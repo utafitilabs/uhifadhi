@@ -22,16 +22,18 @@ use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
+use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamRolesController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamSectionController;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
+use Uhifadhi\Contracts\Access\Grant;
+use Uhifadhi\Contracts\Access\Verb;
 use Uhifadhi\Contracts\Shell\NavGroup;
 
 /**
@@ -114,7 +116,7 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             return;
         }
 
-        if (!$this->authorization->isGranted(PermissionEnum::TeamManage->value)) {
+        if (!$this->authorization->isGranted((string) Grant::of(TeamConcerns::DIRECTORY, Verb::Manage))) {
             return;
         }
 

@@ -17,9 +17,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Uhifadhi\Bundle\TeamBundle\Entity\Trait\TimestampableTrait;
 use Uhifadhi\Bundle\TeamBundle\Entity\Trait\UuidTrait;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\UnknownGrantException;
-use Uhifadhi\Bundle\TeamBundle\Exception\UnknownPermissionException;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Contracts\Access\Grant;
 use Uhifadhi\Contracts\Access\ScopeKind;
@@ -97,21 +95,6 @@ class Position
      */
     #[ORM\Column(name: 'allowed_kinds', type: Types::JSON)]
     private array $allowedKinds = [ScopeKind::Area->value];
-
-    /**
-     * The granted permissions, stored as plain strings - core values and
-     * module-declared ones alike, in the order they were granted.
-     *
-     * SUPERSEDED BY {@see $grants}, AND STILL READ FOR ONE RELEASE. The
-     * (concern, verb) pairs are what a check asks about now; this column is
-     * kept while the gates are moved over, because dropping it in the same
-     * release that stopped writing it would take every existing grant with
-     * it. It goes in the release after the last gate moves.
-     *
-     * @var list<string>
-     */
-    #[ORM\Column(type: Types::JSON)]
-    private array $permissions = [];
 
     /**
      * THE (CONCERN, VERB) PAIRS IT GRANTS, in the order they were granted,
@@ -279,68 +262,6 @@ class Position
     }
 
     /**
-     * THE RAW GRANTED VALUES - the only reading surface, because it is the
-     * only one that can tell the truth. An enum-typed accessor drops every
-     * module-declared permission on the floor, since a module's value is not
-     * a case of an enum this bundle owns.
-     *
-     * @return list<string>
-     */
-    public function getPermissionValues(): array
-    {
-        return $this->permissions;
-    }
-
-    /**
-     * THE ONLY WRITE PATH, AND IT VALIDATES.
-     *
-     * The live catalogue is a REQUIRED second argument rather than something
-     * this entity fetches, because an entity that reached for a service to
-     * validate itself would be an entity you cannot construct in a test - and
-     * because making it required is what stops the unvalidated call from
-     * existing at all.
-     *
-     * WHAT IS ACCEPTED is the live catalogue UNION the strings this position
-     * already holds, and the union is the design:
-     *
-     *   - the catalogue half makes an unknown NEW string fail loudly;
-     *   - the already-held half is prune-not-purge in code. A module
-     *     uninstalled last week left grants behind in positions' JSON; saving
-     *     an unrelated change must not quietly strip them. Editing a position
-     *     is not a migration. They stay, they stop resolving, the matrix draws
-     *     them muted, and revoking one still works - it is a grant, not a
-     *     fixture.
-     *
-     * @param list<string> $values    what the position should hold after this call
-     * @param list<string> $catalogue every permission value this installation currently offers
-     *
-     * @throws UnknownPermissionException if a submitted value is neither in
-     *                                    the catalogue nor already granted here
-     */
-    public function setPermissionValues(array $values, array $catalogue): static
-    {
-        $accepted = [...$catalogue, ...$this->permissions];
-
-        $unknown = array_values(array_unique(array_filter(
-            $values,
-            static fn (string $value): bool => !\in_array($value, $accepted, true),
-        )));
-
-        if ([] !== $unknown) {
-            throw new UnknownPermissionException($unknown);
-        }
-
-        $this->permissions = array_values(array_unique($values));
-
-        return $this;
-    }
-
-    public function hasPermissionValue(string $value): bool
-    {
-        return \in_array($value, $this->permissions, true);
-    }
-
-    /**
      * THE RAW GRANTED PAIRS - the only reading surface, because it is the
      * only one that can tell the truth. A parsed accessor drops every pair
      * whose module has been uninstalled on the floor, and those are exactly
@@ -400,12 +321,6 @@ class Position
     public function grantsVerbOn(string $concern, Verb $verb): bool
     {
         return $this->hasGrant(Grant::of($concern, $verb));
-    }
-
-    /** A convenience for the one caller that genuinely holds an enum case: core code and its tests. */
-    public function hasPermission(PermissionEnum $permission): bool
-    {
-        return $this->hasPermissionValue($permission->value);
     }
 
     public function isLocked(): bool

@@ -16,7 +16,6 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Roster;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
@@ -76,14 +75,11 @@ final class TeamOverviewTest extends IntegrationTestCase
         return $department;
     }
 
-    /** @param list<PermissionEnum> $permissions */
-    private function position(string $name, array $permissions = []): Position
+    /** @param list<string> $grants (concern, verb) pairs this position carries */
+    private function position(string $name, array $grants = []): Position
     {
         $position = (new Position())->setName($name);
-        $position->setPermissionValues(
-            array_map(static fn (PermissionEnum $p): string => $p->value, $permissions),
-            array_map(static fn (PermissionEnum $p): string => $p->value, PermissionEnum::all()),
-        );
+        $position->setGrantValues($grants, $grants);
         $this->em->persist($position);
 
         return $position;
@@ -156,9 +152,9 @@ final class TeamOverviewTest extends IntegrationTestCase
      */
     public function testTheAdministratorCountNamesBothMechanisms(): void
     {
-        $senior = $this->position('Senior Ranger', [PermissionEnum::TeamManage]);
-        $liaison = $this->position('Community Liaison Officer', [PermissionEnum::TeamManage]);
-        $plain = $this->position('Ranger', [PermissionEnum::AreaView]);
+        $senior = $this->position('Senior Ranger', ['directory.manage']);
+        $liaison = $this->position('Community Liaison Officer', ['directory.manage']);
+        $plain = $this->position('Ranger', ['directory.read']);
 
         $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
         $this->person('Salum', 'Mwaipopo', TeamRoleEnum::Admin);

@@ -40,7 +40,7 @@ use Uhifadhi\Contracts\Access\ScopeKind;
  * they are refusals rather than storage and no database can see them.
  *
  * A GRANT IS A (CONCERN, VERB) PAIR. The service used to take flat permission
- * values and write `setPermissionValues()`; the ruling replaced that with
+ * values and write them flat; the ruling replaced that with
  * pairs validated against what the installation DECLARES, so the suite asks
  * for pairs and the refusal is about a pair nobody declared.
  *

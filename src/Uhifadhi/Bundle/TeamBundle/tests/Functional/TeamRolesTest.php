@@ -15,7 +15,6 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
 use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 
 /**
@@ -55,41 +54,41 @@ final class TeamRolesTest extends WebTestCaseWithSchema
         );
     }
 
-    /** Both names on every permission: the label, and the value the voter checks. */
-    public function testEveryPermissionIsShownByBothNames(): void
+    /** Both names on every grant: the label, and the pair the voter checks. */
+    public function testEveryGrantIsShownByBothNames(): void
     {
         $this->installation();
         $table = $this->visit('/team/roles')->filter('.c')->eq(1)->filter('tbody')->text();
 
-        self::assertStringContainsString('Team · Manage', $table);
-        self::assertStringContainsString('team.manage', $table);
+        self::assertStringContainsString('Directory · Manage', $table);
+        self::assertStringContainsString('directory.manage', $table);
     }
 
     /**
      * THE TWO FIGURES ARE DIFFERENT QUESTIONS: how many positions carry it, and
      * how many people sit in those positions.
      */
-    public function testAPermissionCountsItsPositionsAndItsPeopleSeparately(): void
+    public function testAGrantCountsItsPositionsAndItsPeopleSeparately(): void
     {
         $this->installation();
 
-        $row = $this->rowFor('team.manage');
-        self::assertSame('1', $row->filter('td')->eq(1)->text(), 'One position carries team.manage.');
+        $row = $this->rowFor('directory.manage');
+        self::assertSame('1', $row->filter('td')->eq(1)->text(), 'One position carries directory.manage.');
         self::assertSame('2', $row->filter('td')->eq(2)->text(), 'Two active people sit in it.');
     }
 
-    /** A permission no position carries reaches nobody, and reads as nought. */
-    public function testAPermissionNoPositionCarriesReadsAsNought(): void
+    /** A grant no position carries reaches nobody, and reads as nought. */
+    public function testAGrantNoPositionCarriesReadsAsNought(): void
     {
         $this->installation();
 
-        $row = $this->rowFor(PermissionEnum::AreaDelete->value);
+        $row = $this->rowFor('stations.configure');
         self::assertSame('0', $row->filter('td')->eq(1)->text());
         self::assertSame('0', $row->filter('td')->eq(2)->text());
     }
 
-    /** The bands say where a permission came from, the host's own first. */
-    public function testThePermissionsAreBandedByWhoDeclaredThem(): void
+    /** The bands say where a grant came from, the platform's own first. */
+    public function testTheGrantsAreBandedByWhoDeclaredThem(): void
     {
         $this->installation();
 
@@ -98,7 +97,7 @@ final class TeamRolesTest extends WebTestCaseWithSchema
 
         self::assertNotSame([], $bands);
         foreach ($bands as $band) {
-            self::assertMatchesRegularExpression('/· (the host|[a-z-]+) · /', $band);
+            self::assertMatchesRegularExpression('/· (the platform|[a-z-]+) · /', $band);
         }
     }
 
@@ -108,7 +107,7 @@ final class TeamRolesTest extends WebTestCaseWithSchema
         $this->installation();
 
         self::assertSame(
-            ['Tiers', 'Core permissions', 'Module permissions', 'Positions', 'May administer'],
+            ['Tiers', 'Core grants', 'Module grants', 'Positions', 'May administer'],
             $this->visit('/team/roles')->filter('.factband .f .k')->each(static fn (Crawler $c): string => $c->text()),
         );
     }
@@ -167,19 +166,13 @@ final class TeamRolesTest extends WebTestCaseWithSchema
     }
 
     /**
-     * WHAT ADMINISTERING THE TEAM IS, WRITTEN AS PAIRS. `team.manage` was one
-     * flat value; it is eight (concern, verb) pairs now, and these are the
-     * eight the upgrade backfills it into, so a fixture that used to say
-     * "this person administers the team" still says exactly that.
-     *
-     * IT STILL CARRIES THE FLAT VALUE TOO, because this page has not moved:
-     * the roles table counts the old catalogue's values, so a position that
-     * did not carry `team.manage` would be counted as administering nothing
-     * for a reason that has nothing to do with what it grants.
+     * WHAT ADMINISTERING THE TEAM IS, WRITTEN AS PAIRS — the team's own four
+     * concerns, read and managed, which is what "this person administers the
+     * team" means once authority is a concern crossed with a verb.
      */
     private function administratorPosition(string $name): Position
     {
-        $position = $this->position($name, [
+        return $this->position($name, [
             'directory.read',
             'directory.manage',
             'personal-details.read',
@@ -189,10 +182,5 @@ final class TeamRolesTest extends WebTestCaseWithSchema
             'departments.read',
             'departments.configure',
         ]);
-
-        return $position->setPermissionValues(
-            [PermissionEnum::TeamManage->value],
-            array_map(static fn (PermissionEnum $p): string => $p->value, PermissionEnum::all()),
-        );
     }
 }

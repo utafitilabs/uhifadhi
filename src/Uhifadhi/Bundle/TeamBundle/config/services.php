@@ -37,7 +37,6 @@ use Uhifadhi\Bundle\TeamBundle\Controller\PasswordResetController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
-use Uhifadhi\Bundle\TeamBundle\Controller\PositionWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\SecurityController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
@@ -71,7 +70,6 @@ use Uhifadhi\Bundle\TeamBundle\Security\ActiveUserChecker;
 use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Security\GrantVoter;
-use Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentDirectory;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentKindService;
@@ -86,7 +84,6 @@ use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
-use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
@@ -119,7 +116,6 @@ use Uhifadhi\Bundle\TeamBundle\Twig\DoorExtension;
 use Uhifadhi\Bundle\TeamBundle\Twig\MatrixExtension;
 use Uhifadhi\Bundle\TeamBundle\Twig\MatrixRuntime;
 use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
-use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;
 use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
@@ -161,8 +157,6 @@ use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
  *   team.field_sign_in          identifier + passcode -> the person, or nobody
  *   team.controller.api_auth    where a field client signs in
  *   team.api.me_provider        GET /api/me: the bearer account and its permissions
- *   team.permissions            the catalogue: this bundle's seven + what modules declared
- *   team.permission_voter       who holds which of them
  *   team.super_admin_invariant  the refusal that keeps one active Super Admin
  *   team.accounts               every way an account comes into being or changes
  *   team.positions              what a position is, and what it grants
@@ -482,33 +476,6 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('team.access.concerns', TeamConcerns::class)
         ->tag(ConcernSourceInterface::TAG);
-
-    /*
-     * THE CATALOGUE, reading the module providers LIVE from the container in
-     * registration order — which is what makes uninstalling a bundle take its
-     * declared permissions with it on the next request rather than the next
-     * deploy. The tag string is the registry's, written out here rather than
-     * imported: this bundle must work in an installation that has no registry (a
-     * deployment with no modules still has people), and a class constant would
-     * have made RegistryBundle a hard dependency of signing in.
-     */
-    $services->set('team.permissions', PermissionCatalogue::class)
-        ->args([
-            tagged_iterator('uhifadhi.module'),
-            // AND THE CORE BUNDLES THAT ENFORCE ONE WITHOUT BEING A MODULE
-            // — the area's own `duty.checkin`, and whatever follows it.
-            tagged_iterator('uhifadhi.permissions'),
-        ]);
-
-    /*
-     * The voter, tagged by hand. A reusable bundle is not autoconfigured, and a
-     * voter that missed this tag would deny nothing and grant nothing — it would
-     * simply never be asked, which looks exactly like a permission model that
-     * does not work.
-     */
-    $services->set('team.permission_voter', PermissionVoter::class)
-        ->args([service('team.permissions')])
-        ->tag('security.voter');
 
     /*
      * EVERYTHING THERE IS TO HAVE A PERMISSION ABOUT, folded together from
@@ -991,9 +958,6 @@ return static function (ContainerConfigurator $container): void {
      * registry entry — nothing renders differently until the day somebody runs
      * `widget:prune` and it reads their stored layouts as orphans.
      */
-    $services->set('team.widget_surface.positions', PositionWidgets::class)
-        ->tag(WidgetSurfaceInterface::TAG);
-
     $services->set('team.widget_surface.departments', DepartmentWidgets::class)
         ->tag(WidgetSurfaceInterface::TAG);
 
@@ -1233,9 +1197,16 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('team.roles_board', RolesBoard::class)
         ->args([
-            service('team.permissions'),
+            service('team.access.catalogue'),
             service(PositionRepository::class),
             service(UserRepository::class),
+            // THE INSTALLED MODULES, for the name on each band and for the
+            // ones that declare nothing: a module drawn with no rows says
+            // "installed and grants nothing", which is a different fact from
+            // being absent. The tag string is the registry's, written out
+            // rather than imported, because this bundle must boot in an
+            // installation that has no registry at all.
+            tagged_iterator('uhifadhi.module'),
         ]);
     $services->alias(RolesBoard::class, 'team.roles_board');
 
@@ -1360,15 +1331,6 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaDepartmentController::class, 'team.controller.area_department')->public();
-
-    /*
-     * RETIRED, AND STILL ROUTED. The matrix widget surface is a redirect to
-     * the register for one release; it needs nothing but the router.
-     */
-    $services->set('team.controller.position_widgets', PositionWidgetsController::class)
-        ->args([service('router')])
-        ->tag('controller.service_arguments');
-    $services->alias(PositionWidgetsController::class, 'team.controller.position_widgets')->public();
 
     /*
      * THE TWO LETTERS THIS BUNDLE SENDS, and the one question every screen that

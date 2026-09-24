@@ -121,8 +121,6 @@ Not released yet.
    reads and does not own
  * `Area\StationSectionsInterface` and its value objects — how a module puts a
    banded section on a station's record and a block on its configure card
- * `PermissionDeclarationInterface` — how a bundle that is not a module declares
-   the permission it enforces
  * `Api\FieldErrorDocument` — the header that marks a refusal already written in
    the field API's own shape, so the URL space's safety net leaves it alone
  * `Devkit\CommandIo::readSecret()` — additive to the surface but breaking for an

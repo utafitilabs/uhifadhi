@@ -49,9 +49,8 @@ interface ConcernInterface
 
     /**
      * One sentence saying what this concern is about, printed under the row.
-     * Required, for the reason {@see \Uhifadhi\Contracts\ModulePermission}
-     * gives: a matrix half of whose rows explain themselves is one an
-     * administrator stops reading.
+     * Required, for the reason every declared row gives: a matrix half of
+     * whose rows explain themselves is one an administrator stops reading.
      */
     public function description(): string;
 

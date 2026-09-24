@@ -13,42 +13,56 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Service;
 
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
-use Uhifadhi\Bundle\TeamBundle\Model\Permission;
 use Uhifadhi\Bundle\TeamBundle\Model\PermissionGroup;
 use Uhifadhi\Bundle\TeamBundle\Model\PermissionRow;
 use Uhifadhi\Bundle\TeamBundle\Model\SectionFact;
 use Uhifadhi\Bundle\TeamBundle\Model\TierRow;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Contracts\Access\ConcernInterface;
+use Uhifadhi\Contracts\Access\Grant;
+use Uhifadhi\Contracts\Access\Verb;
+use Uhifadhi\Contracts\ModuleProviderInterface;
 
 /**
  * WHAT AUTHORITY EXISTS ON THIS INSTALLATION, AND WHO HOLDS IT.
  *
  * TWO THINGS DECIDE IT AND THERE IS NO THIRD. The TIER — three cases, two of
- * which stand above the matrix — and the PERMISSION a position carries. There
- * is no Role entity, none is proposed, and this service asks for none: it
- * reads the two that already decide and aggregates them, which is the whole of
- * what the tab needed that did not exist.
+ * which stand above the matrix — and the GRANTS a position carries, each of
+ * them a declared concern crossed with one verb. There is no Role entity,
+ * none is proposed, and this service asks for none: it reads the two that
+ * already decide and aggregates them.
  *
  * IT WRITES NOTHING. The matrix is edited on Positions; a page that could
  * change a grant from the report of it would be a second write path for the
  * fact one screen already owns.
  *
- * TWO QUERIES, NOT ONE PER PERMISSION. Every figure below is counted in one
- * pass over the positions and one over the people, because "how many hold
- * `area.view`" asked per row is a query per row on the one page that lists
+ * TWO PASSES, NOT ONE PER ROW. Every figure below is counted in one pass over
+ * the positions and one over the people, because "how many hold
+ * `areas.read`" asked per row is a query per row on the one page that lists
  * every row there is.
+ *
+ * THE BAND IS THE DECLARER'S. A concern belongs to whoever enforces it, and
+ * the catalogue already groups by that, so two packages that both call
+ * something "Records" keep their own bands.
  */
 final readonly class RolesBoard
 {
+    /**
+     * @param iterable<ModuleProviderInterface> $modules every installed module, for the
+     *                                                   names on the bands and for the ones
+     *                                                   that declare nothing
+     */
     public function __construct(
-        private PermissionCatalogue $catalogue,
+        private ConcernCatalogue $catalogue,
         private PositionRepository $positions,
         private UserRepository $users,
+        private iterable $modules = [],
     ) {
     }
 
@@ -64,38 +78,49 @@ final readonly class RolesBoard
      */
     public function read(): array
     {
-        $permissions = $this->catalogue->all();
+        $grouped = $this->catalogue->grouped();
         $positions = $this->positions->findAllOrdered();
         $people = $this->users->findAllByName();
 
-        $core = \count(array_filter($permissions, static fn (Permission $p): bool => $p->isCore()));
+        $pairs = $core = 0;
+        foreach ($grouped as $concerns) {
+            foreach ($concerns as $concern) {
+                $verbs = \count($concern->verbs());
+                $pairs += $verbs;
+                if (null === $concern->moduleSlug()) {
+                    $core += $verbs;
+                }
+            }
+        }
 
         return [
-            'facts' => $this->facts($permissions, $positions, $people, $core),
+            'facts' => $this->facts($grouped, $positions, $people, $core, $pairs),
             'tiers' => self::tiers($people),
-            'groups' => $this->groups($permissions, $positions, $people),
-            'permissions' => \count($permissions),
+            'groups' => $this->groups($grouped, $positions, $people),
+            'permissions' => $pairs,
             'core' => $core,
-            'fromModules' => \count($permissions) - $core,
+            'fromModules' => $pairs - $core,
         ];
     }
 
     /**
-     * @param list<Permission> $permissions
-     * @param list<Position>   $positions
-     * @param list<User>       $people
+     * @param array<string, list<ConcernInterface>> $grouped
+     * @param list<Position>                        $positions
+     * @param list<User>                            $people
      *
      * @return list<SectionFact>
      */
-    private function facts(array $permissions, array $positions, array $people, int $core): array
+    private function facts(array $grouped, array $positions, array $people, int $core, int $pairs): array
     {
-        $modules = [];
-        foreach ($permissions as $permission) {
-            if (null !== $permission->source) {
-                $modules[$permission->source] = true;
+        $declaring = [];
+        foreach ($grouped as $concerns) {
+            foreach ($concerns as $concern) {
+                if (null !== $concern->moduleSlug()) {
+                    $declaring[$concern->moduleSlug()] = true;
+                }
             }
         }
-        $installed = \count($this->catalogue->moduleNames());
+        $installed = \count($this->moduleNames());
 
         $byTier = $byGrant = 0;
         foreach ($people as $person) {
@@ -106,20 +131,20 @@ final readonly class RolesBoard
                 ++$byTier;
                 continue;
             }
-            if (true === $person->getPosition()?->hasPermission(PermissionEnum::TeamManage)) {
+            if (true === $person->getPosition()?->grantsVerbOn(TeamConcerns::DIRECTORY, Verb::Manage)) {
                 ++$byGrant;
             }
         }
 
         return [
             new SectionFact('Tiers', (string) \count(TeamRoleEnum::cases()), '2 are escape hatches'),
-            new SectionFact('Core permissions', (string) $core, 'the host’s own'),
+            new SectionFact('Core grants', (string) $core, 'the platform’s own'),
             new SectionFact(
-                'Module permissions',
-                (string) (\count($permissions) - $core),
-                \sprintf('from %d of %d modules', \count($modules), $installed),
+                'Module grants',
+                (string) ($pairs - $core),
+                \sprintf('from %d of %d modules', \count($declaring), $installed),
             ),
-            new SectionFact('Positions', (string) \count($positions), 'each a permission set'),
+            new SectionFact('Positions', (string) \count($positions), 'each a set of grants'),
             new SectionFact(
                 'May administer',
                 (string) ($byTier + $byGrant),
@@ -172,70 +197,89 @@ final readonly class RolesBoard
     }
 
     /**
-     * EVERY PERMISSION THERE IS, under the band that says where it came from:
-     * the host's own umbrellas first, then each module that declared one, then
-     * the installed modules that declare nothing.
+     * EVERY GRANT THERE IS, under the band of whoever declared the concern it
+     * names: the platform's own bundles first, then each module that declared
+     * one, then the installed modules that declare nothing.
      *
-     * @param list<Permission> $permissions
-     * @param list<Position>   $positions
-     * @param list<User>       $people
+     * @param array<string, list<ConcernInterface>> $grouped
+     * @param list<Position>                        $positions
+     * @param list<User>                            $people
      *
      * @return list<PermissionGroup>
      */
-    private function groups(array $permissions, array $positions, array $people): array
+    private function groups(array $grouped, array $positions, array $people): array
     {
         $holders = [];
         foreach ($people as $person) {
             if (!$person->isActive()) {
                 continue;
             }
-            foreach ($person->getPosition()?->getPermissionValues() ?? [] as $value) {
+            foreach ($person->getPosition()?->getGrantValues() ?? [] as $value) {
                 $holders[$value] = ($holders[$value] ?? 0) + 1;
             }
         }
 
         $carriers = [];
         foreach ($positions as $position) {
-            foreach ($position->getPermissionValues() as $value) {
+            foreach ($position->getGrantValues() as $value) {
                 $carriers[$value] = ($carriers[$value] ?? 0) + 1;
             }
         }
 
-        $moduleNames = $this->catalogue->moduleNames();
-        $banded = [];
-        foreach ($permissions as $permission) {
-            // THE BAND IS THE DECLARER'S, not the word the permission happens
-            // to start with: two modules may both call an umbrella "Records",
-            // and a band that merged them would say the host declared both.
-            $key = $permission->isCore() ? 'host:'.$permission->umbrella : 'module:'.$permission->source;
-            $banded[$key] ??= new PermissionGroup(
-                heading: $permission->isCore()
-                    ? $permission->umbrella
-                    : ($moduleNames[(string) $permission->source] ?? (string) $permission->source),
-                source: $permission->isCore() ? 'the host' : (string) $permission->source,
-            );
+        $moduleNames = $this->moduleNames();
+        $groups = [];
+        $declaring = [];
+        foreach ($grouped as $declarer => $concerns) {
+            $rows = [];
+            foreach ($concerns as $concern) {
+                if (null !== $concern->moduleSlug()) {
+                    $declaring[$concern->moduleSlug()] = true;
+                }
 
-            $banded[$key] = new PermissionGroup(
-                heading: $banded[$key]->heading,
-                source: $banded[$key]->source,
-                rows: [...$banded[$key]->rows, new PermissionRow(
-                    label: $permission->label(),
-                    value: $permission->value,
-                    description: $permission->description,
-                    positions: $carriers[$permission->value] ?? 0,
-                    people: $holders[$permission->value] ?? 0,
-                )],
+                foreach ($concern->verbs() as $verb) {
+                    $pair = (string) Grant::of($concern->key(), $verb);
+                    $rows[] = new PermissionRow(
+                        label: $concern->label().' · '.ucfirst($verb->value),
+                        value: $pair,
+                        description: $concern->description(),
+                        positions: $carriers[$pair] ?? 0,
+                        people: $holders[$pair] ?? 0,
+                    );
+                }
+            }
+
+            $slug = $concerns[0]->moduleSlug() ?? null;
+            $groups[] = new PermissionGroup(
+                heading: $declarer,
+                source: null === $slug ? 'the platform' : $slug,
+                rows: $rows,
             );
         }
-
-        $groups = array_values($banded);
 
         // AN INSTALLED MODULE THAT DECLARES NOTHING IS DRAWN, so its absence
         // cannot be misread as "not installed".
-        foreach ($this->catalogue->silentModules() as $slug) {
-            $groups[] = new PermissionGroup($moduleNames[$slug] ?? $slug, $slug);
+        foreach ($moduleNames as $slug => $name) {
+            if (!isset($declaring[$slug])) {
+                $groups[] = new PermissionGroup($name, $slug);
+            }
         }
 
         return $groups;
+    }
+
+    /**
+     * The label a module's band wears — its own name, from its own provider,
+     * so the page never invents a word for somebody else's module.
+     *
+     * @return array<string, string> slug => display name
+     */
+    private function moduleNames(): array
+    {
+        $names = [];
+        foreach ($this->modules as $module) {
+            $names[$module->slug()] = $module->name();
+        }
+
+        return $names;
     }
 }

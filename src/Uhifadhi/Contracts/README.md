@@ -109,9 +109,6 @@ composer check   # cs:check -> phpstan (max) -> require-check -> the suite
   reading is two verbs, `readLine()` and a `readSecret()` that is never put on the screen.
 - **[Why one package?](docs/why-one-package.md)** — why the registration contract and the
   data-shape contracts ship together, and the test that would split them.
-- **[Area-scoped authority](docs/area-scoped-authority.md)** — *design + architecture, decisions
-  open* — how a department's scope becomes the boundary of a person's authority, which permissions
-  carry an area, and how a module would declare its permission's scope.
 
 ## License
 

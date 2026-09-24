@@ -365,10 +365,10 @@
                                 <div class="posrow">
                                     <span class="pn"><a href="{{ path('team_positions', {position: position.uuidString}) }}">{{ position.name }}</a></span>
                                     <div class="pp">
-                                        {% for value in position.permissionValues %}
+                                        {% for value in position.grantValues %}
                                             <span class="perm">{{ value }}</span>
                                         {% else %}
-                                            <span class="pl-mem">no permissions granted</span>
+                                            <span class="pl-mem">nothing granted</span>
                                         {% endfor %}
                                     </div>
                                     <div class="hb">

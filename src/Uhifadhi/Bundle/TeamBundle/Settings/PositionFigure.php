@@ -46,7 +46,7 @@ final readonly class PositionFigure implements SettingsFigureSourceInterface
         $granting = 0;
         foreach ($this->positions->findAllOrdered() as $position) {
             ++$composed;
-            if ([] !== $position->getPermissionValues()) {
+            if ([] !== $position->getGrantValues()) {
                 ++$granting;
             }
         }

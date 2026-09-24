@@ -13,142 +13,52 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Widget;
 
-use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetGroup;
 use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetPreset;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceRegistry;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
-use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
+use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
 
 /**
- * BOTH TEAM SCREENS ARE WIDGET SURFACES, and this bundle hard-requires
- * ShellBundle to make that true.
+ * WHICH TEAM SCREENS ARE WIDGET SURFACES, AND WHICH ARE NOT.
  *
- * The standing workspace rule is that a drawn direction ships as a built-in
- * preset carrying its trade-off line verbatim — adopted, copied and mixed, never
- * picked and never thrown away. No option set is a ballot. So all six roster
- * directions and all six matrix directions are here, each under the words the
- * design used for it, and the shipped composition is the seventh card the strip
- * leads with.
+ * WIDGETS LIVE ON DATA SURFACES ONLY (owner, 2026-09-22). A register is app
+ * mechanics — one table, one shape — and a configure page is a form; neither
+ * is a canvas somebody arranges. The departments overview is a reading, and
+ * it is the one surface this bundle contributes.
  *
- * A CATALOGUE IS CODE, NOT INPUT: a preset naming a widget the surface does not
- * ship, or a width it does not offer, refuses to boot. That is the framework
- * agreeing, and it is why constructing both catalogues is itself worth a test.
+ * A CATALOGUE IS CODE, NOT INPUT: a preset naming a widget the surface does
+ * not ship, or a width it does not offer, refuses to boot. That is the
+ * framework agreeing, and it is why constructing the catalogue is itself
+ * worth a test.
  */
 final class TeamSurfacesTest extends IntegrationTestCase
 {
-    public function testThePositionsSurfaceIsInTheRegistryAndThePeopleOneIsNot(): void
+    public function testTheDepartmentsSurfaceIsRegisteredAndTheRegistersAreNot(): void
     {
         $registry = static::getContainer()->get('test_public.'.WidgetSurfaceRegistry::class);
         self::assertInstanceOf(WidgetSurfaceRegistry::class, $registry);
 
-        // NO PEOPLE SURFACE (owner 2026-09-22): a register is app mechanics,
-        // one table; widgets stay on the data surfaces.
-        self::assertFalse($registry->has('team'));
-        self::assertTrue($registry->has(PositionWidgets::SURFACE));
+        self::assertTrue($registry->has(DepartmentWidgets::SURFACE));
+        self::assertFalse($registry->has('team'), 'The people register is one table, not a canvas.');
+        self::assertFalse($registry->has('team_positions'), 'The positions register is one table, not a canvas.');
     }
 
-    /** The surface string is what every stored row is keyed by, so it is pinned. */
-    public function testTheSurfaceKeysAreStable(): void
+    public function testTheSurfaceKeyIsStable(): void
     {
-        self::assertSame('team_positions', PositionWidgets::SURFACE);
+        // A stored layout is keyed by this string; changing it orphans every
+        // arrangement anybody has made.
+        self::assertSame('departments', DepartmentWidgets::SURFACE);
     }
 
-    public function testTheMatrixSurfaceShipsThirteenWidgetsInThreeGroups(): void
-    {
-        $catalog = new PositionWidgets()->catalog();
-
-        self::assertSame([
-            'kpis', 'catalogue', 'risks',
-            'matrix_a', 'matrix_b', 'matrix_c', 'matrix_d', 'matrix_e',
-            'dept_a', 'dept_b', 'dept_c', 'dept_d', 'dept_e',
-        ], $catalog->ids());
-
-        self::assertSame(
-            ['context', 'matrix', 'deptfirst'],
-            array_map(static fn (WidgetGroup $g): string => $g->id, $catalog->groups()),
-        );
-    }
-
-    /**
-     * THE FIVE MATRIX DIRECTIONS ARE FIVE RENDERINGS OF ONE ARRAY —
-     * PermissionCatalogue::groupedByUmbrella() — and they are ALTERNATIVES:
-     * every preset that shows the matrix at all shows exactly one of them.
-     * Five renderings of one thing must not be able to disagree about it, and
-     * stacking two would be the page disagreeing with itself.
-     *
-     * Direction F is the exception that proves it: it is not a sixth rendering
-     * of the matrix but a different family — five department-first layouts —
-     * and it shows none of the five.
-     */
-    public function testEveryMatrixPresetTurnsOnAtMostOneRendering(): void
-    {
-        $catalog = new PositionWidgets()->catalog();
-        $renderings = ['matrix_a', 'matrix_b', 'matrix_c', 'matrix_d', 'matrix_e'];
-
-        foreach ($catalog->builtins() as $preset) {
-            $on = array_values(array_intersect($renderings, $preset->ids()));
-            self::assertLessThanOrEqual(1, \count($on), $preset->id.' stacks '.\count($on).' renderings of one array.');
-        }
-
-        self::assertSame(['dept_a', 'dept_b', 'dept_c', 'dept_d', 'dept_e'], $catalog->preset('f')?->ids());
-    }
-
-    /**
-     * B IS THE ONE SELECTED — RULED — and the argument is the fresh-installation
-     * state rather than the populated one: on day one there are no positions,
-     * and B is the only direction whose empty state is a single control that
-     * makes the first one. The grid opens on nothing at all.
-     */
-    public function testTheMatrixShipsOnDirectionB(): void
-    {
-        $catalog = new PositionWidgets()->catalog();
-
-        self::assertSame('b', $catalog->defaultPresetId());
-        self::assertSame(
-            ['a', 'b', 'c', 'd', 'e', 'f'],
-            array_map(static fn (WidgetPreset $p): string => $p->id, $catalog->presets()),
-        );
-    }
-
-    /**
-     * KPI CARDS AT THE TOP holds here too, wherever they appear at all. Direction
-     * F carries none — it is five stacked department layouts and has no counts
-     * of its own — and a rule about where the counts go has nothing to say about
-     * a layout that has none.
-     */
-    public function testWhereTheMatrixSurfaceShowsCountsTheyLead(): void
-    {
-        foreach (new PositionWidgets()->catalog()->builtins() as $preset) {
-            if ($preset->shows('kpis')) {
-                self::assertSame('kpis', $preset->ids()[0], $preset->id.' shows the counts but not first.');
-            }
-        }
-    }
-
-    /**
-     * A DIRECTION'S TRADE-OFF LINE IS ITS DESCRIPTION, and it says what the
-     * direction buys and what it costs, in that order. What the design said
-     * about a direction has to be what the product says about it.
-     */
+    /** The catalogue constructs, and every preset it ships names its trade-off. */
     public function testEveryPresetCarriesItsTradeOffLine(): void
     {
-        foreach ([new PositionWidgets()->catalog()] as $catalog) {
-            foreach ($catalog->presets() as $preset) {
-                self::assertNotSame('', trim($preset->description), $preset->id.' has no trade-off line.');
-                self::assertGreaterThan(60, mb_strlen($preset->description), $preset->id.'\'s line is too short to name a cost.');
-            }
-        }
-    }
+        $presets = new DepartmentWidgets()->catalog()->builtins();
 
-    /** Every widget the catalogues declare has the partial that draws it. */
-    public function testEveryWidgetHasATemplate(): void
-    {
-        foreach ([
-            [new PositionWidgets()->catalog(), __DIR__.'/../../../templates/positions/_w_%s.html.twig'],
-        ] as [$catalog, $pattern]) {
-            foreach ($catalog->ids() as $id) {
-                self::assertFileExists(\sprintf($pattern, $id));
-            }
+        self::assertNotSame([], $presets);
+        foreach ($presets as $preset) {
+            self::assertInstanceOf(WidgetPreset::class, $preset);
+            self::assertNotSame('', trim($preset->description));
         }
     }
 }

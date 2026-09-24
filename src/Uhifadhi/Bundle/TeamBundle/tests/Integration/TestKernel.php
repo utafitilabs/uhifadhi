@@ -373,8 +373,6 @@ final class TestKernel extends Kernel
 
         // Public aliases so a test can hold the bundle's private services.
         foreach ([
-            \Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue::class => 'team.permissions',
-            \Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter::class => 'team.permission_voter',
             \Uhifadhi\Bundle\TeamBundle\ArgumentResolver\AreaValueResolver::class => 'team.area_value_resolver',
             \Uhifadhi\Bundle\TeamBundle\Repository\UserRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\UserRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository::class,

@@ -14,13 +14,11 @@ declare(strict_types=1);
 namespace Uhifadhi\Core\Tests\Core;
 
 use Symfony\Component\HttpFoundation\Response;
-use Uhifadhi\Bundle\AreaBundle\Access\AreaPermissions;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\CheckIn;
 use Uhifadhi\Bundle\AreaBundle\Entity\PersonPosition;
 use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 
 /**
  * THE DAY A RANGER REPORTS — API-CONTRACT.md §13A–§13C, specified from the
@@ -466,7 +464,7 @@ final class FieldDutyEndpointsTest extends FieldApiTestCase
     /** Somebody who may report a day: area view, and the duty permission. */
     private function onDuty(): User
     {
-        return $this->ranger('sl-0142', [PermissionEnum::AreaView], null, [AreaPermissions::CHECK_IN]);
+        return $this->ranger('sl-0142', [...self::READS_THE_PARK, 'duty.record']);
     }
 
     /**

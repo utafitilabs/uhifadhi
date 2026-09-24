@@ -36,8 +36,8 @@ final readonly class PermissionGroup
     {
         return match (\count($this->rows)) {
             0 => 'declares none',
-            1 => '1 permission',
-            default => \sprintf('%d permissions', \count($this->rows)),
+            1 => '1 grant',
+            default => \sprintf('%d grants', \count($this->rows)),
         };
     }
 }

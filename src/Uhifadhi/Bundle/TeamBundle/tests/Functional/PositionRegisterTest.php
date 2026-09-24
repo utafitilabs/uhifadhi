@@ -332,17 +332,4 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
             (string) $this->client->followRedirect()->filter('.flashes')->text(),
         );
     }
-
-    /**
-     * THE WIDGET SURFACE IS RETIRED, AND STILL ROUTED. Deleting a shipped
-     * route 404s every bookmark in the release that changed the page, so the
-     * names stay for one release and go to what replaced them.
-     */
-    public function testTheRetiredWidgetLibraryRedirectsToTheRegister(): void
-    {
-        $this->administrator();
-        $this->client->request('GET', '/team/positions/widgets');
-
-        self::assertResponseRedirects('/team/positions');
-    }
 }

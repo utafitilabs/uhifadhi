@@ -33,12 +33,12 @@
     </div>
 
     <div class="c" style="margin-bottom:20px">
-        <span class="tab">The three tiers<span class="src">&middot; not a permission</span></span>
+        <span class="tab">The three tiers<span class="src">&middot; not a grant</span></span>
         <div class="sxlead">
             <span class="t">
                 {{ ux_icon('shell:triangle-alert') }}
                 <span><b>A tier is not a role and grants no capability by itself &mdash; except for the two that grant all of them.</b>
-                Administering the team is an ordinary permission, <span class="mono">team.manage</span>, so &ldquo;who runs this place&rdquo;
+                Administering the team is an ordinary grant, <span class="mono">directory.manage</span>, so &ldquo;who runs this place&rdquo;
                 is not answerable from the tier column alone.</span>
             </span>
         </div>
@@ -63,14 +63,14 @@
     </div>
 
     <div class="c">
-        <span class="tab">Every permission there is<span class="src">&middot; {{ permissions }} &middot; {{ core }} the host&rsquo;s, {{ fromModules }} from modules</span></span>
-        {# A PERMISSION IS SHOWN BY BOTH NAMES, ALWAYS: the catalogue's label and
-           the machine value the voter checks, and every band wears its
-           contributor. A module-declared permission leaves the matrix when the
+        <span class="tab">Every grant there is<span class="src">&middot; {{ permissions }} &middot; {{ core }} the platform&rsquo;s, {{ fromModules }} from modules</span></span>
+        {# A GRANT IS SHOWN BY BOTH NAMES, ALWAYS: the concern's label with its
+           verb, and the pair the voter checks, and every band wears the package
+           that declared the concern. A module's pair leaves the matrix when the
            module is removed and stays in the JSON of every position that held
            it; the table states that in its own columns. #}
         <table class="tbl">
-            <thead><tr><th>Permission</th><th class="num">Positions</th><th class="num">People</th><th>What it lets somebody do</th></tr></thead>
+            <thead><tr><th>Grant</th><th class="num">Positions</th><th class="num">People</th><th>What it lets somebody do</th></tr></thead>
             <tbody>
             {% for group in groups %}
                 <tr class="sxgrp">
@@ -85,7 +85,7 @@
                     </tr>
                 {% else %}
                     {# DRAWN SO ITS ABSENCE CANNOT BE MISREAD as "not installed". #}
-                    <tr><td colspan="4"><span class="mono d">Installed and declares no permission &mdash; drawn so its absence cannot be misread as &ldquo;not installed&rdquo;</span></td></tr>
+                    <tr><td colspan="4"><span class="mono d">Installed and declares nothing &mdash; drawn so its absence cannot be misread as &ldquo;not installed&rdquo;</span></td></tr>
                 {% endfor %}
             {% endfor %}
             </tbody>

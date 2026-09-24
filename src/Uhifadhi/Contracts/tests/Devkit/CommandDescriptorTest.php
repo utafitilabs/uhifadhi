@@ -19,7 +19,7 @@ use Uhifadhi\Contracts\Devkit\CommandIo;
 
 /**
  * A descriptor is the console-free unit a module hands to devkit: a name, a help
- * line, and the closure that does the work. Like {@see \Uhifadhi\Contracts\ModulePermission},
+ * line, and the closure that does the work. Like every declared row,
  * every field is required — a maintenance command with no name cannot be
  * registered and one with no help line is a blank row in `list` — so a
  * descriptor that has not thought about them does not compile.

@@ -138,13 +138,13 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         $this->em->persist($department);
 
         $long = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Ranger');
-        $long->setPermissionValues([], []);
+        $long->setGrantValues([], []);
         $long->setVacantSince(new \DateTimeImmutable('-96 days'));
         $fresh = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Warden');
-        $fresh->setPermissionValues([], []);
+        $fresh->setGrantValues([], []);
         $fresh->setVacantSince(new \DateTimeImmutable('-3 days'));
         $undated = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Scout');
-        $undated->setPermissionValues([], []);
+        $undated->setGrantValues([], []);
         $this->em->persist($long);
         $this->em->persist($fresh);
         $this->em->persist($undated);

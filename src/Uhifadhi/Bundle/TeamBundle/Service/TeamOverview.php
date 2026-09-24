@@ -13,13 +13,14 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Service;
 
+use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\RosterOverview;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Contracts\Access\Verb;
 
 /**
  * Builds the {@see RosterOverview} the team page's KPI strip and attention pane
@@ -92,7 +93,7 @@ final readonly class TeamOverview
     {
         $granting = array_values(array_filter(
             $this->positions->findAllOrdered(),
-            static fn ($position): bool => $position->hasPermissionValue(PermissionEnum::TeamManage->value),
+            static fn ($position): bool => $position->grantsVerbOn(TeamConcerns::DIRECTORY, Verb::Manage),
         ));
 
         if ([] === $granting) {
@@ -109,6 +110,6 @@ final readonly class TeamOverview
             return true;
         }
 
-        return $user->getPosition()?->hasPermissionValue(PermissionEnum::TeamManage->value) ?? false;
+        return $user->getPosition()?->grantsVerbOn(TeamConcerns::DIRECTORY, Verb::Manage) ?? false;
     }
 }

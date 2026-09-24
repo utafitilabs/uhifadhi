@@ -71,7 +71,6 @@ final class ModuleRegistrationTest extends RegistryKernelTestCase
         self::assertSame(0, $module->position());
         self::assertNull($module->icon());
         self::assertNull($module->entryRoute(), 'no entry route = the generic module page');
-        self::assertSame([], $module->permissions(), 'a module grants nobody anything by existing');
     }
 
     /**

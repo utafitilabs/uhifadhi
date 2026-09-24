@@ -15,7 +15,6 @@ namespace Uhifadhi\Core\Tests\Core;
 
 use Symfony\Component\HttpFoundation\Response;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Contracts\Access\Grant;
 
@@ -107,7 +106,7 @@ final class FieldAccountEndpointTest extends FieldApiTestCase
     /** A refusal, said out loud: the field is present and empty, never absent. */
     public function testAnAccountHoldingNothingIsSentAnEmptyArrayRatherThanNoField(): void
     {
-        $nobody = $this->ranger('sl-0777', permissions: []);
+        $nobody = $this->ranger('sl-0777', grants: []);
 
         $body = $this->get(self::ENDPOINT, $this->tokenFor($nobody));
 
@@ -122,7 +121,7 @@ final class FieldAccountEndpointTest extends FieldApiTestCase
      */
     public function testEveryPermissionTheAccountHoldsIsSent(): void
     {
-        $ranger = $this->ranger('sl-0143', [PermissionEnum::AreaView, PermissionEnum::ModuleCreate]);
+        $ranger = $this->ranger('sl-0143', [...self::READS_THE_PARK, 'modules.configure']);
 
         $body = $this->get(self::ENDPOINT, $this->tokenFor($ranger));
 
@@ -142,7 +141,7 @@ final class FieldAccountEndpointTest extends FieldApiTestCase
      */
     public function testAGrantMadeOnThePositionsScreenReachesTheHandset(): void
     {
-        $ranger = $this->ranger('sl-0144', permissions: [], declared: ['patrols.record']);
+        $ranger = $this->ranger('sl-0144', grants: [], declared: ['patrols.record']);
         $ranger->getPosition()?->setGrantValues(['duty.record'], ['duty.record']);
         $this->em->flush();
 

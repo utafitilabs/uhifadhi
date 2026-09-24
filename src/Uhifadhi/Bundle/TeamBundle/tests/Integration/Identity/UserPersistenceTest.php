@@ -15,14 +15,13 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Identity;
 
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Uid\UuidV7;
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
-use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 
 /**
@@ -88,9 +87,9 @@ final class UserPersistenceTest extends IntegrationTestCase
 
     public function testAPositionAddsNoRole(): void
     {
-        $position = (new Position())->setName('Analyst')->setPermissionValues(
-            [PermissionEnum::AreaView->value, PermissionEnum::ModuleView->value],
-            $this->service(PermissionCatalogue::class)->values(),
+        $position = (new Position())->setName('Analyst')->setGrantValues(
+            ['directory.read', 'positions.read'],
+            $this->service(ConcernCatalogue::class)->pairs(),
         );
 
         $staff = (new User())->setEmail('staff@example.test')->setFirstName('S')->setLastName('T')

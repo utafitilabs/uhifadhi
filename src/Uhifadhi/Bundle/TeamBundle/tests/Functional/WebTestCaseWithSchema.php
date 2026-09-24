@@ -144,7 +144,7 @@ abstract class WebTestCaseWithSchema extends WebTestCase
      * against the old model fails loudly instead of quietly filing nothing.
      *
      * IT GRANTS PAIRS. The second argument used to be a list of flat
-     * permission values written through `setPermissionValues()`; a grant is a
+     * flat permission values; a grant is a
      * `<concern>.<verb>` pair now, so the same argument carries pairs and the
      * write is the validated pair one. The shape of the call is unchanged on
      * purpose — every suite in this package seeds a position through it — so

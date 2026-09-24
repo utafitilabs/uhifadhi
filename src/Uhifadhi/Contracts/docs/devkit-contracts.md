@@ -191,9 +191,9 @@ through the real output, which applies `--quiet` and `-v` itself.
 stdout, where a pipeline can read it; why it refused goes to stderr, where it survives that pipeline
 rather than corrupting it.
 
-Every field of the descriptor is required and validated in the constructor, the same discipline
-[`ModulePermission`](module-provider.md) uses: an unnamed command cannot be registered, and one
-with no help line is a blank row in `list`.
+Every field of the descriptor is required and validated in the constructor, the same discipline a
+declared concern uses: an unnamed command cannot be registered, and one with no help line is a
+blank row in `list`.
 
 ## The framework-coupling decision, stated once
 

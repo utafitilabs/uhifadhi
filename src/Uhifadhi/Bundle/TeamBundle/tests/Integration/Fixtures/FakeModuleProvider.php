@@ -45,9 +45,4 @@ final class FakeModuleProvider implements ModuleProviderInterface
     {
         return 'operations';
     }
-
-    public function permissions(): array
-    {
-        return [];
-    }
 }

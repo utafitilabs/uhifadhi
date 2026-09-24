@@ -52,7 +52,7 @@ namespace Uhifadhi\Contracts\Devkit;
  * in a test run. Three verbs on {@see CommandIo} close that hole while importing
  * nothing.
  *
- * Like {@see \Uhifadhi\Contracts\ModulePermission}, every field is required
+ * Like every declared row, every field is required
  * and validated in the constructor: a command with no name cannot be registered,
  * and one with no help line is a blank row in `list` that tells an operator
  * nothing. A descriptor that has not thought about them does not compile.

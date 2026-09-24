@@ -41,6 +41,9 @@ final class ModuleGrantsAreBackfilledTest extends MigrationsTestCase
 {
     private const string VERSION = 'Uhifadhi\Bundle\TeamBundle\Migrations\Version20260921004000';
 
+    /** The last version at which `team_position.permissions` still exists. */
+    private const string LAST_WITH_THE_OLD_COLUMN = 'Uhifadhi\Bundle\TeamBundle\Migrations\Version20260922000100';
+
     /** Every module value is carried across, and brings its concern's read. */
     public function testAModuleValueIsCarriedAcrossAndBringsItsRead(): void
     {
@@ -148,7 +151,12 @@ final class ModuleGrantsAreBackfilledTest extends MigrationsTestCase
      */
     private function anUpgradingInstallation(array $permissions, array $grants = []): void
     {
-        $this->console('doctrine:migrations:migrate', ['--no-interaction' => true, 'version' => 'latest']);
+        // UP TO THE LAST VERSION THAT STILL HAS THE OLD COLUMN, not to
+        // latest: the version after it drops `team_position.permissions`, and
+        // the shape being restored here is one that column holds. Migrating
+        // past the drop and then writing the old rows is not a state any
+        // installation was ever in.
+        $this->console('doctrine:migrations:migrate', ['--no-interaction' => true, 'version' => self::LAST_WITH_THE_OLD_COLUMN]);
 
         foreach ($permissions as $name => $values) {
             $this->connection->insert('team_position', [

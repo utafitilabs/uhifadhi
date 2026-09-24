@@ -77,7 +77,7 @@ class HostKernel extends TestKernel
         // are never autoconfigured, so this is the entrance the real ones use.
         //
         // ONLY THE SLUG CROSSES INTO THE CONTAINER. A specification dials a
-        // provider with real objects (a ModulePermission is one), and a service
+        // provider with real objects, and a service
         // definition argument can only hold scalars, parameters and references —
         // so the overrides stay here, on this class, and the provider reads them
         // by slug at call time. That is also the more honest fixture: a real
@@ -96,7 +96,6 @@ class HostKernel extends TestKernel
             'registry.area_modules',
             'registry.area_module_ledger',
             'registry.entry_routes',
-            'registry.permissions',
             'registry.sync',
             'registry.sync_listener',
         ] as $id) {

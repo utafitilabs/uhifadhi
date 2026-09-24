@@ -13,63 +13,60 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Permission;
 
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
-use Uhifadhi\Bundle\TeamBundle\Exception\UnknownPermissionException;
-use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Exception\UnknownGrantException;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 
 /**
  * THERE IS ONE WRITE PATH ONTO A POSITION, AND IT VALIDATES.
  *
- * A second one is the obvious thing to reach for and is deliberately absent.
- * `setPermissions(PermissionEnum[])` would take the core enum and SILENTLY
- * DISCARD every module-declared permission, because a module's value is not a
- * case of an enum this bundle owns: an administrator ticking a module's row and
- * saving would watch it come back unticked, with nothing anywhere saying why.
+ * A typed setter over some fixed list of powers is the obvious thing to reach
+ * for and is deliberately absent: it would SILENTLY DISCARD every
+ * module-declared pair, because a module's concern is not something this
+ * bundle owns. An administrator ticking a module's row and saving would watch
+ * it come back unticked, with nothing anywhere saying why.
  *
- * The one that exists is the value-string surface, and it takes the live catalogue
- * as a second required argument, so it cannot be called without one. The
- * accepted set is:
+ * The one that exists is the pair-string surface, and it takes the live
+ * catalogue as a second required argument, so it cannot be called without one.
+ * The accepted set is:
  *
- *     the live catalogue  ∪  the strings this position already holds
+ *     the live catalogue  ∪  the pairs this position already holds
  *
  * The union is the whole design. The left half is what makes an unknown NEW
- * string fail loudly instead of being quietly dropped. The right half is the
+ * pair fail loudly instead of being quietly dropped. The right half is the
  * prune-not-purge ruling in code: a module uninstalled last week left grants
- * behind in positions' JSON, those values are in nobody's catalogue now, and
+ * behind in positions' JSON, those pairs are in nobody's catalogue now, and
  * saving an unrelated change to the position must not silently strip them.
  * Editing a position is not a migration.
  */
 final class PositionGrantTest extends IntegrationTestCase
 {
-    private function catalogue(): PermissionCatalogue
+    /** @return list<string> */
+    private function catalogue(): array
     {
-        return $this->service(PermissionCatalogue::class);
+        return $this->service(ConcernCatalogue::class)->pairs();
     }
 
     /**
-     * THERE IS NO ENUM-TYPED SETTER. Asserted by name, because "not this one,
-     * on purpose" is the fact worth keeping — and because one introduced later
+     * THERE IS NO TYPED SETTER. Asserted by name, because "not this one, on
+     * purpose" is the fact worth keeping — and because one introduced later
      * would pass every other test in this suite.
      */
-    public function testThereIsNoEnumTypedSetter(): void
+    public function testThereIsNoTypedSetter(): void
     {
         // Through reflection rather than method_exists(): static analysis knows
         // the literal answer to the latter and narrows the assertion away.
         self::assertFalse(
             new \ReflectionClass(Position::class)->hasMethod('setPermissions'),
-            'setPermissions() silently discarded every module-declared permission. It does not come back.',
+            'A typed setter silently discarded every module-declared pair. It does not come back.',
         );
     }
 
-    public function testACorePermissionRoundTrips(): void
+    public function testACoreGrantRoundTrips(): void
     {
         $position = (new Position())->setName('Analyst');
-        $position->setPermissionValues(
-            [PermissionEnum::AreaView->value, PermissionEnum::TeamManage->value],
-            $this->catalogue()->values(),
-        );
+        $position->setGrantValues(['directory.read', 'directory.manage'], $this->catalogue());
 
         $this->em->persist($position);
         $this->em->flush();
@@ -78,44 +75,22 @@ final class PositionGrantTest extends IntegrationTestCase
         $stored = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Analyst']);
         self::assertInstanceOf(Position::class, $stored);
 
-        self::assertSame(['area.view', 'team.manage'], $stored->getPermissionValues());
-        self::assertTrue($stored->hasPermissionValue('team.manage'));
+        self::assertSame(['directory.read', 'directory.manage'], $stored->getGrantValues());
     }
 
-    /**
-     * THE ONE AN ENUM-TYPED SETTER COULD NOT CARRY. `surveys.record` belongs to
-     * a module bundle, not to this bundle's enum, and it has to survive a save
-     * unchanged.
-     */
-    public function testAModuleDeclaredPermissionRoundTrips(): void
-    {
-        $position = (new Position())->setName('Surveyor');
-        $position->setPermissionValues(['surveys.record'], $this->catalogue()->values());
-
-        $this->em->persist($position);
-        $this->em->flush();
-        $this->em->clear();
-
-        $stored = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Surveyor']);
-        self::assertInstanceOf(Position::class, $stored);
-
-        self::assertSame(['surveys.record'], $stored->getPermissionValues());
-        self::assertTrue($stored->hasPermissionValue('surveys.record'));
-    }
-
-    /** An invented string is refused, loudly, and it names itself in the message. */
-    public function testAnUnknownNewValueIsRefused(): void
+    /** An invented pair is refused, loudly, and it names itself in the message. */
+    public function testAnUnknownNewPairIsRefused(): void
     {
         $position = (new Position())->setName('Analyst');
 
-        $this->expectException(UnknownPermissionException::class);
+        $this->expectException(UnknownGrantException::class);
         $this->expectExceptionMessageMatches('/invented\.power/');
 
-        $position->setPermissionValues(['area.view', 'invented.power'], $this->catalogue()->values());
+        $position->setGrantValues(['directory.read', 'invented.power'], $this->catalogue());
     }
 
     /**
-     * PRUNE, DO NOT PURGE. `vegetation.survey` was granted by a module that has
+     * PRUNE, DO NOT PURGE. `vegetation.record` was granted by a module that has
      * since been uninstalled: it is in this position's JSON and in nobody's
      * catalogue. Saving an unrelated change keeps it.
      */
@@ -123,9 +98,9 @@ final class PositionGrantTest extends IntegrationTestCase
     {
         $position = (new Position())->setName('Botanist');
         // How the grant got there: the module was installed at the time.
-        $position->setPermissionValues(
-            ['area.view', 'vegetation.survey'],
-            [...$this->catalogue()->values(), 'vegetation.survey'],
+        $position->setGrantValues(
+            ['directory.read', 'vegetation.record'],
+            [...$this->catalogue(), 'vegetation.record'],
         );
 
         $this->em->persist($position);
@@ -134,19 +109,19 @@ final class PositionGrantTest extends IntegrationTestCase
 
         $stored = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Botanist']);
         self::assertInstanceOf(Position::class, $stored);
-        self::assertContains('vegetation.survey', $stored->getPermissionValues());
+        self::assertContains('vegetation.record', $stored->getGrantValues());
 
-        // The module is gone now — the catalogue no longer offers the value. An
-        // administrator adds a core permission and saves.
-        $stored->setPermissionValues(
-            ['area.view', 'vegetation.survey', 'module.view'],
-            $this->catalogue()->values(),
+        // The module is gone now — the catalogue no longer offers the pair. An
+        // administrator adds one of the platform's own and saves.
+        $stored->setGrantValues(
+            ['directory.read', 'vegetation.record', 'positions.read'],
+            $this->catalogue(),
         );
 
         self::assertSame(
-            ['area.view', 'vegetation.survey', 'module.view'],
-            $stored->getPermissionValues(),
-            'An orphan already on the position is accepted; only an unknown NEW string is refused.',
+            ['directory.read', 'vegetation.record', 'positions.read'],
+            $stored->getGrantValues(),
+            'An orphan already on the position is accepted; only an unknown NEW pair is refused.',
         );
     }
 
@@ -154,22 +129,22 @@ final class PositionGrantTest extends IntegrationTestCase
     public function testAnOrphanedGrantCanBeRevoked(): void
     {
         $position = (new Position())->setName('Botanist');
-        $position->setPermissionValues(
-            ['area.view', 'vegetation.survey'],
-            [...$this->catalogue()->values(), 'vegetation.survey'],
+        $position->setGrantValues(
+            ['directory.read', 'vegetation.record'],
+            [...$this->catalogue(), 'vegetation.record'],
         );
 
-        $position->setPermissionValues(['area.view'], $this->catalogue()->values());
+        $position->setGrantValues(['directory.read'], $this->catalogue());
 
-        self::assertSame(['area.view'], $position->getPermissionValues());
+        self::assertSame(['directory.read'], $position->getGrantValues());
     }
 
     /** Ticking the same box twice is one grant. */
     public function testDuplicatesCollapse(): void
     {
         $position = (new Position())->setName('Analyst');
-        $position->setPermissionValues(['area.view', 'area.view'], $this->catalogue()->values());
+        $position->setGrantValues(['directory.read', 'directory.read'], $this->catalogue());
 
-        self::assertSame(['area.view'], $position->getPermissionValues());
+        self::assertSame(['directory.read'], $position->getGrantValues());
     }
 }

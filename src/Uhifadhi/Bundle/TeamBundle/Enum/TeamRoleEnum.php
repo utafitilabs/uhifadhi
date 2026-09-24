@@ -33,7 +33,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Enum;
  * would let somebody administer the team while holding no capability at all —
  * which makes the permission matrix decorative for half the people in it.
  * Administering the team is an ordinary catalogue permission — `team.manage`,
- * the seventh core case ({@see PermissionEnum::TeamManage}) — granted through a
+ * the team's own `directory.manage` grant — granted through a
  * position.
  *
  * So "a manager" is something an administrator COMPOSES: a position carrying

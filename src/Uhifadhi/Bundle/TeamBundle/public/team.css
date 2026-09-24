@@ -124,9 +124,6 @@
  * both palettes without a single dark-mode rule.
  * ========================================================================== */
 
-
-
-
 /* ==========================================================================
    TEAM · POSITIONS — the qualified name, the department marks
    Ported from vendor/positions.css.
@@ -607,7 +604,7 @@ td.dcell + td { white-space: nowrap; }
 /* THE TIER BYPASS, drawn rather than explained in a footnote. A Super Admin's
    or an Admin's authority does not come from a position, so the column that
    represents one is struck through: the boxes are inert and the head says why.
-   `PermissionVoter` grants on `canManageContent()` before it ever looks at a
+   `GrantVoter` grants on `canManageContent()` before it ever looks at a
    position. */
 .pm-grid col.pm-bypass, .pm-grid td.pm-bypass, .pm-grid th.pm-bypass {
     background: repeating-linear-gradient(135deg,
@@ -949,64 +946,6 @@ td.dcell + td { white-space: nowrap; }
 .pm-zero svg { flex: none; color: rgb(var(--c-warn)); margin-top: 2px; width: 16px; height: 16px; }
 .pm-zero b { color: rgb(var(--c-tx)); }
 
-/* ==================== SHARED — the editor's furniture ====================
-   Saving, the count, the position header. Used by more than one direction, so
-   it is stated once.
-   ======================================================================== */
-
-/* THE SAVE BAR. Every direction edits a JSON column, and none of them saves on
-   click: a matrix that writes on every tick is a matrix in which a mis-click is
-   a grant nobody reviewed. The bar states the pending change in words and is
-   the only thing that posts. */
-.pm-save {
-    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-    border: 1px solid color-mix(in srgb, rgb(var(--c-acc)) 34%, transparent);
-    background: color-mix(in srgb, rgb(var(--c-acc)) 5%, transparent);
-    border-radius: 12px; padding: 11px 14px; margin: 14px 0 0;
-}
-/* The sentence takes the room that is left and the actions never wrap under it
-   while there is width for them — a save bar whose buttons drift onto their own
-   line reads as two unrelated things. */
-.pm-save .txt { font-size: 12.5px; color: rgb(var(--c-fog)); line-height: 1.5; flex: 1 1 300px; min-width: 0; }
-.pm-save .txt b { color: rgb(var(--c-tx)); }
-
-/* THE ACTION PAIR, at the house scale. `widgets.css` already states this rule
-   once for every page header in the app — 32px tall, one padding, one font
-   size, and "the primary is distinguished by FILL AND WEIGHT, never by size".
-   A card's action row is the same row in a smaller frame, so it obeys the same
-   rule rather than inventing a second one: Discard is the quiet secondary and
-   sits BEFORE the primary, and the two differ only in weight and fill. */
-.pm-save .acts { display: flex; align-items: center; gap: 9px; margin-left: auto; flex: none; }
-.pm-save .acts .softbtn,
-.pm-save .acts .cta,
-.pm-save .acts button {
-    height: 32px; box-sizing: border-box;
-    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-    padding: 0 14px; border-radius: 9px;
-    font-family: inherit; font-size: 12px; line-height: 1; letter-spacing: 0; text-transform: none;
-    white-space: nowrap; text-decoration: none;
-}
-.pm-save .acts .cta { font-weight: 700; }
-.pm-save .acts .softbtn { font-weight: 600; }
-.pm-save .acts svg { width: 14px; height: 14px; flex: none; }
-@media (max-width: 620px) {
-    .pm-save .acts { margin-left: 0; width: 100%; }
-    .pm-save .acts .softbtn, .pm-save .acts .cta { flex: 1; }
-}
-/* THE CALM FRAME, AND ONLY THE FRAME. `.clean` is the bar that has nothing
-   pending: it drops the accent border and tint, because a bar that always says
-   "unsaved changes" is a bar nobody reads.
-
-   IT DOES NOT HIDE THE PRIMARY, and it used to. The design app draws this bar
-   as a static frame in which "clean" is a state a script leaves the instant a
-   box is ticked; THIS MATRIX SHIPS NO JAVASCRIPT — the label wraps a real
-   checkbox and the form posts what is ticked — so "clean" is the only state
-   there is, nothing ever takes the class off again, and `display: none` on the
-   .cta meant the position could never be saved at all. A rule that can only be
-   honoured by a script the module deliberately does not ship is a rule that
-   cannot ship with it. */
-.pm-save.clean { border-color: var(--c-ln); background: none; }
-
 .pm-head {
     display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
     padding: 0 0 13px; border-bottom: 1px solid var(--c-ln); margin-bottom: 14px;
@@ -1148,12 +1087,11 @@ td.dcell + td { white-space: nowrap; }
    Protection Service / Analyst is the case. Not a fault, and not hidden. */
 .pm-held0 { color: rgb(var(--c-dim)); font-style: italic; }
 
-/* ==================== RULED — A PERMISSION CARRIES A DESCRIPTION =========
-   `ModulePermission` gains a fourth string and `PermissionEnum` a
-   `description()`. The three the catalogue shipped were never enough to decide
-   with: a name says what a permission is CALLED, and the question actually
-   being answered at the moment somebody ticks a box is what granting it LETS
-   SOMEBODY DO. Every direction shows it, each in its own layout's language.
+/* ==================== RULED — A CONCERN CARRIES A DESCRIPTION ============
+   Every declared concern states what it is about in one sentence. A name says
+   what a grant is CALLED, and the question actually being answered at the
+   moment somebody ticks a box is what granting it LETS SOMEBODY DO. Every
+   direction shows it, each in its own layout's language.
    ======================================================================== */
 
 /* A · under the machine name in the pinned row header. The column is wider for
@@ -1242,11 +1180,11 @@ td.dcell + td { white-space: nowrap; }
 .pm-effrow.orphan .lhs b { color: rgb(var(--c-dim)); }
 
 /* ==================== RULED — THE MANAGER TIER IS GONE ===================
-   Team administration became an ordinary catalogue permission. `PermissionEnum`
-   grows a SEVENTH core case, `team.manage`, under a new `Team` umbrella, and
-   every team screen gates on it instead of on a tier. A "manager" is now a
-   position somebody composed — visible in this matrix, countable, and revocable
-   in one click, none of which was true of a tier.
+   Team administration is an ordinary grant: the team's own concerns with
+   `manage` and `configure` on them, and every team screen gates on a pair
+   instead of on a tier. A "manager" is a position somebody composed — visible
+   in this matrix, countable, and revocable in one click, none of which was
+   true of a tier.
 
    It is not destructive, and it is not ordinary either: `team.manage` is the
    only permission whose holder can edit this matrix, and therefore the only one
@@ -1575,8 +1513,8 @@ tr.tm-off:hover td { background: color-mix(in srgb, rgb(var(--c-fog)) 6%, transp
 
 /* ---- the unplaced person -------------------------------------------------
    Staff with no position is the shipped model's ZERO: verified, able to sign
-   in, and able to do nothing at all, because PermissionVoter falls through to
-   `position?->hasPermissionValue()` and there is no position. An empty cell
+   in, and able to do nothing at all, because GrantVoter falls through to
+   `position?->hasGrant()` and there is no position. An empty cell
    would read as missing data. This reads as the fact it is. */
 .tm-nopos {
     display: inline-flex; align-items: center; gap: 7px;
@@ -3006,8 +2944,6 @@ a.ov-nm:hover { color: rgb(var(--c-acc)); }
 /* A CARD WITH AN OPEN PANEL SITS ABOVE THE CARDS AFTER IT, so the panel is
    not painted over by the next one. */
 .dcstack.dcreg .dcard:has(.dc-more[open]) { z-index: 5; }
-
-
 
 /* ════════════════════════════════════════════════════════════════════════
    AN AREA'S DEPARTMENTS — the tab's find row, and the configure section's

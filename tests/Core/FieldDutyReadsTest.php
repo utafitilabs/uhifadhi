@@ -14,11 +14,9 @@ declare(strict_types=1);
 namespace Uhifadhi\Core\Tests\Core;
 
 use Symfony\Component\HttpFoundation\Response;
-use Uhifadhi\Bundle\AreaBundle\Access\AreaPermissions;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Service\DutyRosterService;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 
 /**
  * THE TWO READS THE DUTY TAB LIVES ON — API-CONTRACT.md §13D and §13E.
@@ -328,7 +326,7 @@ final class FieldDutyReadsTest extends FieldApiTestCase
 
     private function onDuty(): User
     {
-        return $this->ranger('sl-0142', [PermissionEnum::AreaView], null, [AreaPermissions::CHECK_IN]);
+        return $this->ranger('sl-0142', [...self::READS_THE_PARK, 'duty.record']);
     }
 
     private function roster(AreaOfInterest $area): string

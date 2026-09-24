@@ -26,7 +26,6 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 use Uhifadhi\Core\Tests\Application\Kernel;
@@ -138,42 +137,18 @@ abstract class FieldApiTestCase extends WebTestCase
     }
 
     /**
-     * THE SAME GRANT, IN PAIRS — the ruled mapping, kept beside the fixture
-     * that needs it rather than reached for from the migration, because a
-     * migration is a one-off statement about stored rows and this is a
-     * standing statement about what a fixture means.
+     * WHAT A RANGER WHO ONLY READS THE PARK HOLDS — the ground's own read
+     * pairs, which is the reach of somebody the installation has given no
+     * job beyond looking.
      *
-     * @param list<string> $values
-     *
-     * @return list<string>
+     * @var list<string>
      */
-    private static function pairsFor(array $values): array
-    {
-        $mapping = [
-            'area.view' => ['areas.read', 'zones.read', 'stations.read', 'assignments.read', 'duty.read', 'modules.read'],
-            'area.create' => ['areas.configure'],
-            'area.edit' => ['areas.configure', 'zones.configure', 'zones.delete', 'stations.configure', 'assignments.manage'],
-            'area.delete' => ['areas.configure'],
-            'module.view' => ['modules.read'],
-            'module.create' => ['modules.configure'],
-            'duty.checkin' => ['duty.record'],
-            'team.manage' => [
-                'directory.read', 'directory.manage',
-                'personal-details.read', 'personal-details.manage',
-                'positions.read', 'positions.configure',
-                'departments.read', 'departments.configure',
-            ],
-        ];
-
-        $pairs = [];
-        foreach ($values as $value) {
-            foreach ($mapping[$value] ?? [] as $pair) {
-                $pairs[$pair] = true;
-            }
-        }
-
-        return array_keys($pairs);
-    }
+    protected const array READS_THE_PARK = [
+        'areas.read',
+        'zones.read',
+        'stations.read',
+        'modules.read',
+    ];
 
     /**
      * Somebody who works in the field: a service number, and a position carrying
@@ -184,34 +159,22 @@ abstract class FieldApiTestCase extends WebTestCase
      * are placed across the whole organization and every department, which is
      * the reach of somebody the installation has not confined.
      *
-     * A MODULE-DECLARED PERMISSION IS A STRING HERE, deliberately. The
-     * enum names only what the TEAM bundle owns; the ground's own values are
-     * the area's and reach the catalogue through a declaration, so a suite
-     * that could only spell the enum's seven could never grant one — and the
-     * endpoint that enforces it could not be specified at all.
+     * EVERY GRANT IS A PAIR AND A PLAIN STRING. A module's concern is its
+     * own, so a fixture that could only spell what the team bundle declares
+     * could never grant one — and the endpoint that enforces it could not be
+     * specified at all.
      *
-     * IT GRANTS BOTH SPELLINGS WHILE BOTH VOTERS RUN. The gates are moving
-     * from flat values to (concern, verb) pairs one package at a time, so a
-     * fixture that granted only one spelling would refuse whichever half had
-     * already moved — for a reason that has nothing to do with what the suite
-     * is asserting. The pair half is derived from the same ruled mapping the
-     * migration uses, and both halves go when the old column does.
-     *
-     * @param list<PermissionEnum> $permissions
-     * @param list<string>         $declared    values other bundles declare, granted verbatim
+     * @param list<string> $grants   the (concern, verb) pairs the position carries
+     * @param list<string> $declared pairs other packages declare, granted verbatim
      */
     protected function ranger(
         string $rangerCode = 'sl-0142',
-        array $permissions = [PermissionEnum::AreaView],
+        array $grants = self::READS_THE_PARK,
         ?Department $department = null,
         array $declared = [],
     ): User {
         $position = new Position()->setName('Field Ranger');
-        $core = array_map(static fn (PermissionEnum $p): string => $p->value, PermissionEnum::all());
-        $values = [...array_map(static fn (PermissionEnum $p): string => $p->value, $permissions), ...$declared];
-        $position->setPermissionValues($values, [...$core, ...$declared]);
-
-        $pairs = self::pairsFor($values);
+        $pairs = array_values(array_unique([...$grants, ...$declared]));
         $position->setGrantValues($pairs, $pairs);
         $this->em->persist($position);
 

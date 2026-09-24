@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Uhifadhi\Core\Tests\Core;
 
 use Symfony\Component\HttpFoundation\Response;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 
 /**
  * `GET /api/areas/mine` — everything a handset caches at sign-in so it can work
@@ -313,7 +312,7 @@ final class FieldAreasEndpointTest extends FieldApiTestCase
     public function testAnAccountThatMaySeeNoAreaIsHandedAnEmptyList(): void
     {
         $this->area('Northern Conservation Reserve');
-        $blind = $this->ranger('sl-0777', permissions: [PermissionEnum::ModuleView]);
+        $blind = $this->ranger('sl-0777', grants: ['modules.read']);
 
         $body = $this->get(self::ENDPOINT, $this->tokenFor($blind));
 

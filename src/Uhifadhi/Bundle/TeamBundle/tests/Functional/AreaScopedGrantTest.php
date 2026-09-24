@@ -87,7 +87,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
 
         self::assertResponseStatusCodeSame(403);
         $this->em->clear();
-        self::assertSame([], $this->em->getRepository(Position::class)->findOneBy(['name' => 'Ranger'])?->getPermissionValues());
+        self::assertSame([], $this->em->getRepository(Position::class)->findOneBy(['name' => 'Ranger'])?->getGrantValues());
     }
 
     /** And NEVER team.manage — conferring team administration is an unbounded act. */
@@ -105,7 +105,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
 
         self::assertResponseStatusCodeSame(403);
         $this->em->clear();
-        self::assertSame([], $this->em->getRepository(Position::class)->findOneBy(['name' => 'Deputy Warden'])?->getPermissionValues());
+        self::assertSame([], $this->em->getRepository(Position::class)->findOneBy(['name' => 'Deputy Warden'])?->getGrantValues());
     }
 
     /**

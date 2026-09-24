@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures;
 
-use Uhifadhi\Contracts\ModulePermission;
 use Uhifadhi\Contracts\ModuleProviderInterface;
 use Uhifadhi\Contracts\ModuleProviderTrait;
 
@@ -41,15 +40,5 @@ final class DeclaringModuleProvider implements ModuleProviderInterface
     public function category(): string
     {
         return 'operations';
-    }
-
-    public function permissions(): array
-    {
-        return [new ModulePermission(
-            'surveys.record',
-            'Surveys',
-            'Record',
-            'Enter a survey from the field and attach its counts to an area.',
-        )];
     }
 }

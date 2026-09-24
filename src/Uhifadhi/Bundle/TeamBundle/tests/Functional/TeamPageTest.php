@@ -21,7 +21,6 @@ use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\TestKernel;
 
@@ -94,15 +93,12 @@ final class TeamPageTest extends WebTestCase
      * organization, so the argument is gone from the signature rather than
      * ignored.
      *
-     * @param list<PermissionEnum> $permissions
+     * @param list<string> $grants (concern, verb) pairs this position carries
      */
-    private function position(string $name, array $permissions = []): Position
+    private function position(string $name, array $grants = []): Position
     {
         $position = (new Position())->setName($name);
-        $position->setPermissionValues(
-            array_map(static fn (PermissionEnum $p): string => $p->value, $permissions),
-            array_map(static fn (PermissionEnum $p): string => $p->value, PermissionEnum::all()),
-        );
+        $position->setGrantValues($grants, $grants);
         $this->em->persist($position);
 
         return $position;
@@ -111,8 +107,8 @@ final class TeamPageTest extends WebTestCase
     /** A settled installation: everybody arrived, everybody holds something, two Super Admins. */
     private function settled(): User
     {
-        $senior = $this->position('Senior Ranger', [PermissionEnum::TeamManage, PermissionEnum::AreaView]);
-        $ranger = $this->position('Ranger', [PermissionEnum::AreaView]);
+        $senior = $this->position('Senior Ranger', ['directory.manage', 'directory.read']);
+        $ranger = $this->position('Ranger', ['directory.read']);
 
         $naomi = $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
         $this->person('Asha', 'Mollel', TeamRoleEnum::SuperAdmin);

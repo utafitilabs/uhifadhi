@@ -300,15 +300,10 @@ done to it, written `<concern>.<verb>`, with the verb the segment after the
 Routes, doors and stored grants all spell it that way, which is what lets the
 build tests hold the three together.
 
-**Both voters run for one release.** `GrantVoter` answers pairs;
-`PermissionVoter` still answers the old flat values. Neither can overrule the
-other — each only recognises attributes the other does not — so gates move over
-a package at a time instead of in one unreviewable sweep. `Position` likewise
-carries **both** columns: `grants` (pairs) beside `permissions` (the old
-values), the latter backfilled into the former by
-`Version20260921002000`. `permissions`, `PermissionEnum`, `PermissionCatalogue`,
-`PermissionVoter` and `ModulePermission` all go in the release after the last
-gate moves.
+**One voter, one column.** `GrantVoter` answers pairs and nothing answers the
+old flat values. A position carries `grants` alone: the flat `permissions`
+column is backfilled into it by `Version20260921002000` and
+`Version20260921004000`, and dropped by `Version20260924000100`.
 
 ### The mapping, site by site
 
@@ -491,10 +486,10 @@ through the helper.
 
 ## The old permission machinery is deprecated, not yet gone
 
-**What changed.** Everything that spoke the fixed seven permissions is marked
-`@deprecated` and still works. Nothing is deleted in this release.
+**What changed.** Everything that spoke the fixed seven permissions is gone.
+An installation upgrades through the backfills, which translate what it held.
 
-| Deprecated | Replaced by |
+| Removed | Replaced by |
 |---|---|
 | `TeamBundle\Enum\PermissionEnum` | declared concerns × the six verbs, spelled `Contracts\Access\Grant` |
 | `TeamBundle\Service\PermissionCatalogue` | `TeamBundle\Access\ConcernCatalogue` |
@@ -504,28 +499,17 @@ through the helper.
 | `Contracts\PermissionDeclarationInterface` | `Contracts\Access\ConcernSourceInterface` |
 | `RegistryBundle\Service\ModulePermissionCatalogue` | the tagged concern sources |
 | `AreaBundle\Access\AreaPermissions` | `AreaBundle\Access\AreaConcerns` |
-| the Roles tab, `GET /team/roles` | the positions register |
+| `Position::$permissions`, the `permissions` column | `Position::$grants`, the `grants` column |
 
-**Why it is two releases and not one.** Deleting a shipped class outright 500s
-every installation that references it, and installations do: a module released
-against `ModulePermission`, a template linking `/team/roles`, a handset reading
-`duty.checkin` off a token it was issued weeks ago. So each of these is
-deprecated with its replacement named, ships one more release unchanged, and
-is dropped in the next. **`Position::$permissions` (the `permissions` column)
-stays on the table for the same release**, alongside the grants the new model
-writes; the contract migration that drops it is marked `@destructive` and
-belongs to the release after this one.
+**Why it is one release and not two.** A rename is a rename everywhere while
+nobody runs this in production: a deprecation stub left in place only lets the
+old word survive, and the backfills are what carry an upgrading installation's
+grants across. What a position held is translated, not lost.
 
-**`duty.checkin` is the one that is deliberately slower than the rest.** It is
-a wire contract with a field app that is not upgraded on the afternoon the
-server is. The GATE already asks `duty.record`; only the token PAYLOAD still
-carries the old word, and it follows once no phone in the field is reading it.
-
-**What a module should do now.** Declare a `ConcernSourceInterface` (tag
+**What a module must do.** Declare a `ConcernSourceInterface` (tag
 `uhifadhi.access.concerns`, by hand), gate on pairs, draw doors with `door()`,
-and extend `AccessConformanceTestCase`. Keep the `ModulePermission`
-declaration for one release if installations may be running the older core;
-the two catalogues coexist deliberately.
+and extend `AccessConformanceTestCase`. There is no second catalogue to keep
+in step.
 
 ## The access vocabulary: concerns, six verbs, four scopes
 

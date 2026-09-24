@@ -21,7 +21,7 @@ use Uhifadhi\Contracts\ModuleProviderTrait;
  * matrix has to draw rather than skip.
  *
  * Most modules gate nothing beyond what the host already does, so their
- * permissions() returns the trait's empty list. Leaving them off the matrix
+ * It declares no concerns. Leaving such a module off the matrix
  * would read as "this bundle is not installed", which is a different and wrong
  * fact; the matrix says instead that it is here and has nothing to grant.
  */

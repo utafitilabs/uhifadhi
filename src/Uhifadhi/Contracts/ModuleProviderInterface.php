@@ -99,15 +99,4 @@ interface ModuleProviderInterface
      * path(entryRoute(), {uuid: area.uuid}).
      */
     public function entryRoute(): ?string;
-
-    /**
-     * The granular permissions this module DECLARES — the host folds them into
-     * its permission catalogue so admins can assign them, and they vanish with
-     * the module on uninstall. Declaring is all a module may do: it never
-     * grants, maps to roles, or names default holders (see ModulePermission).
-     * Most modules declare none.
-     *
-     * @return list<ModulePermission>
-     */
-    public function permissions(): array;
 }

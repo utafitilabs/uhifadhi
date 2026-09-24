@@ -19,7 +19,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
+use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Enum\RosterStateEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\RosterQuery;
@@ -27,6 +27,8 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
+use Uhifadhi\Contracts\Access\Grant;
+use Uhifadhi\Contracts\Access\Verb;
 
 /**
  * THE TEAM PAGE — everybody who can sign in to this installation.
@@ -130,7 +132,7 @@ final readonly class TeamController
             'states' => RosterStateEnum::cases(),
             'departments' => $this->departments->findAllOrdered(),
             'positions' => $this->positions->findAllOrdered(),
-            'teamManage' => PermissionEnum::TeamManage,
+            'teamManage' => (string) Grant::of(TeamConcerns::DIRECTORY, Verb::Manage),
         ];
     }
 

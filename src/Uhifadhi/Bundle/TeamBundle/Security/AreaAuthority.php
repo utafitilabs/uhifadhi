@@ -195,10 +195,9 @@ final readonly class AreaAuthority
      * only what your own position holds") is this list, and everything outside
      * it is drawn disabled and refused server-side.
      *
-     * IT USED TO READ A FLAT `PermissionEnum` AND EXCLUDE `team.manage`. A
-     * permission is a (concern, verb) pair now, and administering the team is
-     * not a seventh verb — it is the team's own concerns with configure on
-     * them, which is why two pairs are excluded here rather than one value.
+     * TWO PAIRS ARE EXCLUDED RATHER THAN ONE VALUE, because administering
+     * the team is not a single word: it is the team's own concerns with
+     * configure on them.
      *
      * @return list<string>|null the grantable pairs, or null when unbounded
      */

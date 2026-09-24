@@ -15,7 +15,6 @@ Every row below is a test, and the table is the order they were written in:
 | 3 | Per-area install/uninstall flips state for that area alone; `base()` reconciles active and installable reconciles parked; a pinned module can never be switched off; uninstalling removes the module's presence from the area's ledger immediately, and keeps its data | `Integration/Area/AreaModuleInstallationTest` |
 | 4 | Category and status are coerced, never trusted; an unknown category falls back to **Operations** | `Unit/Catalogue/ProviderCatalogueMapperTest` |
 | 5 | The sync is idempotent and **create-only** for per-area rows: a deploy never overrules an admin's on/off or ordering, and never deletes an uninstalled module's history | `Integration/Sync/RegistrySyncTest` |
-| 6 | Declared permissions surface through the registry, grouped by umbrella, first-declaration-wins, and vanish with the module — carrying no role and no holders | `Integration/Permission/ModulePermissionCatalogueTest` |
 | 7 | Boundaries: no module named in `src/`, no host namespace, no templates, no controllers, no routes | `Unit/BoundaryTest` |
 | 8 | A module's entry route is read live from its provider, never from a stored column | `Integration/Routing/ModuleEntryRouteResolverTest` |
 | 9 | The catalogue tables keep their production names; the area association is resolved to a real entity | `Integration/Area/CataloguePersistenceTest` |

@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Uhifadhi\Bundle\AreaBundle\Access\AreaConcerns;
-use Uhifadhi\Bundle\AreaBundle\Access\AreaPermissions;
 use Uhifadhi\Bundle\AreaBundle\Devkit\AreaContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\StationContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\ZoneContentProvider;
@@ -84,7 +83,6 @@ use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
-use Uhifadhi\Contracts\PermissionDeclarationInterface;
 use Uhifadhi\Contracts\Roster\WatchProviderInterface;
 use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
 use Uhifadhi\Contracts\Settings\SettingsCheckSourceInterface;
@@ -525,10 +523,6 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('area.access.concerns', AreaConcerns::class)
         ->tag(ConcernSourceInterface::TAG);
-
-    $services->set('area.permissions', AreaPermissions::class)
-        ->tag(PermissionDeclarationInterface::TAG);
-    $services->alias(AreaPermissions::class, 'area.permissions');
 
     $services->set('area.zone_set', ZoneSetService::class)
         ->args([

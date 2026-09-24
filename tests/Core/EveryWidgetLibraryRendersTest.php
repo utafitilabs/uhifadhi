@@ -61,9 +61,6 @@ final class EveryWidgetLibraryRendersTest extends WebTestCase
             'the org dashboard' => ['/widgets', [200]],
             'the areas landing' => ['/areas/widgets', [200]],
             'the departments register' => ['/departments/widgets', [200]],
-            // RETIRED TO A REDIRECT for one release; the surface it belonged
-            // to now draws no library of its own.
-            'the positions register' => ['/team/positions/widgets', [301, 302]],
         ];
     }
 

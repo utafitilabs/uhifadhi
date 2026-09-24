@@ -16,7 +16,6 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 use Symfony\Component\HttpFoundation\Response;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 
 /**
@@ -256,7 +255,7 @@ final class ApiTokenIssuanceTest extends WebTestCaseWithSchema
     private function ranger(): User
     {
         $position = new Position()->setName('Ranger');
-        $position->setPermissionValues([PermissionEnum::AreaView->value], [PermissionEnum::AreaView->value]);
+        $position->setGrantValues(['areas.read'], ['areas.read']);
         $position->setGrantValues(['directory.read'], ['directory.read']);
 
         $user = new User()

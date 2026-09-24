@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Service;
 
+use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\PostingStation;
 use Uhifadhi\Bundle\TeamBundle\Model\SectionBar;
@@ -26,6 +26,7 @@ use Uhifadhi\Bundle\TeamBundle\Model\SectionLine;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Contracts\Access\Verb;
 
 /**
  * WHAT THE TEAM SECTION'S OVERVIEW READS, AND OWNS NOTHING OF.
@@ -311,7 +312,7 @@ final readonly class TeamSectionOverview
                 continue;
             }
             if ($person->getTeamRole()->canManageContent()
-                || true === $person->getPosition()?->hasPermission(PermissionEnum::TeamManage)) {
+                || true === $person->getPosition()?->grantsVerbOn(TeamConcerns::DIRECTORY, Verb::Manage)) {
                 ++$count;
             }
         }

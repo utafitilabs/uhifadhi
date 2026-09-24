@@ -657,79 +657,74 @@ Give it to the "other area" fixtures too — the ones a cross-area test uses to 
 cannot be read from next door. Those tests assert 404, and the 404 has to keep meaning *that row
 is not in this area* rather than *this area has no such module*.
 
-### Permissions
+### Concerns: what there is to have a permission about
 
-A module **declares** permissions; it never grants them:
+A module **declares** concerns; it never grants anything. A concern is a thing to act on, with the
+verbs your module actually enforces on it and the scopes it offers:
 
 ```php
-// src/Module/SightingsModuleProvider.php
-public function permissions(): array
+// src/Access/SightingsConcerns.php
+final readonly class SightingsConcerns implements ConcernSourceInterface
 {
-    return [
-        new ModulePermission(
-            'sightings.record',
-            'Sightings',
-            'Record',
-            'Enter a sighting from the field and attach photographs to it.',
-        ),
-        new ModulePermission(
-            'sightings.verify',
-            'Sightings',
-            'Verify',
-            'Confirm or reject somebody else’s sighting, which is what makes it count in the totals.',
-        ),
-    ];
+    public const string SIGHTINGS = 'sightings';
+
+    public function declaredBy(): string
+    {
+        return 'Sightings';
+    }
+
+    public function concerns(): iterable
+    {
+        yield new Concern(
+            key: self::SIGHTINGS,
+            label: 'Sightings',
+            description: 'What was seen and where: filing a sighting from the field, and confirming somebody else’s.',
+            verbs: [Verb::Read, Verb::Record, Verb::Manage],
+            scopeKinds: [ScopeKind::Organization, ScopeKind::Area],
+            moduleSlug: SightingsModuleProvider::SLUG,
+        );
+    }
 }
 ```
 
-The host folds declarations into its permission matrix so an admin can assign them to positions,
-and they disappear when the module is uninstalled. A declaration carries no role and no default
-holders — **installing a module must never hand an existing user a new power**. Enforcement stays
-clean in both directions: you check the value at your own routes, the host alone decides who holds
-it.
+Tag it by hand — a reusable bundle is not autoconfigured:
 
-#### The fourth argument is a sentence, and it is required
+```php
+$services->set('sightings.access.concerns', SightingsConcerns::class)
+    ->tag(ConcernSourceInterface::TAG);
+```
 
-`ModulePermission` takes four strings, not three. The first three are a **name** — a value to check
-and two words to print. The fourth is the **answer**: one sentence saying what holding this lets a
-person do, printed under the name everywhere the permission appears.
+The installation folds declarations into its positions matrix so an administrator can assign the
+pairs, and they disappear when the module is uninstalled. A declaration carries no role and no
+default holders — **installing a module must never hand an existing person a new power**.
+Enforcement stays clean in both directions: you gate on `<concern>.<verb>` at your own routes, the
+installation alone decides who holds it.
 
-It has no default, deliberately. An administrator opening the host's matrix is being asked to hand a
-power over, and `Sightings · Verify` does not tell them what they are handing over. An optional
-sentence is one most modules would skip, and a matrix where half the rows explain themselves is a
-matrix people stop reading. So a module that has not thought about the sentence does not compile,
-and a blank one is refused at construction.
+#### The description is a sentence, and it is required
+
+An administrator opening the matrix is being asked to hand a power over, and `Sightings · Manage`
+does not tell them what they are handing over. An optional sentence is one most modules would skip,
+and a matrix where half the rows explain themselves is a matrix people stop reading. So a concern
+that has not thought about the sentence does not compile, and a blank one is refused at
+construction.
 
 Write it about the holder, in the product's voice — "Confirm or reject somebody else's sighting",
 not "Grants verify access". The reader is deciding whether to give it to a colleague.
 
-#### A private enum is a fine way to spell your own values
+#### Spell the pair once, from the declaration
 
-Nothing shared exists for permission values, and nothing shared is planned: a host-wide enum of
-every module's permissions would be a file every module has to be added to, which is the coupling
-the declaration mechanism exists to avoid. But a bare string repeated between a provider and the
-routes that check it is a typo waiting to happen, so **a module may ship its own private enum** and
-police it itself:
+A bare string repeated between a declaration and the routes that check it is a typo waiting to
+happen, so compose the pair from the concern key and the verb:
 
 ```php
-// src/Enum/SightingsPermission.php — YOURS, not the host's, not the contract's
-enum SightingsPermission: string
-{
-    case Record = 'sightings.record';
-    case Verify = 'sightings.verify';
-}
+public const string MANAGE = SightingsConcerns::SIGHTINGS.'.'.Verb::Manage->value;
 
-// the provider spells the value once, from the enum
-new ModulePermission(SightingsPermission::Verify->value, 'Sightings', 'Verify', '…');
-
-// and so does the route that enforces it
-#[IsGranted(SightingsPermission::Verify->value)]
+#[IsGranted(self::MANAGE, subject: 'area')]
 ```
 
-The enum stays inside your bundle and never crosses the contract: the registry's catalogue and the
-host's voter see strings, as they do for every module, and yours is the only code that knows the
-enum exists. Namespace
-the values by your module (`sightings.*`) so two modules cannot collide on one.
+Namespace the concern key by your module so two modules cannot collide on one, and run
+`AccessConformanceTestCase` over the declaration in your own suite — it holds the rules the core
+holds itself to.
 
 ### Rendering: generic page or your own
 

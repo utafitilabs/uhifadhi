@@ -21,7 +21,6 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 
@@ -124,11 +123,10 @@ final class PerformanceSnapshotCommandTest extends IntegrationTestCase
         $ecology = new Department()->setName('Ecology');
         $this->em->persist($ecology);
 
-        $permissions = array_map(static fn (PermissionEnum $p): string => $p->value, PermissionEnum::all());
         $held = new Position()->setName('Lead Ecologist');
-        $held->setPermissionValues([], $permissions);
+        $held->setGrantValues([], []);
         $vacant = new Position()->setName('Field Ecologist');
-        $vacant->setPermissionValues([], $permissions);
+        $vacant->setGrantValues([], []);
         $this->em->persist($held);
         $this->em->persist($vacant);
 

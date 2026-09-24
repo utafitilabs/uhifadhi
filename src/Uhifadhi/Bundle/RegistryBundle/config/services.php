@@ -24,7 +24,6 @@ use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleLedger;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleEntryRouteResolver;
-use Uhifadhi\Bundle\RegistryBundle\Service\ModulePermissionCatalogue;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleRouteGate;
 use Uhifadhi\Bundle\RegistryBundle\Service\ProviderCatalogueMapper;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
@@ -61,7 +60,6 @@ use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
  *   registry.entry_routes          where a module's tile links
  *   registry.module_route_gate     is this request for a module the area parked?
  *   registry.parked_module_listener  the gate, applied to every incoming request
- *   registry.permissions           the permissions installed modules declare
  *   registry.sync                  the create-only reconciliation itself
  *   registry.sync_listener         the deploy hook that runs it, at the end of a console command
  */
@@ -150,9 +148,6 @@ return static function (ContainerConfigurator $container): void {
     $services->set('registry.parked_module_listener', ParkedModuleListener::class)
         ->args([service('registry.module_route_gate')])
         ->tag('kernel.event_listener', ['event' => 'kernel.request', 'priority' => 8]);
-
-    $services->set('registry.permissions', ModulePermissionCatalogue::class)
-        ->args([$providers]);
 
     /*
      * THE RECONCILIATION, AND ITS DEPLOY HOOK further down. The core ships no

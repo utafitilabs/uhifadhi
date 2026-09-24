@@ -262,7 +262,7 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
     /**
      * Stored roles + ROLE_USER, plus the TIER's roles. Nothing else: a role is a coarse standing
      * an installation's own rules may name, and the granular permissions a position carries are
-     * decided against the person by {@see \Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter}.
+     * decided against the person by {@see \Uhifadhi\Bundle\TeamBundle\Security\GrantVoter}.
      *
      * A POSITION THEREFORE ADDS NOTHING HERE. Converting a permission into a role would grant the
      * same authority twice — once where the matrix can show it and once where nothing can — and

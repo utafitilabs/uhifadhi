@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures;
 
-use Uhifadhi\Contracts\ModulePermission;
 use Uhifadhi\Contracts\ModuleProviderInterface;
 use Uhifadhi\Contracts\ModuleProviderTrait;
 
@@ -24,7 +23,7 @@ use Uhifadhi\Contracts\ModuleProviderTrait;
  * @phpstan-type Overrides array{
  *     name?: string, category?: string, status?: string, source?: ?string,
  *     pinned?: bool, base?: bool, position?: int, icon?: ?string,
- *     entryRoute?: ?string, permissions?: list<ModulePermission>,
+ *     entryRoute?: ?string,
  * }
  */
 final class SpecModuleProvider implements ModuleProviderInterface
@@ -116,21 +115,5 @@ final class SpecModuleProvider implements ModuleProviderInterface
         $route = $this->overrides()['entryRoute'] ?? null;
 
         return \is_string($route) ? $route : null;
-    }
-
-    /**
-     * @return list<ModulePermission>
-     */
-    public function permissions(): array
-    {
-        $permissions = $this->overrides()['permissions'] ?? [];
-        if (!\is_array($permissions)) {
-            return [];
-        }
-
-        return array_values(array_filter(
-            $permissions,
-            static fn (mixed $permission): bool => $permission instanceof ModulePermission,
-        ));
     }
 }

@@ -81,11 +81,11 @@
         {%- if user.teamRole.canManageContent -%}
             <span class="tm-grants">everything, by tier</span>
         {%- else -%}
-            {%- set granted = position.permissionValues|length -%}
+            {%- set granted = position.grantValues|length -%}
             <span class="tm-grants{{ granted ? '' : ' none' }}">{{ granted ? granted ~ ' granted' : 'holds nothing' }}</span>
         {%- endif -%}
-        {%- if position.hasPermissionValue('team.manage') -%}
-            <span class="tm-mgr">{{ bits.icon_shield() }}team.manage</span>
+        {%- if 'directory.manage' in position.grantValues -%}
+            <span class="tm-mgr">{{ bits.icon_shield() }}directory.manage</span>
         {%- endif -%}
     {%- endif -%}
 {% endmacro %}

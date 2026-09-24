@@ -133,18 +133,15 @@ final class RegistryBundle extends AbstractBundle
         // Zero-config persistence: the registry maps its own entities, so a host
         // never writes a doctrine mappings block for the catalogue tables.
         //
-        // PREPENDED, AND THE FLAG IS LOAD-BEARING — the same rule AreaBundle
-        // and TeamBundle state over their own mappings. `extension()` APPENDS
-        // by default even when called from prependExtension(), which would put
-        // this config LAST, where it OVERRULES the installation instead of
-        // deferring to it; with `prepend: true` it goes first and an
-        // installation that maps these classes itself wins.
+        // PREPENDED, LIKE EVERY BLOCK THIS METHOD WRITES — `prependExtensionConfig()`
+        // on the builder, the form the docs and symfony/ux-chartjs write — so this
+        // config goes first and an installation that maps these classes itself
+        // wins.
         //
         // @see https://symfony.com/doc/current/bundles/prepend_extension.html
-        // @see vendor/symfony/dependency-injection/Loader/Configurator/ContainerConfigurator.php
-        //      — extension(): `prepend` calls prependExtensionConfig(), otherwise loadFromExtension()
+        // @see vendor/symfony/ux-chartjs/src/DependencyInjection/ChartjsExtension.php:57
         if ($builder->hasExtension('doctrine')) {
-            $container->extension('doctrine', [
+            $builder->prependExtensionConfig('doctrine', [
                 'orm' => [
                     'mappings' => [
                         'Registry' => [
@@ -155,7 +152,7 @@ final class RegistryBundle extends AbstractBundle
                         ],
                     ],
                 ],
-            ], prepend: true);
+            ]);
         }
 
         // THE TABLES ARRIVE WITH THE CODE. The catalogue and the per-area ledger
@@ -175,7 +172,7 @@ final class RegistryBundle extends AbstractBundle
             return;
         }
 
-        $container->extension('doctrine_migrations', [
+        $builder->prependExtensionConfig('doctrine_migrations', [
             'migrations_paths' => [
                 'Uhifadhi\\Bundle\\RegistryBundle\\Migrations' => __DIR__.'/migrations',
             ],
@@ -189,7 +186,7 @@ final class RegistryBundle extends AbstractBundle
             'services' => [
                 Comparator::class => 'registry.migration_comparator',
             ],
-        ], prepend: true);
+        ]);
     }
 
     /**

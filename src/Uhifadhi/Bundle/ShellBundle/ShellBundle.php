@@ -292,7 +292,7 @@ final class ShellBundle extends AbstractBundle
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         if ($builder->hasExtension('ux_icons')) {
-            $container->extension('ux_icons', [
+            $builder->prependExtensionConfig('ux_icons', [
                 'icon_sets' => [
                     'shell' => ['path' => __DIR__.'/assets/icons/shell'],
                 ],
@@ -313,12 +313,11 @@ final class ShellBundle extends AbstractBundle
         // The bundle's public/ dir needs none of this: AssetMapper exposes it
         // as `bundles/shell/` on its own.
         if ($builder->hasExtension('framework') && interface_exists(AssetMapperInterface::class)) {
-            // PREPENDED, THE SHAPE EVERY symfony/ux BUNDLE WRITES. `extension()`
-            // appends even when called from prependExtension(), which puts this
-            // path LAST, where it overrules an installation's own framework
-            // config instead of deferring to it; prepended, "any other settings
-            // done explicitly inside the config/* files would override these
-            // prepended settings".
+            // PREPENDED, THE SHAPE EVERY symfony/ux BUNDLE WRITES — and the one form
+            // every block in this method takes, `prependExtensionConfig()` on the
+            // builder, so this path goes FIRST and an installation's own framework
+            // config wins: \"any other settings done explicitly inside the config/*
+            // files would override these prepended settings\".
             //
             // @see https://symfony.com/doc/current/bundles/prepend_extension.html
             // @see https://symfony.com/doc/current/frontend/create_ux_bundle.html
@@ -337,18 +336,15 @@ final class ShellBundle extends AbstractBundle
         // dashboard layouts under Widget/. An installation never writes a
         // doctrine mappings block for widget_* tables.
         //
-        // PREPENDED, AND THE FLAG IS LOAD-BEARING — the same rule AreaBundle
-        // and TeamBundle state over their own mappings. `extension()` APPENDS
-        // by default even when called from prependExtension(), which would put
-        // this config LAST, where it OVERRULES the installation instead of
-        // deferring to it; with `prepend: true` it goes first and an
-        // installation that maps these classes itself wins.
+        // PREPENDED, LIKE EVERY BLOCK THIS METHOD WRITES — `prependExtensionConfig()`
+        // on the builder, the form the docs and symfony/ux-map write — so this
+        // config goes first and an installation that maps these classes itself
+        // wins.
         //
         // @see https://symfony.com/doc/current/bundles/prepend_extension.html
-        // @see vendor/symfony/dependency-injection/Loader/Configurator/ContainerConfigurator.php
-        //      — extension(): `prepend` calls prependExtensionConfig(), otherwise loadFromExtension()
+        // @see vendor/symfony/ux-map/src/UXMapBundle.php:117
         if ($builder->hasExtension('doctrine')) {
-            $container->extension('doctrine', [
+            $builder->prependExtensionConfig('doctrine', [
                 'orm' => [
                     'mappings' => [
                         'ShellWidget' => [
@@ -359,7 +355,7 @@ final class ShellBundle extends AbstractBundle
                         ],
                     ],
                 ],
-            ], prepend: true);
+            ]);
         }
 
         // THE TABLES ARRIVE WITH THE CODE. A person's widget layout and the
@@ -376,11 +372,11 @@ final class ShellBundle extends AbstractBundle
         // Guarded: an application may install this bundle without the migrations
         // bundle in its kernel, and there it simply has no history to run.
         if ($builder->hasExtension('doctrine_migrations')) {
-            $container->extension('doctrine_migrations', [
+            $builder->prependExtensionConfig('doctrine_migrations', [
                 'migrations_paths' => [
                     'Uhifadhi\\Bundle\\ShellBundle\\Migrations' => __DIR__.'/migrations',
                 ],
-            ], prepend: true);
+            ]);
         }
     }
 

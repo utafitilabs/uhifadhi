@@ -161,12 +161,11 @@ final class AtlasBundle extends AbstractBundle
          * bundle for the Leaflet build and the provider config alone.
          */
         if ($builder->hasExtension('framework') && interface_exists(AssetMapperInterface::class)) {
-            // PREPENDED, THE SHAPE EVERY symfony/ux BUNDLE WRITES. `extension()`
-            // appends even when called from prependExtension(), which puts this
-            // path LAST, where it overrules an installation's own framework
-            // config instead of deferring to it; prepended, "any other settings
-            // done explicitly inside the config/* files would override these
-            // prepended settings".
+            // PREPENDED, THE SHAPE EVERY symfony/ux BUNDLE WRITES — and the one form
+            // every block in this method takes, `prependExtensionConfig()` on the
+            // builder, so this path goes FIRST and an installation's own framework
+            // config wins: \"any other settings done explicitly inside the config/*
+            // files would override these prepended settings\".
             //
             // @see https://symfony.com/doc/current/bundles/prepend_extension.html
             // @see https://symfony.com/doc/current/frontend/create_ux_bundle.html
@@ -189,9 +188,9 @@ final class AtlasBundle extends AbstractBundle
          * plate, and must still boot for the Leaflet build's sake.
          */
         if ($builder->hasExtension('twig')) {
-            $container->extension('twig', [
+            $builder->prependExtensionConfig('twig', [
                 'paths' => [__DIR__.'/templates' => 'Atlas'],
-            ], prepend: true);
+            ]);
         }
     }
 

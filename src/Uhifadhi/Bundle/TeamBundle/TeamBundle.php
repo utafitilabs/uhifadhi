@@ -114,12 +114,14 @@ final class TeamBundle extends AbstractBundle
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         /*
-         * PREPENDED, AND THE FLAG IS LOAD-BEARING. `extension()` APPENDS by
-         * default even when called from prependExtension() — which puts this
-         * config LAST, where it would overrule the installation instead of
-         * deferring to it. With `prepend: true` it goes first and the
-         * application's own doctrine.yaml wins, which is the entire reason
-         * shipping a resolution here is safe rather than presumptuous. It
+         * PREPENDED, LIKE EVERY BLOCK THIS METHOD WRITES — `prependExtensionConfig()`
+         * on the builder, the form the docs and symfony/ux-map write — so this
+         * config goes first and the application's own doctrine.yaml wins, which
+         * is the entire reason shipping a resolution here is safe rather than
+         * presumptuous.
+         * @see https://symfony.com/doc/current/bundles/prepend_extension.html
+         * @see vendor/symfony/ux-map/src/UXMapBundle.php:117
+         * It
          * changes nothing for the mappings below, whose key is this bundle's
          * alone and which nothing else writes.
          */
@@ -127,7 +129,7 @@ final class TeamBundle extends AbstractBundle
         // Zero-config persistence: the bundle maps its own entities, so an
         // installation never writes a doctrine mappings block for team_* tables.
         if ($builder->hasExtension('doctrine')) {
-            $container->extension('doctrine', [
+            $builder->prependExtensionConfig('doctrine', [
                 'orm' => [
                     'mappings' => [
                         'Team' => [
@@ -175,7 +177,7 @@ final class TeamBundle extends AbstractBundle
                         ContractUserInterface::class => User::class,
                     ],
                 ],
-            ], prepend: true);
+            ]);
         }
 
         /*
@@ -197,12 +199,12 @@ final class TeamBundle extends AbstractBundle
          * @see https://symfony.com/doc/current/rate_limiter.html
          */
         if ($builder->hasExtension('framework') && interface_exists(RateLimiterFactoryInterface::class)) {
-            $container->extension('framework', [
+            $builder->prependExtensionConfig('framework', [
                 'rate_limiter' => [
                     'team_token_id' => ['policy' => 'fixed_window', 'limit' => 5, 'interval' => '1 minute'],
                     'team_token_ip' => ['policy' => 'fixed_window', 'limit' => 20, 'interval' => '1 minute'],
                 ],
-            ], prepend: true);
+            ]);
         }
 
         // The bundle's public/ dir is auto-registered by AssetMapper under the
@@ -217,12 +219,11 @@ final class TeamBundle extends AbstractBundle
         // built. The composer keyword `symfony-ux` is what makes Flex look in
         // here at all — without it everything installs and nothing binds.
         if ($builder->hasExtension('framework') && interface_exists(AssetMapperInterface::class)) {
-            // PREPENDED, THE SHAPE EVERY symfony/ux BUNDLE WRITES. `extension()`
-            // appends even when called from prependExtension(), which puts this
-            // path LAST, where it overrules an installation's own framework
-            // config instead of deferring to it; prepended, "any other settings
-            // done explicitly inside the config/* files would override these
-            // prepended settings".
+            // PREPENDED, THE SHAPE EVERY symfony/ux BUNDLE WRITES — and the one form
+            // every block in this method takes, `prependExtensionConfig()` on the
+            // builder, so this path goes FIRST and an installation's own framework
+            // config wins: \"any other settings done explicitly inside the config/*
+            // files would override these prepended settings\".
             //
             // @see https://symfony.com/doc/current/bundles/prepend_extension.html
             // @see https://symfony.com/doc/current/frontend/create_ux_bundle.html
@@ -251,11 +252,11 @@ final class TeamBundle extends AbstractBundle
         // Guarded: an application may install this bundle without the migrations
         // bundle in its kernel, and there it simply has no history to run.
         if ($builder->hasExtension('doctrine_migrations')) {
-            $container->extension('doctrine_migrations', [
+            $builder->prependExtensionConfig('doctrine_migrations', [
                 'migrations_paths' => [
                     'Uhifadhi\\Bundle\\TeamBundle\\Migrations' => __DIR__.'/migrations',
                 ],
-            ], prepend: true);
+            ]);
         }
     }
 

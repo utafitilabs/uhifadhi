@@ -107,9 +107,9 @@ final class AreaBundle extends AbstractBundle
          * these screens, and it must still boot for the entity's sake.
          */
         if ($builder->hasExtension('twig')) {
-            $container->extension('twig', [
+            $builder->prependExtensionConfig('twig', [
                 'paths' => [__DIR__.'/templates' => 'Area'],
-            ], prepend: true);
+            ]);
         }
 
         /*
@@ -118,12 +118,11 @@ final class AreaBundle extends AbstractBundle
          * on its own — but assets/ has to be mapped by name.
          */
         if ($builder->hasExtension('framework') && interface_exists(AssetMapperInterface::class)) {
-            // PREPENDED, THE SHAPE EVERY symfony/ux BUNDLE WRITES. `extension()`
-            // appends even when called from prependExtension(), which puts this
-            // path LAST, where it overrules an installation's own framework
-            // config instead of deferring to it; prepended, "any other settings
-            // done explicitly inside the config/* files would override these
-            // prepended settings".
+            // PREPENDED, THE SHAPE EVERY symfony/ux BUNDLE WRITES — and the one form
+            // every block in this method takes, `prependExtensionConfig()` on the
+            // builder, so this path goes FIRST and an installation's own framework
+            // config wins: \"any other settings done explicitly inside the config/*
+            // files would override these prepended settings\".
             //
             // @see https://symfony.com/doc/current/bundles/prepend_extension.html
             // @see https://symfony.com/doc/current/frontend/create_ux_bundle.html
@@ -143,14 +142,16 @@ final class AreaBundle extends AbstractBundle
         }
 
         /*
-         * PREPENDED, AND THE FLAG IS LOAD-BEARING. `extension()` APPENDS by
-         * default even when called from prependExtension() — which would put
-         * this config LAST, where it OVERRULES the installation instead of
-         * deferring to it. With `prepend: true` it goes first and the
-         * application's own doctrine config wins, which is the entire reason
-         * shipping a resolution here is safe rather than presumptuous.
+         * PREPENDED, LIKE EVERY BLOCK THIS METHOD WRITES — `prependExtensionConfig()`
+         * on the builder, the form the docs and symfony/ux-map write — so this
+         * config goes first and the application's own doctrine config wins,
+         * which is the entire reason shipping a resolution here is safe rather
+         * than presumptuous.
+         *
+         * @see https://symfony.com/doc/current/bundles/prepend_extension.html
+         * @see vendor/symfony/ux-map/src/UXMapBundle.php:117
          */
-        $container->extension('doctrine', [
+        $builder->prependExtensionConfig('doctrine', [
             'orm' => [
                 // Zero-config persistence: the bundle maps its own entity, so an
                 // installation never writes a mappings block for area_of_interest.
@@ -196,7 +197,7 @@ final class AreaBundle extends AbstractBundle
                     AreaInterface::class => AreaOfInterest::class,
                 ],
             ],
-        ], prepend: true);
+        ]);
 
         // THE TABLES ARRIVE WITH THE CODE. The gazetted boundary and the
         // zones inside it are this bundle's, so their DDL ships here too,
@@ -212,11 +213,11 @@ final class AreaBundle extends AbstractBundle
         // Guarded: an application may install this bundle without the migrations
         // bundle in its kernel, and there it simply has no history to run.
         if ($builder->hasExtension('doctrine_migrations')) {
-            $container->extension('doctrine_migrations', [
+            $builder->prependExtensionConfig('doctrine_migrations', [
                 'migrations_paths' => [
                     'Uhifadhi\\Bundle\\AreaBundle\\Migrations' => __DIR__.'/migrations',
                 ],
-            ], prepend: true);
+            ]);
         }
     }
 

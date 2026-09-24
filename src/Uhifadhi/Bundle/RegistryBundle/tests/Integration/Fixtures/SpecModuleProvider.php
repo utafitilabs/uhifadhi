@@ -81,6 +81,13 @@ final class SpecModuleProvider implements ModuleProviderInterface
         return \is_string($this->overrides()['status'] ?? null) ? $this->overrides()['status'] : 'live';
     }
 
+    public function description(): ?string
+    {
+        $description = $this->overrides()['description'] ?? null;
+
+        return \is_string($description) ? $description : null;
+    }
+
     public function dataSource(): ?string
     {
         $source = $this->overrides()['source'] ?? null;

@@ -54,6 +54,7 @@ final class ModuleProviderTraitTest extends TestCase
         self::assertSame('Example', $provider->name());
         self::assertSame('pressure', $provider->category());
         self::assertSame('live', $provider->status());
+        self::assertNull($provider->description(), 'A module says nothing beyond its name until it says otherwise.');
         self::assertNull($provider->dataSource());
         self::assertFalse($provider->pinned());
         self::assertFalse($provider->base(), 'A module is installable until it says otherwise — base is the exception.');

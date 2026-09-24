@@ -61,6 +61,10 @@ class Module
     #[ORM\Column(name: 'name', length: 80)]
     private ?string $name = null;
 
+    /** What the module is, in one line, or null for a module that says nothing beyond its name. */
+    #[ORM\Column(name: 'description', length: 160, nullable: true)]
+    private ?string $description = null;
+
     #[ORM\Column(name: 'category', enumType: ModuleCategory::class)]
     private ModuleCategory $category = ModuleCategory::Operations;
 
@@ -108,6 +112,18 @@ class Module
     public function setName(string $name): static
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): static
+    {
+        $this->description = $description;
 
         return $this;
     }

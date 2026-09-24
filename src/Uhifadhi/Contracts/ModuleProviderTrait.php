@@ -28,6 +28,11 @@ trait ModuleProviderTrait
         return 'live';
     }
 
+    public function description(): ?string
+    {
+        return null;
+    }
+
     public function dataSource(): ?string
     {
         return null;

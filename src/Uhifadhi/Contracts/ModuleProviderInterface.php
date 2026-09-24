@@ -40,6 +40,14 @@ interface ModuleProviderInterface
     public function name(): string;
 
     /**
+     * WHAT THE MODULE IS, in one line a stranger understands — "Ranger patrols:
+     * tracks, observations and station duty." — or null for a module that says
+     * nothing beyond its name. The area's modules register prints it under the
+     * name; the tile and the sub-nav never do.
+     */
+    public function description(): ?string;
+
+    /**
      * Catalogue category the host files this module under — a category value
      * string the host understands, such as "flux", "pressure" or
      * "biodiversity" (the host maps + validates it, falling back to a default

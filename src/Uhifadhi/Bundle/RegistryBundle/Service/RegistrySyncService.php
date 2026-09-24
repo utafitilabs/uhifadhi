@@ -87,6 +87,7 @@ final readonly class RegistrySyncService
             }
             $module->setSlug($row['slug'])
                 ->setName($row['name'])
+                ->setDescription($row['description'])
                 ->setCategory($row['category'])
                 ->setStatus($row['status'])
                 ->setDataSource($row['source'])

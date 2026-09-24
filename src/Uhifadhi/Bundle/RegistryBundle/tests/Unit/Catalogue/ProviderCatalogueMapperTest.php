@@ -48,6 +48,7 @@ final class ProviderCatalogueMapperTest extends TestCase
     {
         $row = $this->mapper()->toRow(new SpecModuleProvider('sightings', [
             'name' => 'Sightings',
+            'description' => 'Every animal somebody saw, and where.',
             'category' => 'biodiversity',
             'status' => 'template',
             'source' => 'Field observations',
@@ -56,6 +57,7 @@ final class ProviderCatalogueMapperTest extends TestCase
 
         self::assertSame('sightings', $row['slug']);
         self::assertSame('Sightings', $row['name']);
+        self::assertSame('Every animal somebody saw, and where.', $row['description']);
         self::assertSame(ModuleCategory::Biodiversity, $row['category']);
         self::assertSame(ModuleStatus::Template, $row['status']);
         self::assertSame('Field observations', $row['source']);
@@ -120,6 +122,8 @@ final class ProviderCatalogueMapperTest extends TestCase
     public function testAnInstallableModuleArrivesParkedAndABaseModuleArrivesActive(): void
     {
         self::assertFalse($this->mapper()->toRow(new SpecModuleProvider('sightings'), 0)['active']);
+        // And a module that says nothing beyond its name has no line under it.
+        self::assertNull($this->mapper()->toRow(new SpecModuleProvider('sightings'), 0)['description']);
 
         $base = $this->mapper()->toRow(new SpecModuleProvider('ferries', ['base' => true]), 0);
         self::assertTrue($base['active'], 'machinery other surfaces depend on is not an opt-in');

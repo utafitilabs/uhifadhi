@@ -53,7 +53,7 @@ final readonly class ProviderCatalogueMapper
      *                               used only as the tie-break for modules that declare
      *                               no position of their own
      *
-     * @return array{slug: string, name: string, category: ModuleCategory, status: ModuleStatus,
+     * @return array{slug: string, name: string, description: ?string, category: ModuleCategory, status: ModuleStatus,
      *     source: string, icon: ?string, pinned: bool, active: bool, position: int}
      */
     public function toRow(ModuleProviderInterface $provider, int $registrationOrder): array
@@ -61,6 +61,9 @@ final readonly class ProviderCatalogueMapper
         return [
             'slug' => $provider->slug(),
             'name' => $provider->name(),
+            // One line under the name in the modules register, or nothing: a
+            // module that says nothing beyond its name is not padded out.
+            'description' => $provider->description(),
             'category' => ModuleCategory::tryFrom($provider->category()) ?? $this->fallbackCategory(),
             // A module that is installed is running.
             'status' => ModuleStatus::tryFrom($provider->status()) ?? ModuleStatus::Live,

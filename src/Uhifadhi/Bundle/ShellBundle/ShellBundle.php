@@ -325,6 +325,17 @@ final class ShellBundle extends AbstractBundle
         // Zero-config persistence for the one thing the shell remembers: the
         // dashboard layouts under Widget/. An installation never writes a
         // doctrine mappings block for widget_* tables.
+        //
+        // PREPENDED, AND THE FLAG IS LOAD-BEARING — the same rule AreaBundle
+        // and TeamBundle state over their own mappings. `extension()` APPENDS
+        // by default even when called from prependExtension(), which would put
+        // this config LAST, where it OVERRULES the installation instead of
+        // deferring to it; with `prepend: true` it goes first and an
+        // installation that maps these classes itself wins.
+        //
+        // @see https://symfony.com/doc/current/bundles/prepend_extension.html
+        // @see vendor/symfony/dependency-injection/Loader/Configurator/ContainerConfigurator.php
+        //      — extension(): `prepend` calls prependExtensionConfig(), otherwise loadFromExtension()
         if ($builder->hasExtension('doctrine')) {
             $container->extension('doctrine', [
                 'orm' => [
@@ -337,7 +348,7 @@ final class ShellBundle extends AbstractBundle
                         ],
                     ],
                 ],
-            ]);
+            ], prepend: true);
         }
 
         // THE TABLES ARRIVE WITH THE CODE. A person's widget layout and the

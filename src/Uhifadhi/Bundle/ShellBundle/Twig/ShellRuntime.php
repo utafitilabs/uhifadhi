@@ -37,6 +37,10 @@ use Uhifadhi\Contracts\Shell\UserBadge;
  *
  * Everything here is a READ. The shell draws; it does not remember, it does not
  * write, and it decides nothing about who may see what.
+ *
+ * @see https://symfony.com/doc/current/templating/twig_extension.html — a lazy-loaded extension's work lives in a RuntimeExtensionInterface class
+ * @see vendor/symfony/twig-bundle/DependencyInjection/Compiler/RuntimeLoaderPass.php — the 'twig.runtime' tag config/services.php writes by hand, collected into twig.runtime_loader
+ * @see vendor/symfony/twig-bundle/Resources/config/twig.php — 'twig.runtime_loader', the ContainerRuntimeLoader that builds this class on the first call
  */
 final class ShellRuntime implements RuntimeExtensionInterface
 {

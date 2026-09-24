@@ -27,6 +27,9 @@ use Twig\TwigFunction;
  * extension holding anything that reads either kills the BUILD rather than a
  * page. A runtime is constructed lazily, on the first call — which is a render,
  * which is a request.
+ *
+ * @see https://symfony.com/doc/current/templating/twig_extension.html — the extension declares the functions, a lazy-loaded runtime named as [Runtime::class, 'method'] builds them
+ * @see vendor/symfony/twig-bundle/DependencyInjection/TwigExtension.php — registerForAutoconfiguration(ExtensionInterface::class)->addTag('twig.extension'); a reusable bundle is not autoconfigured, so config/services.php writes that tag by hand
  */
 final class ShellExtension extends AbstractExtension
 {

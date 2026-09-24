@@ -106,7 +106,7 @@ abstract class InstallationTestCase extends RegistryKernelTestCase
         $listener = self::getContainer()->get('test.registry.sync_listener');
         \assert($listener instanceof RegistrySyncListener);
 
-        @unlink($listener->stampFile);
+        @unlink($listener->stampFile());
         $listener->reconcileOnce();
 
         $this->em()->clear();

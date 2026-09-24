@@ -120,7 +120,7 @@ final class RegistrySyncListenerTest extends InstallationTestCase
         $metadata = $this->em()->getMetadataFactory()->getAllMetadata();
         new SchemaTool($this->em())->dropSchema($metadata);
 
-        @unlink($this->listener()->stampFile);
+        @unlink($this->listener()->stampFile());
 
         $connection = $this->em()->getConnection();
         $connection->close();
@@ -132,7 +132,7 @@ final class RegistrySyncListenerTest extends InstallationTestCase
         self::assertSame(200, $response->getStatusCode(), 'the page a request came for was answered');
 
         self::assertFalse($connection->isConnected(), 'the request opened the registry a connection');
-        self::assertFileDoesNotExist($this->listener()->stampFile);
+        self::assertFileDoesNotExist($this->listener()->stampFile());
     }
 
     /**
@@ -179,11 +179,45 @@ final class RegistrySyncListenerTest extends InstallationTestCase
      * does every command an operator runs afterwards in the same build. The proof
      * is a row removed by hand that a second call does not put back.
      */
+    /**
+     * A STAMP BELONGS TO ONE CONTAINER BUILD. `cache:clear` is itself a console
+     * command: at its own end it reconciles with the container it booted with —
+     * the one from BEFORE the clear, which knows nothing of a module installed a
+     * moment earlier — and stamps. If that stamp counted for the next, rebuilt
+     * container, the new module never entered the catalogue until somebody
+     * deleted the file by hand. So the stamp is named after the build, and a
+     * build finds only its own.
+     */
+    public function testAStampFromAnotherBuildDoesNotStopThisBuildReconciling(): void
+    {
+        $this->install(['sightings']);
+        $listener = $this->listener();
+
+        $buildId = self::getContainer()->getParameter('container.build_id');
+        self::assertIsString($buildId);
+        self::assertStringContainsString('registry-sync.'.$buildId.'.stamp', $listener->stampFile(), 'the stamp is named after this build');
+
+        // Another build stamped, as cache:clear does with the container it booted with.
+        @unlink($listener->stampFile());
+        touch(\dirname($listener->stampFile()).'/registry-sync.0ldbu1ld.stamp');
+        $this->em()->getConnection()->executeStatement('DELETE FROM area_module');
+        $this->em()->getConnection()->executeStatement('DELETE FROM module');
+
+        $listener->reconcileOnce();
+
+        self::assertSame(
+            ['sightings'],
+            $this->em()->getConnection()->fetchFirstColumn('SELECT slug FROM module'),
+            'another build\'s stamp does not count; this build reconciles once',
+        );
+        self::assertFileExists($listener->stampFile());
+    }
+
     public function testAReconciledBuildIsNotReconciledAgain(): void
     {
         $this->install(['sightings']);
 
-        self::assertFileExists($this->listener()->stampFile);
+        self::assertFileExists($this->listener()->stampFile());
 
         $this->em()->getConnection()->executeStatement('DELETE FROM area_module');
         $this->em()->getConnection()->executeStatement('DELETE FROM module');
@@ -215,10 +249,10 @@ final class RegistrySyncListenerTest extends InstallationTestCase
         $tool = new SchemaTool($this->em());
         $tool->dropSchema($metadata);
 
-        @unlink($this->listener()->stampFile);
+        @unlink($this->listener()->stampFile());
         $this->listener()->reconcileOnce();
 
-        self::assertFileDoesNotExist($this->listener()->stampFile);
+        self::assertFileDoesNotExist($this->listener()->stampFile());
         self::assertTrue($this->sync()->skipped, 'no registry tables, nothing to reconcile');
 
         // …and the migration's turn comes: the tables appear, and the command

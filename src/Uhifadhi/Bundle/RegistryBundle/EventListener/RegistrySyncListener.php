@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\RegistryBundle\EventListener;
 
 use Psr\Container\ContainerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 use Symfony\Contracts\Service\ServiceSubscriberInterface;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
 
@@ -74,12 +75,35 @@ use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
 final class RegistrySyncListener implements ServiceSubscriberInterface
 {
     /**
-     * @param string $stampFile written once the registry has been reconciled against this build's cache directory
+     * @param string $stampPath where the stamp lives; the file itself is named after the container build, see {@see stampFile()}
      */
     public function __construct(
         private readonly ContainerInterface $container,
-        public readonly string $stampFile,
+        private readonly string $stampPath,
     ) {
+    }
+
+    /**
+     * THE STAMP BELONGS TO ONE CONTAINER BUILD. `cache:clear` is a console
+     * command too: at its own end this listener runs with the container the
+     * command booted with — the one from BEFORE the clear, which knows nothing
+     * of a module installed a moment earlier — and stamps. Named after the
+     * build, that stamp is nobody else's: the rebuilt container that the next
+     * command boots finds no stamp of its own and reconciles, with the module
+     * in it. A stamp shared across builds left a freshly installed module out
+     * of the catalogue until somebody deleted the file by hand.
+     *
+     * `container.build_id` is written into every compiled container by the
+     * dumper; it changes whenever the container is rebuilt.
+     */
+    public function stampFile(): string
+    {
+        $parameters = $this->container->get(ContainerBagInterface::class);
+        \assert($parameters instanceof ContainerBagInterface);
+        $build = $parameters->has('container.build_id') ? $parameters->get('container.build_id') : 'build';
+        \assert(\is_string($build));
+
+        return \dirname($this->stampPath).'/registry-sync.'.$build.'.stamp';
     }
 
     /**
@@ -106,18 +130,19 @@ final class RegistrySyncListener implements ServiceSubscriberInterface
      */
     public function reconcileOnce(): void
     {
-        if (is_file($this->stampFile)) {
+        $stampFile = $this->stampFile();
+        if (is_file($stampFile)) {
             return;
         }
 
-        $directory = \dirname($this->stampFile);
+        $directory = \dirname($stampFile);
         if (!is_dir($directory) && !mkdir($directory, 0o777, true) && !is_dir($directory)) {
             return;
         }
 
         // 'x' fails if the file is there: the process that creates it is the one
         // that reconciles, and the others go on with the command they are in.
-        $claim = @fopen($this->stampFile, 'x');
+        $claim = @fopen($stampFile, 'x');
         if (false === $claim) {
             return;
         }
@@ -128,10 +153,10 @@ final class RegistrySyncListener implements ServiceSubscriberInterface
             \assert($sync instanceof RegistrySyncService);
 
             if ($sync->sync()->skipped) {
-                @unlink($this->stampFile);
+                @unlink($stampFile);
             }
         } catch (\Throwable) {
-            @unlink($this->stampFile);
+            @unlink($stampFile);
         }
     }
 
@@ -142,6 +167,7 @@ final class RegistrySyncListener implements ServiceSubscriberInterface
         // already had.
         return [
             RegistrySyncService::class,
+            ContainerBagInterface::class,
         ];
     }
 }

@@ -139,7 +139,7 @@ final class AreaDepartmentsTest extends WebTestCaseWithSchema
 
         self::assertCount(0, $crawler->filter('.dcard form'));
         self::assertSame('/departments', $crawler->filter('.pgact a.cta')->attr('href'));
-        self::assertStringEndsWith('/departments/settings', (string) $crawler->filter('.factband a.more')->attr('href'));
+        self::assertStringEndsWith('/configure/departments', (string) $crawler->filter('.factband a.more')->attr('href'));
     }
 
     private function tab(): Crawler

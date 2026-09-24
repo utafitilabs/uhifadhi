@@ -385,6 +385,8 @@ final class TestKernel extends Kernel
             \Uhifadhi\Bundle\TeamBundle\Service\PositionService::class => 'team.positions',
             \Uhifadhi\Bundle\TeamBundle\Service\DepartmentService::class => 'team.departments',
             \Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService::class => 'team.password_reset',
+            \Uhifadhi\Bundle\TeamBundle\Service\TeamSettingsService::class => 'team.settings',
+            \Uhifadhi\Bundle\TeamBundle\Repository\TeamSettingsRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\TeamSettingsRepository::class,
             \Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceRegistry::class => 'shell.widget.surfaces',
             \Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaNavChildren::class => 'team.area_nav_children',
             \Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory::class => 'team.performance_history',
@@ -436,7 +438,7 @@ final class TestKernel extends Kernel
          * without these two could only ever prove the door is absent.
          */
         $routes->add('area_index', '/areas')->controller(ShellPageController::class);
-        $routes->add('area_stations_configure', '/areas/{uuid}/stations/settings')
+        $routes->add('area_stations_configure', '/areas/{uuid}/configure/stations')
             ->controller(ShellPageController::class);
 
         $routes->add('home', '/')->controller(GuardedController::class);

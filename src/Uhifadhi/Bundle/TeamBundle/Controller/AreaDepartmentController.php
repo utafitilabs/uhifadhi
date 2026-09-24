@@ -131,7 +131,7 @@ final readonly class AreaDepartmentController
      * is the register's own route and carries the register's own gate, so
      * nothing is permitted here that is not permitted there.
      */
-    #[Route('/areas/{uuid}/departments/settings', name: self::SECTION, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
+    #[Route('/areas/{uuid}/configure/departments', name: self::SECTION, requirements: ['uuid' => Requirement::UUID], methods: ['GET'], priority: 1)]
     #[IsGranted('departments.read')]
     public function configure(string $uuid): Response
     {

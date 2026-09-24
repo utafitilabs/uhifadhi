@@ -52,7 +52,7 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
         $this->areaAdminIn($this->area('Northern Reserve'));
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/configure');
+        $token = $this->tokenFrom('/team/configure/positions');
         $this->client->request('POST', '/team/positions', [
             '_token' => $token, 'name' => 'Field Ranger',
         ]);
@@ -75,7 +75,7 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
         $this->department('Ecology');
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/configure');
+        $crawler = $this->client->request('GET', '/team/configure/positions');
         $card = $crawler->filter('#add form.crcard');
 
         self::assertCount(1, $card->filter('input[name="name"]'));
@@ -89,7 +89,7 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
         $this->position('Analyst');
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/configure');
+        $token = $this->tokenFrom('/team/configure/positions');
         $this->client->request('POST', '/team/positions', [
             '_token' => $token, 'name' => 'Analyst',
         ]);
@@ -109,7 +109,7 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
         $ranger = $this->position('Ranger');
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/configure');
+        $token = $this->tokenFrom('/team/configure/positions');
         $this->client->request('POST', '/team/positions/'.$ranger->getUuidString().'/rename', [
             '_token' => $token, 'name' => 'Senior Ranger',
         ]);
@@ -132,7 +132,7 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
         $this->place($grace, [$this->area('Western Reserve')]);
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/configure');
+        $token = $this->tokenFrom('/team/configure/positions');
         $this->client->request('POST', '/team/positions/'.$analyst->getUuidString().'/rename', [
             '_token' => $token, 'name' => 'Senior Analyst',
         ]);
@@ -153,7 +153,7 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
         $this->em->flush();
         $this->client->loginUser($orgAdmin);
 
-        $token = $this->tokenFrom('/team/configure');
+        $token = $this->tokenFrom('/team/configure/positions');
         $this->client->request('POST', '/team/positions', [
             '_token' => $token, 'name' => 'Field Ranger',
         ]);
@@ -170,7 +170,7 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
         $this->department('Ecology');
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/configure');
+        $crawler = $this->client->request('GET', '/team/configure/positions');
         $card = $crawler->filter('#add form.crcard');
 
         self::assertCount(1, $card->filter('input[name="name"]'));

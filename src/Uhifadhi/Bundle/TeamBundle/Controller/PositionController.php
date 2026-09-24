@@ -226,14 +226,15 @@ final readonly class PositionController
 
         try {
             $position = $this->positionWrites->create($name);
-            // THE ADD ROW IS A NAME AND A SEAT COUNT, as the design draws it;
-            // what the position allows is set on its configure page, so a new
-            // one keeps the entity's own default until somebody goes there.
+            // THE ADD CARD IS A NAME, A SEAT COUNT AND A PLACEMENT, as the
+            // design draws it; a create that posts no placement keeps the
+            // entity's own default until somebody opens the configure page.
+            $kinds = $this->kindsFrom($request);
             $this->positionWrites->setIdentity(
                 $position,
                 $name,
                 $this->seatsFrom($request),
-                $position->getAllowedKinds(),
+                [] === $kinds ? $position->getAllowedKinds() : $kinds,
             );
         } catch (NameNotUniqueException) {
             // The index would have said this in SQL. The person who typed the

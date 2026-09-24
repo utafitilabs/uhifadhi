@@ -13,107 +13,183 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Controller;
 
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
-use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
-use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
-use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Bundle\TeamBundle\Enum\InvitationUnitEnum;
+use Uhifadhi\Bundle\TeamBundle\Service\TeamSettingsService;
+use Uhifadhi\Contracts\Access\ScopeKind;
 use Uhifadhi\Contracts\Access\Verb;
 
 /**
- * HOW THE TEAM SECTION IS SET UP — its two configure screens of its own.
+ * HOW THE TEAM SECTION IS SET UP — three configure sections, one address each.
  *
  * AN ORG-LEVEL SECTION'S CONFIGURE SCREENS ARE ITS OWN ROUTES. The shell's
  * configure page renders a section into an AREA's frame, and this section has
- * no area in its address; so the screens are addresses here, declared to the
- * shell through the same sections contract, and the shell builds the strip
- * from them.
+ * no area in its address; so the sections are addresses here, declared to the
+ * shell through the sections contract, and the shell builds the strip from
+ * them. That is a difference of address, not of idiom: the strip, the lit
+ * Configure action and the crumb are the frame's.
  *
- * SETTINGS IS READ-ONLY, AND THAT IS THE DESIGN. Every line on it is a fact
- * about the model or about who may do what. A control that let one of them be
- * changed would be a second place the rule lived; the rule is in the code, and
- * this page is where you read it without opening the code.
+ * THE TEST A CARD HAS TO PASS TO BE HERE (ruled 2026-09-24): it sets a rule
+ * for the WHOLE team. A fact about one person, one position or one posting is
+ * that record's own page; a restatement of the permission model is the matrix;
+ * a rule the model fixes is not a field. So there are three sections and one
+ * card on two of them:
  *
- * A SCREEN DOES NOT NAME AN ACTION THAT DOES NOT EXIST. There is no
- * "deleting an account" row and no recycle bin: accounts are deactivated, kept
- * and listed, and naming the absent action would only teach a reader to look
- * for it.
+ *   PEOPLE        the invitation rules — how long a link lives, how many uses
+ *                 it has, whether somebody may be created with a password.
+ *   POSITIONS     adding a position — creation is configuration, the register
+ *                 shows what exists. The create card posts to the register's
+ *                 own write, so it carries that write's token.
+ *   ASSIGNMENTS   the stationing rules — what every posting an area writes is
+ *                 held to. Team never writes a posting; the area does.
  *
- * ONE SCREEN, TEAM SETTINGS (ruled 2026-09-22): it states the installation's
- * policies and carries the one write this surface has — adding a position.
+ * THERE IS NO ROLES SECTION: the tiers are the model's and held on the
+ * person, the matrix is edited on the position. And the sign-in policy is the
+ * installation's, under Settings › Organization, not a Team rule.
+ *
+ * EACH CARD IS A FORM. The current value sits in its control and the primary
+ * action is in the save row; each save writes its own card's rules and no
+ * other's.
  */
 final readonly class TeamConfigureController
 {
-    /** The section's settings — the last entry in the strip, and the house's rank. */
-    public const string SETTINGS = 'team_configure';
+    /** The three sections, in the order the strip reads them. */
+    public const string PEOPLE = 'team_configure_people';
+    public const string POSITIONS = 'team_configure_positions';
+    public const string ASSIGNMENTS = 'team_configure_assignments';
 
-    /** The words a position is written with. */
+    /** The invitation rules and the stationing rules are directory rules; adding a position is composing positions. */
+    public const string DIRECTORY = TeamConcerns::DIRECTORY.'.'.Verb::Manage->value;
+
+    public const string CSRF_ID = 'team_settings';
+
     public function __construct(
         private Environment $twig,
-        private UserRepository $users,
-        private DepartmentRepository $departments,
+        private TeamSettingsService $settings,
         private CsrfTokenManagerInterface $csrf,
+        private UrlGeneratorInterface $router,
     ) {
     }
 
-    /**
-     * HOW PEOPLE GET IN, WHAT HAPPENS TO AN ACCOUNT, AND WHO MAY CHANGE
-     * EITHER.
-     *
-     * THE TWO FIGURES ON IT ARE ANSWERS, not readings of a period: "who may
-     * administer" is an access question, and a page that stated the rule
-     * without saying how many people it currently names would be a page you
-     * still had to leave to act on.
-     */
-    #[Route('/team/configure', name: self::SETTINGS, defaults: TeamController::SURFACE, methods: ['GET'])]
-    #[IsGranted(PositionController::CONFIGURE)]
-    public function settings(): Response
+    #[Route('/team/configure/people', name: self::PEOPLE, defaults: TeamController::SURFACE, methods: ['GET'])]
+    #[IsGranted(self::DIRECTORY)]
+    public function people(): Response
     {
-        $people = $this->users->findAllByName();
-        $byTier = 0;
-        $mayAdminister = 0;
-        foreach ($people as $person) {
-            if (!$person->isActive()) {
-                continue;
-            }
-            if ($person->getTeamRole()->canManageContent()) {
-                ++$byTier;
-                ++$mayAdminister;
-                continue;
-            }
-            // WHO ADMINISTERS THE TEAM, in the terms the model now uses:
-            // somebody whose position confers the positions register. It read
-            // the flat `team.manage` until administering the team stopped
-            // being a seventh verb and became these concerns with configure
-            // on them.
-            if (true === $person->getPosition()?->grantsVerbOn(TeamConcerns::POSITIONS, Verb::Configure)) {
-                ++$mayAdminister;
-            }
+        return new Response($this->twig->render('@Team/team/configure/people.html.twig', [
+            'rules' => $this->settings->current(),
+            'units' => InvitationUnitEnum::cases(),
+            'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
+        ]));
+    }
+
+    /** THE INVITATION RULES, SAVED — the one write on the People section. */
+    #[Route('/team/configure/people', name: 'team_configure_people_save', methods: ['POST'])]
+    #[IsGranted(self::DIRECTORY)]
+    public function savePeople(Request $request): Response
+    {
+        $this->assertCsrf($request);
+
+        $unit = InvitationUnitEnum::tryFrom((string) $request->request->get('validUnit'));
+        if (null === $unit) {
+            return $this->back($request, self::PEOPLE, 'An invitation is valid for a number of days or of hours.', 'error');
         }
 
-        return new Response($this->twig->render('@Team/team/configure.html.twig', [
-            'people' => \count($people),
-            'mayAdminister' => $mayAdminister,
-            'byTier' => $byTier,
-            'tiers' => TeamRoleEnum::cases(),
-            'departments' => \count($this->departments->findAllActiveOrdered()),
-            // THE ADD-A-POSITION CARD posts to the positions register's own
-            // write, so it carries that write's token, not the vocabulary's.
+        try {
+            $this->settings->setInvitationRules(
+                $this->number($request, 'validAmount'),
+                $unit,
+                $this->number($request, 'uses'),
+                'allowed' === $request->request->get('withPassword'),
+            );
+        } catch (\InvalidArgumentException $refusal) {
+            return $this->back($request, self::PEOPLE, $refusal->getMessage(), 'error');
+        }
+
+        return $this->back($request, self::PEOPLE, 'Saved. Applies to every invitation sent from now on.');
+    }
+
+    /**
+     * ADDING A POSITION. The create card posts to the positions register's
+     * own write ({@see PositionController::create()}), so this screen carries
+     * that write's token and nothing of its own.
+     */
+    #[Route('/team/configure/positions', name: self::POSITIONS, defaults: TeamController::SURFACE, methods: ['GET'])]
+    #[IsGranted(PositionController::CONFIGURE)]
+    public function positions(): Response
+    {
+        return new Response($this->twig->render('@Team/team/configure/positions.html.twig', [
+            // WHAT A PLACEMENT MAY BE MADE AT, and the whole of it: at the
+            // organization or at named areas. Department is the placement's
+            // other dimension and `own` is a scope a concern offers.
+            'placeableKinds' => [ScopeKind::Organization, ScopeKind::Area],
             'csrfToken' => $this->csrf->getToken(PositionController::CSRF_ID)->getValue(),
         ]));
     }
 
-    /*
-     * WHAT A POSITION MAY BE CALLED — titles, and the departments already
-     * using each word.
-     *
-     * THE SAME WORD TWICE IS LEGAL and is the case this vocabulary exists to
-     * allow: a position's name is unique inside its department and nowhere
-     * else, so `Analyst` in Ecology and `Analyst` in Protection Service are
-     * two different jobs. Nothing on this screen may merge them.
-     */
+    #[Route('/team/configure/assignments', name: self::ASSIGNMENTS, defaults: TeamController::SURFACE, methods: ['GET'])]
+    #[IsGranted(self::DIRECTORY)]
+    public function assignments(): Response
+    {
+        return new Response($this->twig->render('@Team/team/configure/assignments.html.twig', [
+            'rules' => $this->settings->current(),
+            'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
+        ]));
+    }
+
+    /** THE STATIONING RULES, SAVED — the one write on the Assignments section. */
+    #[Route('/team/configure/assignments', name: 'team_configure_assignments_save', methods: ['POST'])]
+    #[IsGranted(self::DIRECTORY)]
+    public function saveAssignments(Request $request): Response
+    {
+        $this->assertCsrf($request);
+
+        try {
+            $this->settings->setStationingRules(
+                'allowed' === $request->request->get('twoStations'),
+                $this->number($request, 'leaders'),
+                'allowed' === $request->request->get('emptyStation'),
+            );
+        } catch (\InvalidArgumentException $refusal) {
+            return $this->back($request, self::ASSIGNMENTS, $refusal->getMessage(), 'error');
+        }
+
+        return $this->back($request, self::ASSIGNMENTS, 'Saved. Applies to every posting written in an area from now on.');
+    }
+
+    /** A posted count, or nought for anything that is not one — the service says what is too few. */
+    private function number(Request $request, string $field): int
+    {
+        $posted = $request->request->get($field);
+
+        return is_numeric($posted) ? (int) $posted : 0;
+    }
+
+    private function assertCsrf(Request $request): void
+    {
+        if (!$this->csrf->isTokenValid(new CsrfToken(self::CSRF_ID, (string) $request->request->get('_token')))) {
+            throw new NotFoundHttpException('Invalid CSRF token.');
+        }
+    }
+
+    /** BACK TO THE CARD THE EDIT WAS MADE ON, so the sentence is read beside the thing it is about. */
+    private function back(Request $request, string $section, string $message, string $kind = 'success'): RedirectResponse
+    {
+        $session = $request->hasSession() ? $request->getSession() : null;
+        if ($session instanceof FlashBagAwareSessionInterface) {
+            $session->getFlashBag()->add($kind, $message);
+        }
+
+        return new RedirectResponse($this->router->generate($section));
+    }
 }

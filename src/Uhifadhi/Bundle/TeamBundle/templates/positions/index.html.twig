@@ -53,7 +53,7 @@
     {# THE SECTION'S PRIMARY ACTION, the accent cta, first in the row. It does
        not open a second form: it jumps to the create card that is already open
        at the top of the page, the way a configure page states a setting. #}
-    {% if door('positions.configure') %}<a class="cta" href="{{ path('team_configure') }}#add">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Add a position</a>{% endif %}
+    {% if door('positions.configure') %}<a class="cta" href="{{ path('team_configure_positions') }}#add">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Add a position</a>{% endif %}
     {# AND NO CONFIGURE ENTRY HERE. The frame writes exactly one, last in the
        row, on every surface in the product — a page that types its own draws
        the word twice, which is what this one did. #}

@@ -25,6 +25,7 @@ use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
+use Uhifadhi\Bundle\TeamBundle\Controller\TeamConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamRolesController;
@@ -296,9 +297,9 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             // A PERSON'S RECORD AND ITS CONFIGURE PAGE ARE THE PEOPLE SCREEN'S,
             // and a position's are the register's: the tree opens the path to
             // the screen a record belongs to, or the viewer stands nowhere.
-            $this->screen('People', TeamController::PEOPLE, ['team_member', 'team_member_configure']),
-            $this->screen('Positions', PositionController::REGISTER, ['team_position_show', 'team_position_configure']),
-            $this->screen('Assignments', TeamPostingsController::POSTINGS),
+            $this->screen('People', TeamController::PEOPLE, ['team_member', 'team_member_configure', TeamConfigureController::PEOPLE]),
+            $this->screen('Positions', PositionController::REGISTER, ['team_position_show', 'team_position_configure', TeamConfigureController::POSITIONS]),
+            $this->screen('Assignments', TeamPostingsController::POSTINGS, [TeamConfigureController::ASSIGNMENTS]),
             $this->screen('Roles', TeamRolesController::ROLES),
         ]));
 

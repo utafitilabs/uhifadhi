@@ -42,7 +42,7 @@ final class PostingDoorServiceTest extends TestCase
     {
         $door = $this->door(['01a0c006-bfb6-752d-bc76-5e816ddeaa93' => 'Northern Reserve']);
 
-        self::assertSame('/areas/01a0c006-bfb6-752d-bc76-5e816ddeaa93/stations/settings', $door->url());
+        self::assertSame('/areas/01a0c006-bfb6-752d-bc76-5e816ddeaa93/configure/stations', $door->url());
     }
 
     /** Several, and the register is where they say which. */
@@ -65,7 +65,7 @@ final class PostingDoorServiceTest extends TestCase
     {
         $door = $this->door(['01a0c006-bfb6-752d-bc76-5e816ddeaa93' => 'Northern Reserve'], organization: true);
 
-        self::assertSame('/areas/01a0c006-bfb6-752d-bc76-5e816ddeaa93/stations/settings', $door->url());
+        self::assertSame('/areas/01a0c006-bfb6-752d-bc76-5e816ddeaa93/configure/stations', $door->url());
     }
 
     /** No areas at all, and the register is still somewhere to start. */
@@ -102,7 +102,7 @@ final class PostingDoorServiceTest extends TestCase
         if ($mounted) {
             $routes->add(PostingDoorService::REGISTER_ROUTE, new Route('/areas'));
             if ($stations) {
-                $routes->add(PostingDoorService::STATIONS_ROUTE, new Route('/areas/{uuid}/stations/settings'));
+                $routes->add(PostingDoorService::STATIONS_ROUTE, new Route('/areas/{uuid}/configure/stations'));
             }
         }
 

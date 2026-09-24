@@ -59,6 +59,7 @@ final readonly class UserService
         private SuperAdminInvariant $invariant,
         private PositionVacancy $vacancies,
         private UserRepository $users,
+        private TeamSettingsService $settings,
     ) {
     }
 
@@ -150,7 +151,10 @@ final readonly class UserService
             ->setLastName('')
             ->setPosition($position)
             ->setVerified(false)
-            ->setVerificationToken(bin2hex(random_bytes(32)));
+            ->setVerificationToken(bin2hex(random_bytes(32)))
+            // SENT UNDER THE RULE IN FORCE TODAY, and stamped so that a rule
+            // tightened tomorrow leaves this link as it was promised.
+            ->setInvitationExpiresAt($this->settings->current()->invitationExpiry(new \DateTimeImmutable()));
         $user->setPassword($this->hasher->hashPassword($user, bin2hex(random_bytes(32))));
 
         if (null !== $invitedBy) {
@@ -191,6 +195,8 @@ final readonly class UserService
 
         $token = bin2hex(random_bytes(32));
         $user->setVerificationToken($token);
+        // A RESEND IS A NEW LINK, sent under the rule in force now.
+        $user->setInvitationExpiresAt($this->settings->current()->invitationExpiry(new \DateTimeImmutable()));
 
         // WHO ASKED, AND WHEN, IS PART OF THE FACT. The roster prints "invited
         // by N. Kileo, 3 days ago", and after a resend the honest answer is

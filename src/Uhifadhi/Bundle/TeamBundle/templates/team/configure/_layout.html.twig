@@ -1,0 +1,27 @@
+{# TEAM · CONFIGURE — the frame every section shares.
+
+   THE STRIP IS THE FRAME'S, written from the sections contract into the place
+   a data tab's strip occupies; the lit Configure action is the frame's too and
+   is the way back to the overview. This layout adds the one door the design
+   draws before it — the register — and the crumb that names the section.
+
+   EACH SECTION FILLS: `section` (the crumb's word), `shell_page_subtitle`
+   (one line: what THIS section is for) and `shell_page` (its cards). #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Team · Configure · {{ section }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_overview') }}">uhifadhi</a> / <a href="{{ path('team_index') }}">team</a> / configure / <span>{{ section }}</span>
+{% endblock %}
+
+{% block shell_page_title %}Team{% endblock %}
+
+{% block shell_page_actions %}
+    <a class="tgl" href="{{ path('team_index') }}">&lsaquo; The register</a>
+{% endblock %}

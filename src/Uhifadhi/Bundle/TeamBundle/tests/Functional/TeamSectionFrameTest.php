@@ -101,19 +101,19 @@ final class TeamSectionFrameTest extends WebTestCaseWithSchema
 
         self::assertGreaterThan(0, $actions->count());
         self::assertSame('Configure', trim($actions->last()->text()));
-        self::assertSame('/team/configure', $actions->last()->attr('href'));
+        self::assertSame('/team/configure/people', $actions->last()->attr('href'));
     }
 
     /** The configure page shows its SECTIONS where a data tab shows the strip. */
     public function testTheConfigurePageShowsItsSectionsInTheStrip(): void
     {
-        $crawler = $this->visit('/team/configure');
+        $crawler = $this->visit('/team/configure/people');
 
         self::assertSame(
-            ['Team settings'],
+            ['People', 'Positions', 'Assignments'],
             $crawler->filter('.atabs a')->each(static fn (Crawler $c): string => $c->text()),
         );
-        self::assertSame(['Team settings'], $crawler->filter('.atabs a.on')->each(static fn (Crawler $c): string => $c->text()));
+        self::assertSame(['People'], $crawler->filter('.atabs a.on')->each(static fn (Crawler $c): string => $c->text()));
     }
 
     /**
@@ -122,7 +122,7 @@ final class TeamSectionFrameTest extends WebTestCaseWithSchema
      */
     public function testOnConfigureTheActionIsTheWayBack(): void
     {
-        $action = $this->visit('/team/configure')->filter('.pgact > *')->last();
+        $action = $this->visit('/team/configure/people')->filter('.pgact > *')->last();
 
         self::assertSame('/team/overview', $action->attr('href'));
     }

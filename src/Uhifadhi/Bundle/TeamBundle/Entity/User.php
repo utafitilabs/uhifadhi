@@ -169,6 +169,15 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
     private ?\DateTimeImmutable $invitedAt = null;
 
     /**
+     * WHEN THE INVITATION LINK STOPS OPENING — stamped from the team's
+     * invitation rules the moment the link is sent, so a rule tightened later
+     * leaves a link already in an inbox as it was promised. Null on an account
+     * invited before there was a rule, and on one never invited at all.
+     */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $invitationExpiresAt = null;
+
+    /**
      * Self-referencing and nullable, with the FK nulled rather than cascading:
      * the person who invited somebody may themselves be deactivated later, and
      * an account must never be deleted because of who introduced it.
@@ -459,6 +468,24 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
     public function getInvitedAt(): ?\DateTimeImmutable
     {
         return $this->invitedAt;
+    }
+
+    public function getInvitationExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->invitationExpiresAt;
+    }
+
+    public function setInvitationExpiresAt(?\DateTimeImmutable $expiresAt): static
+    {
+        $this->invitationExpiresAt = $expiresAt;
+
+        return $this;
+    }
+
+    /** Whether the invitation link may still be opened at $now — an unstamped link never lapses. */
+    public function isInvitationOpenAt(\DateTimeImmutable $now): bool
+    {
+        return null === $this->invitationExpiresAt || $this->invitationExpiresAt >= $now;
     }
 
     public function getInvitedBy(): ?self

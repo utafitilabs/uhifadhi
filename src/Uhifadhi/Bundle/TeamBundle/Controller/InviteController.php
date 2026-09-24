@@ -32,6 +32,7 @@ use Uhifadhi\Bundle\TeamBundle\Exception\PositionFullException;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
+use Uhifadhi\Bundle\TeamBundle\Service\TeamSettingsService;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 
 /**
@@ -83,6 +84,7 @@ final readonly class InviteController
         private UrlGeneratorInterface $router,
         private TokenStorageInterface $tokens,
         private Mail $mail,
+        private TeamSettingsService $settings,
     ) {
     }
 
@@ -101,6 +103,9 @@ final readonly class InviteController
             // The one deployment fact this page turns on.
             'mailerConfigured' => $this->mail->isConfigured(),
             'passwordMinLength' => User::PASSWORD_MIN_LENGTH,
+            // THE TEAM'S RULE: whether somebody may be created with a password
+            // at all, or by invitation only. Withheld here and refused below.
+            'withPassword' => $this->settings->current()->isInvitationWithPassword(),
             'createToken' => $this->csrf->getToken(self::CSRF_CREATE)->getValue(),
             'inviteToken' => $this->csrf->getToken(self::CSRF_INVITE)->getValue(),
         ]));
@@ -112,6 +117,12 @@ final readonly class InviteController
     public function create(Request $request): Response
     {
         $this->assertCsrf($request, self::CSRF_CREATE);
+
+        if (!$this->settings->current()->isInvitationWithPassword()) {
+            // WITHHELD AND REFUSED. The team's rule says people arrive by
+            // invitation only; a POST that arrives anyway gets the sentence.
+            return $this->back($request, 'This team adds people by invitation only — the rule is set on Team › Configure › People.', 'error');
+        }
 
         $email = strtolower(trim((string) $request->request->get('email')));
         $password = (string) $request->request->get('password');

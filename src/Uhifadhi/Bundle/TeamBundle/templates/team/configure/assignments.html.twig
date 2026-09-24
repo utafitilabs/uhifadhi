@@ -1,0 +1,44 @@
+{# TEAM · CONFIGURE · ASSIGNMENTS — the rules every posting is written under.
+
+   ONE CARD, AS A FORM. Team never writes a posting — the area does; these are
+   the rules it writes them under. A derived zone and a department read from
+   the station are facts, not fields. #}
+{% extends '@Team/team/configure/_layout.html.twig' %}
+{% import '@Team/team/configure/_bits.html.twig' as bits %}
+
+{% set section = 'assignments' %}
+
+{% block shell_page_subtitle %}Configure &middot; Assignments: the rules every posting is written under.{% endblock %}
+
+{% block shell_page %}
+    <form class="c" method="post" action="{{ path('team_configure_assignments_save') }}">
+        <input type="hidden" name="_token" value="{{ csrfToken }}">
+        <span class="tab">Stationing rules<span class="src">&middot; every posting</span></span>
+        <div class="frow">
+            <label>Two stations at once</label>
+            <span class="fcell">
+                {{ bits.yesno('twoStations', rules.twoStationsAllowed ? 'allowed' : 'one', {'allowed': 'Allowed', 'one': 'One only'}, 'Two stations at once') }}
+            </span>
+        </div>
+        <div class="frow">
+            <label for="tc-leaders">Leaders</label>
+            <span class="fcell">
+                <span class="fnum">
+                    <input class="fld" type="number" id="tc-leaders" name="leaders" value="{{ rules.leadersPerStation }}" min="1" required aria-label="per station">
+                    <span class="u">per station</span>
+                </span>
+            </span>
+        </div>
+        <div class="frow">
+            <label>A station with nobody</label>
+            <span class="fcell">
+                {{ bits.yesno('emptyStation', rules.emptyStationAllowed ? 'allowed' : 'not-allowed', {'allowed': 'Allowed', 'not-allowed': 'Not allowed'}, 'A station with nobody') }}
+            </span>
+        </div>
+        <div class="save-row">
+            <span class="d" style="font-size:11.5px;margin-right:auto">Applies to every posting written in an area</span>
+            <button type="reset" class="btn">Cancel</button>
+            <button type="submit" class="cta">Save stationing rules</button>
+        </div>
+    </form>
+{% endblock %}

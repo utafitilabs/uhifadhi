@@ -8,6 +8,21 @@
 
 Not released yet.
 
+ * TEAM'S CONFIGURE PAGE IS THREE SECTIONS (ruled 2026-09-24), each an
+   address of its own on the shape every area configure section wears:
+   `/team/configure/people` (the invitation rules), `/team/configure/positions`
+   (adding a position) and `/team/configure/assignments` (the stationing
+   rules). The one-screen `/team/configure` is gone, not redirected. The rules
+   live in `team_settings`, one row the shipped migration writes; an
+   invitation is stamped with the validity in force when it is sent, and the
+   create-with-a-password path is withheld and refused when the rule says
+   invitation only. The sign-in policy is the installation's and is no longer
+   stated here.
+
+ * THE DEPARTMENTS SECTION OF AN AREA'S CONFIGURE PAGE answers at
+   `/areas/{uuid}/configure/departments`, the shape every area configure
+   section wears; `…/departments/settings` is gone, not redirected.
+
  * THE POSITION TITLES ARE GONE (ruled 2026-09-22). `PositionTitle`, its
    table, the vocabulary screen at /team/configure/positions and its writes
    were a list nothing read once position names became unique across the

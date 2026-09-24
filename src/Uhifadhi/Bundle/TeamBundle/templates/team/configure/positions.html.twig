@@ -1,0 +1,46 @@
+{# TEAM · CONFIGURE · POSITIONS — adding one.
+
+   THE HOUSE CREATE CARD, and only it (owner 2026-09-22): the register shows
+   what exists; creating a position is configuration. The card carries its own
+   defaults, so there is no second defaults card; grants are ticked on the
+   position once it exists; nothing here deletes.
+
+   IT POSTS TO THE REGISTER'S OWN WRITE, so it carries that write's token. #}
+{% extends '@Team/team/configure/_layout.html.twig' %}
+
+{% set section = 'positions' %}
+
+{% block shell_page_subtitle %}Configure &middot; Positions: adding one.{% endblock %}
+
+{% block shell_page %}
+    <div class="dcadd" id="add">
+        <div class="dcaddhd">
+            {{ ux_icon('shell:plus', {width: 16, height: 16}) }}
+            <b>Add a position</b>
+            <span class="hint">The name is unique for the organization</span>
+        </div>
+        <form class="crcard" method="post" action="{{ path('team_position_create') }}">
+            <input type="hidden" name="_token" value="{{ csrfToken }}">
+            <div class="crgrid">
+                <div class="crfield grow">
+                    <span class="crlab">Name</span>
+                    <input type="text" name="name" class="fld" placeholder="Sergeant" aria-label="Position name" required maxlength="120">
+                </div>
+                <div class="crfield">
+                    <span class="crlab">Seats</span>
+                    <input type="number" name="seats" class="fld" placeholder="unlimited" min="1" style="width:110px" aria-label="Seats">
+                </div>
+                <div class="crfield">
+                    <span class="crlab">Placement</span>
+                    <span class="fsel n"><select class="fld" name="allows[]" aria-label="Placement">
+                        {%- for kind in placeableKinds %}<option value="{{ kind.value }}">{{ kind.value|capitalize }}</option>{% endfor -%}
+                    </select></span>
+                </div>
+                <button class="cta" type="submit">Add position</button>
+            </div>
+            <div class="crhint">
+                <span>Grants are ticked on the position&rsquo;s own page once it exists &mdash; <a href="{{ path('team_positions') }}">the register</a></span>
+            </div>
+        </form>
+    </div>
+{% endblock %}

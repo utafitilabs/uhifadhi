@@ -159,49 +159,6 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
         }
     }
 
-    // ---- team settings ---------------------------------------------------
-
-    /**
-     * A SCREEN DOES NOT NAME AN ACTION THAT DOES NOT EXIST. Accounts are
-     * deactivated, kept and listed; naming a delete or a recycle bin would
-     * teach a reader to look for one.
-     */
-    public function testTheSettingsScreenNamesNoActionTheProductDoesNotHave(): void
-    {
-        $this->installation();
-        $text = $this->visit('/team/configure')->filter('.pgbody')->text();
-
-        self::assertStringNotContainsString('Recycle bin', $text);
-        self::assertStringNotContainsString('Deleting an account', $text);
-        self::assertStringContainsString('Deactivated accounts are refused at sign-in, and stay listed.', $text);
-    }
-
-    /** The two figures on it are the answer to an access question. */
-    public function testTheAccessCardSaysHowManyPeopleTheRuleNames(): void
-    {
-        $this->installation();
-        $text = $this->visit('/team/configure')->filter('.pgbody')->text();
-
-        self::assertStringContainsString('2 of 4 people', $text);
-        self::assertStringContainsString('by tier, 2 people', $text);
-    }
-
-    /** SETTINGS IS READ-ONLY: it states the rules and changes none of them. */
-    /**
-     * THE SETTINGS SCREEN'S ONE WRITE IS ADDING A POSITION (owner 2026-09-22:
-     * creation is configuration, a register is presentation). Everything else
-     * on it states a setting.
-     */
-    public function testTheSettingsScreenWritesNothingButANewPosition(): void
-    {
-        $this->installation();
-        $forms = $this->visit('/team/configure')->filter('form[method="post"]');
-
-        self::assertCount(1, $forms);
-        self::assertStringEndsWith('/team/positions', (string) $forms->attr('action'));
-        self::assertCount(1, $forms->filter('input[name="name"]'));
-    }
-
     /**
      * Four people: a Super Admin, an Admin, a Staff member whose position
      * carries the grant, and one who holds nothing and has never signed in.

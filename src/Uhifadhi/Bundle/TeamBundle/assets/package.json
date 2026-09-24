@@ -1,6 +1,6 @@
 {
     "name": "@uhifadhi/team-bundle",
-    "description": "Front-end behaviour of the team screens — the grants editor's per-module bulk controls and change preview, the grant matrix's fold-all/open-all shortcuts, the older permission matrix's per-umbrella select-all, the department surfaces' panels, and the performance matrix's in-band sort, mapped into hosts via AssetMapper.",
+    "description": "Front-end behaviour of the team screens \u2014 the grants editor's per-module bulk controls and change preview, the grant matrix's fold-all/open-all shortcuts, the older permission matrix's per-umbrella select-all, the department surfaces' panels, the performance matrix's in-band sort, and the configure sections' yes / no control, mapped into hosts via AssetMapper.",
     "license": "AGPL-3.0-or-later",
     "symfony": {
         "controllers": {
@@ -26,6 +26,11 @@
             },
             "folds": {
                 "main": "controllers/folds_controller.js",
+                "fetch": "lazy",
+                "enabled": true
+            },
+            "yes-no": {
+                "main": "controllers/yes_no_controller.js",
                 "fetch": "lazy",
                 "enabled": true
             }

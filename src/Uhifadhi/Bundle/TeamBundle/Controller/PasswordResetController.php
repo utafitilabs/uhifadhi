@@ -205,7 +205,7 @@ final readonly class PasswordResetController
         $user = $this->users->findOneBy(['verificationToken' => $token]);
 
         return new Response($this->twig->render('@Team/auth/accept.html.twig', [
-            'state' => $user instanceof User && !$user->isVerified() && $user->isActive() ? 'open' : 'stale',
+            'state' => $user instanceof User && self::isOpen($user) ? 'open' : 'stale',
             'member' => $user instanceof User ? $user : null,
             'minLength' => User::PASSWORD_MIN_LENGTH,
             'csrfToken' => $this->csrf->getToken(self::CSRF_ACCEPT)->getValue(),
@@ -218,7 +218,7 @@ final readonly class PasswordResetController
         $this->assertCsrf($request, self::CSRF_ACCEPT);
 
         $user = $this->users->findOneBy(['verificationToken' => $token]);
-        if (!$user instanceof User || $user->isVerified() || !$user->isActive()) {
+        if (!$user instanceof User || !self::isOpen($user)) {
             return new Response($this->twig->render('@Team/auth/accept.html.twig', [
                 'state' => 'stale',
                 'member' => null,
@@ -307,5 +307,15 @@ final readonly class PasswordResetController
         if (!$this->csrf->isTokenValid(new CsrfToken($id, (string) $request->request->get('_token')))) {
             throw new NotFoundHttpException('Invalid CSRF token.');
         }
+    }
+
+    /**
+     * WHETHER AN INVITATION LINK STILL OPENS: unaccepted, the account active,
+     * and inside the validity stamped when it was sent. Expired and accepted
+     * are ONE answer on purpose, as they are for a reset link.
+     */
+    private static function isOpen(User $user): bool
+    {
+        return !$user->isVerified() && $user->isActive() && $user->isInvitationOpenAt(new \DateTimeImmutable());
     }
 }

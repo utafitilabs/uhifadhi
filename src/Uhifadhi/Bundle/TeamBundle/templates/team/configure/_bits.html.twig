@@ -1,0 +1,12 @@
+{# THE YES / NO CONTROL — two halves of one control at the family's height,
+   carrying a real field: the buttons paint the choice, the hidden input posts
+   it, and the form's Save is what writes. `options` is a map of posted value
+   to label, in the order drawn; `current` is the posted value now in force. #}
+{% macro yesno(name, current, options, label) %}
+    <span class="fyn" role="group" aria-label="{{ label }}" data-controller="uhifadhi--team-bundle--yes-no">
+        <input type="hidden" name="{{ name }}" value="{{ current }}" data-uhifadhi--team-bundle--yes-no-target="field">
+        {%- for value, text in options %}
+            <button type="button" class="{{ value == current ? 'on' : '' }}" aria-pressed="{{ value == current ? 'true' : 'false' }}" data-value="{{ value }}" data-action="uhifadhi--team-bundle--yes-no#pick" data-uhifadhi--team-bundle--yes-no-target="option">{{ text }}</button>
+        {%- endfor %}
+    </span>
+{% endmacro %}

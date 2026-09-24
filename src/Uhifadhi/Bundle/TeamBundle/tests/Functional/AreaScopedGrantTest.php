@@ -60,7 +60,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
         $ranger = $this->position('Ranger', []);
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/configure');
+        $token = $this->tokenFrom('/team/configure/positions');
         $this->client->request('POST', '/team/positions/'.$ranger->getUuidString().'/permissions', [
             '_token' => $token, 'grants' => ['directory.read'],
         ]);
@@ -80,7 +80,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
         $ranger = $this->position('Ranger', []);
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/configure');
+        $token = $this->tokenFrom('/team/configure/positions');
         $this->client->request('POST', '/team/positions/'.$ranger->getUuidString().'/permissions', [
             '_token' => $token, 'grants' => ['surveys.read'],
         ]);
@@ -98,7 +98,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
         $deputy = $this->position('Deputy Warden', []);
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/configure');
+        $token = $this->tokenFrom('/team/configure/positions');
         $this->client->request('POST', '/team/positions/'.$deputy->getUuidString().'/permissions', [
             '_token' => $token, 'grants' => ['positions.configure'],
         ]);
@@ -121,7 +121,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
         $ranger = $this->position('Ranger', ['surveys.read']);
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/configure');
+        $token = $this->tokenFrom('/team/configure/positions');
         $this->client->request('POST', '/team/positions/'.$ranger->getUuidString().'/permissions', [
             '_token' => $token, 'grants' => ['directory.read'],
         ]);
@@ -166,7 +166,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
         $this->em->flush();
         $this->client->loginUser($orgAdmin);
 
-        $token = $this->tokenFrom('/team/configure');
+        $token = $this->tokenFrom('/team/configure/positions');
         $this->client->request('POST', '/team/positions/'.$ranger->getUuidString().'/permissions', [
             '_token' => $token, 'grants' => ['surveys.read', 'positions.configure'],
         ]);

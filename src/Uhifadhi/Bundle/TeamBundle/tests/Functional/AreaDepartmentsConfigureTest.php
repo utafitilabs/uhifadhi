@@ -83,7 +83,7 @@ final class AreaDepartmentsConfigureTest extends WebTestCaseWithSchema
 
         $this->client->submit($crawler->filter('form.crcard')->form(['name' => 'Wildlife Vet']));
 
-        self::assertResponseRedirects('/areas/'.$area->getUuidString().'/departments/settings');
+        self::assertResponseRedirects('/areas/'.$area->getUuidString().'/configure/departments');
 
         $made = $this->em->getRepository(Department::class)->findOneBy(['name' => 'Wildlife Vet']);
         self::assertInstanceOf(Department::class, $made);
@@ -97,7 +97,7 @@ final class AreaDepartmentsConfigureTest extends WebTestCaseWithSchema
 
         $this->client->submit($crawler->filter('.dcard form.dc-renameform')->form(['name' => 'Wetlands']));
 
-        self::assertResponseRedirects('/areas/'.$area->getUuidString().'/departments/settings');
+        self::assertResponseRedirects('/areas/'.$area->getUuidString().'/configure/departments');
     }
 
     /** @return array{0: Crawler, 1: HostArea} */
@@ -113,7 +113,7 @@ final class AreaDepartmentsConfigureTest extends WebTestCaseWithSchema
         $this->em->flush();
 
         return [
-            $this->client->request('GET', '/areas/'.$north->getUuidString().'/departments/settings'),
+            $this->client->request('GET', '/areas/'.$north->getUuidString().'/configure/departments'),
             $north,
         ];
     }

@@ -49,6 +49,17 @@ moment it exists and the person goes straight to signing in.</p>
 <div class="iv-ways">
 
     {# ── CREATE WITH A PASSWORD ───────────────────────────────────────── #}
+    {# WITHHELD UNDER THE TEAM'S RULE (Configure › People): when people arrive
+       by invitation only, the path is not drawn — and the write refuses. #}
+    {% if not withPassword %}
+    <div class="iv-way">
+        <div class="iv-whead"><b>Create with a password</b><span class="chip">invitation only</span></div>
+        <div class="iv-wbody">
+            <p class="iv-lede">This team adds people by invitation only &mdash; the rule is set on
+            <a href="{{ path('team_configure_people') }}">Team &rsaquo; Configure &rsaquo; People</a>.</p>
+        </div>
+    </div>
+    {% else %}
     <div class="iv-way">
         <div class="iv-whead"><b>Create with a password</b><span class="chip ok">always available</span></div>
         <div class="iv-wbody">
@@ -97,6 +108,8 @@ moment it exists and the person goes straight to signing in.</p>
             </div>
         </div>
     </div>
+
+    {% endif %}
 
     {# ── INVITE BY EMAIL ──────────────────────────────────────────────── #}
     <div class="iv-way" data-mailer="{{ mailerConfigured ? 'on' : 'off' }}">

@@ -23,9 +23,11 @@ use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\PasswordTooShortException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PositionFullException;
+use Uhifadhi\Bundle\TeamBundle\Repository\TeamSettingsRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
+use Uhifadhi\Bundle\TeamBundle\Service\TeamSettingsService;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 
 /**
@@ -266,6 +268,9 @@ final class UserServiceTest extends TestCase
                 self::createStub(UserRepository::class),
             ),
             $users,
+            // THE INVITATION RULES an invitation is stamped from: a row nobody
+            // has written reads the defaults, which is all this unit needs.
+            new TeamSettingsService(self::createStub(TeamSettingsRepository::class), self::createStub(EntityManagerInterface::class)),
         );
     }
 }

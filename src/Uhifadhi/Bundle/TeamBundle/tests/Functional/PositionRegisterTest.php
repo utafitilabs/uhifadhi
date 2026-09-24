@@ -283,17 +283,17 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
     /**
      * THE CREATE CARD IS A POSITION'S TWO FACTS — a name and a seat count, as
      * the design draws it. No department, because a position belongs to none;
-     * no allowed kinds either, those are set on the record's configure page,
-     * so a new position keeps the entity's default until somebody goes there.
+     * the placement is the third field, organization first as the design
+     * draws it, and the grants are ticked on the record's configure page.
      */
-    public function testTheCreateCardWritesTheNameAndTheSeats(): void
+    public function testTheCreateCardWritesTheNameTheSeatsAndThePlacement(): void
     {
         $this->administrator();
-        $crawler = $this->client->request('GET', '/team/configure');
+        $crawler = $this->client->request('GET', '/team/configure/positions');
 
         self::assertCount(0, $crawler->filter('#add select[name="department"]'));
-        self::assertCount(0, $crawler->filter('#add input[name="allows[]"]'), 'The kinds a position allows are not on the add row.');
-        self::assertSame(['name', 'seats'], $crawler->filter('#add .crlab')->each(static fn ($l): string => strtolower(trim($l->text()))));
+        self::assertCount(1, $crawler->filter('#add select[name="allows[]"]'), 'The placement is one select on the add card.');
+        self::assertSame(['name', 'seats', 'placement'], $crawler->filter('#add .crlab')->each(static fn ($l): string => strtolower(trim($l->text()))));
 
         $form = $crawler->filter('#add form')->form();
         $form['name'] = 'Sergeant';
@@ -310,7 +310,7 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
         // allows read under the name.
         self::assertSame('Grants nothing', trim($crawler->filter('tr.prow td:nth-child(4)')->text()));
         self::assertSame(
-            [ScopeKind::Area],
+            [ScopeKind::Organization],
             $this->em->getRepository(Position::class)->findOneBy(['name' => 'Sergeant'])?->getAllowedKinds(),
         );
     }
@@ -322,7 +322,7 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
         $this->position('Sergeant');
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/configure');
+        $crawler = $this->client->request('GET', '/team/configure/positions');
         $form = $crawler->filter('#add form')->form();
         $form['name'] = 'Sergeant';
         $this->client->submit($form);

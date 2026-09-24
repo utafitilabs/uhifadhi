@@ -65,6 +65,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\InstallationPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\TeamSettingsRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\ActiveUserChecker;
 use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
@@ -95,6 +96,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamSectionOverview;
+use Uhifadhi\Bundle\TeamBundle\Service\TeamSettingsService;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Bundle\TeamBundle\Settings\PeopleFigure;
 use Uhifadhi\Bundle\TeamBundle\Settings\PeopleReading;
@@ -283,6 +285,18 @@ return static function (ContainerConfigurator $container): void {
     $services->set(ApiTokenRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
+
+    $services->set(TeamSettingsRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    /*
+     * THE RULES THE WHOLE TEAM IS RUN UNDER — one row, read by the screens
+     * that state them and written by the three configure sections.
+     */
+    $services->set('team.settings', TeamSettingsService::class)
+        ->args([service(TeamSettingsRepository::class), service('doctrine.orm.entity_manager')]);
+    $services->alias(TeamSettingsService::class, 'team.settings');
 
     /*
      * THE CREDENTIAL A FIELD CLIENT CARRIES. It lives here because a token is a
@@ -867,6 +881,9 @@ return static function (ContainerConfigurator $container): void {
             service('team.super_admin_invariant'),
             service('team.position_vacancy'),
             service(UserRepository::class),
+            // THE INVITATION RULES an invitation is sent under — the link's
+            // validity is stamped from them the moment it is issued.
+            service('team.settings'),
         ]);
 
     /*
@@ -1238,12 +1255,17 @@ return static function (ContainerConfigurator $container): void {
         ->tag('controller.service_arguments');
     $services->alias(TeamSectionController::class, 'team.controller.section')->public();
 
+    /*
+     * THE THREE CONFIGURE SECTIONS — People, Positions, Assignments — each
+     * an address of its own, declared to the shell through the sections
+     * contract below so the frame draws the strip.
+     */
     $services->set('team.controller.configure', TeamConfigureController::class)
         ->args([
             service('twig'),
-            service(UserRepository::class),
-            service(DepartmentRepository::class),
+            service('team.settings'),
             service('security.csrf.token_manager'),
+            service('router'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(TeamConfigureController::class, 'team.controller.configure')->public();
@@ -1256,6 +1278,7 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.section_tabs', TeamSectionTabs::class)
         ->tag(ModuleTabsInterface::TAG);
     $services->set('team.section_configuration', TeamSectionConfiguration::class)
+        ->args([service('team.access.door')])
         ->tag(ConfigurationSectionsInterface::TAG);
 
     $services->set('team.controller.department_section', DepartmentSectionController::class)
@@ -1366,6 +1389,8 @@ return static function (ContainerConfigurator $container): void {
             service('router'),
             service('security.token_storage'),
             service('team.mail'),
+            // Whether the password path is offered at all is the team's rule.
+            service('team.settings'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(InviteController::class, 'team.controller.invite')->public();

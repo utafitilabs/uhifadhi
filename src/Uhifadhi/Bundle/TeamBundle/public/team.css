@@ -3228,11 +3228,11 @@ label.pm-box:focus-within i { outline: 2px solid rgb(var(--c-acc)); outline-offs
     color: var(--fog);
     cursor: pointer;
     line-height: 1;
-    font: 700 9px var(--font-mono);
+    font: 600 10px var(--font-mono);
     letter-spacing: .1em;
     text-transform: uppercase;
-    padding: 0 11px;
-    height: 24px;
+    /* The family's one 34px height, as the design's sheet states it. */
+    padding: 10px 14px 12px;
 }
 .fyn > button + button { border-left: 1px solid var(--ln2); }
 .fyn > button.on { background: var(--acc); color: var(--accT); }
@@ -3504,3 +3504,35 @@ table.tbl.dreg .ov-nm, table.tbl.preg .ov-nm { font-size: 13px; }
 table.tbl.dreg .fchev, table.tbl.preg .fchev { color: rgb(var(--c-acc)); }
 table.tbl tr.foldrow .poscard b { color: rgb(var(--c-acc)); }
 table.tbl.dreg tr.foldrow td, table.tbl.preg tr.foldrow td { padding: 0 14px 0 36px; }
+
+/* ---- TEAM · CONFIGURE — the three sections ------------------------------
+   Everything visible is the house's: .c / .tab / .src the card, .frow the
+   labelled row, .fsel and .fyn the controls at one height, .save-row the foot
+   with the primary action bottom-right, .dcadd / .crcard the create card. The
+   handful of rules below are the ones the shell does not ship. */
+
+/* A number, and the unit it is counted in. */
+.fnum { display: inline-flex; align-items: center; gap: 7px; }
+.fnum > input.fld { width: 104px; font-size: 12.5px; padding-top: 7px; padding-bottom: 8px; font-variant-numeric: tabular-nums; }
+.fnum > .u { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .06em; color: var(--dim); }
+
+/* WHEN AN ANSWER IS WANTED. The quiet mark beside a control: a statement of
+   the rule, never a validation state, so it does not use the fail colour. */
+.fwhen { font-family: var(--font-mono); font-size: 8.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin-left: 7px; white-space: nowrap; }
+.fwhen.req { color: var(--acc); font-weight: 700; }
+
+/* The cell a .frow's control sits in: the control, then the mark, on one baseline. */
+.frow > .fcell { display: flex; align-items: center; min-width: 0; flex-wrap: wrap; gap: 0; }
+
+/* A card that is a form keeps the house card's shape and the house gap. */
+form.c { display: block; margin-bottom: 20px; }
+
+/* In the create card the field column stretches its children, which would
+   pull a select's box wider than the select and strand its chevron. */
+.crfield > .fsel { align-self: flex-start; }
+.crfield > .fsel.n { width: 158px; }
+
+@media (max-width: 760px) {
+    form.c > .save-row { flex-wrap: wrap; }
+    form.c > .save-row > .d { flex: 1 1 100%; margin-bottom: 4px; }
+}

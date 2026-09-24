@@ -421,6 +421,37 @@ body::before {
     width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 22px; box-sizing: border-box;
     display: flex; align-items: center; justify-content: flex-end; gap: 14px;
 }
+/* WHOSE INSTALLATION THIS IS, in the bar's left half (design: org-name.css
+   `.on-c3`). The brand's accent rule at 3×22, the organization's name, a
+   hairline the rule's own height, and the short name — one phrase, so the
+   product and the installation read as a pair without the bar carrying a
+   second mark. The rule is the smallest spend of the accent available, and it
+   IS a spend: nothing else in the bar may take it.
+
+   `margin-left: auto` on the group rather than `justify-content: space-between`
+   on the row, because the lockup is absent on an installation nobody has named
+   and the account cluster must stay where it is either way. */
+.topbar > .tb-right > .tb-left { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.tb-rule {
+    flex: none; width: 3px; height: 22px; border-radius: 2px;
+    background: rgb(var(--c-acc)); box-shadow: 0 0 0 3px var(--accGlow);
+}
+/* A name that does not fit ends in an ellipsis and keeps the whole of itself in
+   its title attribute — one rule for the one slot that states the name. */
+.tb-left b {
+    font-size: 13.5px; font-weight: 600; letter-spacing: .004em; color: rgb(var(--c-tx));
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: min(38vw, 370px);
+}
+/* The short name is a 22px box, the rule's height, so the hairline dividing it
+   from the name runs the rule's full length and no further. */
+.tb-short {
+    display: inline-flex; align-items: center; height: 22px; flex: none;
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; line-height: normal; letter-spacing: .12em;
+    color: rgb(var(--c-dim)); padding: 1px 0 0 11px; margin-left: 1px; border-left: 1px solid var(--c-ln2);
+}
+/* The bar's right-hand group, so the icons and the card keep one gap whether or
+   not the organization is named beside them. */
+.tb-rightgrp { margin-left: auto; display: flex; align-items: center; gap: 14px; }
 .tb-icon {
     position: relative; display: grid; place-items: center; width: 34px; height: 34px; border: 0;
     background: none; color: rgb(var(--c-fog)); border-radius: 9px; cursor: pointer; font-family: inherit;
@@ -538,6 +569,12 @@ body::before {
 }
 .pvfoot form { display: contents; }
 
+/* Below the fold the bar gives the name every pixel the account cluster does
+   not need: the short name drops and the name takes the measure back. */
+@media (max-width: 760px) {
+    .tb-short { display: none; }
+    .tb-left b { max-width: 46vw; }
+}
 @media (max-width: 640px) { .uinfo { display: none; } }
 
 /* The footer row. NOT `.page`: the frame owns that class and owns exactly one

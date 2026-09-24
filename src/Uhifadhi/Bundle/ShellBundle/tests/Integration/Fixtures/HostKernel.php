@@ -36,7 +36,7 @@ use Uhifadhi\Contracts\Shell\UserBadge;
  * how a real source behaves — read live, never cached (see the navigation contract's
  * same-day promise).
  */
-final class HostKernel extends TestKernel
+class HostKernel extends TestKernel
 {
     /** @var array<string, NavSection> */
     public static array $navSources = [];

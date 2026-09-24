@@ -23,9 +23,11 @@ use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\ShellBundle\Model\OrgFrame;
+use Uhifadhi\Bundle\ShellBundle\Model\OrgLockup;
 use Uhifadhi\Bundle\ShellBundle\Service\AreaShell;
 use Uhifadhi\Bundle\ShellBundle\Service\Navigation;
 use Uhifadhi\Bundle\ShellBundle\Service\OrgShell;
+use Uhifadhi\Bundle\ShellBundle\Service\SettingsReading;
 use Uhifadhi\Bundle\ShellBundle\Service\Stylesheets;
 use Uhifadhi\Bundle\ShellBundle\Service\Theme;
 use Uhifadhi\Bundle\ShellBundle\Service\UserBadgeReader;
@@ -51,6 +53,7 @@ final class ShellRuntime implements RuntimeExtensionInterface
         private readonly ModuleFrameService $frame,
         private readonly OrgShell $orgShell,
         private readonly UserBadgeReader $userBadge,
+        private readonly SettingsReading $settings,
         private readonly Theme $theme,
         private readonly RouterInterface $router,
         private readonly string $brandName,
@@ -155,17 +158,24 @@ final class ShellRuntime implements RuntimeExtensionInterface
     }
 
     /**
-     * THE PAGE TITLE, COMPOSED ONCE: "<page> — <place> — <brand>".
+     * THE PAGE TITLE, COMPOSED ONCE: "<page> — <place> — <Organization>".
      *
      * A platform where every page types this join itself is a platform where
-     * some pages use a hyphen, some an em dash, and some forget the brand. A
+     * some pages use a hyphen, some an em dash, and some forget whose it is. A
      * page says only what it is; the shell says where it is and whose it is,
      * because those are the two parts a page cannot know reliably.
+     *
+     * THE TAIL IS THE ORGANIZATION, not the product (ruled 2026-09-24): a
+     * bookmark, a tab strip and a printed page carry whose installation this
+     * is. An installation nobody has named falls back to the wordmark it was
+     * shipped with, which is the same fallback the settings screen prints.
      */
     public function title(string $page = ''): string
     {
+        $whose = $this->organization()?->name;
+
         $parts = array_filter(
-            [trim($page), $this->areaShell->place(), $this->brandName],
+            [trim($page), $this->areaShell->place(), $whose ?? $this->brandName],
             static fn (?string $part): bool => null !== $part && '' !== trim($part),
         );
 
@@ -181,6 +191,22 @@ final class ShellRuntime implements RuntimeExtensionInterface
     public function userBadge(): ?UserBadge
     {
         return $this->userBadge->badge();
+    }
+
+    /**
+     * WHOSE INSTALLATION THIS IS, AS THE TOP BAR DRAWS IT — the name in full
+     * and the short name beside it — or null on one nobody has named yet
+     * (ruled 2026-09-24, option C3).
+     *
+     * READ THROUGH THE SETTINGS SECTION, which is the one place the setting is
+     * answered: the bar and Settings › Organization cannot then disagree about
+     * what this installation is called.
+     */
+    public function organization(): ?OrgLockup
+    {
+        $identity = $this->settings->organization();
+
+        return null === $identity ? null : OrgLockup::of($identity);
     }
 
     public function defaultTheme(): string

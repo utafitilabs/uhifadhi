@@ -60,6 +60,36 @@
                 {% block shell_topbar %}
                     <header class="topbar">
                         <span class="tb-right">
+                            {# WHOSE INSTALLATION THIS IS — the brand's accent rule,
+                               the organization's full name, a hairline, the short
+                               name. The chrome says UHIFADHI, the product, in the
+                               sidebar head; this is the one slot that says whose
+                               installation it is, and the mark and the wordmark
+                               beside it are untouched (ruled 2026-09-24, option C3).
+
+                               AN INSTALLATION NOBODY HAS NAMED GETS NOTHING HERE,
+                               the same rule the viewer's card keeps: repeating the
+                               wordmark would state the organization twice and name
+                               it neither time. Settings › Organization is where that
+                               is answered.
+
+                               THE NAME CARRIES ITSELF AS ITS TITLE because the sheet
+                               bounds the measure and ends a name that does not fit in
+                               an ellipsis; the whole of it stays readable on hover. #}
+                            {#- NOT A SOCKET. A module fills none of it and a host
+                                replacing it replaces `shell_topbar`: a block here
+                                would be a sixteenth name in the layout contract
+                                that nobody has asked to fill. -#}
+                            {%- set _org = shell_organization() -%}
+                            {%- if _org is not null -%}
+                                <span class="tb-left">
+                                    <i class="tb-rule" aria-hidden="true"></i>
+                                    <b title="{{ _org.name }}">{{ _org.name }}</b>
+                                    <span class="tb-short">{{ _org.shortName }}</span>
+                                </span>
+                            {%- endif -%}
+
+                            <span class="tb-rightgrp">
                             {# THE SOCKET'S DEFAULT CONTENT IS THE WHOLE TOP-BAR ROW —
                                the alerts bell, the theme toggle, and the viewer's
                                card — not a bare toggle a host bolts things beside. A
@@ -110,14 +140,25 @@
                                    empty one. #}
                                 {%- set _badge = shell_user_badge() -%}
                                 {%- if _badge is not null -%}
+                                    {# THE SECOND LINE IS THE INSTALLATION, THEN THE SEAT —
+                                       "UCA · operator". The seat is the badge contract's
+                                       half, composed by whoever knows who is signed in;
+                                       the organization is the shell's, because the bar
+                                       beside it already reads the setting and a badge
+                                       source would have to learn the settings section to
+                                       say it. Either half may be missing and the line is
+                                       then the other one, or absent. #}
+                                    {%- set _chip_org = shell_organization() -%}
+                                    {%- set _line = [_chip_org is null ? null : _chip_org.shortName, _badge.context]|filter(part => part is not null and part is not empty)|join(' · ') -%}
                                     <span class="user">
                                         <span class="avatar">{{ _badge.initials }}</span>
                                         <span class="uinfo"><b>{{ _badge.name }}</b>
-                                            {%- if _badge.context is not null %}<em>{{ _badge.context }}</em>{% endif -%}
+                                            {%- if _line is not empty %}<em>{{ _line }}</em>{% endif -%}
                                         </span>
                                     </span>
                                 {%- endif -%}
                             {% endblock %}
+                            </span>
                         </span>
                     </header>
                 {% endblock %}

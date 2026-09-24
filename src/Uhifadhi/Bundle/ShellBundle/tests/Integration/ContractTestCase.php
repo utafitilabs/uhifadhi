@@ -46,14 +46,28 @@ abstract class ContractTestCase extends ShellKernelTestCase
     {
         parent::setUp();
 
-        HostKernel::reset();
+        static::resetTheHost();
     }
 
     protected function tearDown(): void
     {
-        HostKernel::reset();
+        static::resetTheHost();
 
         parent::tearDown();
+    }
+
+    /**
+     * THE HOST THIS CASE ACTUALLY BOOTS, reset — not HostKernel by name. A case
+     * whose subject is a contract the plain stand-in host does not implement
+     * boots a host that does ({@see Fixtures\NamedHostKernel}), and resetting
+     * the wrong class would leave that host's statics standing between tests.
+     */
+    protected static function resetTheHost(): void
+    {
+        $kernel = static::getKernelClass();
+        \assert(is_a($kernel, HostKernel::class, true));
+
+        $kernel::reset();
     }
 
     /**

@@ -81,6 +81,11 @@ final class SettingsReading
 
     private ?OrganizationIdentity $identity = null;
 
+    private ?OrganizationIdentity $organization = null;
+
+    /** Null is an ANSWER here — nobody has named this installation — so the ask is remembered separately. */
+    private bool $organizationAsked = false;
+
     /**
      * @param iterable<SettingsFigureSourceInterface>   $figureSources
      * @param iterable<SettingsCheckSourceInterface>    $checkSources
@@ -399,15 +404,30 @@ final class SettingsReading
      */
     public function identity(): OrganizationIdentity
     {
-        if (null !== $this->identity) {
-            return $this->identity;
+        return $this->identity ??= $this->organization() ?? new OrganizationIdentity($this->brandName);
+    }
+
+    /**
+     * WHOSE INSTALLATION THIS IS, OR NULL BECAUSE NOBODY HAS SAID — the same
+     * reading as {@see self::identity()} with the fallback taken off.
+     *
+     * The distinction is the top bar's: the settings screen draws a fallback
+     * because a table cell must hold something, and the bar draws nothing,
+     * because repeating the wordmark the sidebar head already carries would
+     * state the organization in two slots and name it in neither.
+     */
+    public function organization(): ?OrganizationIdentity
+    {
+        if ($this->organizationAsked) {
+            return $this->organization;
         }
 
+        $this->organizationAsked = true;
         $source = $this->single(OrganizationIdentitySourceInterface::SERVICE, OrganizationIdentitySourceInterface::class);
 
-        return $this->identity = $source instanceof OrganizationIdentitySourceInterface
+        return $this->organization = $source instanceof OrganizationIdentitySourceInterface
             ? $source->organizationIdentity()
-            : new OrganizationIdentity($this->brandName);
+            : null;
     }
 
     /**

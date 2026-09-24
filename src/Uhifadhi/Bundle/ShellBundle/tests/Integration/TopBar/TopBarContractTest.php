@@ -137,6 +137,33 @@ final class TopBarContractTest extends ContractTestCase
     }
 
     /**
+     * AN INSTALLATION NOBODY HAS NAMED GETS NO LOCKUP — the bar's left half
+     * stays empty rather than repeating the wordmark the sidebar head already
+     * carries. The organization is stated in exactly one slot, and on a fresh
+     * installation there is nothing to state; Settings › Organization is where
+     * that is answered, and the bar says so by saying nothing.
+     */
+    public function testAnInstallationNobodyHasNamedDrawsNoOrganizationLockup(): void
+    {
+        $crawler = $this->crawl(self::PAGE);
+
+        self::assertCount(1, $crawler->filter('header.topbar'));
+        self::assertCount(0, $crawler->filter('header.topbar .tb-left'), 'Nothing to name, so nothing is named.');
+        self::assertCount(0, $crawler->filter('header.topbar .tb-rule'));
+    }
+
+    /**
+     * AND ITS BROWSER TITLE FALLS BACK TO THE WORDMARK IT WAS SHIPPED WITH —
+     * the same fallback the settings screen prints, rather than a blank tail.
+     */
+    public function testAnUnnamedInstallationsTitleFallsBackToTheWordmark(): void
+    {
+        $title = $this->crawl('@fixtures/bare_document_page.html.twig')->filter('title');
+
+        self::assertStringEndsWith('Uhifadhi', trim($title->text()));
+    }
+
+    /**
      * THE BADGE IS READ LIVE, per render — signing out takes the card with it on
      * the next request, the same-day promise the whole contract layer makes.
      */

@@ -333,6 +333,11 @@ return static function (ContainerConfigurator $container): void {
             service('shell.frame'),
             service('shell.org_shell'),
             service('shell.user_badge'),
+            // WHOSE INSTALLATION THIS IS, for the top bar's lockup and the
+            // browser title. The section's own reading, not a second one: two
+            // services answering "what is this installation called" is the
+            // disagreement the single-source contract exists to prevent.
+            service('shell.settings.reading'),
             service('shell.theme'),
             service('router'),
             '%shell.brand_name%',

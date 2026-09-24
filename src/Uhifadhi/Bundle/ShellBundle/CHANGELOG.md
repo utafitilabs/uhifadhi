@@ -8,6 +8,27 @@
 
 Not released yet.
 
+ * THE ORGANIZATION IS NAMED IN THE TOP BAR — the brand's accent rule, the
+   organization's full name, a hairline and the short name, in the bar's left
+   half, on every page. The chrome said UHIFADHI and never said whose
+   installation it was; it says both now, and the mark and the wordmark in the
+   sidebar head are untouched. The name arrives from the organization identity
+   contract through the settings section, so the bar and Settings ›
+   Organization cannot disagree; an installation nobody has named draws no
+   lockup rather than repeating the wordmark. A name that will not fit ends in
+   an ellipsis and carries the whole of itself as its title.
+
+   The short name falls back to the name's initials — the capitalised words'
+   first letters — until somebody sets one; it is a starting guess, never what
+   the setting is pinned to. The viewer chip's second line now opens with it
+   ("UCA · operator"), and the browser title ends with the organization rather
+   than the wordmark.
+
+ * EVERY CONFIGURE SECTION IS ADDRESSED BY NAME in the strip —
+   `…/configure/widgets` as much as `…/configure/settings`. The bare
+   `…/configure` stays the Configure action's way in and opens on the first
+   section.
+
  * THE BRANDMARK'S DEFAULT DESTINATION IS THE ORGANIZATION DASHBOARD.
    `shell.home_route` now defaults to `organization_dashboard`, the page the
    core ships at `/`; an installation that puts something else at its front

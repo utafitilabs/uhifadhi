@@ -57,6 +57,9 @@ final class ShellExtension extends AbstractExtension
             new TwigFunction('shell_title', [ShellRuntime::class, 'title']),
             // Who the top bar names — the viewer's card — or null when nobody.
             new TwigFunction('shell_user_badge', [ShellRuntime::class, 'userBadge']),
+            // Whose installation this is — the name the bar states and the
+            // short name beside it — or null on one nobody has named.
+            new TwigFunction('shell_organization', [ShellRuntime::class, 'organization']),
             // What a visitor who has never chosen a theme gets.
             new TwigFunction('shell_default_theme', [ShellRuntime::class, 'defaultTheme']),
             // The wordmark beside the brand tile, and where the tile links.

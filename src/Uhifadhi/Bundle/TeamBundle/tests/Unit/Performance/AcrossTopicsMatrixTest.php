@@ -165,7 +165,7 @@ final class AcrossTopicsMatrixTest extends TestCase
         return new AcrossTopicsMatrix()->build(
             $topics,
             $directory,
-            PerformanceScope::organisation(),
+            PerformanceScope::organization(),
             FigurePeriod::month(new \DateTimeImmutable('2026-08-14')),
             static fn (string $uuid): string => '/departments/'.$uuid,
         );

@@ -214,13 +214,13 @@ final class SettingsSectionTest extends ShellKernelTestCase
      * draws the wordmark it was shipped with with every other field reading
      * "not set" — the page telling somebody exactly what there is to do.
      */
-    public function testTheOrganisationScreenDrawsTheFallbackAndNamesWhatIsNotSet(): void
+    public function testTheOrganizationScreenDrawsTheFallbackAndNamesWhatIsNotSet(): void
     {
-        $rows = $this->get('/settings/organisation')->filter('div.pgbody table.tbl tr');
+        $rows = $this->get('/settings/organization')->filter('div.pgbody table.tbl tr');
 
         self::assertCount(5, $rows, 'Name, short name, logo, time zone, country.');
         self::assertStringContainsString('Uhifadhi', trim($rows->eq(0)->text()));
-        self::assertSame(4, substr_count($this->get('/settings/organisation')->filter('div.pgbody')->html(), 'not set'));
+        self::assertSame(4, substr_count($this->get('/settings/organization')->filter('div.pgbody')->html(), 'not set'));
     }
 
     /**

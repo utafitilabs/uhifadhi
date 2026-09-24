@@ -28,7 +28,7 @@ namespace Uhifadhi\Contracts\Settings;
  * somebody deciding whether to upload one needs to know what happens if they
  * do not.
  */
-final readonly class OrganisationIdentity
+final readonly class OrganizationIdentity
 {
     /**
      * @param string      $name      the full name, drawn in the header and on every export

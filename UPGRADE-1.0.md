@@ -591,8 +591,8 @@ so an organization can withhold it without withholding the page it sits on.
 
 **What changed.** Every word a reader can see now spells it **organization**
 (ruled 2026-09-21). The sidebar heading already did; the Settings tab beside
-it read "Organisation", the scope control read "Organisation — all areas",
-and the dashboard's own captions read "the organisation" — three spellings on
+it read "Organization", the scope control read "Organization — all areas",
+and the dashboard's own captions read "the organization" — three spellings on
 two screens. Templates, labels, page titles, sublines, hints, docs and these
 upgrade notes are swept, and `tests/Core/OneSpellingOfOrganizationTest` fails
 the build on the other spelling in any shipped template or translation
@@ -605,27 +605,27 @@ that changed the copy:
 
 | Identifier | Kind | Referenced by an installation? |
 | --- | --- | --- |
-| `organisation_dashboard` | route name | **yes** — it is the default of `shell.home_route`, and an installation may generate it |
-| `organisation_widgets`, `…_save`, `…_reset`, `…_preset`, `…_preset_copy`, `…_preset_create`, `…_preset_apply`, `…_preset_rename`, `…_preset_delete` | route names | possibly — a host may generate or override them |
-| `/settings/organisation` | URL segment (`SettingsTab::Organisation`'s value) | **yes** — people bookmark and link to it |
-| `shell.settings.organisation_identity` | service id (the alias a host sets) | **yes** — a host aliases it to publish its identity |
-| `Uhifadhi\Contracts\Settings\OrganisationIdentity`, `OrganisationIdentitySourceInterface` | contract class names | **yes** — a host implements the interface |
-| `Scope::organisation()`, `Scope::isOrganisation()` | contract methods | **yes** — modules call both |
-| `PerformanceScope::organisation()`, `isOrganisation()` | contract methods | **yes** — a module's performance topic calls them |
-| `PerformanceController::ORGANISATION` | public constant (its VALUE now reads "Organization — all areas") | unlikely, but public |
-| `TeamBundle\Performance\OrganisationBand`, service `team.performance.organisation_band` | class and service id | no |
-| `AreaBundle\Service\AreaMapService::organisation()` | method | no |
-| `OrgOverviewWidgets::SLUG` = `'organisation'` | contributor slug | no, but it keys `by.<slug>` in cell context |
-| `SettingsTab::Organisation` | enum case | no |
+| `organization_dashboard` | route name | **yes** — it is the default of `shell.home_route`, and an installation may generate it |
+| `organization_widgets`, `…_save`, `…_reset`, `…_preset`, `…_preset_copy`, `…_preset_create`, `…_preset_apply`, `…_preset_rename`, `…_preset_delete` | route names | possibly — a host may generate or override them |
+| `/settings/organization` | URL segment (`SettingsTab::Organization`'s value) | **yes** — people bookmark and link to it |
+| `shell.settings.organization_identity` | service id (the alias a host sets) | **yes** — a host aliases it to publish its identity |
+| `Uhifadhi\Contracts\Settings\OrganizationIdentity`, `OrganizationIdentitySourceInterface` | contract class names | **yes** — a host implements the interface |
+| `Scope::organization()`, `Scope::isOrganization()` | contract methods | **yes** — modules call both |
+| `PerformanceScope::organization()`, `isOrganization()` | contract methods | **yes** — a module's performance topic calls them |
+| `PerformanceController::ORGANIZATION` | public constant (its VALUE now reads "Organization — all areas") | unlikely, but public |
+| `TeamBundle\Performance\OrganizationBand`, service `team.performance.organization_band` | class and service id | no |
+| `AreaBundle\Service\AreaMapService::organization()` | method | no |
+| `OrgOverviewWidgets::SLUG` = `'organization'` | contributor slug | no, but it keys `by.<slug>` in cell context |
+| `SettingsTab::Organization` | enum case | no |
 
-**When they turn over,** the route names and the `/settings/organisation`
+**When they turn over,** the route names and the `/settings/organization`
 address are the two that need a deprecation period rather than a rename: a
 route keeps its old name as an alias for one release, and the old URL
 redirects. The rest are ordinary renames once the release after this one is
 open.
 
 **Two test fixtures deliberately keep the old spelling** and must not be
-swept: `NavGroupTest` and `NavigationTest` use "Organisation" as the *near
+swept: `NavGroupTest` and `NavigationTest` use "Organization" as the *near
 miss* a sidebar group must refuse — a source that typed it used to make a
 fifth heading, and the refusal is what stops that.
 
@@ -687,7 +687,7 @@ The shell still ships `welcome.php` as a route resource; an installation that
 prefers the old front door simply keeps importing it and does not import
 AreaBundle's controllers at `/`. One of the two answers `/`, never both.
 
-**The brandmark.** `shell.home_route` defaults to `organisation_dashboard`.
+**The brandmark.** `shell.home_route` defaults to `organization_dashboard`.
 An installation with its own front door sets its own route name, as before.
 
 **What a module contributes.** A new seam beside the area's, opted into
@@ -859,7 +859,7 @@ areas would be a disagreement with nothing to settle it:
 
 ```php
 $services->alias(ModuleMatrixSourceInterface::SERVICE, MyMatrix::class);
-$services->alias(OrganisationIdentitySourceInterface::SERVICE, MyIdentity::class);
+$services->alias(OrganizationIdentitySourceInterface::SERVICE, MyIdentity::class);
 ```
 
 Both are optional. An installation where nobody answers gets a screen that

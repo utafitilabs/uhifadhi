@@ -47,7 +47,7 @@ final class ScopeControlTest extends ContractTestCase
     public function testTheControlOffersWhatTheHostSaysThisViewerMaySee(): void
     {
         FixtureScopeSource::$scopes = [
-            Scope::organisation(),
+            Scope::organization(),
             Scope::area('area-1', 'Ngorongoro'),
             Scope::area('area-2', 'Pololeti Game Reserve'),
         ];
@@ -72,7 +72,7 @@ final class ScopeControlTest extends ContractTestCase
      */
     public function testTheControlIsARealFormAndNotAScriptedOne(): void
     {
-        FixtureScopeSource::$scopes = [Scope::organisation(), Scope::area('area-1', 'Ngorongoro')];
+        FixtureScopeSource::$scopes = [Scope::organization(), Scope::area('area-1', 'Ngorongoro')];
 
         $crawler = new Crawler($this->render('@Shell/_scope_control.html.twig', [
             'scopes' => $this->scopes()->available(),
@@ -114,16 +114,16 @@ final class ScopeControlTest extends ContractTestCase
     /** The first slice is the one a page opens on. */
     public function testThePageOpensOnTheFirstSliceOffered(): void
     {
-        FixtureScopeSource::$scopes = [Scope::organisation(), Scope::area('area-1', 'Ngorongoro')];
+        FixtureScopeSource::$scopes = [Scope::organization(), Scope::area('area-1', 'Ngorongoro')];
 
-        self::assertTrue($this->scopes()->current()?->isOrganisation());
+        self::assertTrue($this->scopes()->current()?->isOrganization());
     }
 
     /** The organization and an area are told apart by what they name, never by a label. */
     public function testAScopeIsComparedByWhatItNames(): void
     {
         self::assertTrue(Scope::area('a', 'Ngorongoro')->is(Scope::area('a', 'renamed since')));
-        self::assertFalse(Scope::area('a', 'Ngorongoro')->is(Scope::organisation()));
-        self::assertTrue(Scope::organisation('all areas')->is(Scope::organisation('every area')));
+        self::assertFalse(Scope::area('a', 'Ngorongoro')->is(Scope::organization()));
+        self::assertTrue(Scope::organization('all areas')->is(Scope::organization('every area')));
     }
 }

@@ -63,7 +63,7 @@ Not released yet.
    address is the prefix of every other.
  * THE QUEUE READS ONE SCOPE WIDER: `AreaOverview::attentionForScope()` —
    the same per-area loop concatenated and sorted by the one rule, never a
-   second aggregate. `AreaMapService::organisation()` is the network map plus
+   second aggregate. `AreaMapService::organization()` is the network map plus
    the live layer, and `AreaPresetLibrary::mapAreas()` is public so both
    surfaces turn a register row into a plate the same way.
 

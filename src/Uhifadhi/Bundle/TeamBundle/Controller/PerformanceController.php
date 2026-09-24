@@ -26,7 +26,7 @@ use Uhifadhi\Bundle\TeamBundle\Performance\AcrossTopicsMatrix;
 use Uhifadhi\Bundle\TeamBundle\Performance\ChartBridge;
 use Uhifadhi\Bundle\TeamBundle\Performance\Comparison;
 use Uhifadhi\Bundle\TeamBundle\Performance\GoalsTopic;
-use Uhifadhi\Bundle\TeamBundle\Performance\OrganisationBand;
+use Uhifadhi\Bundle\TeamBundle\Performance\OrganizationBand;
 use Uhifadhi\Bundle\TeamBundle\Performance\PeriodKind;
 use Uhifadhi\Bundle\TeamBundle\Performance\RequiredPeriod;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCard;
@@ -86,7 +86,7 @@ final readonly class PerformanceController
     public const int DECISIONS_SHOWN = 5;
 
     /** What the scope picker calls the organization, on the page and in the picker. */
-    public const string ORGANISATION = 'Organization — all areas';
+    public const string ORGANIZATION = 'Organization — all areas';
 
     public function __construct(
         private Environment $twig,
@@ -94,7 +94,7 @@ final readonly class PerformanceController
         private DepartmentDirectoryInterface $directory,
         private AcrossTopicsMatrix $across,
         private TopicCards $cards,
-        private OrganisationBand $band,
+        private OrganizationBand $band,
         private UrlGeneratorInterface $urls,
         private EntityManagerInterface $entityManager,
         /**
@@ -318,7 +318,7 @@ final readonly class PerformanceController
             // the organization's own band.
             'band' => $this->band->build($this->topics->forScope($scope, $period), $scope, $period),
             'scope' => $scope,
-            'organization' => self::ORGANISATION,
+            'organization' => self::ORGANIZATION,
             'areas' => $this->areas(),
             'period' => $period,
             // WHAT THE SUBLINE NAMES is what the figures were actually
@@ -384,7 +384,7 @@ final readonly class PerformanceController
     {
         $uuid = $request->query->getString('area');
         if ('' === $uuid) {
-            return PerformanceScope::organisation(self::ORGANISATION);
+            return PerformanceScope::organization(self::ORGANIZATION);
         }
 
         foreach ($this->areas() as $area) {
@@ -396,7 +396,7 @@ final readonly class PerformanceController
         // AN ADDRESS NAMING NO AREA IS THE ORGANIZATION, not a 404: a
         // stale link to an area somebody wound down should open the page
         // it was sent from rather than a wall.
-        return PerformanceScope::organisation(self::ORGANISATION);
+        return PerformanceScope::organization(self::ORGANIZATION);
     }
 
     /**

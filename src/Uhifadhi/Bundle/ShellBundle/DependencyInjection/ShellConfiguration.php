@@ -22,7 +22,7 @@ use Symfony\Component\Config\Definition\Builder\NodeDefinition;
  *
  *   shell:
  *     brand_name: Uhifadhi           # the wordmark beside the brand tile
- *     home_route: organisation_dashboard  # where the brandmark links
+ *     home_route: organization_dashboard  # where the brandmark links
  *     default_theme: light           # light | dark | system
  *
  * DELIBERATELY TINY, and it must stay that way — a layout bundle is where
@@ -75,7 +75,7 @@ final class ShellConfiguration
                 ->end()
                 ->scalarNode('home_route')
                     ->info('Route the brandmark links to. The shell is installed by an application and cannot know its route names; the default is the organization dashboard the core ships, and an installation that puts something else at its front door says so here.')
-                    ->defaultValue('organisation_dashboard')->cannotBeEmpty()
+                    ->defaultValue('organization_dashboard')->cannotBeEmpty()
                 ->end()
                 ->enumNode('default_theme')
                     ->info('Theme a visitor who has never chosen one gets: light, dark, or the operating system\'s preference.')

@@ -16,7 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing;
-use Uhifadhi\Bundle\TeamBundle\Performance\OrganisationBand;
+use Uhifadhi\Bundle\TeamBundle\Performance\OrganizationBand;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 
 /**
@@ -339,11 +339,11 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
      * module happened to publish would be a different band per
      * installation.
      */
-    public function testTheOrganisationsBandIsTheSameSixOnEveryScreen(): void
+    public function testTheOrganizationsBandIsTheSameSixOnEveryScreen(): void
     {
         $this->seed();
 
-        $expected = array_values(OrganisationBand::FIGURES);
+        $expected = array_values(OrganizationBand::FIGURES);
 
         foreach (['/departments/performance', '/departments/performance/topics/staffing'] as $path) {
             $band = $this->client->request('GET', $path)

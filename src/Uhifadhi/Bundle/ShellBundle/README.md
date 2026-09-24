@@ -113,7 +113,7 @@ Configuration, all of it optional:
 # config/packages/shell.yaml
 shell:
     brand_name: Uhifadhi           # the wordmark beside the brand tile
-    home_route: organisation_dashboard  # where the brandmark links
+    home_route: organization_dashboard  # where the brandmark links
     default_theme: light           # light | dark | system
 ```
 

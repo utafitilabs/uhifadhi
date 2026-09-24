@@ -48,22 +48,22 @@ final class OrgScopeIsTheSumOfAreasTest extends IntegrationTestCase
     private const string NOW = '2026-09-19T11:42:00+03:00';
 
     /** THE WIDE ANSWER IS THE NARROW ANSWERS, person for person. */
-    public function testTheOrganisationsLivePositionsAreTheAreasOwn(): void
+    public function testTheOrganizationsLivePositionsAreTheAreasOwn(): void
     {
         $north = $this->anAreaReporting('Northern Reserve', 'Asha', 'Mollel');
         $south = $this->anAreaReporting('Southern Reserve', 'Tumaini', 'Ndosi');
         $asOf = new \DateTimeImmutable(self::NOW);
 
-        $organisation = $this->presence()->forScope(Scope::organisation(), $asOf);
+        $organization = $this->presence()->forScope(Scope::organization(), $asOf);
         $perArea = [
             ...$this->presence()->liveIn((string) $north->getUuidString(), $asOf)->positions,
             ...$this->presence()->liveIn((string) $south->getUuidString(), $asOf)->positions,
         ];
 
-        self::assertCount(2, $organisation->positions);
+        self::assertCount(2, $organization->positions);
         self::assertSame(
             self::names($perArea),
-            self::names($organisation->positions),
+            self::names($organization->positions),
             'The organization is its areas, and nothing else.',
         );
     }
@@ -103,15 +103,15 @@ final class OrgScopeIsTheSumOfAreasTest extends IntegrationTestCase
 
         self::assertSame(
             1,
-            $this->presence()->forScope(Scope::organisation(), $asOf)->staleCount(),
+            $this->presence()->forScope(Scope::organization(), $asOf)->staleCount(),
             'The organization’s stale count is the areas’ stale counts, not a re-judgement of them.',
         );
     }
 
     /** An installation with no areas answers an empty reading, not a failure. */
-    public function testAnOrganisationWithNoAreasIsEmptyRatherThanAFailure(): void
+    public function testAnOrganizationWithNoAreasIsEmptyRatherThanAFailure(): void
     {
-        $live = $this->presence()->forScope(Scope::organisation(), new \DateTimeImmutable(self::NOW));
+        $live = $this->presence()->forScope(Scope::organization(), new \DateTimeImmutable(self::NOW));
 
         self::assertSame([], $live->positions);
         self::assertTrue($live->isEmpty());

@@ -134,7 +134,7 @@ final readonly class AreaOverview
      */
     public function attentionForScope(Scope $scope, \DateTimeImmutable $now): array
     {
-        if (!$scope->isOrganisation()) {
+        if (!$scope->isOrganization()) {
             $area = $this->areas->findOneBy(['uuid' => $scope->areaUuid]);
 
             return null === $area ? [] : $this->attentionFor($area, $now);

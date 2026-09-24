@@ -153,7 +153,7 @@ final readonly class PerformanceNavigation implements NavigationSourceInterface
         }
 
         $period = $this->periods->month();
-        $scope = PerformanceScope::organisation();
+        $scope = PerformanceScope::organization();
 
         $rows = [];
         foreach ($this->topics->forScope($scope, $period) as $topic) {

@@ -180,7 +180,7 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
      */
     public function forScope(Scope $scope, \DateTimeImmutable $asOf): LivePresence
     {
-        if (!$scope->isOrganisation()) {
+        if (!$scope->isOrganization()) {
             return $this->liveIn((string) $scope->areaUuid, $asOf);
         }
 

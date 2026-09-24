@@ -20,7 +20,7 @@ use Uhifadhi\Contracts\Settings\CheckVerdict;
 use Uhifadhi\Contracts\Settings\DecisionUrgency;
 use Uhifadhi\Contracts\Settings\ModuleColumn;
 use Uhifadhi\Contracts\Settings\ModuleMatrix;
-use Uhifadhi\Contracts\Settings\OrganisationIdentity;
+use Uhifadhi\Contracts\Settings\OrganizationIdentity;
 use Uhifadhi\Contracts\Settings\SettingsCheck;
 use Uhifadhi\Contracts\Settings\SettingsFigure;
 use Uhifadhi\Contracts\Settings\SettingsStep;
@@ -117,9 +117,9 @@ final class SettingsContractTest extends TestCase
     {
         $at = new \DateTimeImmutable('2026-09-20 11:42:00', new \DateTimeZone('UTC'));
 
-        self::assertSame('UTC+3', new OrganisationIdentity('Anywhere', timeZone: 'Africa/Dar_es_Salaam')->utcOffset($at));
-        self::assertSame('UTC+0', new OrganisationIdentity('Anywhere', timeZone: 'UTC')->utcOffset($at));
-        self::assertSame('UTC+5:45', new OrganisationIdentity('Anywhere', timeZone: 'Asia/Kathmandu')->utcOffset($at));
+        self::assertSame('UTC+3', new OrganizationIdentity('Anywhere', timeZone: 'Africa/Dar_es_Salaam')->utcOffset($at));
+        self::assertSame('UTC+0', new OrganizationIdentity('Anywhere', timeZone: 'UTC')->utcOffset($at));
+        self::assertSame('UTC+5:45', new OrganizationIdentity('Anywhere', timeZone: 'Asia/Kathmandu')->utcOffset($at));
     }
 
     /**
@@ -130,16 +130,16 @@ final class SettingsContractTest extends TestCase
     {
         $at = new \DateTimeImmutable('2026-09-20 11:42:00', new \DateTimeZone('UTC'));
 
-        self::assertNull(new OrganisationIdentity('Anywhere')->utcOffset($at), 'No zone set.');
-        self::assertNull(new OrganisationIdentity('Anywhere', timeZone: 'Nowhere/Nothing')->utcOffset($at), 'A zone PHP does not know.');
+        self::assertNull(new OrganizationIdentity('Anywhere')->utcOffset($at), 'No zone set.');
+        self::assertNull(new OrganizationIdentity('Anywhere', timeZone: 'Nowhere/Nothing')->utcOffset($at), 'A zone PHP does not know.');
     }
 
     /** An organization is known by its name; there is no nameless one to draw. */
-    public function testAnOrganisationWithoutANameIsRefused(): void
+    public function testAnOrganizationWithoutANameIsRefused(): void
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        new OrganisationIdentity('  ');
+        new OrganizationIdentity('  ');
     }
 
     /**
@@ -151,7 +151,7 @@ final class SettingsContractTest extends TestCase
     public function testTheScreensAreDeclaredInTheOrderTheSectionIsRead(): void
     {
         self::assertSame(
-            ['overview', 'installation', 'modules', 'organisation'],
+            ['overview', 'installation', 'modules', 'organization'],
             array_column(SettingsTab::cases(), 'value'),
         );
     }

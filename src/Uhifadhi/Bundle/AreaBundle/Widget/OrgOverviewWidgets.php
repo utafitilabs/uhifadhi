@@ -44,7 +44,7 @@ use Uhifadhi\Contracts\Shell\Scope;
 final readonly class OrgOverviewWidgets implements OrgOverviewContributorInterface
 {
     /** The organization's own "module" slug — it is always asked. */
-    public const string SLUG = 'organisation';
+    public const string SLUG = 'organization';
 
     public const string KPIS = 'kpis';
     public const string ATTENTION = 'attention';

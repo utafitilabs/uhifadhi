@@ -21,30 +21,24 @@ use PHPUnit\Framework\TestCase;
  * ONE SPELLING, EVERYWHERE A READER CAN SEE IT: "organization" (ruled by the
  * owner, 2026-09-21).
  *
- * WHY A TEST AND NOT A STYLE NOTE. The product had both spellings at once —
- * the sidebar heading read ORGANIZATION while the Settings tab beside it
- * read Organisation, and the scope control read "Organisation — all areas"
- * over a page whose heading did not. Nobody types the second spelling on
+ * WHY A TEST AND NOT A STYLE NOTE. Nobody types the other spelling on
  * purpose; it arrives one string at a time, from whoever wrote that screen,
  * and it is invisible until somebody reads two screens side by side.
  *
- * WHAT IS SWEPT: every shipped template, which is where user-facing words
- * live. Translation catalogues are swept too the day this product grows
- * one — the glob is here already, so the first `.xlf` anybody adds is
- * covered without a change to this file.
+ * WHAT IS SWEPT: every shipped template, where a reader meets the word, and
+ * every PHP file the core ships, where the identifiers live. Route names
+ * (`organization_dashboard`), service ids, class names
+ * (`OrganizationIdentity`), enum cases and the `/settings/organization`
+ * address carry the same spelling as the copy, so the letters are flagged
+ * wherever they appear rather than only between word boundaries.
+ * Translation catalogues are swept too the day this product grows one — the
+ * glob is here already, so the first `.xlf` anybody adds is covered without
+ * a change to this file.
  *
- * WHAT IS NOT SWEPT, AND WHY: PHP identifiers. Route names
- * (`organisation_dashboard`), service ids, class names
- * (`OrganisationIdentity`), enum cases and the `/settings/organisation`
- * address are things installations and modules REFERENCE, so they turn over
- * on the two-release rule rather than in the same commit as the copy.
- *
- * AND AN IDENTIFIER CAN REACH A TEMPLATE, which is why this does not simply
- * search for the letters: `{{ scope.isOrganisation }}` is a method call, not
- * a word a reader sees. So what is flagged is the WORD — bounded by
- * non-identifier characters, and never reached through `.`, `::` or `$`. A
- * sentence is caught; a call is not. The day an identifier is renamed, this
- * test does not need touching.
+ * THE ONE PLACE THE OTHER SPELLING BELONGS is a test fixture that asserts it
+ * is refused — {@see \Uhifadhi\Contracts\Tests\Shell\NavGroupTest}'s
+ * near-miss list. Test files are therefore outside the PHP sweep; shipped
+ * code is not.
  */
 #[CoversNothing]
 final class OneSpellingOfOrganizationTest extends TestCase
@@ -97,8 +91,7 @@ final class OneSpellingOfOrganizationTest extends TestCase
             self::wordsIn((string) file_get_contents($file)),
             \sprintf(
                 '%s spells it "%s" where a reader can see it. The product spells it "%s" (ruled 2026-09-21) — '
-                .'one spelling, everywhere. A PHP identifier may still carry the other spelling this release '
-                .'and a template may call one; a WORD in a template may not, because a template is read.',
+                .'one spelling, everywhere, identifiers included.',
                 basename($file),
                 self::WRONG,
                 self::RIGHT,
@@ -107,29 +100,46 @@ final class OneSpellingOfOrganizationTest extends TestCase
     }
 
     /**
-     * THE WORD, NOT THE LETTERS — every standalone occurrence, with the ones
-     * that are part of an identifier or reached through `.`, `::` or `$`
-     * left out. The same boundary the sweep itself used, so the two cannot
-     * disagree about what counts as prose.
+     * THE LETTERS, WHEREVER THEY SIT — in a sentence, in a class name, in a
+     * route name or in an address. One spelling means one spelling.
      *
      * @return list<string>
      */
     private static function wordsIn(string $contents): array
     {
-        preg_match_all(
-            '/(?<![A-Za-z0-9_])(?<!\.)(?<!:)(?<!\$)'.self::WRONG.'(?![A-Za-z0-9_])/i',
-            $contents,
-            $found,
-        );
+        preg_match_all('/'.self::WRONG.'/i', $contents, $found);
 
         return $found[0];
+    }
+
+    /**
+     * AND THE CODE SPELLS IT THE SAME WAY. Every PHP file the core ships —
+     * tests excluded, because the near-miss fixture that proves the other
+     * spelling is refused has to be able to write it.
+     */
+    public function testNoShippedSourceFileUsesTheOtherSpelling(): void
+    {
+        $root = \dirname(__DIR__, 2);
+
+        $offenders = [];
+        foreach (self::under($root.'/src', '*.php') as $file) {
+            if (str_contains($file, '/tests/')) {
+                continue;
+            }
+
+            if ([] !== self::wordsIn((string) file_get_contents($file))) {
+                $offenders[] = substr($file, \strlen($root) + 1);
+            }
+        }
+
+        self::assertSame([], $offenders, 'The product spells it "'.self::RIGHT.'" (ruled 2026-09-21), identifiers included.');
     }
 
     /**
      * AND THE SWEEP IS REALLY LOOKING. A test that would pass over an empty
      * set, or whose needle never matched anything, is a test that stops
      * catching the thing it was written for — so the right spelling is
-     * asserted to be present somewhere, which it is on every organisation
+     * asserted to be present somewhere, which it is on every organization
      * surface the core ships.
      */
     public function testTheSweepIsActuallyReadingTheTemplates(): void

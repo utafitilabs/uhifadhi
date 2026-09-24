@@ -47,18 +47,18 @@ final class PerformanceTopicsTest extends IntegrationTestCase
 
         self::assertSame(
             ['staffing', 'goals', 'attention', 'incidents', 'patrols'],
-            $this->keysOf($this->topics()->forScope(PerformanceScope::organisation(), self::period())),
+            $this->keysOf($this->topics()->forScope(PerformanceScope::organization(), self::period())),
         );
     }
 
     /** Rearranged, the page reads the new order. */
-    public function testTheOrderFollowsTheOrganisationsOwnArrangement(): void
+    public function testTheOrderFollowsTheOrganizationsOwnArrangement(): void
     {
         $this->aCatalogue(['patrols' => 0, 'incidents' => 1]);
 
         self::assertSame(
             ['staffing', 'goals', 'attention', 'patrols', 'incidents'],
-            $this->keysOf($this->topics()->forScope(PerformanceScope::organisation(), self::period())),
+            $this->keysOf($this->topics()->forScope(PerformanceScope::organization(), self::period())),
         );
     }
 
@@ -69,7 +69,7 @@ final class PerformanceTopicsTest extends IntegrationTestCase
 
         self::assertSame(
             ['staffing', 'goals', 'attention', 'patrols'],
-            $this->keysOf($this->topics()->forScope(PerformanceScope::organisation(), self::period())),
+            $this->keysOf($this->topics()->forScope(PerformanceScope::organization(), self::period())),
         );
     }
 
@@ -78,11 +78,11 @@ final class PerformanceTopicsTest extends IntegrationTestCase
     {
         $this->aCatalogue(['patrols' => 0]);
 
-        $topic = $this->topics()->byKey('patrols', PerformanceScope::organisation(), self::period());
+        $topic = $this->topics()->byKey('patrols', PerformanceScope::organization(), self::period());
 
         self::assertNotNull($topic);
         self::assertSame('Patrols', $topic->title());
-        self::assertNull($this->topics()->byKey('nothing', PerformanceScope::organisation(), self::period()));
+        self::assertNull($this->topics()->byKey('nothing', PerformanceScope::organization(), self::period()));
     }
 
     /**
@@ -94,8 +94,8 @@ final class PerformanceTopicsTest extends IntegrationTestCase
     {
         $this->aCatalogue(['patrols' => 0]);
 
-        foreach ($this->topics()->forScope(PerformanceScope::organisation(), self::period()) as $topic) {
-            self::assertCount(4, $topic->kpis(PerformanceScope::organisation(), self::period()), $topic->key());
+        foreach ($this->topics()->forScope(PerformanceScope::organization(), self::period()) as $topic) {
+            self::assertCount(4, $topic->kpis(PerformanceScope::organization(), self::period()), $topic->key());
         }
     }
 
@@ -109,10 +109,10 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         $this->aCatalogue(['patrols' => 0]);
 
         $rows = [];
-        foreach ($this->topics()->forScope(PerformanceScope::organisation(), self::period()) as $topic) {
+        foreach ($this->topics()->forScope(PerformanceScope::organization(), self::period()) as $topic) {
             $rows[$topic->key()] = array_map(
                 static fn (TopicKpi $kpi): string => $kpi->label,
-                $topic->kpis(PerformanceScope::organisation(), self::period()),
+                $topic->kpis(PerformanceScope::organization(), self::period()),
             );
         }
 
@@ -129,7 +129,7 @@ final class PerformanceTopicsTest extends IntegrationTestCase
      *
      * THE POSTS CARRY NO DEPARTMENT. A position used to be filed under one;
      * the ruling made the department a placement written against each person,
-     * so a vacancy is a fact about the post alone and the organisation-wide
+     * so a vacancy is a fact about the post alone and the organization-wide
      * count reads it there.
      */
     public function testTheStaffingTopicCountsThePostsThatHaveStoodEmptyTooLong(): void
@@ -158,10 +158,10 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         }
         $this->em->flush();
 
-        $staffing = $this->topics()->byKey('staffing', PerformanceScope::organisation(), self::period());
+        $staffing = $this->topics()->byKey('staffing', PerformanceScope::organization(), self::period());
         self::assertNotNull($staffing);
 
-        $figures = $staffing->kpis(PerformanceScope::organisation(), self::period());
+        $figures = $staffing->kpis(PerformanceScope::organization(), self::period());
         $overThreshold = $figures[3];
 
         self::assertSame('staffing.over_threshold', $overThreshold->key);
@@ -200,11 +200,11 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         $this->em->persist($goal);
         $this->em->flush();
 
-        $goals = $this->topics()->byKey('goals', PerformanceScope::organisation(), self::period());
+        $goals = $this->topics()->byKey('goals', PerformanceScope::organization(), self::period());
         self::assertNotNull($goals);
 
         $figures = [];
-        foreach ($goals->kpis(PerformanceScope::organisation(), self::period()) as $kpi) {
+        foreach ($goals->kpis(PerformanceScope::organization(), self::period()) as $kpi) {
             $figures[$kpi->key] = $kpi->value;
         }
 
@@ -228,10 +228,10 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         $this->em->persist($quiet);
         $this->em->flush();
 
-        $goals = $this->topics()->byKey('goals', PerformanceScope::organisation(), self::period());
+        $goals = $this->topics()->byKey('goals', PerformanceScope::organization(), self::period());
         self::assertNotNull($goals);
 
-        $matrix = $goals->matrix(PerformanceScope::organisation(), self::period());
+        $matrix = $goals->matrix(PerformanceScope::organization(), self::period());
         $names = array_map(static fn (object $row): string => $row->departmentName, $matrix->rows);
 
         self::assertContains('Finance', $names);
@@ -260,10 +260,10 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         }
         $this->em->flush();
 
-        $goals = $this->topics()->byKey('goals', PerformanceScope::organisation(), self::period());
+        $goals = $this->topics()->byKey('goals', PerformanceScope::organization(), self::period());
         self::assertNotNull($goals);
 
-        $pace = $goals->matrix(PerformanceScope::organisation(), self::period())->rows[0]->cells['goals.pace'];
+        $pace = $goals->matrix(PerformanceScope::organization(), self::period())->rows[0]->cells['goals.pace'];
 
         self::assertTrue($pace->isMarked(), 'the pace column counts states');
         self::assertNull($pace->value, 'and states no figure, because there is none to state');
@@ -290,7 +290,7 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         $this->em->flush();
 
         $attention = $this->attentionReading((string) $measuring->getUuidString());
-        $matrix = $attention->matrix(PerformanceScope::organisation(), self::period());
+        $matrix = $attention->matrix(PerformanceScope::organization(), self::period());
 
         $names = array_map(static fn (object $row): string => $row->departmentName, $matrix->rows);
 
@@ -317,7 +317,7 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         $this->em->flush();
 
         $matrix = $this->attentionReading((string) $measuring->getUuidString())
-            ->matrix(PerformanceScope::organisation(), self::period());
+            ->matrix(PerformanceScope::organization(), self::period());
 
         $fold = array_values(array_filter($matrix->rows, static fn (object $row): bool => '' === $row->departmentUuid))[0];
 
@@ -340,7 +340,7 @@ final class PerformanceTopicsTest extends IntegrationTestCase
 
         $figures = [];
         foreach ($this->attentionReading((string) $department->getUuidString())
-            ->kpis(PerformanceScope::organisation(), self::period()) as $kpi) {
+            ->kpis(PerformanceScope::organization(), self::period()) as $kpi) {
             $figures[$kpi->key] = $kpi->value;
         }
 

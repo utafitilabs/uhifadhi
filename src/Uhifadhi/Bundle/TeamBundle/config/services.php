@@ -55,7 +55,7 @@ use Uhifadhi\Bundle\TeamBundle\Performance\DepartmentsBand;
 use Uhifadhi\Bundle\TeamBundle\Performance\GoalsTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixViewBuilder;
-use Uhifadhi\Bundle\TeamBundle\Performance\OrganisationBand;
+use Uhifadhi\Bundle\TeamBundle\Performance\OrganizationBand;
 use Uhifadhi\Bundle\TeamBundle\Performance\StaffingTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCards;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
@@ -613,8 +613,8 @@ return static function (ContainerConfigurator $container): void {
      * by key from the host's own three topics — ruled, and a module
      * never changes the organization's own band.
      */
-    $services->set('team.performance.organisation_band', OrganisationBand::class);
-    $services->alias(OrganisationBand::class, 'team.performance.organisation_band');
+    $services->set('team.performance.organization_band', OrganizationBand::class);
+    $services->alias(OrganizationBand::class, 'team.performance.organization_band');
 
     /*
      * AND THE REGISTER'S OWN BAND — what the departments DID rather than
@@ -1138,7 +1138,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.department_directory'),
             service('team.performance.across_topics'),
             service('team.performance.topic_cards'),
-            service('team.performance.organisation_band'),
+            service('team.performance.organization_band'),
             service('router'),
             service('doctrine.orm.entity_manager'),
             service(CurrentPeriodInterface::class)->nullOnInvalid(),

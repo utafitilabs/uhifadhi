@@ -46,7 +46,7 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
      */
     public function testEveryPersonInTheDemoStandsAtOnePostAtMost(): void
     {
-        $this->seedTheDemoOrganisation();
+        $this->seedTheDemoOrganization();
 
         $standing = array_map(
             static fn (mixed $id): string => (string) (\is_scalar($id) ? $id : ''),
@@ -68,7 +68,7 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
      */
     public function testEveryStaffedPostInTheDemoHasOneLeader(): void
     {
-        $this->seedTheDemoOrganisation();
+        $this->seedTheDemoOrganization();
 
         $rows = $this->connection->fetchAllAssociative(
             'SELECT station_id, COUNT(*) FILTER (WHERE leader) AS leaders'
@@ -105,7 +105,7 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
      */
     public function testThePostsTheGroundLeavesEmptyAreTheOnesItMeantTo(): void
     {
-        $this->seedTheDemoOrganisation();
+        $this->seedTheDemoOrganization();
 
         $rows = $this->connection->fetchAllAssociative(
             'SELECT s.area_id, COUNT(p.id) AS standing'
@@ -146,7 +146,7 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
      */
     public function testTheRosterIsBigEnoughToStaffEveryPost(): void
     {
-        $this->seedTheDemoOrganisation();
+        $this->seedTheDemoOrganization();
 
         $posted = $this->rowCount('SELECT COUNT(*) FROM posting WHERE ended_at IS NULL');
 
@@ -166,7 +166,7 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
      */
     public function testPostsPastTheEndOfTheRosterStandEmpty(): void
     {
-        $this->seedTheDemoOrganisation();
+        $this->seedTheDemoOrganization();
 
         $people = $this->rowCount('SELECT COUNT(*) FROM team_user');
         $posted = $this->rowCount('SELECT COUNT(*) FROM posting WHERE ended_at IS NULL');
@@ -192,7 +192,7 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
      */
     public function testEveryDemoPositionGrantsSomethingAndOneStandsEmpty(): void
     {
-        $this->seedTheDemoOrganisation();
+        $this->seedTheDemoOrganization();
 
         $catalogue = static::getContainer()->get('test_public.'.ConcernCatalogue::class);
         self::assertInstanceOf(ConcernCatalogue::class, $catalogue);
@@ -235,7 +235,7 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
     }
 
     /** The shipped demo, through the providers an installation's devkit would run. */
-    private function seedTheDemoOrganisation(): void
+    private function seedTheDemoOrganization(): void
     {
         // An installation's own first act: migrate, then seed. Seeding into a
         // database with no schema would fail for a reason that has nothing to

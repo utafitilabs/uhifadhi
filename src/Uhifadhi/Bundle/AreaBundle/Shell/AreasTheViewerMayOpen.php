@@ -91,7 +91,7 @@ final readonly class AreasTheViewerMayOpen implements ScopeSourceInterface
         }
 
         if (\count($open) > 1) {
-            yield Scope::organisation();
+            yield Scope::organization();
         }
 
         yield from $open;

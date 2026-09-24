@@ -64,7 +64,7 @@ final readonly class PostingDoorService
     {
         $areas = array_values(array_filter(
             $this->scopes->available(),
-            static fn (object $scope): bool => !$scope->isOrganisation(),
+            static fn (object $scope): bool => !$scope->isOrganization(),
         ));
 
         if (1 === \count($areas)) {

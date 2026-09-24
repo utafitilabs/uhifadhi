@@ -60,7 +60,7 @@ final readonly class DepartmentDirectory implements DepartmentDirectoryInterface
 
             // AN AREA'S PAGE HOLDS THE DEPARTMENTS THAT READ THAT AREA:
             // its own, and the org-wide ones every area inherits.
-            if (!$scope->isOrganisation() && null !== $areaUuid && $areaUuid !== $scope->areaUuid) {
+            if (!$scope->isOrganization() && null !== $areaUuid && $areaUuid !== $scope->areaUuid) {
                 continue;
             }
 
@@ -97,7 +97,7 @@ final readonly class DepartmentDirectory implements DepartmentDirectoryInterface
             return [$own];
         }
 
-        if (!$scope->isOrganisation()) {
+        if (!$scope->isOrganization()) {
             return [(string) $scope->areaUuid];
         }
 

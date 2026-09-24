@@ -96,6 +96,6 @@ final readonly class FakeOrgWidgets implements OrgOverviewContributorInterface, 
 
     public function context(Scope $scope, \DateTimeImmutable $now): array
     {
-        return ['out' => 3, 'walked' => 96, 'organization' => $scope->isOrganisation()];
+        return ['out' => 3, 'walked' => 96, 'organization' => $scope->isOrganization()];
     }
 }

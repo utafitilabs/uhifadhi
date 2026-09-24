@@ -9,7 +9,7 @@
 Not released yet.
 
  * THE BRANDMARK'S DEFAULT DESTINATION IS THE ORGANIZATION DASHBOARD.
-   `shell.home_route` now defaults to `organisation_dashboard`, the page the
+   `shell.home_route` now defaults to `organization_dashboard`, the page the
    core ships at `/`; an installation that puts something else at its front
    door says so in one line, as before.
 

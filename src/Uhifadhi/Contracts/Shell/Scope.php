@@ -30,7 +30,7 @@ namespace Uhifadhi\Contracts\Shell;
  * value object that carried an answer nobody had given would be the answer.
  * When it is ruled it is one more named constructor and one more branch in
  * whoever reads it — which is why the two that exist are asked by name
- * ({@see isOrganisation()}) rather than by comparing a nullable uuid.
+ * ({@see isOrganization()}) rather than by comparing a nullable uuid.
  */
 final readonly class Scope
 {
@@ -42,7 +42,7 @@ final readonly class Scope
     ) {
     }
 
-    public static function organisation(string $label = 'Organization — all areas'): self
+    public static function organization(string $label = 'Organization — all areas'): self
     {
         return new self(null, $label);
     }
@@ -52,7 +52,7 @@ final readonly class Scope
         return new self($areaUuid, $label);
     }
 
-    public function isOrganisation(): bool
+    public function isOrganization(): bool
     {
         return null === $this->areaUuid;
     }

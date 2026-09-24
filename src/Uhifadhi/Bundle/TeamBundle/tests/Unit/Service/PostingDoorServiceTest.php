@@ -61,9 +61,9 @@ final class PostingDoorServiceTest extends TestCase
      * control, and a door that counted it would send somebody who may open
      * one area to the register instead of to their own stations.
      */
-    public function testTheOrganisationRowIsNotCountedAsAnArea(): void
+    public function testTheOrganizationRowIsNotCountedAsAnArea(): void
     {
-        $door = $this->door(['01a0c006-bfb6-752d-bc76-5e816ddeaa93' => 'Northern Reserve'], organisation: true);
+        $door = $this->door(['01a0c006-bfb6-752d-bc76-5e816ddeaa93' => 'Northern Reserve'], organization: true);
 
         self::assertSame('/areas/01a0c006-bfb6-752d-bc76-5e816ddeaa93/stations/settings', $door->url());
     }
@@ -96,7 +96,7 @@ final class PostingDoorServiceTest extends TestCase
     }
 
     /** @param array<string, string> $areas uuid => name */
-    private function door(array $areas, bool $organisation = false, bool $mounted = true, bool $stations = true): PostingDoorService
+    private function door(array $areas, bool $organization = false, bool $mounted = true, bool $stations = true): PostingDoorService
     {
         $routes = new RouteCollection();
         if ($mounted) {
@@ -107,8 +107,8 @@ final class PostingDoorServiceTest extends TestCase
         }
 
         $scopes = [];
-        if ($organisation) {
-            $scopes[] = Scope::organisation();
+        if ($organization) {
+            $scopes[] = Scope::organization();
         }
         foreach ($areas as $uuid => $name) {
             $scopes[] = Scope::area($uuid, $name);

@@ -383,7 +383,7 @@ final readonly class DepartmentController
             }
         }
 
-        return PerformanceScope::organisation();
+        return PerformanceScope::organization();
     }
 
     /**

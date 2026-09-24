@@ -21,8 +21,8 @@ use Uhifadhi\Contracts\Settings\DecisionUrgency;
 use Uhifadhi\Contracts\Settings\ModuleColumn;
 use Uhifadhi\Contracts\Settings\ModuleMatrix;
 use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
-use Uhifadhi\Contracts\Settings\OrganisationIdentity;
-use Uhifadhi\Contracts\Settings\OrganisationIdentitySourceInterface;
+use Uhifadhi\Contracts\Settings\OrganizationIdentity;
+use Uhifadhi\Contracts\Settings\OrganizationIdentitySourceInterface;
 use Uhifadhi\Contracts\Settings\SettingsChange;
 use Uhifadhi\Contracts\Settings\SettingsChangeSourceInterface;
 use Uhifadhi\Contracts\Settings\SettingsCheck;
@@ -79,7 +79,7 @@ final class SettingsReading
 
     private ?ModuleMatrix $matrix = null;
 
-    private ?OrganisationIdentity $identity = null;
+    private ?OrganizationIdentity $identity = null;
 
     /**
      * @param iterable<SettingsFigureSourceInterface>   $figureSources
@@ -397,17 +397,17 @@ final class SettingsReading
      * says it is not set — which is the page telling somebody exactly what
      * there is to do rather than inventing an organization nobody named.
      */
-    public function identity(): OrganisationIdentity
+    public function identity(): OrganizationIdentity
     {
         if (null !== $this->identity) {
             return $this->identity;
         }
 
-        $source = $this->single(OrganisationIdentitySourceInterface::SERVICE, OrganisationIdentitySourceInterface::class);
+        $source = $this->single(OrganizationIdentitySourceInterface::SERVICE, OrganizationIdentitySourceInterface::class);
 
-        return $this->identity = $source instanceof OrganisationIdentitySourceInterface
-            ? $source->organisationIdentity()
-            : new OrganisationIdentity($this->brandName);
+        return $this->identity = $source instanceof OrganizationIdentitySourceInterface
+            ? $source->organizationIdentity()
+            : new OrganizationIdentity($this->brandName);
     }
 
     /**

@@ -22,8 +22,8 @@ use Uhifadhi\Contracts\Settings\CheckVerdict;
 use Uhifadhi\Contracts\Settings\DecisionUrgency;
 use Uhifadhi\Contracts\Settings\ModuleMatrix;
 use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
-use Uhifadhi\Contracts\Settings\OrganisationIdentity;
-use Uhifadhi\Contracts\Settings\OrganisationIdentitySourceInterface;
+use Uhifadhi\Contracts\Settings\OrganizationIdentity;
+use Uhifadhi\Contracts\Settings\OrganizationIdentitySourceInterface;
 use Uhifadhi\Contracts\Settings\SettingsChange;
 use Uhifadhi\Contracts\Settings\SettingsChangeSourceInterface;
 use Uhifadhi\Contracts\Settings\SettingsCheck;
@@ -266,7 +266,7 @@ final class SettingsReadingTest extends TestCase
     public function testTheSinglesComeFromWhoeverAnswersThem(): void
     {
         $matrix = new ModuleMatrix([], [new AreaRun('Somewhere', [], 0)]);
-        $identity = new OrganisationIdentity('An Authority', shortName: 'AA');
+        $identity = new OrganizationIdentity('An Authority', shortName: 'AA');
 
         $reading = $this->reading(singles: [
             ModuleMatrixSourceInterface::SERVICE => new class($matrix) implements ModuleMatrixSourceInterface {
@@ -279,12 +279,12 @@ final class SettingsReadingTest extends TestCase
                     return $this->matrix;
                 }
             },
-            OrganisationIdentitySourceInterface::SERVICE => new class($identity) implements OrganisationIdentitySourceInterface {
-                public function __construct(private readonly OrganisationIdentity $identity)
+            OrganizationIdentitySourceInterface::SERVICE => new class($identity) implements OrganizationIdentitySourceInterface {
+                public function __construct(private readonly OrganizationIdentity $identity)
                 {
                 }
 
-                public function organisationIdentity(): OrganisationIdentity
+                public function organizationIdentity(): OrganizationIdentity
                 {
                     return $this->identity;
                 }

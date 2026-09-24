@@ -72,7 +72,7 @@ final readonly class PerformanceConfigureController
     public function settings(): Response
     {
         $period = PeriodKind::Month->period(RequiredPeriod::of($this->periods)->now());
-        $topics = $this->topics->forScope(PerformanceScope::organisation(), $period);
+        $topics = $this->topics->forScope(PerformanceScope::organization(), $period);
 
         return new Response($this->twig->render('@Team/performance/configure.html.twig', [
             'kinds' => PeriodKind::labels(),

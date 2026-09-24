@@ -37,7 +37,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
  * somebody could have built from the screens.
  */
 #[CoversClass(TeamContentProvider::class)]
-final class DemoOrganisationTest extends IntegrationTestCase
+final class DemoOrganizationTest extends IntegrationTestCase
 {
     public function testTheBundleOffersItsContentThroughTheDevkitContracts(): void
     {
@@ -50,7 +50,7 @@ final class DemoOrganisationTest extends IntegrationTestCase
         self::assertSame([], $this->collector()->get('team')->dependsOn());
     }
 
-    public function testSeedingLeavesAnOrganisationWithDepartmentsPositionsAndPeople(): void
+    public function testSeedingLeavesAnOrganizationWithDepartmentsPositionsAndPeople(): void
     {
         $this->collector()->seed('team');
         $this->em->clear();
@@ -73,7 +73,7 @@ final class DemoOrganisationTest extends IntegrationTestCase
      * is repeating a command, not asking for a second organization — and the
      * slices seeded after this one only run if this one does not refuse.
      */
-    public function testSeedingTwiceLeavesTheOrganisationTheFirstRunLeft(): void
+    public function testSeedingTwiceLeavesTheOrganizationTheFirstRunLeft(): void
     {
         $this->collector()->seed('team');
         $this->em->clear();

@@ -145,7 +145,7 @@ final readonly class AreaMapService
      * @param list<array{name: string, live: bool, href: string, boundary: string|null}> $areas
      * @param int                                                                        $withoutPosition how many on duty have reported no fix, for the key
      */
-    public function organisation(array $areas, LivePresence $presence, int $withoutPosition = 0): AtlasMap
+    public function organization(array $areas, LivePresence $presence, int $withoutPosition = 0): AtlasMap
     {
         return $this->register($areas)->livePositions($presence, $withoutPosition);
     }

@@ -434,7 +434,7 @@ final readonly class GoalsTopic implements PerformanceTopicProviderInterface, To
     private function departmentsIn(PerformanceScope $scope): array
     {
         $all = $this->departments->findAllActiveOrdered();
-        if ($scope->isOrganisation()) {
+        if ($scope->isOrganization()) {
             return $all;
         }
 

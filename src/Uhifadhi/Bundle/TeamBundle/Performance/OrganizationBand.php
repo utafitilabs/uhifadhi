@@ -46,7 +46,7 @@ use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
  * dropped one would be five figures wide on one installation and six
  * on another, and nobody could tell which.
  */
-final readonly class OrganisationBand
+final readonly class OrganizationBand
 {
     /** The six, in the order the design reads them, and the label each wears here. */
     public const array FIGURES = [

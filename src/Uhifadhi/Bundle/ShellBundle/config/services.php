@@ -37,7 +37,7 @@ use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\ShellBundle\Twig\ShellExtension;
 use Uhifadhi\Bundle\ShellBundle\Twig\ShellRuntime;
 use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
-use Uhifadhi\Contracts\Settings\OrganisationIdentitySourceInterface;
+use Uhifadhi\Contracts\Settings\OrganizationIdentitySourceInterface;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
 use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
 
@@ -270,7 +270,7 @@ return static function (ContainerConfigurator $container): void {
             tagged_iterator(ShellBundle::SETTINGS_STEP_TAG),
             service_locator([
                 ModuleMatrixSourceInterface::SERVICE => service(ModuleMatrixSourceInterface::SERVICE)->ignoreOnInvalid(),
-                OrganisationIdentitySourceInterface::SERVICE => service(OrganisationIdentitySourceInterface::SERVICE)->ignoreOnInvalid(),
+                OrganizationIdentitySourceInterface::SERVICE => service(OrganizationIdentitySourceInterface::SERVICE)->ignoreOnInvalid(),
             ]),
             '%shell.brand_name%',
             // WHAT THE KERNEL ACTUALLY BOOTS. A part of the core on disk that

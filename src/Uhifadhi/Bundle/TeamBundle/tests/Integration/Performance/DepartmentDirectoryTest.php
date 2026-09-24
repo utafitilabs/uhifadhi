@@ -48,7 +48,7 @@ final class DepartmentDirectoryTest extends IntegrationTestCase
         $this->aDepartment('Ecology');
         $this->aDepartment('Wetland Management', $north);
 
-        $entries = $this->directory()->forScope(PerformanceScope::organisation())->entries;
+        $entries = $this->directory()->forScope(PerformanceScope::organization())->entries;
 
         self::assertSame(['Ecology', 'Wetland Management'], array_map(static fn ($e): string => $e->name, $entries));
         self::assertSame(['Org-wide', 'Northern Reserve'], array_map(static fn ($e): string => $e->band, $entries));
@@ -103,7 +103,7 @@ final class DepartmentDirectoryTest extends IntegrationTestCase
         $this->em->flush();
         $this->areaModules()->install($north, 'patrols');
 
-        $rows = $this->directory()->forScope(PerformanceScope::organisation())->answeringFor('patrols');
+        $rows = $this->directory()->forScope(PerformanceScope::organization())->answeringFor('patrols');
 
         self::assertSame(
             ['Ecology', 'Wetland Management'],
@@ -118,12 +118,12 @@ final class DepartmentDirectoryTest extends IntegrationTestCase
         $this->aDepartment('Ecology');
         $this->aDepartment('Wetland Management', $north);
 
-        self::assertSame(['Org-wide', 'Northern Reserve'], $this->directory()->forScope(PerformanceScope::organisation())->bands());
+        self::assertSame(['Org-wide', 'Northern Reserve'], $this->directory()->forScope(PerformanceScope::organization())->bands());
     }
 
     private function entryFor(string $name): \Uhifadhi\Contracts\Performance\DepartmentEntry
     {
-        foreach ($this->directory()->forScope(PerformanceScope::organisation())->entries as $entry) {
+        foreach ($this->directory()->forScope(PerformanceScope::organization())->entries as $entry) {
             if ($name === $entry->name) {
                 return $entry;
             }

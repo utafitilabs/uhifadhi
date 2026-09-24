@@ -47,7 +47,7 @@ enum SettingsTab: string
     case Modules = 'modules';
 
     /** Who the installation belongs to. It edits, so it comes last. */
-    case Organisation = 'organisation';
+    case Organization = 'organization';
 
     /**
      * The first screen — the one the sidebar row and the section's own name
@@ -71,7 +71,7 @@ enum SettingsTab: string
             self::Overview => 'Overview',
             self::Installation => 'Installation',
             self::Modules => 'Modules',
-            self::Organisation => 'Organization',
+            self::Organization => 'Organization',
         };
     }
 
@@ -86,7 +86,7 @@ enum SettingsTab: string
             self::Overview => 'What this installation gives you, what it runs, and who it belongs to. Organization scope — an area’s own settings are on the area, and a module’s are on that module’s Configure page.',
             self::Installation => 'What is installed, at what version, which areas run it, and whether any of it needs attention. This is the page that used to be the front door.',
             self::Modules => 'The catalogue: every module this installation can run, what it does, and which areas run it.',
-            self::Organisation => 'Who this installation belongs to: the name it is known by, its mark, and where in the world it is.',
+            self::Organization => 'Who this installation belongs to: the name it is known by, its mark, and where in the world it is.',
         };
     }
 

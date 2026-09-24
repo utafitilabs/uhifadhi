@@ -36,7 +36,7 @@ final readonly class PerformanceScope
     ) {
     }
 
-    public static function organisation(string $label = 'Organization — all areas'): self
+    public static function organization(string $label = 'Organization — all areas'): self
     {
         return new self(null, $label);
     }
@@ -46,7 +46,7 @@ final readonly class PerformanceScope
         return new self($areaUuid, $label);
     }
 
-    public function isOrganisation(): bool
+    public function isOrganization(): bool
     {
         return null === $this->areaUuid;
     }

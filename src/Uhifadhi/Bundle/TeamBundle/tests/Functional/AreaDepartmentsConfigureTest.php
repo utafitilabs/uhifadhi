@@ -67,7 +67,7 @@ final class AreaDepartmentsConfigureTest extends WebTestCaseWithSchema
     }
 
     /** An org-wide row says where it is configured, and links there. */
-    public function testAnOrgWideRowPointsAtTheOrganisationsRegister(): void
+    public function testAnOrgWideRowPointsAtTheOrganizationsRegister(): void
     {
         [$crawler] = $this->section();
         $row = $crawler->filter('.dprow')->first();

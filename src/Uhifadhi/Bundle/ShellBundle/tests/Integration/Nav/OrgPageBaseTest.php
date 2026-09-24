@@ -128,7 +128,7 @@ final class OrgPageBaseTest extends ContractTestCase
         $this->on('fixture_org_overview');
         FixtureOrgModule::$pages = self::threeDeclaredPages();
         FixtureScopeSource::$scopes = [
-            Scope::organisation(),
+            Scope::organization(),
             Scope::area('11111111-1111-1111-1111-111111111111', 'Crater'),
         ];
 

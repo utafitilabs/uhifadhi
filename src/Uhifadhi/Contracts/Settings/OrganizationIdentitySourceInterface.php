@@ -19,17 +19,17 @@ namespace Uhifadhi\Contracts\Settings;
  * AN ALIAS, NOT A TAGGED COLLECTION: an installation belongs to one
  * organization, and two sources answering would be two names on one export.
  *
- *     $services->alias('shell.settings.organisation_identity', App\Settings\OurIdentity::class);
+ *     $services->alias('shell.settings.organization_identity', App\Settings\OurIdentity::class);
  *
  * THE ALIAS IS OPTIONAL, AND ITS ABSENCE IS A HONEST STATE. A fresh
  * installation has been given no name of its own and the screen draws the
  * wordmark it was shipped with, with every other field stating that it is not
  * set — which is the page telling somebody exactly what there is to do.
  */
-interface OrganisationIdentitySourceInterface
+interface OrganizationIdentitySourceInterface
 {
     /** The service id the settings section asks for, where anybody answers it. */
-    public const string SERVICE = 'shell.settings.organisation_identity';
+    public const string SERVICE = 'shell.settings.organization_identity';
 
-    public function organisationIdentity(): OrganisationIdentity;
+    public function organizationIdentity(): OrganizationIdentity;
 }

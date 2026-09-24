@@ -55,7 +55,7 @@ final class ScopeControlTest extends WebTestCase
      * first because it is the widest reading and the one an org page opens
      * on.
      */
-    public function testFourViewableAreasAreOfferedUnderTheOrganisation(): void
+    public function testFourViewableAreasAreOfferedUnderTheOrganization(): void
     {
         $this->boot();
         foreach (['Crater', 'Northern Reserve', 'Salt Marsh', 'Western Range'] as $name) {
@@ -68,8 +68,8 @@ final class ScopeControlTest extends WebTestCase
             ['Organization — all areas', 'Crater', 'Northern Reserve', 'Salt Marsh', 'Western Range'],
             array_map(static fn (Scope $scope): string => $scope->label, $scopes),
         );
-        self::assertTrue($scopes[0]->isOrganisation());
-        self::assertFalse($scopes[1]->isOrganisation());
+        self::assertTrue($scopes[0]->isOrganization());
+        self::assertFalse($scopes[1]->isOrganization());
     }
 
     /**
@@ -131,7 +131,7 @@ final class ScopeControlTest extends WebTestCase
      * shell's own frame around it, and the control in its action row with
      * every slice this viewer may open — with nothing wired by the host.
      */
-    public function testTheControlIsDrawnOnAContributedOrganisationPage(): void
+    public function testTheControlIsDrawnOnAContributedOrganizationPage(): void
     {
         $this->boot();
         foreach (['Crater', 'Northern Reserve', 'Salt Marsh', 'Western Range'] as $name) {

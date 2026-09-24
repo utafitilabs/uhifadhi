@@ -62,10 +62,10 @@ use Uhifadhi\Contracts\Shell\Scope;
 final readonly class OrgDashboardController
 {
     /** `/`, and what the brandmark points at. */
-    public const string ROUTE = 'organisation_dashboard';
+    public const string ROUTE = 'organization_dashboard';
 
     /** Its widget library. */
-    public const string WIDGETS_ROUTE = 'organisation_widgets';
+    public const string WIDGETS_ROUTE = 'organization_widgets';
 
     /** A structurally valid uuid that addresses nothing — the library's URL template. */
     private const string PLACEHOLDER_UUID = '00000000-0000-4000-8000-000000000000';
@@ -141,14 +141,14 @@ final readonly class OrgDashboardController
         ]));
     }
 
-    #[Route('/widgets/save', name: 'organisation_widgets_save', methods: ['POST'])]
+    #[Route('/widgets/save', name: 'organization_widgets_save', methods: ['POST'])]
     #[IsGranted('areas.read')]
     public function save(Request $request): Response
     {
         return $this->endpoint->save($request, $this->catalogue->catalog());
     }
 
-    #[Route('/widgets/reset', name: 'organisation_widgets_reset', methods: ['POST'])]
+    #[Route('/widgets/reset', name: 'organization_widgets_reset', methods: ['POST'])]
     #[IsGranted('areas.read')]
     public function reset(Request $request): Response
     {
@@ -162,7 +162,7 @@ final readonly class OrgDashboardController
         );
     }
 
-    #[Route('/widgets/preset/{presetId}', name: 'organisation_widgets_preset', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'])]
+    #[Route('/widgets/preset/{presetId}', name: 'organization_widgets_preset', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'])]
     #[IsGranted('areas.read')]
     public function applyPreset(Request $request, string $presetId): Response
     {
@@ -176,7 +176,7 @@ final readonly class OrgDashboardController
         );
     }
 
-    #[Route('/widgets/preset/{presetId}/copy', name: 'organisation_widgets_preset_copy', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'], priority: 1)]
+    #[Route('/widgets/preset/{presetId}/copy', name: 'organization_widgets_preset_copy', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'], priority: 1)]
     #[IsGranted('areas.read')]
     public function copyPreset(Request $request, string $presetId): Response
     {
@@ -187,7 +187,7 @@ final readonly class OrgDashboardController
         );
     }
 
-    #[Route('/widgets/presets', name: 'organisation_widgets_preset_create', methods: ['POST'])]
+    #[Route('/widgets/presets', name: 'organization_widgets_preset_create', methods: ['POST'])]
     #[IsGranted('areas.read')]
     public function createPreset(Request $request): Response
     {
@@ -198,7 +198,7 @@ final readonly class OrgDashboardController
         );
     }
 
-    #[Route('/widgets/presets/{presetUuid}/apply', name: 'organisation_widgets_preset_apply', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
+    #[Route('/widgets/presets/{presetUuid}/apply', name: 'organization_widgets_preset_apply', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
     #[IsGranted('areas.read')]
     public function applyCustomPreset(Request $request, string $presetUuid): Response
     {
@@ -209,7 +209,7 @@ final readonly class OrgDashboardController
         );
     }
 
-    #[Route('/widgets/presets/{presetUuid}/rename', name: 'organisation_widgets_preset_rename', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
+    #[Route('/widgets/presets/{presetUuid}/rename', name: 'organization_widgets_preset_rename', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
     #[IsGranted('areas.read')]
     public function renameCustomPreset(Request $request, string $presetUuid): Response
     {
@@ -220,7 +220,7 @@ final readonly class OrgDashboardController
         );
     }
 
-    #[Route('/widgets/presets/{presetUuid}/delete', name: 'organisation_widgets_preset_delete', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
+    #[Route('/widgets/presets/{presetUuid}/delete', name: 'organization_widgets_preset_delete', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
     #[IsGranted('areas.read')]
     public function deleteCustomPreset(Request $request, string $presetUuid): Response
     {
@@ -244,7 +244,7 @@ final readonly class OrgDashboardController
      */
     private function read(\DateTimeImmutable $now): array
     {
-        $scope = Scope::organisation();
+        $scope = Scope::organization();
         $rows = $this->register->rows($now);
 
         return [
@@ -264,7 +264,7 @@ final readonly class OrgDashboardController
             // of nothing, so the cell is left out rather than drawn empty —
             // and every other cell keeps its slot and says what it cannot
             // measure.
-            'map' => [] === $rows ? null : $this->areaMap->organisation(
+            'map' => [] === $rows ? null : $this->areaMap->organization(
                 $this->library->mapAreas($rows),
                 $this->positions->forScope($scope, $now),
             ),
@@ -292,14 +292,14 @@ final readonly class OrgDashboardController
     private function urls(): array
     {
         return [
-            'save' => $this->router->generate('organisation_widgets_save'),
-            'reset' => $this->router->generate('organisation_widgets_reset'),
-            'preset' => $this->router->generate('organisation_widgets_preset', ['presetId' => '__ID__']),
-            'copy' => $this->router->generate('organisation_widgets_preset_copy', ['presetId' => '__ID__']),
-            'presets' => $this->router->generate('organisation_widgets_preset_create'),
-            'apply' => $this->router->generate('organisation_widgets_preset_apply', ['presetUuid' => self::PLACEHOLDER_UUID]),
-            'rename' => $this->router->generate('organisation_widgets_preset_rename', ['presetUuid' => self::PLACEHOLDER_UUID]),
-            'delete' => $this->router->generate('organisation_widgets_preset_delete', ['presetUuid' => self::PLACEHOLDER_UUID]),
+            'save' => $this->router->generate('organization_widgets_save'),
+            'reset' => $this->router->generate('organization_widgets_reset'),
+            'preset' => $this->router->generate('organization_widgets_preset', ['presetId' => '__ID__']),
+            'copy' => $this->router->generate('organization_widgets_preset_copy', ['presetId' => '__ID__']),
+            'presets' => $this->router->generate('organization_widgets_preset_create'),
+            'apply' => $this->router->generate('organization_widgets_preset_apply', ['presetUuid' => self::PLACEHOLDER_UUID]),
+            'rename' => $this->router->generate('organization_widgets_preset_rename', ['presetUuid' => self::PLACEHOLDER_UUID]),
+            'delete' => $this->router->generate('organization_widgets_preset_delete', ['presetUuid' => self::PLACEHOLDER_UUID]),
             'dashboard' => $this->router->generate(self::ROUTE),
         ];
     }

@@ -414,7 +414,7 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
      */
     private function sumAcross(string $key, string $periodKey, ?PerformanceScope $scope = null, ?array $departments = null): ?float
     {
-        $departments ??= $this->departmentsIn($scope ?? PerformanceScope::organisation());
+        $departments ??= $this->departmentsIn($scope ?? PerformanceScope::organization());
 
         $sum = null;
         foreach ($departments as $department) {
@@ -437,7 +437,7 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
     private function departmentsIn(PerformanceScope $scope): array
     {
         $all = $this->departments->findAllActiveOrdered();
-        if ($scope->isOrganisation()) {
+        if ($scope->isOrganization()) {
             return $all;
         }
 

@@ -29,20 +29,20 @@ use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
  * in it keeps whatever it had; nothing here claims a URL the application did
  * not ask it to claim.
  *
- * THE SECTION IS A TRAILING OPTIONAL PARAMETER, which is what makes the ruled
- * order visible in the URL: the surface's FIRST section — Widget library — is
- * the bare address the `Configure` action opens, and every other section hangs
- * one segment below it. So `/areas/{uuid}/configure` is the area's widget
- * library and `/areas/{uuid}/configure/settings` is its settings, and the router
- * generates the bare form on its own whenever no section is named.
+ * THE SECTION IS A TRAILING OPTIONAL PARAMETER. Every section is addressed by
+ * name — `/areas/{uuid}/configure/widgets`, `/areas/{uuid}/configure/settings`
+ * — one address shape for everything a surface is set up with, whether the
+ * shell renders the section or it keeps a screen of its own. The bare address
+ * is the `Configure` action's way in: it opens on the surface's FIRST section,
+ * Widget library by the ruled order, and names none.
  *
  * A surface whose first section keeps an address of its own cannot be drawn at
  * the bare address, so the bare address answers 302 to that screen instead. One
  * rule, both shapes — see ModuleFrameService::bareAddressRedirect().
  *
- * NOTHING HERE NEEDS A PRIORITY. The module address is three segments under
- * `/modules/`, and the module grid's own customize family is two, so neither can
- * shadow the other however an application orders its imports.
+ * A SECTION WITH A SCREEN OF ITS OWN takes the same shape at its own route —
+ * `/areas/{uuid}/configure/modules`, `/areas/{uuid}/configure/zones` — mounted
+ * with a priority so the shell's `{section}` parameter never swallows it.
  *
  * THE MODULE ADDRESS WEARS THE PLATFORM'S MODULE PATH SHAPE on purpose:
  * `/areas/{uuid}/modules/{slug}/…` is the shape a parked module is closed by, so

@@ -444,27 +444,17 @@ final readonly class ModuleFrameService
     }
 
     /**
-     * The address of a section the shell renders. The surface's FIRST section —
-     * Widget library, by the ruled order — is the configure page itself, so it
-     * keeps the bare address the `Configure` action opens; every other section
-     * hangs one segment below it.
-     *
-     * The first SECTION, not the first rendered one: when a surface leads with a
-     * screen of its own the bare address is that screen's redirect
-     * ({@see bareAddressRedirect()}) and belongs to no section the shell draws.
+     * The address of a section the shell renders — the configure page with the
+     * section named, for every section: one address shape for everything a
+     * surface is set up with, so the strip reads `…/configure/widgets`,
+     * `…/configure/kinds`, `…/configure/settings` and a section a module adds
+     * lands in the same place. The bare address stays the `Configure` action's
+     * way in and opens on the first section ({@see currentSectionId()}); no
+     * section is addressed by it.
      */
     private function renderedSectionUrl(Request $request, string $surface, ConfigurationSection $section): ?string
     {
-        return $this->configureUrl(
-            $request,
-            $surface,
-            $section->id === $this->firstSectionId($surface) ? null : $section->id,
-        );
-    }
-
-    private function firstSectionId(string $surface): ?string
-    {
-        return $this->sections->sections($surface)[0]->id ?? null;
+        return $this->configureUrl($request, $surface, $section->id);
     }
 
     /**

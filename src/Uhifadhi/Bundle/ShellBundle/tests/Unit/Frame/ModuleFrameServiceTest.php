@@ -137,8 +137,12 @@ final class ModuleFrameServiceTest extends TestCase
         self::assertSame(['Widget library'], $this->labels($lit));
     }
 
-    /** And every other section hangs one segment below it. */
-    public function testEveryOtherSectionKeepsItsOwnAddress(): void
+    /**
+     * EVERY SECTION HANGS ONE SEGMENT BELOW THE BARE ADDRESS, the first one
+     * included: one address shape for everything a surface is set up with,
+     * so a strip entry and a door never disagree about where a section is.
+     */
+    public function testEverySectionCarriesItsOwnAddress(): void
     {
         $urls = array_map(
             static fn (AreaTab $tab): string => $tab->url,
@@ -146,7 +150,7 @@ final class ModuleFrameServiceTest extends TestCase
         );
 
         $configure = '/areas/'.self::AREA.'/modules/patrols/configure';
-        self::assertSame([$configure, $configure.'/kinds', $configure.'/settings'], $urls);
+        self::assertSame([$configure.'/widgets', $configure.'/kinds', $configure.'/settings'], $urls);
     }
 
     /**

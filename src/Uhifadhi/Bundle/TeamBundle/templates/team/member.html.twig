@@ -20,6 +20,7 @@
    | Position card foot: reach · departments   | data    | reach, placement                | done   |
    | empty state (.pmx-zero) + Give a position | state   | card is null                    | done   |
    | ledger card: folds, verbs, where, through | data    | card.groups, placement          | done   |
+   | module cards after the ledger (seam)      | data    | recordCells (team.record.cells) | done   |
    | Stationed at: plate, station, code, since | data    | stationedAt                     | done   |
    | History: latest 8 of N + View all         | data    | history                         | done   |
 #}
@@ -152,6 +153,11 @@
                 <div class="pcard-foot"><span>{{ card.concernsGranted }} concern{{ card.concernsGranted == 1 ? '' : 's' }} &middot; {{ granted|length }} group{{ granted|length == 1 ? '' : 's' }}</span><span class="sp"></span><a class="ov-open" href="{{ path('team_position_show', {uuid: card.uuid}) }}">See it on the position {{ ux_icon('shell:chevron-right') }}</a></div>
             </div>
         {% endif %}
+
+        {# A MODULE'S CARDS, LAST — whatever a module knows about this person,
+           drawn whole through the record-cell seam; a provider with nothing
+           to say answered null and is simply not here. #}
+        {% for cell in recordCells %}{{ cell|raw }}{% endfor %}
     </div>
 
     <div class="col">

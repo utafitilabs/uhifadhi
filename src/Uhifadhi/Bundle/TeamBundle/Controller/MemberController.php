@@ -54,6 +54,7 @@ use Uhifadhi\Contracts\Access\Verb;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 use Uhifadhi\Contracts\People\PersonPosting;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
+use Uhifadhi\Contracts\People\PersonRecordCellProviderInterface;
 use Uhifadhi\Contracts\People\StationPlateProviderInterface;
 
 /**
@@ -151,6 +152,14 @@ final readonly class MemberController
         private PositionBoard $board,
         private DepartmentRepository $departments,
         private EntityManagerInterface $entityManager,
+        /**
+         * A MODULE'S CARD ON THIS PERSON'S RECORD, from whoever holds a fact
+         * about them. Drawn last in the main column, after the ledger; a
+         * provider with nothing to say answers null and nothing is drawn.
+         *
+         * @var iterable<PersonRecordCellProviderInterface>
+         */
+        private iterable $recordCells = [],
     ) {
     }
 
@@ -184,6 +193,7 @@ final readonly class MemberController
             'reach' => null === $position ? 0 : $this->users->countActiveHoldingAnyPosition([$position]),
             'history' => \array_slice($history, 0, self::HISTORY),
             'historyTotal' => \count($history),
+            'recordCells' => $this->recordCellsFor($member),
         ]));
     }
 
@@ -696,6 +706,30 @@ final readonly class MemberController
     }
 
     /** THE PLATE FOR WHERE THEY ARE STATIONED — the first provider that owns the station answers. */
+    /**
+     * EVERY CARD A MODULE DRAWS ON THIS PERSON, in the order the container
+     * yields the providers; the ones answering null are simply absent.
+     *
+     * @return list<string>
+     */
+    private function recordCellsFor(User $member): array
+    {
+        $uuid = $member->getUuidString();
+        if (null === $uuid) {
+            return [];
+        }
+
+        $cells = [];
+        foreach ($this->recordCells as $provider) {
+            $cell = $provider->cellFor($uuid);
+            if (null !== $cell) {
+                $cells[] = $cell;
+            }
+        }
+
+        return $cells;
+    }
+
     private function plateFor(?PersonPosting $posting): ?string
     {
         if (null === $posting) {

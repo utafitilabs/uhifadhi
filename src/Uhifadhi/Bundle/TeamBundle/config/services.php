@@ -124,6 +124,7 @@ use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
+use Uhifadhi\Contracts\People\PersonRecordCellProviderInterface;
 use Uhifadhi\Contracts\People\StationPlateProviderInterface;
 use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
@@ -1039,6 +1040,8 @@ return static function (ContainerConfigurator $container): void {
             service('team.position_board'),
             service(DepartmentRepository::class),
             service('doctrine.orm.entity_manager'),
+            // A MODULE'S CARD ON A PERSON'S RECORD, from whoever tags the seam.
+            tagged_iterator(PersonRecordCellProviderInterface::TAG),
         ])
         ->tag('controller.service_arguments');
     $services->alias(MemberController::class, 'team.controller.member')->public();

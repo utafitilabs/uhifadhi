@@ -1394,6 +1394,7 @@ valid.
 | `Kpi\StationFigureProviderInterface` | `uhifadhi.station_kpi` | a station's headline figure, for every station of an area at once |
 | `People\PersonFacetProviderInterface` | `uhifadhi.person_facets` | a person's position and department, for a list somewhere else |
 | `People\PersonPostingProviderInterface` | `uhifadhi.person_postings` | where a person works, for their own page |
+| `People\PersonRecordCellProviderInterface` | `team.record.cells` | a card on a person's record, after the grants ledger |
 | `Area\StationDirectoryInterface` | `uhifadhi.station_directory` | every station and who stands at each, across every area |
 | `Storage\FileSourceInterface` | `uhifadhi.file_source` | that this module stores files, and its word for one |
 
@@ -1439,6 +1440,47 @@ It is a separate interface because the area's own contributor has no stylesheet 
 contract that makes it answer a question it has no answer to has started guessing. Your sheet is
 linked last, which means you may tune what you own — and only what you own: restating a shell or
 area selector wins by load order and drifts every other surface, which the sheet tests catch.
+
+### A card on a person's record
+
+A person's record is the team's page — the position, what it grants, where they are stationed,
+the account's history. A module that holds a fact about a person (the handsets they carry, when one
+last reported in) draws it as one more card through `People\PersonRecordCellProviderInterface`,
+tagged `team.record.cells`. The page renders every card it is handed as the **last cards of the
+main column, after the grants ledger**, in the order the container yields the providers.
+
+```php
+final readonly class HandsetRecordCell implements PersonRecordCellProviderInterface
+{
+    public function __construct(private HandsetRepository $handsets, private Security $security, private Environment $twig)
+    {
+    }
+
+    public function cellFor(string $personUuid): ?string
+    {
+        // THE CONTRIBUTION GATES ITSELF: nothing to say, or nothing the viewer
+        // may read, is null — and null draws nothing.
+        if (!$this->security->isGranted('handsets.read')) {
+            return null;
+        }
+        $carried = $this->handsets->findByPerson($personUuid);
+
+        return [] === $carried ? null : $this->twig->render('@Telemetry/person/_cell.html.twig', ['handsets' => $carried]);
+    }
+}
+```
+
+```php
+// config/services.php — tagged by hand, because a reusable bundle is not autoconfigured
+$services->set('telemetry.record_cell', HandsetRecordCell::class)
+    ->args([service(HandsetRepository::class), service('security.helper'), service('twig')])
+    ->tag(PersonRecordCellProviderInterface::TAG);
+```
+
+The card is your **whole** markup — one house card, `.c` with its `.tab`, written against the
+shell's sheet and your own — and the page adds nothing around it and reads nothing out of it. It
+does not ask whether the viewer may see your fact: a card that said "you may not see this" would be
+a card about the viewer, not about the person, so the gate is yours and the answer is null.
 
 ### Publishing a topic on the performance page
 

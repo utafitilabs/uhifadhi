@@ -193,6 +193,17 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('doctrine.migrations.configuration')]);
 
     $services->set('registry.sync_listener', RegistrySyncListener::class)
+        // THE SUBSCRIBER IS TAGGED BY HAND because this bundle autoconfigures
+        // nothing:
+        //   "The container detects service subscribers via autoconfiguration.
+        //    If you disabled it, add the `container.service_subscriber` tag to
+        //    the definition of the service that implements
+        //    ServiceSubscriberInterface"
+        //   "when the container finds a service implementing
+        //    ServiceSubscriberInterface, it creates a locator with the
+        //    subscribed services and injects it into the constructor argument
+        //    type-hinted with Psr\Container\ContainerInterface"
+        // @see https://symfony.com/doc/current/service_container/service_subscribers_locators.html
         // ResolveServiceSubscribersPass swaps a Psr ContainerInterface reference
         // for the subscriber's own locator; any other id would inject the real
         // container. @see vendor/symfony/dependency-injection/Compiler/ResolveServiceSubscribersPass.php
@@ -204,6 +215,15 @@ return static function (ContainerConfigurator $container): void {
         // THE END OF A CONSOLE COMMAND IS THE WHOLE OF THE HOOK. A deploy
         // migrates and then warms the cache up, and the registry is in step by
         // the time the second command returns; a request is served without it.
+        //
+        // `kernel.event_listener` AND A CONSOLE EVENT: the tag's name says
+        // kernel, but what it registers is a listener on the application's one
+        // `event_dispatcher` — the same dispatcher the console application is
+        // given — and the pass that reads the tag treats `event` as an opaque
+        // string, so a console event name is as good as a kernel one.
         // @see https://symfony.com/doc/current/reference/dic_tags.html#kernel-event-listener
+        // @see https://symfony.com/doc/current/components/console/events.html#the-consoleevents-terminate-event
+        // @see vendor/symfony/event-dispatcher/DependencyInjection/RegisterListenersPass.php
+        // @see vendor/symfony/console/ConsoleEvents.php — `const TERMINATE = 'console.terminate'`
         ->tag('kernel.event_listener', ['event' => 'console.terminate', 'method' => 'onConsoleTerminate']);
 };

@@ -73,12 +73,12 @@ final class LivenessTest extends KernelTestCase
         // so nothing here is answered out of work somebody already did.
         $listener = self::getContainer()->get('registry.sync_listener');
         \assert($listener instanceof RegistrySyncListener);
-        @unlink($listener->stampFile);
+        @unlink($listener->stampFile());
 
         $response = $kernel->handle(Request::create('/up'));
 
         self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
         self::assertFalse($connection->isConnected(), 'the liveness route was answered out of the database');
-        self::assertFileDoesNotExist($listener->stampFile, 'a request reconciled the registry');
+        self::assertFileDoesNotExist($listener->stampFile(), 'a request reconciled the registry');
     }
 }

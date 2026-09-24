@@ -138,11 +138,11 @@ final class CoreBootTest extends KernelTestCase
         $listener = self::getContainer()->get('registry.sync_listener');
         \assert($listener instanceof RegistrySyncListener);
 
-        @unlink($listener->stampFile);
+        @unlink($listener->stampFile());
         $listener->reconcileOnce();
 
         self::assertFileDoesNotExist(
-            $listener->stampFile,
+            $listener->stampFile(),
             'nothing to reconcile before the first migration, and nothing remembered as done',
         );
     }

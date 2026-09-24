@@ -200,19 +200,47 @@ jobs:
       # added after it would resolve the PUBLISHED core — which is exactly
       # the stale snapshot this job exists to catch.
       #
-      # The version is stated rather than guessed: `actions/checkout` leaves
-      # a detached HEAD, and Composer's guesser would name the commit rather
-      # than the branch. The module's own constraint is a caret against tags
-      # (`^0.1`), which a dev version does not satisfy under a stable floor, so
-      # the requirement is rewritten to this line's dev version for the run —
-      # the module is being tested against the core's NEXT commit on purpose.
+      # THE PATH REPOSITORY STATES THE VERSION IT SERVES, because a checkout is
+      # not a branch: `versions` is the documented option for exactly this.
+      #   "When the version cannot be inferred from the local VCS repository, or
+      #    when you want to override the version, you can use the `versions`
+      #    option when declaring the repository"
+      #   @see https://getcomposer.org/doc/05-repositories.md#path
+      #   @see composer/src/Composer/Repository/PathRepository.php — loadPackageFromFileSystem(),
+      #        `if (isset($package['name'], $this->options['versions'][$package['name']]))`
+      #
+      # THE LINE IS THE BRANCH, AND NOTHING ELSE. `extra.branch-alias` is gone
+      # from this core: a branch whose name is a version line already IS a
+      # version to Composer —
+      #   "you must specify a version constraint that looks like this:
+      #    `v1.x-dev`. The `.x` is an arbitrary string that Composer requires to
+      #    tell it that we're talking about the `v1` branch and not a `v1` tag"
+      #   @see https://getcomposer.org/doc/articles/versions.md#branches
+      #   @see composer/vendor/composer/semver/src/VersionParser.php — normalizeBranch(),
+      #        a `\d+(\.\d+)*` branch becomes `<line>.x-dev`, anything else `dev-<branch>`
+      # so the branch name is read from the event GitHub names it in, not from a
+      # working copy: `actions/checkout` is given no ref here, and on a pull
+      # request the commit under test belongs to the BASE line.
+      #   @see https://docs.github.com/en/actions/reference/variables-reference#default-environment-variables
+      #
+      # THE REQUIREMENT IS REWRITTEN TOO. The module's own constraint is a caret
+      # against tags (`^0.1`), which a dev version does not satisfy under a
+      # stable floor; a `x-dev` constraint carries its own stability, so no
+      # `@dev` flag and no `minimum-stability` edit is needed —
+      #   @see composer/src/Composer/Package/Loader/RootPackageLoader.php —
+      #        extractStabilityFlags(), a non-stable constraint sets that
+      #        package's stability flag by itself.
+      # The module is being tested against the core's NEXT commit on purpose.
       - name: Point the module at this core commit
         working-directory: module
+        env:
+          CORE_LINE: ${{ github.base_ref || github.ref_name }}
         run: |
-          line="$(jq -r '.extra["branch-alias"]["dev-main"] // empty' ../core/composer.json)"
-          line="${line:-$(git -C ../core rev-parse --abbrev-ref HEAD)}"
-          case "$line" in HEAD) line="$(git -C ../core branch -r --contains HEAD | grep -v HEAD | head -1 | sed 's#.*origin/##')";; esac
-          version="${line%-dev}.x-dev"
+          line="$CORE_LINE"
+          case "$line" in
+            [0-9]*.[0-9]*) version="${line}.x-dev" ;;
+            *) version="dev-${line}" ;;
+          esac
           echo "core line $line → $version"
           tmp="$(mktemp)"
           jq --arg v "$version" '.repositories = ([{

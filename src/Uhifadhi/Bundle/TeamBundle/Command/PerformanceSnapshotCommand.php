@@ -49,6 +49,9 @@ use Uhifadhi\Bundle\TeamBundle\Service\TeamSectionOverview;
  * department. A figure nobody published is written as ABSENT rather than
  * skipped, so a sparkline can draw the hole and a delta can say there is
  * nothing to compare with — neither of which is a nought.
+ *
+ * @see https://symfony.com/doc/current/console.html — #[AsCommand] names the command; a reusable bundle is not autoconfigured, so config/services.php adds the 'console.command' tag by hand
+ * @see vendor/symfony/console/DependencyInjection/AddConsoleCommandPass.php — $aliases = $tags[0]['command'] ?? $attribute?->name, which is why the tag carries no name of its own
  */
 #[AsCommand(
     name: 'team:performance:snapshot',

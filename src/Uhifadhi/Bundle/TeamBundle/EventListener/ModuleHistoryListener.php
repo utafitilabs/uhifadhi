@@ -43,6 +43,9 @@ use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
  * and the only thing that walks every department for every figure; this
  * asks one newly-present module about the recent past, so the page it
  * appears on has something to compare against.
+ *
+ * @see https://symfony.com/doc/current/event_dispatcher.html — a listener is a service tagged 'kernel.event_listener' with the event and the method
+ * @see vendor/symfony/event-dispatcher/DependencyInjection/RegisterListenersPass.php — the tag attributes this listener is registered with in config/services.php
  */
 final readonly class ModuleHistoryListener
 {

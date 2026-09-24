@@ -31,6 +31,10 @@ use Uhifadhi\Bundle\TeamBundle\Access\Door;
  * IT IS THIS BUNDLE'S because the model is: the team owns positions, seats
  * and the check. A module calls `door()` in its own templates and requires
  * nothing new to do it.
+ *
+ * @see https://symfony.com/doc/current/templating/twig_extension.html
+ * @see vendor/symfony/twig-bundle/DependencyInjection/TwigExtension.php — registerForAutoconfiguration(ExtensionInterface::class)->addTag('twig.extension'); a reusable bundle is not autoconfigured, so config/services.php writes that tag by hand
+ * @see vendor/symfony/security-core/Authorization/AuthorizationChecker.php — what Door asks, and what a first-class extension may hold: no request and no database at construction, so building the twig service during an asset build is still safe
  */
 final class DoorExtension extends AbstractExtension
 {

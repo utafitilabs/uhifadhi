@@ -36,6 +36,9 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * module points at an area exactly as it points at a person, and requires
  * neither package to do it. A `null` answer is the whole signal: no area means
  * unbounded, which means no banner.
+ *
+ * @see https://symfony.com/doc/current/templating/twig_extension.html
+ * @see vendor/symfony/twig-bundle/DependencyInjection/TwigExtension.php — registerForAutoconfiguration(ExtensionInterface::class)->addTag('twig.extension'); a reusable bundle is not autoconfigured, so config/services.php writes that tag by hand
  */
 final class AreaScopeExtension extends AbstractExtension
 {

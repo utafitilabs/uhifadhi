@@ -28,6 +28,9 @@ use Twig\TwigFunction;
  *
  * THE RENDERING IS A RUNTIME, so a page with no matrix on it builds
  * neither the builder nor the template.
+ *
+ * @see https://symfony.com/doc/current/templating/twig_extension.html — the extension declares, a lazy-loaded runtime named as [Runtime::class, 'method'] renders
+ * @see vendor/symfony/twig-bundle/DependencyInjection/TwigExtension.php — registerForAutoconfiguration(ExtensionInterface::class)->addTag('twig.extension'); a reusable bundle is not autoconfigured, so config/services.php writes that tag by hand
  */
 final class MatrixExtension extends AbstractExtension
 {

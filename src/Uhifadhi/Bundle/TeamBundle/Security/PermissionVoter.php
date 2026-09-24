@@ -62,6 +62,8 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * seven so an installation mid-upgrade is not locked out of its own pages.
  *
  * @deprecated since 1.0, use {@see GrantVoter}
+ * @see https://symfony.com/doc/current/security/voters.html — a voter extends Voter, answers supports() and voteOnAttribute()
+ * @see vendor/symfony/security-core/Authorization/Voter/Voter.php — the two abstract signatures this class implements, the fourth ?Vote argument included
  */
 final class PermissionVoter extends Voter
 {

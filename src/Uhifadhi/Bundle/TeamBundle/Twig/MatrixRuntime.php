@@ -28,6 +28,9 @@ use Uhifadhi\Contracts\Performance\TopicMatrix;
  * the title, and who published it. Nothing else: a caller cannot hand in
  * a class, a colour or a column, because then two matrices would differ
  * by who wrote the page rather than by what they measure.
+ *
+ * @see https://symfony.com/doc/current/templating/twig_extension.html — a lazy-loaded extension's work lives in a RuntimeExtensionInterface class
+ * @see vendor/symfony/twig-bundle/DependencyInjection/Compiler/RuntimeLoaderPass.php — the 'twig.runtime' tag config/services.php writes by hand, collected into twig.runtime_loader
  */
 final readonly class MatrixRuntime implements RuntimeExtensionInterface
 {

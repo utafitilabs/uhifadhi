@@ -58,6 +58,10 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * person must be placed in at least one of those departments.
  *
  * @extends Voter<string, ?AreaInterface>
+ *
+ * @see https://symfony.com/doc/current/security/voters.html — a voter extends Voter, answers supports() and voteOnAttribute()
+ * @see vendor/symfony/security-core/Authorization/Voter/Voter.php — the two abstract signatures this class implements, the fourth ?Vote argument included
+ * @see vendor/symfony/security-bundle/DependencyInjection/SecurityExtension.php — the 'security.voter' tag; a reusable bundle is not autoconfigured, so config/services.php writes it by hand
  */
 final class GrantVoter extends Voter
 {

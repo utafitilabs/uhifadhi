@@ -581,72 +581,6 @@
 .mtile-add .t { display: flex; align-items: center; gap: 8px; }
 .mtile-add .d { font-weight: 400; font-size: 11.5px; color: rgb(var(--c-fog)); }
 
-/* THE PIN: one module in the compact reading of the active set, above the
-   detailed rows. The pill itself is the shell's mini chip and is worn, not
-   restated — `class="mchip a-pin"` — because a chip defined twice renders
-   differently depending on which sheet the page linked last. What is this
-   surface's alone is what makes the pill a PIN: it can be dragged into a new
-   order, it can be pinned so it cannot move, and it carries the control that
-   parks its module. */
-.a-pin-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 22px; }
-
-.a-pin.pinned { opacity: .75; background: rgb(var(--c-raised)); }
-.a-pin.dragging { opacity: .5; border-style: dashed; border-color: rgb(var(--c-acc)); }
-.a-pin .grip { display: inline-flex; cursor: grab; color: rgb(var(--c-fog)); }
-.a-pin .grip svg { display: block; height: 12px; width: auto; }
-.a-pin .pinlabel { font-size: 8px; opacity: .7; letter-spacing: .08em; }
-.a-pin form { display: inline-flex; }
-.a-pin .rm { border: 0; background: none; cursor: pointer; padding: 0 0 0 2px; font-family: inherit; color: inherit; }
-
-.mod-banner { border-left: 3px solid rgb(var(--c-acc)); padding: 14px 18px; margin-bottom: 20px; }
-.mod-banner .t { font-size: 13.5px; font-weight: 600; }
-.mod-banner .d { color: rgb(var(--c-fog)); font-size: 12px; margin-top: 3px; }
-
-/* The active list is the wider half: it holds the rows that get dragged. */
-.mod-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; align-items: start; }
-
-@media (max-width: 900px) {
-    .mod-grid { grid-template-columns: 1fr; }
-}
-
-.mod-rows,
-.mod-parked-list { margin-top: 6px; }
-
-.mod-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    margin-bottom: 8px;
-    border: 1px solid var(--c-ln);
-    border-radius: 9px;
-    background: color-mix(in srgb, rgb(var(--c-p1)) 60%, transparent);
-}
-
-.mod-row.pinned { opacity: .75; background: rgb(var(--c-raised)); }
-.mod-row.dragging { opacity: .45; border-style: dashed; border-color: rgb(var(--c-acc)); }
-.mod-row form { display: inline-flex; }
-
-.mod-grip { color: rgb(var(--c-fog)); cursor: grab; display: inline-flex; flex: none; }
-.mod-grip svg { width: 12px; height: 16px; }
-/* The pinned row keeps the grip's column so its name lines up with the rest. */
-.mod-grip-gap { width: 12px; flex: none; }
-
-.mod-name { font-weight: 600; font-size: 13px; min-width: 138px; }
-.mod-spacer { flex: 1; }
-
-.mod-src {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    color: rgb(var(--c-dim));
-    border: 1px solid var(--c-ln2);
-    border-radius: 5px;
-    padding: 2px 6px;
-    white-space: nowrap;
-}
-
-.mod-pin { font-family: var(--font-mono); font-size: 9px; color: rgb(var(--c-dim)); }
-
 /* A SWITCH, AND IT IS A SUBMIT BUTTON. The control that parks a module is a real
    form control styled as a toggle — not a checkbox posting on change — so it
    works with scripting off and reads as one decision. */
@@ -682,34 +616,82 @@
 .mod-toggle.on { background: rgb(var(--c-acc)); border-color: rgb(var(--c-acc)); }
 .mod-toggle.on::after { left: 16px; }
 
-.mod-cat {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: rgb(var(--c-fog));
-    margin: 14px 0 8px;
+/* ── THE MODULES REGISTER (design: areas/<area>/configure/modules.html) ─────
+   The People-table idiom on the catalogue: one row per module, a two-line
+   name cell, one fact per column. Only this section's own vocabulary is
+   written here; the table, the chips, the filter chip and the switch are the
+   shell's and the sheet above. */
+
+/* The name cell: the module, then what it is, on two lines. */
+.cmname { min-width: 0; }
+.cmname b { display: block; font-size: 13px; font-weight: 600; color: rgb(var(--c-tx)); line-height: 1.3; }
+.cmname .cmwhat { display: block; font-size: 11px; color: rgb(var(--c-dim)); line-height: 1.45; margin-top: 2px; }
+
+/* Order: a grip and the position it holds. Parked rows hold none and say so. */
+.cmord { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.cmord .cmgrip { color: rgb(var(--c-fog)); cursor: grab; display: inline-flex; flex: none; }
+.cmord .cmgrip svg { width: 11px; height: 15px; display: block; }
+.cmord .n { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: rgb(var(--c-tx)); }
+.cmord .none { font-family: var(--font-mono); font-size: 10px; color: rgb(var(--c-dim)); }
+
+/* A parked row keeps every column and loses its weight — no second colour, no
+   hue, no strike-through: the state chip says it and the ink says it. */
+tr.cmparked .cmname b { color: rgb(var(--c-fog)); font-weight: 500; }
+tr.cmparked td { color: rgb(var(--c-dim)); }
+/* A row on its way somewhere else. */
+.tbl tr.dragging td { opacity: .45; }
+
+/* The door into a module's own configure pages. Same height as the switch
+   beside it (26px), so a row with a door and a row without sit level. */
+.cmdoor {
+    display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px;
+    border: 1px solid var(--c-ln2); border-radius: 7px; font-size: 11.5px; font-weight: 600;
+    color: rgb(var(--c-tx)); text-decoration: none; background: rgb(var(--c-raised)); white-space: nowrap;
+}
+.cmdoor:hover { border-color: rgb(var(--c-acc)); color: rgb(var(--c-acc)); }
+.cmdoor svg { width: 13px; height: 13px; flex: none; color: rgb(var(--c-acc)); }
+.cmnodoor {
+    display: inline-flex; align-items: center; height: 26px; padding: 0 10px;
+    border: 1px dashed var(--c-ln2); border-radius: 7px; font-family: var(--font-mono);
+    font-size: 10px; color: rgb(var(--c-dim)); white-space: nowrap;
+}
+table.tbl td .cmdoor, table.tbl td .cmnodoor { vertical-align: middle; }
+/* The switch sits in a form; the form takes no room of its own. */
+.cmscroll td form { display: inline-flex; margin: 0; }
+
+/* The filter row the register wears: grouped dropdowns, a search, and the line
+   that says what is shown. */
+.cmfilt { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 0 12px; }
+.cmsearch { flex: 1 1 200px; min-width: 150px; }
+.cmsearch .fld { height: 28px; font-size: 12px; padding: 0 10px; border-radius: 8px; width: 100%; }
+.cmshown { font-family: var(--font-mono); font-size: 10px; letter-spacing: .06em; color: rgb(var(--c-dim)); white-space: nowrap; }
+.cmshown b { color: rgb(var(--c-fog)); font-weight: 700; }
+/* An option that is a button rather than a link wears the same row. */
+.cmfilt button.i-ddopt { border: 0; background: none; font: inherit; color: inherit; cursor: pointer; }
+.cmfilt button.i-ddopt.on { background: color-mix(in srgb, rgb(var(--c-acc)) 12%, transparent); }
+.cmfilt button.i-ddopt:hover { background: rgb(var(--c-raised)); }
+
+/* The trailing column head names a control, so it never wraps. */
+table.tbl th.cmact { white-space: nowrap; }
+/* No row border above the card's foot: the last register row stops at the
+   card's own edge, so two rules never stack. */
+.cmscroll table.tbl tbody tr:last-child td { border-bottom: 0; }
+
+@media (max-width: 760px) {
+    /* The register scrolls sideways inside its own box, never the page. */
+    .cmscroll { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+    .cmscroll::-webkit-scrollbar { display: none; }
+    .cmscroll table.tbl { min-width: 640px; }
 }
 
-/* DASHED, BECAUSE PARKED IS NOT OFF-AND-BROKEN. A parked module's data is
-   intact; the card is drawn as an outline of something that could be here. */
-.mod-parked {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    margin-bottom: 8px;
-    border: 1px dashed var(--c-ln2);
-    border-radius: 9px;
+/* THE COUNT ON THE CARD'S EDGE — "3 running · 2 parked" — the tab's twin at the
+   right-hand end, dashed because it is a reading and not a name. */
+.c > .lib {
+    position: absolute; top: -9px; right: 12px; z-index: 2;
+    background: rgb(var(--c-cv)); border: 1px dashed var(--c-ln2); border-radius: 7px;
+    padding: 3px 9px;
+    font-family: var(--font-mono); font-size: 8px; color: rgb(var(--c-dim));
 }
-
-.mod-parked .body { flex: 1; }
-.mod-parked .name { font-weight: 600; font-size: 12.5px; }
-.mod-parked-src { margin-top: 4px; }
-.mod-parked .cta { padding: 5px 12px; font-size: 11px; border: 0; cursor: pointer; }
-
-/* The count beside a plate's tab — "15 on". */
-.lib { float: right; font-family: var(--font-mono); font-size: 9px; color: rgb(var(--c-dim)); }
 
 /* ── The register, drawn as a wall of workspaces ─────────────────────────────
    The card gallery the /areas register graduated to (design: areas/index.html,

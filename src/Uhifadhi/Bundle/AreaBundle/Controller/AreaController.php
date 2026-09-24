@@ -14,10 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Controller;
 
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -38,10 +36,8 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
-use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
-use Uhifadhi\Contracts\Shell\ConfigurationSection;
 
 /**
  * THE AREA SCREENS — the register, one area's overview, and its settings.
@@ -77,7 +73,6 @@ final readonly class AreaController
         private AreaOverview $overview,
         private AreaMapPayload $mapPayload,
         private AreaMapService $areaMap,
-        private UrlGeneratorInterface $urls,
         private AreaPresetLibrary $library,
         private AreaOverviewCatalogue $catalogue,
         private AreaComposition $composition,
@@ -330,34 +325,6 @@ final readonly class AreaController
         }
 
         return ['urgent' => $urgent, 'byModule' => $byModule];
-    }
-
-    /**
-     * THE OLD SETTINGS SCREEN'S ADDRESS, PERMANENTLY MOVED.
-     *
-     * What an area is set up with is configuration, and all of it now lives on
-     * the one configure page behind the one Configure action — the record itself
-     * in that page's Area settings section, which is where this points. The address stays
-     * answered rather than deleted because it is in bookmarks, in a redirect a
-     * form posts through, and in whatever an installation typed into its own
-     * links — and 301 is what tells all three where it went for good.
-     *
-     * THE GATE IS THE SCREEN'S. `areas.configure` was what the settings screen
-     * cost and it is what the redirect costs, so a viewer who could not open it
-     * before still cannot be bounced into it.
-     */
-    #[Route('/areas/{uuid}/settings', name: 'area_settings', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted('areas.configure', subject: 'area')]
-    public function settings(
-        #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
-    ): Response {
-        return new RedirectResponse(
-            $this->urls->generate(ConfigureController::AREA_ROUTE, [
-                'uuid' => $area->getUuidString(),
-                'section' => ConfigurationSection::SETTINGS,
-            ]),
-            Response::HTTP_MOVED_PERMANENTLY,
-        );
     }
 
     /**

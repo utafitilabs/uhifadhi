@@ -32,7 +32,7 @@
 {% block shell_breadcrumbs %}
     <a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_index') }}">areas</a> /
     <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name }}</a> /
-    <a href="{{ path('area_settings', {uuid: area.uuidString}) }}">settings</a> / edit
+    <a href="{{ path('shell_area_configure', {uuid: area.uuidString, section: 'settings'}) }}">settings</a> / edit
 {% endblock %}
 
 {% block shell_page_title %}Edit area{% endblock %}
@@ -40,7 +40,7 @@
 {% block shell_page_subtitle %}The area's identity &mdash; name, IUCN category, established year &mdash; and its boundary. The boundary is the one dangerous action here: a replace supersedes the current geometry, it never deletes what references it.{% endblock %}
 
 {% block shell_page_actions %}
-    <a class="tgl" href="{{ path('area_settings', {uuid: area.uuidString}) }}">&larr; Back to settings</a>
+    <a class="tgl" href="{{ path('shell_area_configure', {uuid: area.uuidString, section: 'settings'}) }}">&larr; Back to settings</a>
 {% endblock %}
 
 {% block shell_page %}
@@ -106,7 +106,7 @@
                     </div>
 
                     <div class="form-foot">
-                        <a class="tgl" href="{{ path('area_settings', {uuid: area.uuidString}) }}">Cancel</a>
+                        <a class="tgl" href="{{ path('shell_area_configure', {uuid: area.uuidString, section: 'settings'}) }}">Cancel</a>
                         <button type="submit" class="cta">Save identity</button>
                     </div>
                 </form>

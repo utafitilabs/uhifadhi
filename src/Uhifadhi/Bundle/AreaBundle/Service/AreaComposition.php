@@ -16,7 +16,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Service;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
-use Uhifadhi\Bundle\AreaBundle\Model\ModuleRow;
+use Uhifadhi\Bundle\AreaBundle\Model\ModuleRegisterRow;
 use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
@@ -56,6 +56,7 @@ final readonly class AreaComposition
         private AreaModuleService $areaModules,
         private ModuleEntryRouteResolver $entryRoutes,
         private RouterInterface $router,
+        private ModuleSettingsDoors $doors,
     ) {
     }
 
@@ -82,18 +83,6 @@ final readonly class AreaComposition
         }
 
         return array_values($groups);
-    }
-
-    /**
-     * THE ACTIVE SET IN ITS OWN ORDER — the order the shop's rows and pills are
-     * drawn in, and the order the area shows its modules in. The registry keeps it
-     * on `position`; nothing is re-sorted here.
-     *
-     * @return list<ModuleRow>
-     */
-    public function activeFor(AreaOfInterest $area): array
-    {
-        return array_map(ModuleRow::of(...), $this->activeModulesOf($area));
     }
 
     /**
@@ -183,41 +172,52 @@ final readonly class AreaComposition
     }
 
     /**
-     * THE SHOP, UNDER THE HEADINGS THE CATALOGUE USES. Two kinds of card sit
-     * here and they are deliberately indistinguishable: a module this area
-     * switched OFF, and one it has never had a row for at all. Both are switched
-     * on the same way and by the same slug, so telling them apart would be a
-     * distinction that changes nothing a person can do.
+     * THE MODULES REGISTER — every catalogued module as this area holds it,
+     * running rows first in the area's own order, parked rows after in the
+     * catalogue's.
      *
-     * @return array<string, list<ModuleRow>>
+     * TWO KINDS OF PARKED ROW, AND THEY ARE DELIBERATELY INDISTINGUISHABLE: a
+     * module this area switched OFF, and one it has never had a row for at
+     * all. Both are switched on the same way and by the same slug, so telling
+     * them apart would be a distinction that changes nothing a person can do.
+     *
+     * @return list<ModuleRegisterRow>
      */
-    public function parkedByCategoryFor(AreaOfInterest $area): array
+    public function registerFor(AreaOfInterest $area): array
     {
-        $active = [];
+        $rows = [];
+        $position = 0;
         foreach ($this->activeModulesOf($area) as $module) {
-            $active[(string) $module->getSlug()] = true;
+            $rows[(string) $module->getSlug()] = $this->row($module, $area, ++$position);
         }
 
-        $grouped = [];
         foreach ($this->catalogue->all() as $module) {
-            if (isset($active[(string) $module->getSlug()])) {
-                continue;
+            $slug = (string) $module->getSlug();
+            if (!isset($rows[$slug])) {
+                $rows[$slug] = $this->row($module, $area, null);
             }
-            $grouped[$module->getCategory()->label()][] = ModuleRow::of($module);
         }
 
-        return $grouped;
+        return array_values($rows);
     }
 
-    /** How many of the catalogue's modules this area has parked — the shop's count. */
+    /** How many of the catalogue's modules this area has parked — the grid's count. */
     public function parkedCountFor(AreaOfInterest $area): int
     {
-        $count = 0;
-        foreach ($this->parkedByCategoryFor($area) as $rows) {
-            $count += \count($rows);
-        }
+        return \count($this->catalogue->all()) - \count($this->activeModulesOf($area));
+    }
 
-        return $count;
+    private function row(Module $module, AreaOfInterest $area, ?int $position): ModuleRegisterRow
+    {
+        return new ModuleRegisterRow(
+            slug: (string) $module->getSlug(),
+            name: (string) $module->getName(),
+            description: $module->getDescription(),
+            running: null !== $position,
+            pinned: $module->isPinned(),
+            position: $position,
+            settings: $this->doors->doorFor((string) $module->getSlug(), $area),
+        );
     }
 
     private function entryUrlFor(Module $module, AreaOfInterest $area): ?string

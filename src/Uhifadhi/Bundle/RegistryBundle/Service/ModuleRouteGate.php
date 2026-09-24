@@ -40,11 +40,10 @@ use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
  *     module the catalogue actually has.
  *
  * THE CATALOGUE CHECK IS NOT A DETAIL, it is what makes reading 2 safe at all.
- * The area's own screens wear the same path shape: `/areas/{uuid}/modules` is
- * the grid and `/areas/{uuid}/modules/customize` is the screen an admin unparks
- * FROM. A gate that read the shape and nothing else would close that door and
- * lock the admin out of the only page that reopens it. "customize" is not a
- * module in anybody's catalogue, so it is not a module here.
+ * The area's own screens wear the same path shape — `/areas/{uuid}/modules` is
+ * the grid — and nothing stops an installation mounting a screen of its own
+ * under it. A gate that read the shape and nothing else would close every such
+ * door. A segment that names no module in the catalogue is not a module here.
  *
  * WHAT IT COSTS. A request with the marker: one indexed row read
  * (`area_module` joined to `module` and the area, `LIMIT 1`), and nothing at

@@ -12,17 +12,23 @@ import { Controller } from '@hotwired/stimulus';
 /*
  * THE ORDER AN AREA SHOWS ITS MODULES IN, SET BY DRAGGING.
  *
- * TWO LISTS, ONE ORDER. The shop draws the active set twice — as pills across the
- * top and as detailed rows below — and dragging in either has to move both, or
- * the page would show a person two different answers to the same question. They
- * are matched by SLUG, which is also what the reorder route takes, so nothing
- * here knows an assignment's identity.
+ * ANY NUMBER OF LISTS, ONE ORDER. A surface may draw the running set more than
+ * once, and dragging in any list moves every list, or the page would show a
+ * person two different answers to the same question. Rows are matched by SLUG,
+ * which is also what the reorder route takes, so nothing here knows an
+ * assignment's identity. Only a row that carries a slug is armed: a parked
+ * row, or a pinned one, carries none and is never moved.
+ *
+ * THE POSITION IS REDRAWN WITH THE ROW. A register prints each running row's
+ * place in the order; after a drag the places are renumbered from the list
+ * the drag happened in, so the numbers and the rows never disagree.
  *
  * THE ONLY WRITE THAT NEEDS SCRIPTING, and the only one that does. Switching a
  * module on or off is a real form with a real submit button and works with
- * scripting off; a shop whose only way to park a module was a drag would be
- * unreachable from a keyboard. What is lost without this file is the ordering,
- * which is a preference — not the composition, which is the point of the screen.
+ * scripting off; a register whose only way to park a module was a drag would
+ * be unreachable from a keyboard. What is lost without this file is the
+ * ordering, which is a preference — not the composition, which is the point of
+ * the screen.
  *
  * POSTED, NOT QUEUED. The new order goes to the server as soon as a drag ends,
  * because the alternative is a "Save" button somebody leaves the page without
@@ -58,8 +64,19 @@ export default class extends Controller {
         row.classList.remove('dragging');
         this.dragging = null;
         this.mirror();
+        this.renumber();
         this.persist();
         this.draggedList = null;
+    }
+
+    /* Every list prints its running rows' places afresh, 1 upwards, in the new order. */
+    renumber() {
+        this.listTargets.forEach((list) => {
+            let place = 0;
+            list.querySelectorAll('[data-position]').forEach((cell) => {
+                cell.textContent = String(++place);
+            });
+        });
     }
 
     moveOver(event, list, row) {

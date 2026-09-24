@@ -46,7 +46,7 @@
        `modules.configure` — see AreaModulesController for why that pair and not
        a role. #}
     {% if door('modules.configure') %}
-        <a class="cta" href="{{ path('area_module_customize', {uuid: area.uuidString}) }}">{{ ux_icon('shell:sliders-horizontal') }} Customize</a>
+        <a class="cta" href="{{ path('area_modules_configure', {uuid: area.uuidString}) }}">{{ ux_icon('shell:sliders-horizontal') }} Modules</a>
     {% endif %}
 {% endblock %}
 
@@ -58,7 +58,7 @@
            many modules are actually waiting in it rather than implying there is
            always something to add. #}
         <div class="grid g4">
-            <a class="c mtile-add" href="{{ path('area_module_customize', {uuid: area.uuidString}) }}">
+            <a class="c mtile-add" href="{{ path('area_modules_configure', {uuid: area.uuidString}) }}">
                 <span class="t">{{ ux_icon('shell:plus') }} Add a module</span>
                 <span class="d">
                     {%- if parkedCount > 0 -%}

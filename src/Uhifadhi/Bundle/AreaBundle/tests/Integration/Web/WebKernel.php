@@ -230,6 +230,14 @@ final class WebKernel extends Kernel
         $services->set(PatrolsModuleTabs::class)
             ->tag('uhifadhi.module_tabs');
 
+        /*
+         * A MODULE'S OWN CONFIGURE SECTIONS, STOOD IN FOR — what puts a
+         * `Configure` door on that module's row of the modules register.
+         * Tagged by hand, as a reusable module bundle must.
+         */
+        $services->set(PatrolsConfigurationSections::class)
+            ->tag('uhifadhi.configuration_sections');
+
         foreach ([
             ['patrols', 'Patrols', 'pressure', 'live', 'GPS field tracks', 'test_module_entry'],
             ['incidents', 'Incidents', 'pressure', 'live', 'field reports', null],
@@ -447,6 +455,13 @@ final class WebKernel extends Kernel
          * asserted without depending on a module bundle.
          */
         $routes->add('test_module_entry', '/areas/{uuid}/modules/patrols')
+            ->controller('kernel::moduleEntry');
+
+        // THE CONTRIBUTED CONFIGURE SECTION'S OWN SCREEN, at the address shape
+        // every area configure section wears. A section that borrowed the
+        // area's front door would make the frame read the overview as a
+        // configure page and light the Configure action there.
+        $routes->add('test_contributed_section', '/areas/{uuid}/configure/contributed')
             ->controller('kernel::moduleEntry');
 
         // The module's second data place, so the fourth rung of the tree has

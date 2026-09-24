@@ -50,8 +50,8 @@ final class PlateSubjectTest extends WebTestCase
 
     public function testTheConfigureSectionsOpenOnTheArea(): void
     {
-        self::assertSubject($this->plateOf('/zones/settings'), self::AREA);
-        self::assertSubject($this->plateOf('/stations/settings'), self::AREA);
+        self::assertSubject($this->plateOf('/configure/zones'), self::AREA);
+        self::assertSubject($this->plateOf('/configure/stations'), self::AREA);
     }
 
     /** A zone's page is about the zone; the area around it is context. */

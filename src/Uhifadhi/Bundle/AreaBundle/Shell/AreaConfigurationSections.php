@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Shell;
 
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Uid\Uuid;
+use Uhifadhi\Bundle\AreaBundle\Controller\AreaModulesController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
@@ -39,10 +40,10 @@ use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
  * shell passes nothing — it has a slug, not an area — so the heading is composed
  * here, from the area the viewer is actually configuring.
  *
- * THE SETTINGS SECTION IS WHERE THE OLD `/settings` SCREEN WENT. Its content is
- * unchanged and its address is a permanent redirect; what it lost is a page
- * frame of its own and a tab in the area's strip, because reading what an area
- * IS is configuration and configuration is not a data place.
+ * EVERY SECTION ANSWERS AT `/areas/{uuid}/configure/<section>` — the ones the
+ * shell renders and the ones with a screen of their own alike — so a person
+ * reads one address shape for everything an area is set up with, and a
+ * module adding a section of its own lands in the same place.
  */
 final readonly class AreaConfigurationSections implements ConfigurationSectionsInterface
 {
@@ -102,6 +103,18 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
          * answering it with a shorter strip.
          */
         if (null !== $area) {
+            /*
+             * MODULES IS A SCREEN — the register of what this area runs, with
+             * the switch and the order — and it stands second because what an
+             * area runs on is decided before how its ground is divided.
+             */
+            $sections[] = ConfigurationSection::screen(
+                'modules',
+                'Modules',
+                AreaModulesController::CONFIGURE,
+                ['uuid' => (string) $area->getUuidString()],
+            );
+
             /*
              * ZONES IS A SCREEN, NOT A RENDERED SECTION. A section the shell
              * draws is a template with no request of its own; this one takes an

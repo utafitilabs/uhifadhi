@@ -43,6 +43,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaThumbnailer;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
+use Uhifadhi\Bundle\AreaBundle\Service\ModuleSettingsDoors;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonDirectoryService;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonFacetService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingBoardService;
@@ -674,12 +675,25 @@ return static function (ContainerConfigurator $container): void {
      * screen's: an installation that carries the model and mounts no page reads
      * its own composition too, and has no twig.
      */
+    /*
+     * WHERE A MODULE'S OWN SETTINGS ARE, for the modules register's door
+     * column: asked of the shell's sections registry, the same declaration
+     * the shell draws a module's configure page from.
+     */
+    $services->set('area.module_settings_doors', ModuleSettingsDoors::class)
+        ->args([
+            service('shell.frame.configuration_sections'),
+            service('router'),
+        ]);
+    $services->alias(ModuleSettingsDoors::class, 'area.module_settings_doors');
+
     $services->set('area.composition', AreaComposition::class)
         ->args([
             service('registry.catalogue'),
             service('registry.area_modules'),
             service('registry.entry_routes'),
             service('router'),
+            service('area.module_settings_doors'),
         ]);
     $services->alias(AreaComposition::class, 'area.composition');
 

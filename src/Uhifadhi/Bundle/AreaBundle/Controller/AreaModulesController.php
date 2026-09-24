@@ -26,12 +26,13 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Model\ModuleRegisterRow;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaComposition;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 
 /**
- * THE PER-AREA MODULES SCREEN — the grid of what this area has switched on, and
- * the shop it is composed in.
+ * THE PER-AREA MODULES SCREENS — the grid of what this area has switched on,
+ * and the Modules section of its configure page where that is decided.
  *
  * `area_modules` IS THE ROUTE NAME, AND THAT IS A FLEET CONTRACT rather
  * than a local choice. Three consumers already generate it blind and degrade
@@ -40,22 +41,22 @@ use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
  * back-button print plain text. Mounting it here lights all three with no change
  * to any of them — which is what the name existing before the route was for.
  *
- * THIS BUNDLE OWNS THE SCREEN AND THE REGISTRY STAYS UI-LESS. The grid is a reading
+ * THE CONFIGURE SECTION IS A SCREEN OF THE AREA'S CONFIGURE PAGE, at
+ * `/areas/{uuid}/configure/modules` like every other section of it. It writes —
+ * the switch and the order — so it answers at its own address and is declared
+ * as a screen ({@see \Uhifadhi\Bundle\AreaBundle\Shell\AreaConfigurationSections});
+ * the frame is the shell's either way: the section strip stands where the data
+ * tabs stand and the Configure action is lit.
+ *
+ * THIS BUNDLE OWNS THE SCREENS AND THE REGISTRY STAYS UI-LESS. Both are a reading
  * of the registry's catalogue against an area's ledger, and "an area" is this
  * module's word: the registry holds that table for installations whose area model is
  * their own and cannot name an area class, let alone draw a page about one. So
  * the registry publishes the data and this bundle draws it. A test in the registry greps
  * its own source to keep it that way.
  *
- * THE PICTURE IS THE SHELL'S. The tiles are rendered by the shell's
- * `_module_grid.html.twig` — the same partial a department page or a search
- * result would use — because the catalogue picture must look identical wherever
- * it appears. What is NOT the shell's is which cards, in which groups, with
- * which URLs: that needs the area, the viewer and the ledger, none of which a
- * layout has. See {@see AreaComposition}.
- *
  * TWO PAIRS, AND THE MAPPING IS DELIBERATE. `modules.read` to see the grid;
- * `modules.configure` to reach the shop and to move anything in it, because
+ * `modules.configure` to open the section and to move anything in it, because
  * switching a module on for an area is setting what that area runs on. A concern
  * and a verb rather than a role, because composing an area is exactly what that
  * pair describes and a role is not grantable to a position.
@@ -71,6 +72,13 @@ final readonly class AreaModulesController
 
     /** Composing it: switching a module on or off, and setting the order. */
     public const string COMPOSE = 'modules.configure';
+
+    /** Where the strip's Modules entry points, and where every write comes back to. */
+    public const string CONFIGURE = 'area_modules_configure';
+
+    public const string TOGGLE = 'area_modules_toggle';
+
+    public const string REORDER = 'area_modules_reorder';
 
     public function __construct(
         private Environment $twig,
@@ -100,70 +108,74 @@ final readonly class AreaModulesController
     }
 
     /**
-     * MOUNTED WITH A PRIORITY, and it is load-bearing. `/areas/{uuid}/modules`
-     * cannot swallow this one, but a module bundle mounting its own page at
-     * `/areas/{uuid}/modules/{slug}` could — and the shop is this bundle's, not
-     * a module called "customize".
+     * THE MODULES SECTION — a register of the catalogue as this area holds
+     * it: one row per module, running rows first in the area's order, the
+     * switch, the grip and the door to the module's own settings.
+     *
+     * MOUNTED WITH A PRIORITY, and it is load-bearing: the shell's own
+     * configure route takes `/areas/{uuid}/configure/{section}` for the
+     * sections it renders, and this address is a section it does not.
      */
-    #[Route('/areas/{uuid}/modules/customize', name: 'area_module_customize', requirements: ['uuid' => Requirement::UUID], methods: ['GET'], priority: 1)]
+    #[Route('/areas/{uuid}/configure/modules', name: self::CONFIGURE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'], priority: 1)]
     #[IsGranted(self::COMPOSE, subject: 'area')]
-    public function customize(
+    public function configure(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
-        return new Response($this->twig->render('@Area/area/customize.html.twig', [
+        $rows = $this->composition->registerFor($area);
+        $running = \count(array_filter($rows, static fn (ModuleRegisterRow $row): bool => $row->running));
+        $withSettings = \count(array_filter($rows, static fn (ModuleRegisterRow $row): bool => null !== $row->settings));
+
+        return new Response($this->twig->render('@Area/area/configure/modules.html.twig', [
             'area' => $area,
-            'active' => $this->composition->activeFor($area),
-            'parkedByCategory' => $this->composition->parkedByCategoryFor($area),
-            'parkedCount' => $this->composition->parkedCountFor($area),
+            'rows' => $rows,
+            'running' => $running,
+            'parked' => \count($rows) - $running,
+            'withSettings' => $withSettings,
             'token' => $this->csrf->getToken($this->tokenId($area))->getValue(),
         ]));
     }
 
     /**
-     * SWITCH A MODULE ON. Idempotent, and it re-activates a parked row in place
-     * rather than writing a second one — so a module that has been off and on
-     * again keeps whatever it recorded while it was on.
+     * THE SWITCH. It carries the state it means — `to=on` runs the module
+     * here, `to=off` parks it — so a form submitted twice does not flip the
+     * module back, and a page held open across somebody else's change does
+     * exactly what its label said.
+     *
+     * Switching on re-activates a parked row in place rather than writing a
+     * second one, so a module that has been off and on again keeps whatever it
+     * recorded while it was on; switching off parks — the row and its data
+     * stay. A pinned module is silently refused by the registry rather than
+     * half-parked here.
      *
      * A SLUG THAT IS IN NO CATALOGUE WRITES NOTHING AND SAYS NOTHING. It is not
-     * a 404: the shop is a live reading of a catalogue that can change under an
-     * open page, and somebody clicking "+ Add" on a module uninstalled a second
-     * ago has done nothing wrong. They get the page back, without it.
+     * a 404: the register is a live reading of a catalogue that can change under
+     * an open page, and somebody switching on a module uninstalled a second ago
+     * has done nothing wrong. They get the page back, without it.
      */
-    #[Route('/areas/{uuid}/modules/customize/install', name: 'area_module_install', requirements: ['uuid' => Requirement::UUID], methods: ['POST'], priority: 1)]
+    #[Route('/areas/{uuid}/configure/modules/{slug}/toggle', name: self::TOGGLE, requirements: ['uuid' => Requirement::UUID, 'slug' => '[a-z][a-z0-9-]*'], methods: ['POST'], priority: 1)]
     #[IsGranted(self::COMPOSE, subject: 'area')]
-    public function install(
+    public function toggle(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
+        string $slug,
         Request $request,
     ): Response {
         $this->denyUnlessTokenValid($area, $request);
-        $this->areaModules->install($area, $request->request->getString('module'));
 
-        return $this->backToShop($area);
+        if ('on' === $request->request->getString('to')) {
+            $this->areaModules->install($area, $slug);
+        } else {
+            $this->areaModules->uninstall($area, $slug);
+        }
+
+        return $this->backToTheSection($area);
     }
 
     /**
-     * PARK A MODULE. Its data stays — the row survives switched off, which is
-     * what the shop's own caption promises. A pinned module is silently refused
-     * by the registry rather than half-parked here.
-     */
-    #[Route('/areas/{uuid}/modules/customize/uninstall', name: 'area_module_uninstall', requirements: ['uuid' => Requirement::UUID], methods: ['POST'], priority: 1)]
-    #[IsGranted(self::COMPOSE, subject: 'area')]
-    public function uninstall(
-        #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
-        Request $request,
-    ): Response {
-        $this->denyUnlessTokenValid($area, $request);
-        $this->areaModules->uninstall($area, $request->request->getString('module'));
-
-        return $this->backToShop($area);
-    }
-
-    /**
-     * THE ORDER THE MODULES ARE SHOWN IN, as the pills were dragged into it. The
+     * THE ORDER THE MODULES ARE SHOWN IN, as the rows were dragged into it. The
      * only batch write on the screen, because dragging one row moves every row
      * after it.
      */
-    #[Route('/areas/{uuid}/modules/customize/reorder', name: 'area_module_reorder', requirements: ['uuid' => Requirement::UUID], methods: ['POST'], priority: 1)]
+    #[Route('/areas/{uuid}/configure/modules/reorder', name: self::REORDER, requirements: ['uuid' => Requirement::UUID], methods: ['POST'], priority: 2)]
     #[IsGranted(self::COMPOSE, subject: 'area')]
     public function reorder(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -176,10 +188,10 @@ final readonly class AreaModulesController
             static fn (mixed $slug): bool => \is_string($slug) && '' !== $slug,
         )));
 
-        return $this->backToShop($area);
+        return $this->backToTheSection($area);
     }
 
-    /** One token for the whole shop, scoped to the area whose composition it changes. */
+    /** One token for the whole section, scoped to the area whose composition it changes. */
     public function tokenId(AreaOfInterest $area): string
     {
         return 'area_modules_'.$area->getUuidString();
@@ -193,12 +205,12 @@ final readonly class AreaModulesController
     }
 
     /**
-     * POST-REDIRECT-GET, so a reload does not switch the same module twice. Back
-     * to the shop rather than the grid: composing is several decisions in a row,
-     * and the "Done" button is what leaves.
+     * POST-REDIRECT-GET, so a reload does not switch the same module twice.
+     * Back to the section rather than the grid: composing is several decisions
+     * in a row, and the strip is what leaves.
      */
-    private function backToShop(AreaOfInterest $area): RedirectResponse
+    private function backToTheSection(AreaOfInterest $area): RedirectResponse
     {
-        return new RedirectResponse($this->urls->generate('area_module_customize', ['uuid' => $area->getUuidString()]));
+        return new RedirectResponse($this->urls->generate(self::CONFIGURE, ['uuid' => $area->getUuidString()]));
     }
 }

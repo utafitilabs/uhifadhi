@@ -208,7 +208,7 @@ final class StationDeepLinkTest extends WebTestCase
 
     private function section(AreaOfInterest $area): string
     {
-        return '/areas/'.$area->getUuidString().'/stations/settings';
+        return '/areas/'.$area->getUuidString().'/configure/stations';
     }
 
     /**

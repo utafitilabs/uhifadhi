@@ -93,7 +93,7 @@ final readonly class StationConfigureController
     ) {
     }
 
-    #[Route('/areas/{uuid}/stations/settings', name: self::ROUTE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
+    #[Route('/areas/{uuid}/configure/stations', name: self::ROUTE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'], priority: 1)]
     #[IsGranted('stations.read', subject: 'area')]
     public function configure(
         Request $request,

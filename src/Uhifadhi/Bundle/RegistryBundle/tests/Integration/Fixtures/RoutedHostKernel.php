@@ -67,10 +67,10 @@ final class RoutedHostKernel extends HostKernel
         // gate existed; the path shape is the safety net under it.
         $routes->add('beta_log', '/areas/{uuid}/modules/beta/log')->controller($page);
 
-        // The area's OWN screen, wearing the same path shape. "customize" is
-        // not a module in anybody's catalogue, and the gate must leave it alone
-        // — parking a module must not lock the screen you unpark from.
-        $routes->add('host_customize', '/areas/{uuid}/modules/customize')->controller($page);
+        // An installation's OWN screen, wearing the same path shape. "compare"
+        // is not a module in anybody's catalogue, and the gate must leave it
+        // alone: a segment is a module only when the catalogue says so.
+        $routes->add('host_compare', '/areas/{uuid}/modules/compare')->controller($page);
 
         // Not a module route by either reading.
         $routes->add('host_area', '/areas/{uuid}')->controller($page);

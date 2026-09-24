@@ -1,0 +1,182 @@
+{# THE MODULES SECTION OF AN AREA'S CONFIGURE PAGE — which modules run on this
+   area, in which order, and where each one's own settings are.
+
+   Design: areas/<area>/configure/modules.html.
+
+   A SCREEN OF THE CONFIGURE PAGE, NOT A PAGE OF ITS OWN. It writes — the switch
+   and the order — so it answers at its own address; the frame is the shell's:
+   the section strip stands where the data tabs stand, the Configure action is
+   lit, and the page reads like every other section.
+
+   ONE REGISTER, ONE TABLE. One row per catalogued module, running rows first
+   in the area's order, parked rows after. Five facts, one per column: what the
+   module is, whether it runs, where it stands, whether it has settings of its
+   own, and the switch. Nothing under the table: the strip says which section
+   this is and the columns say the rest.
+
+   EVERY SWITCH IS A REAL FORM and posts the state it means, so it works with
+   scripting off and a resubmitted form changes nothing. The drag ordering is
+   the one thing that needs JavaScript, and it posts the same route by hand.
+
+   THE FILTERS ARE CLIENT-SIDE, like every other register's: the rows are
+   already on the page, and a round trip per keystroke would lose the typed
+   text on every reload. The counts are of the whole set, so an option says
+   what picking it would do.
+
+   ONE TOKEN FOR THE WHOLE SECTION, scoped to this area: one authorization
+   decision — "may this viewer compose THIS area" — already answered once by
+   modules.configure on every action. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}{{ area.name }} · configure · modules{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_index') }}">areas</a> / <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name|lower }}</a> / <a href="{{ path('shell_area_configure', {uuid: area.uuidString}) }}">configure</a> / modules
+{% endblock %}
+
+{% block shell_page_title %}{{ area.name }}{% endblock %}
+
+{% block shell_page_subtitle %}Which modules run on this area, in which order, and each module&rsquo;s own settings.{% endblock %}
+
+{% block shell_page %}
+{% set toggleTitleOn = 'switch off — parks the module' %}
+{% set toggleTitleOff = 'switch on — runs it here' %}
+<div class="c"
+     data-controller="uhifadhi--area-bundle--module-register uhifadhi--area-bundle--module-order"
+     data-uhifadhi--area-bundle--module-order-url-value="{{ path('area_modules_reorder', {uuid: area.uuidString}) }}"
+     data-uhifadhi--area-bundle--module-order-token-value="{{ token }}">
+    <span class="tab">Modules<span class="src">&middot; this area&rsquo;s sub-app</span></span>
+    <span class="lib">{{ running }} running &middot; {{ parked }} parked</span>
+
+    <div class="cmfilt">
+        {# THE STATE, GROUPED. The house filter chip: a closed chip that opens
+           a panel of options with counts of the whole set. #}
+        <details class="i-dd" data-uhifadhi--area-bundle--module-register-target="dropdown">
+            <summary class="mchip i-ddt">
+                <span class="i-ddval">any state</span>
+                <span class="i-ddcaret">&#9662;</span>
+            </summary>
+            <div class="i-ddmenu">
+                <span class="i-ddhead">state</span>
+                <button type="button" class="i-ddopt on" data-filter="state" data-value="" data-action="uhifadhi--area-bundle--module-register#pick" data-label="any state">
+                    <span class="i-dot"></span>
+                    <span class="i-ddopt-l">All</span>
+                    <span class="i-ddopt-n">{{ rows|length }}</span>
+                </button>
+                <span class="i-ddsep"></span>
+                <button type="button" class="i-ddopt" data-filter="state" data-value="running" data-action="uhifadhi--area-bundle--module-register#pick" data-label="running">
+                    <span class="i-dot"></span>
+                    <span class="i-ddopt-l">Running</span>
+                    <span class="i-ddopt-n">{{ running }}</span>
+                </button>
+                <button type="button" class="i-ddopt" data-filter="state" data-value="parked" data-action="uhifadhi--area-bundle--module-register#pick" data-label="parked">
+                    <span class="i-dot"></span>
+                    <span class="i-ddopt-l">Parked</span>
+                    <span class="i-ddopt-n">{{ parked }}</span>
+                </button>
+            </div>
+        </details>
+
+        <details class="i-dd" data-uhifadhi--area-bundle--module-register-target="dropdown">
+            <summary class="mchip i-ddt">
+                <span class="i-ddval">any settings</span>
+                <span class="i-ddcaret">&#9662;</span>
+            </summary>
+            <div class="i-ddmenu">
+                <span class="i-ddhead">own settings</span>
+                <button type="button" class="i-ddopt on" data-filter="settings" data-value="" data-action="uhifadhi--area-bundle--module-register#pick" data-label="any settings">
+                    <span class="i-dot"></span>
+                    <span class="i-ddopt-l">Any</span>
+                    <span class="i-ddopt-n">{{ rows|length }}</span>
+                </button>
+                <span class="i-ddsep"></span>
+                <button type="button" class="i-ddopt" data-filter="settings" data-value="has" data-action="uhifadhi--area-bundle--module-register#pick" data-label="has settings">
+                    <span class="i-dot"></span>
+                    <span class="i-ddopt-l">Has settings</span>
+                    <span class="i-ddopt-n">{{ withSettings }}</span>
+                </button>
+                <button type="button" class="i-ddopt" data-filter="settings" data-value="none" data-action="uhifadhi--area-bundle--module-register#pick" data-label="none yet">
+                    <span class="i-dot"></span>
+                    <span class="i-ddopt-l">None yet</span>
+                    <span class="i-ddopt-n">{{ rows|length - withSettings }}</span>
+                </button>
+            </div>
+        </details>
+
+        <span class="cmsearch"><input class="fld" type="search" placeholder="Find a module" data-uhifadhi--area-bundle--module-register-target="search"></span>
+        <span class="cmshown">showing <b data-uhifadhi--area-bundle--module-register-target="count">{{ rows|length }}</b> of {{ rows|length }}</span>
+    </div>
+
+    <div class="cmscroll">
+        <table class="tbl">
+            <thead>
+                <tr>
+                    <th class="sorted">Module</th>
+                    <th>State</th>
+                    <th>Order</th>
+                    <th>Own settings</th>
+                    <th class="cmact" style="text-align:right">Runs here</th>
+                </tr>
+            </thead>
+            <tbody data-uhifadhi--area-bundle--module-register-target="list" data-uhifadhi--area-bundle--module-order-target="list">
+                {% for row in rows %}
+                    {# A ROW IS DRAGGABLE ONLY WHILE IT RUNS AND IS NOT PINNED:
+                       the order is the order of what runs, and a pinned module
+                       holds the front. `data-slug` is what the order controller
+                       arms; a parked row carries none and is never moved. #}
+                    <tr data-row data-row-slug="{{ row.slug }}"
+                        data-name="{{ (row.name ~ ' ' ~ (row.description ?? ''))|lower }}"
+                        data-state="{{ row.running ? 'running' : 'parked' }}"
+                        data-settings="{{ row.settings ? 'has' : 'none' }}"
+                        {% if not row.running %}class="cmparked"{% elseif not row.pinned %}data-slug="{{ row.slug }}"{% endif %}>
+                        <td>
+                            <div class="cmname">
+                                <b>{{ row.name }}</b>
+                                {% if row.description %}<span class="cmwhat">{{ row.description }}</span>{% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if row.running %}<span class="chip ok">running</span>{% else %}<span class="chip idle">parked</span>{% endif %}
+                        </td>
+                        <td>
+                            <span class="cmord">
+                                {% if row.running %}
+                                    {% if not row.pinned %}<span class="cmgrip" title="drag to reorder">{{ ux_icon('shell:grip-vertical') }}</span>{% endif %}
+                                    <span class="n" data-position>{{ row.position }}</span>
+                                {% else %}
+                                    <span class="none">&mdash;</span>
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            {% if row.settings %}
+                                <a class="cmdoor" href="{{ row.settings.url }}" title="{{ row.settings.title }}">{{ ux_icon('shell:settings') }} Configure</a>
+                            {% else %}
+                                <span class="cmnodoor" title="This module has no configure screen yet">no settings</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align:right">
+                            {# THE PINNED MODULE HAS NO SWITCH. It is what the area IS
+                               rather than something composed onto it; the registry
+                               refuses to park it anyway, and a control that silently
+                               does nothing is worse than none. #}
+                            {% if not row.pinned %}
+                                <form method="post" action="{{ path('area_modules_toggle', {uuid: area.uuidString, slug: row.slug}) }}">
+                                    <input type="hidden" name="_token" value="{{ token }}">
+                                    <input type="hidden" name="to" value="{{ row.running ? 'off' : 'on' }}">
+                                    <button type="submit" class="mod-toggle{{ row.running ? ' on' }}" title="{{ row.running ? toggleTitleOn : toggleTitleOff }}" aria-pressed="{{ row.running ? 'true' : 'false' }}"></button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -129,7 +129,7 @@ final class AreaEditTest extends WebTestCase
         $response = $this->browser()->getResponse();
 
         self::assertSame(302, $response->getStatusCode());
-        self::assertSame('/areas/'.$uuid.'/settings', $response->headers->get('Location'));
+        self::assertSame('/areas/'.$uuid.'/configure/settings', $response->headers->get('Location'));
 
         $this->em->clear();
         $fresh = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Northern Conservation Reserve']);

@@ -49,7 +49,7 @@ final class PostingDoorTest extends WebTestCase
 
         self::assertStringContainsString('Nobody is stationed here', $body);
         self::assertStringContainsString(
-            '/areas/'.$area->getUuidString().'/stations/settings?open='.$station->getUuidString(),
+            '/areas/'.$area->getUuidString().'/configure/stations?open='.$station->getUuidString(),
             $body,
             'The empty state opens the configure page on this very station.',
         );
@@ -163,7 +163,7 @@ final class PostingDoorTest extends WebTestCase
 
     private function section(AreaOfInterest $area): string
     {
-        return '/areas/'.$area->getUuidString().'/stations/settings';
+        return '/areas/'.$area->getUuidString().'/configure/stations';
     }
 
     private function body(string $url): string

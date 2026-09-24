@@ -8,6 +8,19 @@
 
 Not released yet.
 
+ * THE MODULES SECTION OF THE AREA'S CONFIGURE PAGE, at
+   `/areas/{uuid}/configure/modules`: a register of the catalogue as the area
+   holds it — one row per module, running rows first in the area's order,
+   the switch, the grip and the position, and the door to the module's own
+   configure page. The module shop and its addresses are gone; the switch
+   posts `…/configure/modules/{slug}/toggle` with the state it means, the
+   order posts `…/configure/modules/reorder`.
+
+ * EVERY AREA CONFIGURE SECTION ANSWERS AT `/areas/{uuid}/configure/<section>`
+   — zones, stations, departments, modules, and the shell's widgets and
+   settings. The per-section addresses (`…/zones/settings`,
+   `…/stations/settings`, `…/settings`) are gone, not redirected.
+
  * A ZONE CARD OPENS IN THE BROWSER, the twin of the stations register's:
    the zones register is a native `<details>`, so a click costs no round
    trip, and `?open=` still decides which card ARRIVES open. The rename

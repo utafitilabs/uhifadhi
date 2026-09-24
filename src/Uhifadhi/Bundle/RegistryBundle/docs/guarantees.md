@@ -51,9 +51,8 @@ thinking about it.
 2. **The fleet's path shape** — `/areas/{uuid}/modules/{slug}/…` — as the safety
    net under a module that has not added its line, and **only when the segment
    names a module the catalogue actually has**. That last clause is not a
-   detail: `/areas/{uuid}/modules/customize` is the area's own screen, the one
-   an admin unparks *from*, and a gate that read the shape alone would lock them
-   out of it.
+   detail: an installation may mount a screen of its own under the same shape,
+   and a gate that read the shape alone would close it.
 
 **What it costs.** One indexed row read (`area_module` joined to `module` and
 the area, `LIMIT 1`) per recognised request. A request with the marker pays only

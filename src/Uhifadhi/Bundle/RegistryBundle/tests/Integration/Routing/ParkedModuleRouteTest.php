@@ -124,21 +124,18 @@ final class ParkedModuleRouteTest extends InstallationTestCase
     }
 
     /**
-     * THE DOOR YOU UNPARK FROM STAYS OPEN — the one failure that would be worse
-     * than the hole itself.
+     * A SCREEN THAT IS NOT A MODULE'S, ON THE MODULE PATH SHAPE, IS UNTOUCHED.
      *
-     * The area's own customize screen lives at `/areas/{uuid}/modules/customize`,
-     * which wears the module path shape exactly. Recognising module routes by
-     * their path alone, with nothing to check the segment against, would 404 it
-     * and lock an admin out of the screen that switches modules back on. The
-     * gate reads the segment as a module only when the catalogue has one by that
-     * name.
+     * An installation may mount a screen of its own under `/areas/{uuid}/modules/`.
+     * Recognising module routes by their path alone, with nothing to check the
+     * segment against, would 404 it whenever the shape matched. The gate reads
+     * the segment as a module only when the catalogue has one by that name.
      */
-    public function testTheAreasOwnScreenOnTheSamePathShapeIsUntouched(): void
+    public function testAScreenThatIsNoModulesOnTheSamePathShapeIsUntouched(): void
     {
         $area = $this->areaWithModules();
 
-        self::assertSame(200, $this->get('/areas/'.$this->uuid($area).'/modules/customize')->getStatusCode());
+        self::assertSame(200, $this->get('/areas/'.$this->uuid($area).'/modules/compare')->getStatusCode());
     }
 
     /**

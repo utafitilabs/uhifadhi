@@ -191,14 +191,55 @@ final class AreaModulesTest extends WebTestCase
         $this->aGhostRow($area);
 
         self::assertStringNotContainsString('Ghost', $this->body($this->modulesPath($area)));
-        self::assertStringNotContainsString('Ghost', $this->body($this->modulesPath($area).'/customize'));
+        self::assertStringNotContainsString('Ghost', $this->body($this->configurePath($area)));
         // And the one whose bundle IS installed is untouched by the exclusion.
         self::assertStringContainsString('Patrols', $this->body($this->modulesPath($area)));
     }
 
-    // ── The shop ──────────────────────────────────────────────────────────
+    // ── The configure section ──────────────────────────────────────────────
 
-    public function testTheShopListsActiveAndParkedSeparately(): void
+    /**
+     * ONE ROW PER CATALOGUED MODULE, RUNNING FIRST. The rows that run are in
+     * the area's own order; the parked ones follow in the catalogue's. A
+     * module the area has never had a row for is parked exactly like one it
+     * switched off, because both are switched on the same way.
+     */
+    public function testTheSectionListsTheCatalogueRunningFirst(): void
+    {
+        $this->boot(self::ALL);
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aCatalogue();
+        $this->install($area, 'forest-loss');
+        $this->install($area, 'patrols');
+
+        $body = $this->body($this->configurePath($area));
+
+        $rows = array_map(static fn (string $slug): int|false => strpos($body, 'data-row-slug="'.$slug.'"'), ['forest-loss', 'patrols', 'incidents']);
+        $sorted = $rows;
+        sort($sorted);
+        self::assertSame($sorted, $rows, 'running rows come first, in the area\'s order, then the parked ones');
+        self::assertStringContainsString('2 running', $this->cardHead($body));
+        self::assertStringContainsString('1 parked', $this->cardHead($body));
+    }
+
+    /** The name cell says what the module is, under its name, where the module says. */
+    public function testARowSaysWhatTheModuleIs(): void
+    {
+        $this->boot(self::ALL);
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aCatalogue();
+
+        $body = $this->body($this->configurePath($area));
+
+        self::assertStringContainsString('<span class="cmwhat">Ranger patrols: tracks, observations and station duty.</span>', $body);
+        // A module that says nothing beyond its name gets no line, not an empty one.
+        self::assertSame(1, substr_count($body, 'class="cmwhat"'));
+    }
+
+    /** A running row holds a grip and its position; a parked row holds neither. */
+    public function testARunningRowHoldsItsPositionAndAParkedRowNone(): void
     {
         $this->boot(self::ALL);
         $this->signIn();
@@ -206,45 +247,133 @@ final class AreaModulesTest extends WebTestCase
         $this->aCatalogue();
         $this->install($area, 'patrols');
 
-        $body = $this->body($this->modulesPath($area).'/customize');
+        $body = $this->body($this->configurePath($area));
 
-        self::assertStringContainsString('Active modules', $body);
-        self::assertStringContainsString('Inactive modules', $body);
-        // Parked: in the catalogue, no row on this area.
-        self::assertStringContainsString('Incidents', $body);
+        $patrols = $this->row($body, 'patrols');
+        self::assertStringContainsString('<span class="chip ok">running</span>', $patrols);
+        self::assertStringContainsString('cmgrip', $patrols);
+        self::assertStringContainsString('data-position>1</span>', $patrols);
+        self::assertStringContainsString('data-slug="patrols"', $patrols);
+
+        $incidents = $this->row($body, 'incidents');
+        self::assertStringContainsString('<span class="chip idle">parked</span>', $incidents);
+        self::assertStringNotContainsString('cmgrip', $incidents);
+        self::assertStringContainsString('<span class="none">', $incidents);
+        self::assertStringNotContainsString('data-slug=', $incidents);
+        self::assertStringContainsString('class="cmparked"', $incidents);
     }
 
-    /** The grid's Customize button is hidden from somebody who may only look. */
-    public function testTheCustomizeAffordanceCarriesItsPermission(): void
-    {
-        $this->boot([...self::ALL_AREA_PERMISSIONS, 'modules.read']);
-        $this->signIn();
-        $area = $this->anArea();
-        $this->aCatalogue();
-
-        self::assertStringNotContainsString('/customize', $this->body($this->modulesPath($area)));
-    }
-
-    public function testTheShopIsClosedWithoutModulesConfigure(): void
-    {
-        $this->boot([...self::ALL_AREA_PERMISSIONS, 'modules.read']);
-        $this->signIn();
-        $area = $this->anArea();
-        $this->aCatalogue();
-
-        self::assertSame(403, $this->get($this->modulesPath($area).'/customize')->getStatusCode());
-    }
-
-    public function testAddingAModuleSwitchesItOnForTheArea(): void
+    /**
+     * THE DOOR IS THE MODULE'S OWN CONFIGURE PAGE, drawn only where the
+     * module declares sections; a module that declares none says "no
+     * settings" rather than opening onto a 404.
+     */
+    public function testTheOwnSettingsColumnIsADoorWhereTheModuleDeclaresSections(): void
     {
         $this->boot(self::ALL);
         $this->signIn();
         $area = $this->anArea();
         $this->aCatalogue();
 
-        $response = $this->post($this->modulesPath($area).'/customize/install', ['module' => 'patrols']);
+        $body = $this->body($this->configurePath($area));
+
+        $patrols = $this->row($body, 'patrols');
+        self::assertStringContainsString('class="cmdoor" href="/areas/'.$area->getUuidString().'/modules/patrols/configure"', $patrols);
+        self::assertStringContainsString('title="Its own settings: Widget library · Patrol types"', $patrols);
+
+        self::assertStringContainsString('<span class="cmnodoor"', $this->row($body, 'incidents'));
+    }
+
+    /** The filters count the whole set, and the line under them says what is shown. */
+    public function testTheFiltersCountTheWholeSet(): void
+    {
+        $this->boot(self::ALL);
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aCatalogue();
+        $this->install($area, 'patrols');
+
+        $body = $this->body($this->configurePath($area));
+
+        self::assertSame(2, substr_count($body, '<details class="i-dd"'));
+        self::assertStringContainsString('data-filter="state" data-value="running"', $body);
+        self::assertStringContainsString('data-filter="settings" data-value="has"', $body);
+        self::assertMatchesRegularExpression('#data-value="running"[^>]*>.*?<span class="i-ddopt-n">1</span>#s', $body);
+        self::assertMatchesRegularExpression('#data-value="parked"[^>]*>.*?<span class="i-ddopt-n">2</span>#s', $body);
+        self::assertMatchesRegularExpression('#data-value="has"[^>]*>.*?<span class="i-ddopt-n">1</span>#s', $body);
+        self::assertMatchesRegularExpression('#data-value="none"[^>]*>.*?<span class="i-ddopt-n">2</span>#s', $body);
+        self::assertStringContainsString('placeholder="Find a module"', $body);
+        self::assertStringContainsString('showing <b data-uhifadhi--area-bundle--module-register-target="count">3</b> of 3', $body);
+    }
+
+    /** A freshly created area has everything parked and nothing in the order. */
+    public function testAFreshAreaHasEverythingParked(): void
+    {
+        $this->boot(self::ALL);
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aCatalogue();
+
+        $body = $this->body($this->configurePath($area));
+
+        self::assertStringContainsString('0 running', $this->cardHead($body));
+        self::assertStringContainsString('3 parked', $this->cardHead($body));
+        self::assertStringNotContainsString('cmgrip', $body);
+        self::assertSame(3, substr_count($body, 'class="cmparked"'));
+    }
+
+    /** The strip on the area's configure page carries the section, at its address. */
+    public function testTheConfigureStripCarriesTheModulesSection(): void
+    {
+        $this->boot(self::ALL);
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aCatalogue();
+
+        $body = $this->body($this->configurePath($area));
+
+        self::assertStringContainsString('href="'.$this->configurePath($area).'" class="on">Modules</a>', $body);
+    }
+
+    /** The grid's affordance points at the section and is hidden from somebody who may only look. */
+    public function testTheGridsAffordanceCarriesItsPermission(): void
+    {
+        $this->boot([...self::ALL_AREA_PERMISSIONS, 'modules.read']);
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aCatalogue();
+
+        self::assertStringNotContainsString('/configure/modules', $this->body($this->modulesPath($area)));
+
+        $this->boot(self::ALL);
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aCatalogue();
+
+        self::assertStringContainsString($this->configurePath($area), $this->body($this->modulesPath($area)));
+    }
+
+    public function testTheSectionIsClosedWithoutModulesConfigure(): void
+    {
+        $this->boot([...self::ALL_AREA_PERMISSIONS, 'modules.read']);
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aCatalogue();
+
+        self::assertSame(403, $this->get($this->configurePath($area))->getStatusCode());
+    }
+
+    public function testSwitchingAModuleOnRunsItHere(): void
+    {
+        $this->boot(self::ALL);
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aCatalogue();
+
+        $response = $this->post($area, 'patrols/toggle', ['to' => 'on']);
 
         self::assertSame(302, $response->getStatusCode());
+        self::assertSame($this->configurePath($area), $response->headers->get('Location'));
         self::assertSame(['patrols'], $this->activeSlugs($area));
     }
 
@@ -256,7 +385,7 @@ final class AreaModulesTest extends WebTestCase
         $this->aCatalogue();
         $this->install($area, 'patrols');
 
-        $response = $this->post($this->modulesPath($area).'/customize/uninstall', ['module' => 'patrols']);
+        $response = $this->post($area, 'patrols/toggle', ['to' => 'off']);
 
         self::assertSame(302, $response->getStatusCode());
         self::assertSame([], $this->activeSlugs($area));
@@ -275,33 +404,28 @@ final class AreaModulesTest extends WebTestCase
         $this->aCatalogue();
         $this->install($area, 'patrols');
 
-        $this->post($this->modulesPath($area).'/customize/uninstall', ['module' => 'patrols']);
-        $this->post($this->modulesPath($area).'/customize/install', ['module' => 'patrols']);
+        $this->post($area, 'patrols/toggle', ['to' => 'off']);
+        $this->post($area, 'patrols/toggle', ['to' => 'on']);
 
         self::assertSame(['patrols'], $this->activeSlugs($area));
         self::assertCount(1, $this->em->getRepository(\Uhifadhi\Bundle\RegistryBundle\Entity\AreaModule::class)->findAll());
     }
 
-    public function testTheOrderThePillsAreDraggedIntoIsPersisted(): void
+    /** The switch carries the state it means, so a resubmitted form does not flip it back. */
+    public function testTheSwitchIsIdempotent(): void
     {
         $this->boot(self::ALL);
         $this->signIn();
         $area = $this->anArea();
         $this->aCatalogue();
-        $this->install($area, 'patrols');
-        $this->install($area, 'incidents');
 
-        $this->post($this->modulesPath($area).'/customize/reorder', ['order' => ['incidents', 'patrols']]);
+        $this->post($area, 'patrols/toggle', ['to' => 'on']);
+        $this->post($area, 'patrols/toggle', ['to' => 'on']);
 
-        self::assertSame(['incidents', 'patrols'], $this->activeSlugs($area));
+        self::assertSame(['patrols'], $this->activeSlugs($area));
     }
 
-    /**
-     * AND THE ROWS ARE THE OTHER END OF THE SAME DRAG. The shop draws the active
-     * set twice and says both are draggable, so the order a person expresses in
-     * the detailed rows reaches the route exactly as a pill order does — and the
-     * page they come back to is drawn in the order they just set, rows included.
-     */
+    /** The order the rows are dragged into is persisted, and the page is redrawn in it. */
     public function testTheOrderTheRowsAreDraggedIntoIsPersistedAndRedrawn(): void
     {
         $this->boot(self::ALL);
@@ -312,15 +436,16 @@ final class AreaModulesTest extends WebTestCase
         $this->install($area, 'incidents');
         $this->install($area, 'forest-loss');
 
-        $this->post($this->modulesPath($area).'/customize/reorder', ['order' => ['forest-loss', 'incidents', 'patrols']]);
+        $this->post($area, 'reorder', ['order' => ['forest-loss', 'incidents', 'patrols']]);
 
         self::assertSame(['forest-loss', 'incidents', 'patrols'], $this->activeSlugs($area));
 
-        $rows = $this->body($this->modulesPath($area).'/customize');
+        $rows = $this->body($this->configurePath($area));
         $positions = array_map(static fn (string $slug): int|false => strpos($rows, 'data-slug="'.$slug.'"'), ['forest-loss', 'incidents', 'patrols']);
         $sorted = $positions;
         sort($sorted);
-        self::assertSame($sorted, $positions, 'The shop is not redrawn in the order it was just given.');
+        self::assertSame($sorted, $positions, 'The section is not redrawn in the order it was just given.');
+        self::assertStringContainsString('data-position>3</span>', $this->row($rows, 'patrols'));
     }
 
     /** A write without the permission is refused, and nothing moves. */
@@ -331,7 +456,9 @@ final class AreaModulesTest extends WebTestCase
         $area = $this->anArea();
         $this->aCatalogue();
 
-        self::assertSame(403, $this->post($this->modulesPath($area).'/customize/install', ['module' => 'patrols'])->getStatusCode());
+        $this->browser()->request('POST', $this->configurePath($area).'/patrols/toggle', ['to' => 'on', '_token' => 'x']);
+
+        self::assertSame(403, $this->browser()->getResponse()->getStatusCode());
         self::assertSame([], $this->activeSlugs($area));
     }
 
@@ -343,7 +470,7 @@ final class AreaModulesTest extends WebTestCase
         $area = $this->anArea();
         $this->aCatalogue();
 
-        $this->browser()->request('POST', $this->modulesPath($area).'/customize/install', ['module' => 'patrols', '_token' => 'forged']);
+        $this->browser()->request('POST', $this->configurePath($area).'/patrols/toggle', ['to' => 'on', '_token' => 'forged']);
 
         self::assertSame(403, $this->browser()->getResponse()->getStatusCode());
         self::assertSame([], $this->activeSlugs($area));
@@ -357,7 +484,7 @@ final class AreaModulesTest extends WebTestCase
         $area = $this->anArea();
         $this->aCatalogue();
 
-        self::assertSame(302, $this->post($this->modulesPath($area).'/customize/install', ['module' => 'nonesuch'])->getStatusCode());
+        self::assertSame(302, $this->post($area, 'nonesuch/toggle', ['to' => 'on'])->getStatusCode());
         self::assertSame([], $this->activeSlugs($area));
     }
 
@@ -426,13 +553,14 @@ final class AreaModulesTest extends WebTestCase
     private function aCatalogue(): void
     {
         foreach ([
-            ['patrols', 'Patrols', ModuleCategory::Pressure, ModuleStatus::Live, 'GPS field tracks'],
-            ['incidents', 'Incidents', ModuleCategory::Pressure, ModuleStatus::Live, 'field reports'],
-            ['forest-loss', 'Forest loss', ModuleCategory::Flux, ModuleStatus::Template, 'Hansen GFC'],
-        ] as $i => [$slug, $name, $category, $status, $source]) {
+            ['patrols', 'Patrols', ModuleCategory::Pressure, ModuleStatus::Live, 'GPS field tracks', 'Ranger patrols: tracks, observations and station duty.'],
+            ['incidents', 'Incidents', ModuleCategory::Pressure, ModuleStatus::Live, 'field reports', null],
+            ['forest-loss', 'Forest loss', ModuleCategory::Flux, ModuleStatus::Template, 'Hansen GFC', null],
+        ] as $i => [$slug, $name, $category, $status, $source, $description]) {
             $this->em->persist(new Module()
                 ->setSlug($slug)
                 ->setName($name)
+                ->setDescription($description)
                 ->setCategory($category)
                 ->setStatus($status)
                 ->setDataSource($source)
@@ -501,23 +629,40 @@ final class AreaModulesTest extends WebTestCase
         return (string) $this->get($path)->getContent();
     }
 
-    /** @param array<string, string|list<string>> $parameters */
-    private function post(string $path, array $parameters): Response
+    private function configurePath(AreaOfInterest $area): string
     {
-        // The token the screen mints for this area, read back from the page the
-        // control lives on rather than generated here: a test that mints its own
-        // proves nothing about the form.
-        $parameters['_token'] = $this->tokenOn($path);
-        $this->browser()->request('POST', $path, $parameters);
-
-        return $this->browser()->getResponse();
+        return '/areas/'.$area->getUuidString().'/configure/modules';
     }
 
-    private function tokenOn(string $path): string
+    /** The register's card head: what it is called and what it counts. */
+    private function cardHead(string $body): string
     {
-        $customize = substr($path, 0, (int) strrpos($path, '/'));
-        preg_match('#name="_token" value="([^"]+)"#', $this->body($customize), $m);
+        preg_match('#<span class="tab">.*?</span>\s*<span class="lib">.*?</span>#s', $body, $m);
 
-        return $m[1] ?? '';
+        return $m[0] ?? '';
+    }
+
+    /** One row of the register, by the slug the template stamps on it. */
+    private function row(string $body, string $slug): string
+    {
+        preg_match('#<tr[^>]*data-row-slug="'.$slug.'".*?</tr>#s', $body, $m);
+        self::assertNotSame('', $m[0] ?? '', 'no row for '.$slug);
+
+        return $m[0];
+    }
+
+    /**
+     * @param array<string, string|list<string>> $parameters
+     */
+    private function post(AreaOfInterest $area, string $action, array $parameters): Response
+    {
+        // The token the section mints for this area, read back from the page
+        // the control lives on rather than generated here: a test that mints
+        // its own proves nothing about the form.
+        preg_match('#name="_token" value="([^"]+)"#', $this->body($this->configurePath($area)), $m);
+        $parameters['_token'] = $m[1] ?? '';
+        $this->browser()->request('POST', $this->configurePath($area).'/'.$action, $parameters);
+
+        return $this->browser()->getResponse();
     }
 }

@@ -112,7 +112,7 @@ final class ZoneCardDisclosureTest extends WebTestCase
 
     private function section(AreaOfInterest $area): string
     {
-        return '/areas/'.$area->getUuidString().'/zones/settings';
+        return '/areas/'.$area->getUuidString().'/configure/zones';
     }
 
     private function body(string $url): string

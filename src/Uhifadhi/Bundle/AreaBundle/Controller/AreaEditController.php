@@ -36,6 +36,8 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
+use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
+use Uhifadhi\Contracts\Shell\ConfigurationSection;
 
 /**
  * THE EDIT SCREEN — an area's identity and its boundary, on one page, and the
@@ -111,7 +113,7 @@ final readonly class AreaEditController
             return $this->render($area, identityError: $e->getMessage(), status: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        return new RedirectResponse($this->urls->generate('area_settings', ['uuid' => $area->getUuidString()]));
+        return new RedirectResponse($this->urls->generate(ConfigureController::AREA_ROUTE, ['uuid' => $area->getUuidString(), 'section' => ConfigurationSection::SETTINGS]));
     }
 
     /**

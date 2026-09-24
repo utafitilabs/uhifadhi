@@ -21,5 +21,5 @@
         {%- if centroid -%}{{ centroid }}{%- else -%}&mdash;<em>not set</em>{%- endif -%}
     </span></span>
     <span class="sp"></span>
-    <a class="more" href="{{ path('area_settings', {uuid: area.uuidString}) }}">Area settings &rarr;</a>
+    <a class="more" href="{{ path('shell_area_configure', {uuid: area.uuidString, section: 'settings'}) }}">Area settings &rarr;</a>
 </div>

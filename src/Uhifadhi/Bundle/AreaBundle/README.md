@@ -327,15 +327,19 @@ remove.
 | Create an area | `area_new` · `GET,POST /areas/new` | `areas.configure` |
 | One area's overview | `area_show` · `/areas/{uuid}` | `areas.read` |
 | Its module grid | `area_modules` · `/areas/{uuid}/modules` | `modules.read` |
-| Its module shop | `area_module_customize` · `/areas/{uuid}/modules/customize` | `modules.configure` |
+| Its Modules configure section | `area_modules_configure` · `/areas/{uuid}/configure/modules` | `modules.configure` |
 | Its zones | `area_zones` · `/areas/{uuid}/zones` | `zones.read` |
 | Its stations | `area_stations` · `/areas/{uuid}/stations` | `stations.read` |
-| Its settings | `area_settings` · `/areas/{uuid}/settings` | `areas.configure` |
 | Edit its identity or boundary | `area_edit` · `GET,POST /areas/{uuid}/edit` | `areas.configure` |
 
-Three POST addresses sit under the shop and carry the same `modules.configure`
-gate plus a CSRF token scoped to the area: `area_module_install`,
-`area_module_uninstall` and `area_module_reorder`.
+Two POST addresses sit under the Modules section and carry the same
+`modules.configure` gate plus a CSRF token scoped to the area:
+`area_modules_toggle` (`…/configure/modules/{slug}/toggle`, `to=on|off`) and
+`area_modules_reorder` (`…/configure/modules/reorder`, `order[]` of slugs).
+The zones, stations and departments sections answer at
+`/areas/{uuid}/configure/zones`, `…/stations` and `…/departments`; the widget
+library and the area's settings are the shell's configure page at
+`…/configure/widgets` and `…/configure/settings`.
 
 The writes behind the zones and stations pages carry the verb that matches what
 they do rather than the verb that opened the page: renaming a zone or redrawing

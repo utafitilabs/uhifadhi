@@ -98,7 +98,6 @@ return static function (ContainerConfigurator $container): void {
             service('area.overview'),
             service('area.map_payload'),
             service('area.map'),
-            service('router'),
             service('area.preset_library'),
             // The surface's own catalogue — the area's cells and one
             // contributor per module switched on here.

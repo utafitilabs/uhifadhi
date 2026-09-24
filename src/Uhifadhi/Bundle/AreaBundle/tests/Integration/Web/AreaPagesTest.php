@@ -430,9 +430,11 @@ final class AreaPagesTest extends WebTestCase
         // THE ZONES SECTION IS A SCREEN WITH AN ADDRESS OF ITS OWN, and the
         // strip still carries it: which of the two shapes a section is, is the
         // section's business and not the strip's.
-        self::assertStringContainsString('/zones/settings">Zones</a>', $strip);
-        // The area's DATA tabs are what a configure page does not show.
-        self::assertStringNotContainsString('Modules', $strip);
+        self::assertStringContainsString('/configure/zones">Zones</a>', $strip);
+        // The Modules SECTION stands second; the area's DATA tab of the same
+        // name is what a configure page does not show.
+        self::assertStringContainsString('/configure/modules">Modules</a>', $strip);
+        self::assertSame(1, substr_count($strip, '>Modules</a>'));
     }
 
     /**
@@ -469,8 +471,9 @@ final class AreaPagesTest extends WebTestCase
     }
 
     /**
-     * THE BARE CONFIGURE ADDRESS IS THE FIRST SECTION — the widget library — so
-     * that is what opens, and that is what is lit.
+     * THE BARE CONFIGURE ADDRESS OPENS ON THE FIRST SECTION — the widget
+     * library — and the strip lights that section at its own address, which
+     * every section carries.
      */
     public function testTheBareConfigureAddressOpensTheWidgetLibraryAndLightsIt(): void
     {
@@ -479,7 +482,7 @@ final class AreaPagesTest extends WebTestCase
 
         $body = $this->body('/areas/'.$area->getUuidString().'/configure');
 
-        self::assertStringContainsString('href="/areas/'.$area->getUuidString().'/configure" class="on"', $body);
+        self::assertStringContainsString('href="/areas/'.$area->getUuidString().'/configure/widgets" class="on"', $body);
         self::assertStringContainsString('Dashboard composition', $body);
     }
 
@@ -514,22 +517,6 @@ final class AreaPagesTest extends WebTestCase
     }
 
     /**
-     * THE OLD SETTINGS ADDRESS IS PERMANENTLY MOVED, not deleted: it is in
-     * bookmarks and in whatever an installation typed into its own links, and
-     * 301 is what tells all of them where it went for good.
-     */
-    public function testTheOldSettingsAddressRedirectsPermanentlyToTheConfigurePage(): void
-    {
-        $this->boot();
-        $area = $this->anArea();
-
-        $response = $this->get('/areas/'.$area->getUuidString().'/settings');
-
-        self::assertSame(301, $response->getStatusCode());
-        self::assertSame('/areas/'.$area->getUuidString().'/configure/settings', $response->headers->get('Location'));
-    }
-
-    /**
      * ADDRESSED BY UUID, so the sequential key is not a URL anybody can walk.
      */
     public function testASequentialKeyIsNotAnAddress(): void
@@ -553,7 +540,6 @@ final class AreaPagesTest extends WebTestCase
         yield 'the register needs areas.read' => ['/areas', []];
         yield 'an overview needs areas.read' => ['/areas/{uuid}', []];
         yield 'zones need zones.read' => ['/areas/{uuid}/zones', []];
-        yield 'the settings redirect needs areas.configure' => ['/areas/{uuid}/settings', self::READ_ONLY_AREA_PERMISSIONS];
     }
 
     /**

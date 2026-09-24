@@ -112,7 +112,7 @@ final readonly class ZoneConfigureController
     ) {
     }
 
-    #[Route('/areas/{uuid}/zones/settings', name: self::ROUTE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
+    #[Route('/areas/{uuid}/configure/zones', name: self::ROUTE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'], priority: 1)]
     #[IsGranted('zones.read', subject: 'area')]
     public function configure(
         Request $request,

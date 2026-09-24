@@ -43,7 +43,7 @@
     {% if area.iucnCategory %}<span class="f"><span class="k">IUCN</span><span class="v">{{ area.iucnCategory }}</span></span>{% endif %}
     {% if area.establishedYear %}<span class="f"><span class="k">Established</span><span class="v">{{ area.establishedYear }}</span></span>{% endif %}
     <span class="sp"></span>
-    <a class="more" href="{{ path('area_settings', {uuid: area.uuidString}) }}">Area settings &rarr;</a>
+    <a class="more" href="{{ path('shell_area_configure', {uuid: area.uuidString, section: 'settings'}) }}">Area settings &rarr;</a>
 </div>
 
 {# FOUR FIGURES, NEVER FIVE (ruled): a strip is four to a row, and a fifth

@@ -24,6 +24,11 @@
                 "fetch": "eager",
                 "enabled": true
             },
+            "module-register": {
+                "main": "controllers/module_register_controller.js",
+                "fetch": "eager",
+                "enabled": true
+            },
             "station-point": {
                 "main": "controllers/station_point_controller.js",
                 "fetch": "eager",

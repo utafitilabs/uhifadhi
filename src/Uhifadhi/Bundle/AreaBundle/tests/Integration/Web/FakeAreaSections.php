@@ -25,6 +25,6 @@ final readonly class FakeAreaSections implements AreaSectionsInterface
 {
     public function sectionsFor(string $areaUuid, string $areaName): array
     {
-        return [ConfigurationSection::screen('contributed', 'Contributed '.$areaName, 'area_show', ['uuid' => $areaUuid])];
+        return [ConfigurationSection::screen('contributed', 'Contributed '.$areaName, 'test_contributed_section', ['uuid' => $areaUuid])];
     }
 }

@@ -30,6 +30,9 @@ use Uhifadhi\Bundle\AreaBundle\Api\DutyResponse;
  * that failed differently would be two contracts wearing one name.
  *
  * @implements ProviderInterface<Response>
+ *
+ * @see https://api-platform.com/docs/core/state-providers/ — a provider implements ProviderInterface and an operation names it in `provider:`
+ * @see vendor/api-platform/core/src/State/ProviderInterface.php — the one method these subclasses answer
  */
 abstract class DutyProvider implements ProviderInterface
 {

@@ -36,6 +36,9 @@ use Uhifadhi\Bundle\AreaBundle\Api\DutyResponse;
  * tested without one.
  *
  * @implements ProcessorInterface<mixed, Response>
+ *
+ * @see https://api-platform.com/docs/core/state-processors/ — a processor implements ProcessorInterface and an operation names it in `processor:`
+ * @see vendor/api-platform/core/src/State/ProcessorInterface.php — the one method these subclasses answer
  */
 abstract class DutyProcessor implements ProcessorInterface
 {

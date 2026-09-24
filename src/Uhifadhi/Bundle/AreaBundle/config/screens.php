@@ -66,6 +66,20 @@ use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
  * So AreaBundle::loadExtension() imports this file only when the
  * application has both twig to render in and security to be gated by. See there
  * for the guard itself.
+ *
+ * THE CONTROLLERS EXTEND NOTHING and take what they need in the constructor —
+ * without autoconfiguration the #[Required] on AbstractController::setContainer
+ * is never processed, so a base class would be handed no container. That is how
+ * the framework's own controllers are written, and the `controller.service_arguments`
+ * tag on each of them is what a route's `->controller('area.controller.x')` needs:
+ * the pass it feeds sets the definition public and builds the argument locator.
+ *
+ *   — https://symfony.com/doc/current/controller/service.html
+ *   — https://symfony.com/doc/current/bundles/best_practices.html
+ *
+ * @see vendor/symfony/framework-bundle/Controller/TemplateController.php — a core controller with no base class
+ * @see vendor/symfony/http-kernel/DependencyInjection/RegisterControllerArgumentLocatorsPass.php — `$def->setPublic(true)` for every tagged controller
+ * @see vendor/symfony/http-kernel/Controller/ContainerControllerResolver.php — "Did you forget to tag the service with \"controller.service_arguments\"?"
  */
 return static function (ContainerConfigurator $container): void {
     $services = $container->services();

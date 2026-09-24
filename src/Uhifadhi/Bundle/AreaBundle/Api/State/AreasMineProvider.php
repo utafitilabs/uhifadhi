@@ -50,6 +50,9 @@ use Uhifadhi\Contracts\Entity\UserInterface;
  * dependency of owning ground.
  *
  * @implements ProviderInterface<AreasMine>
+ *
+ * @see https://api-platform.com/docs/core/state-providers/ — a provider implements ProviderInterface and an operation names it in `provider:`
+ * @see vendor/api-platform/core/src/State/ProviderInterface.php — the one method; the 'api_platform.state_provider' tag and its `key` are written by hand in config/field_api.php, a reusable bundle being unautoconfigured
  */
 final readonly class AreasMineProvider implements ProviderInterface
 {

@@ -36,8 +36,8 @@ category **and by the viewer's department**, which is a reading for a person on
 a page — a view-model, and the registry has no viewer.
 
 Concretely: this bundle ships **no `templates/` directory, no controllers, no
-routes and no console commands**, and `tests/Unit/BoundaryTest.php` fails the
-build if that changes.
+routes and one console command**, `registry:sync`, and `tests/Unit/BoundaryTest.php`
+fails the build if that changes.
 
 ## It draws no route, and it closes them
 

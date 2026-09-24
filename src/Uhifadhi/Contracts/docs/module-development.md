@@ -532,12 +532,12 @@ bundles.
 ### The catalogue and per-area install
 
 RegistryBundle keeps a catalogue of modules and, separately, a per-area record of which are switched
-on. **Nobody runs a command to fill either.** The reconciliation happens once per build, at the end
-of a console command: a deploy runs `doctrine:migrations:migrate` and then `bin/console cache:warmup`,
-the first of the two reconciles the build, and the second finds the work done. An operator's whole
-ritual after migrating is that warm-up. **A web request reconciles nothing** — it opens the registry
-no connection on its own account, so an installation that has migrated nothing still answers a
-liveness probe on a route that reads no database.
+on. **One command fills both: `bin/console registry:sync`**, typed after `doctrine:migrations:migrate`
+and before `cache:warmup`, on every install and every upgrade. It prints what it did — the modules
+added, kept and retired — and exits non-zero, naming the migration step, when it is typed before the
+registry's tables exist. **A web request reconciles nothing** — it opens the registry no connection
+on its own account, so an installation that has migrated nothing still answers a liveness probe on a
+route that reads no database.
 
 The sync reads every tagged provider and upserts a catalogue row by `slug()`; then it backfills each
 area with any module it does not yet have. It is idempotent and **create-only** for the per-area
@@ -2636,26 +2636,28 @@ named at the root as well.
 
 ### After installing
 
+Installing a module is `composer require`, then the same four lines as any upgrade:
+
 ```bash
-bin/console doctrine:migrations:migrate
-bin/console cache:warmup                  # the registry reconciles itself
+bin/console cache:clear --no-warmup       # the container that knows the new bundle
+bin/console doctrine:migrations:migrate   # your tables
+bin/console registry:sync                 # your module enters the catalogue
+bin/console cache:warmup
 ```
 
 If your module added tables, the versions that create them ship with it — see
 [7. Shipping migrations](#7-shipping-migrations). `doctrine:migrations:diff` is the
 installation's, for the entities it writes itself.
 
-**There is no command to add your module to the catalogue, and there is nothing to remember.** The
-registry sync rides the end of a console command, once per build, so the warm-up above is the whole
-of it — a command a deploy hook already runs after migrating, doing a job an operator would otherwise
-have to be told about. Nothing a request does reconciles anything, and nothing a request does opens
-the registry a connection. **The core ships exactly one console command**, and your
-module ships none: `bin/console list` on a production installation offers the framework's built-in
-commands plus `team:user:create` — the first administrator, the one account that cannot be made
-through a screen — because everything else a person types belongs to devkit, which is
-`require-dev`. That command is the documented exception, and it exists because a production build
-has no development packages and the first account has to be made on the deployment itself. A
-command your module wants is a `CommandDescriptor` handed to devkit; see
+**`registry:sync` is what adds your module to the catalogue and gives every existing area its row.**
+It reports what it added, kept and retired, changes nothing when typed twice, and refuses — non-zero,
+naming `doctrine:migrations:migrate` — when typed before the tables exist. Nothing a request does
+reconciles anything, and nothing a request does opens the registry a connection. **Your module ships
+no console command of its own**: `bin/console list` on a production installation offers the
+framework's built-in commands plus the core's three — `registry:sync`, `team:user:create` and
+`team:performance:snapshot`, each something a production build without development packages must
+run — because everything else a person types belongs to devkit, which is `require-dev`. A command
+your module wants is a `CommandDescriptor` handed to devkit; see
 [the devkit contracts](devkit-contracts.md).
 
 The sync is safe on production and safe to repeat. Your module's catalogue row is refreshed from your

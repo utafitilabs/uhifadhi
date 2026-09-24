@@ -18,15 +18,19 @@ use Symfony\Component\Console\CommandLoader\CommandLoaderInterface;
 use Uhifadhi\Core\Tests\Application\Kernel;
 
 /**
- * THE CORE'S CONSOLE SURFACE IS TWO COMMANDS, AND THIS IS WHERE THAT IS TRUE
+ * THE CORE'S CONSOLE SURFACE IS THREE COMMANDS, AND THIS IS WHERE THAT IS TRUE
  * OR NOT.
  *
  * The rule and its exceptions, stated once for all five bundles at once.
  * Everything the platform can be told to do is a screen, because a command is
- * a door with no page and nobody to explain itself to; the two that are not
- * screens are both things a PRODUCTION installation must be able to run
+ * a door with no page and nobody to explain itself to; the three that are not
+ * screens are all things a PRODUCTION installation must be able to run
  * without development packages, which is the whole of the exception:
  *
+ *   `registry:sync`             the catalogue brought into step with the
+ *                               installed module bundles — the third line of
+ *                               every install and every upgrade, after the
+ *                               migrations and before the warm-up.
  *   `team:user:create`          the first administrator — the one account an
  *                               installation cannot make through a screen,
  *                               because every screen is behind the sign-in it
@@ -75,7 +79,7 @@ final class OneConsoleCommandTest extends KernelTestCase
         }
     }
 
-    public function testTheOnlyCommandsTheCoreShipsAreTheTwoAProductionInstallationRuns(): void
+    public function testTheOnlyCommandsTheCoreShipsAreTheThreeAProductionInstallationRuns(): void
     {
         self::bootKernel();
 
@@ -97,8 +101,8 @@ final class OneConsoleCommandTest extends KernelTestCase
 
         sort($ours);
 
-        self::assertSame(['team:performance:snapshot', 'team:user:create'], $ours, \sprintf(
-            'The core ships two commands, both of them things a production installation must run; this one carries [%s]. Everything else belongs to devkit.',
+        self::assertSame(['registry:sync', 'team:performance:snapshot', 'team:user:create'], $ours, \sprintf(
+            'The core ships three commands, all of them things a production installation must run; this one carries [%s]. Everything else belongs to devkit.',
             implode(', ', $ours),
         ));
     }

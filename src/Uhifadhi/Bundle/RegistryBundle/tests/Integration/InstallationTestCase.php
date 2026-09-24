@@ -15,7 +15,9 @@ namespace Uhifadhi\Bundle\RegistryBundle\Tests\Integration;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
-use Uhifadhi\Bundle\RegistryBundle\EventListener\RegistrySyncListener;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncResult;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures\HostKernel;
@@ -91,25 +93,32 @@ abstract class InstallationTestCase extends RegistryKernelTestCase
     }
 
     /**
-     * Reconcile the registry the way a deploy does: through the listener that is
-     * the whole of the mechanism. The core ships no console command of its own —
-     * a deploy migrates and then warms the cache up, and the registry is in step
-     * by the end of those.
+     * Reconcile the registry the way an operator does: `registry:sync`, typed
+     * into the console of the booted installation. Symfony's documented way to
+     * drive a command in process is a FrameworkBundle Application built on the
+     * kernel.
      *
-     * The stamp goes first because a deploy is a new build, and a new build has
-     * a cache directory with no stamp in it. That is also what tells this apart
-     * from {@see RegistrySyncListener::reconcileOnce()} being called twice in one
-     * build, which the once-per-build specification is about.
+     * @see https://symfony.com/doc/current/console.html#testing-commands
+     * @see vendor/symfony/framework-bundle/Console/Application.php
      */
-    protected function reconcile(): void
+    protected function reconcile(): string
     {
-        $listener = self::getContainer()->get('test.registry.sync_listener');
-        \assert($listener instanceof RegistrySyncListener);
+        $kernel = self::$kernel;
+        \assert(null !== $kernel);
 
-        @unlink($listener->stampFile());
-        $listener->reconcileOnce();
+        $application = new Application($kernel);
+        $application->setAutoExit(false);
+        $application->setCatchExceptions(false);
+
+        $output = new BufferedOutput();
+        $status = $application->run(new ArrayInput(['command' => 'registry:sync']), $output);
+        $text = $output->fetch();
+
+        self::assertSame(0, $status, 'registry:sync failed:'.\PHP_EOL.$text);
 
         $this->em()->clear();
+
+        return $text;
     }
 
     /**

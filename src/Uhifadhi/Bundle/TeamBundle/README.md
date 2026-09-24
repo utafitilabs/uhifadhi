@@ -165,8 +165,9 @@ and the passphrase is read from standard input.
 the passphrase inline instead of on standard input — at the cost of putting it in
 the process list, so prefer the pipe.
 
-**This is the one console command the core ships.** Every other command the
-platform has belongs to `uhifadhi/devkit-module`, which installs through
+**The core ships only commands a production build must run** — this one, the
+registry's `registry:sync`, and `team:performance:snapshot`. Every other command
+the platform has belongs to `uhifadhi/devkit-module`, which installs through
 `require-dev` and is absent from a production build. That arrangement cannot hold
 this one: a production installation is built *without* development packages, and
 the first administrator is needed exactly there. There is no web setup screen —

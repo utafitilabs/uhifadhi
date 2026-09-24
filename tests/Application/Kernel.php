@@ -37,8 +37,13 @@ use Uhifadhi\Core\Tests\Core\FakeRoster;
  *
  * It sits at the monorepo root rather than inside one bundle because the
  * bundles here are released together and their integration IS the product.
+ *
+ * NOT FINAL, for one reason: the core carries no module bundle, and a
+ * specification about what the registry does with one — `registry:sync`
+ * against the real migrations — stands a module up by extending this kernel
+ * with a tagged provider ({@see \Uhifadhi\Core\Tests\Core\Fixtures\ModuleCarryingKernel}).
  */
-final class Kernel extends BaseKernel
+class Kernel extends BaseKernel
 {
     use CheckoutTempDirTrait;
     use MicroKernelTrait;

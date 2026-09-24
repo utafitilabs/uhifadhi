@@ -97,7 +97,6 @@ class HostKernel extends TestKernel
             'registry.area_module_ledger',
             'registry.entry_routes',
             'registry.sync',
-            'registry.sync_listener',
         ] as $id) {
             $services->alias('test.'.$id, $id)->public();
         }

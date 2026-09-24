@@ -33,7 +33,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\TestKernel;
  * THE FIRST ADMINISTRATOR — the one account an installation cannot make through
  * a screen, because every screen is behind the sign-in it does not yet have.
  *
- * The core ships one console command and this is it, so this suite runs it the
+ * The core's commands are the ones a production build runs, so this suite runs it the
  * way an operator does: through the application's own console, found by name in
  * the command loader the compiler pass built, driven by the tester the console
  * documents.

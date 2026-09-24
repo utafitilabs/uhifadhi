@@ -16,13 +16,13 @@ namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration;
 use Symfony\Component\Console\CommandLoader\CommandLoaderInterface;
 
 /**
- * THE CORE SHIPS ONE CONSOLE COMMAND, AND THIS BUNDLE IS NOT WHERE IT LIVES.
+ * THE CORE'S CONSOLE COMMANDS LIVE ELSEWHERE, AND THIS BUNDLE SHIPS NONE.
  *
- * The exception is exact: TeamBundle's `team:user:create`, the first
- * administrator, because a production installation is built without development
- * packages and that account is needed on the server. Nothing else. Everything
- * the platform can otherwise be told to do is either something the runtime does
- * for itself — the registry reconciles when the cache is warmed — or something
+ * The exceptions are exact: the registry's `registry:sync`, which brings the
+ * catalogue into step after the migrations, and the team bundle's
+ * `team:user:create` and `team:performance:snapshot` — all three things a
+ * production installation must run without development packages. Nothing
+ * else. Everything the platform can otherwise be told to do is something
  * devkit owns, and devkit is a development-only package whose absence from a
  * deployment is enforced by the dependency graph rather than by a flag somebody
  * has to remember to set. A seeder shipped here would be installed on every
@@ -51,7 +51,7 @@ final class NoConsoleCommandTest extends IntegrationTestCase
         ));
 
         self::assertSame([], $mine, \sprintf(
-            'The core ships one command, team:user:create, and it is the team bundle\'s; this bundle registers [%s]. A seeder belongs in devkit.',
+            'The core\'s commands are the registry\'s and the team bundle\'s; this bundle registers [%s]. A seeder belongs in devkit.',
             implode(', ', $mine),
         ));
     }

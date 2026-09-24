@@ -32,10 +32,10 @@ use PHPUnit\Framework\TestCase;
  *     reach back into one.
  *  3. The registry renders nothing. See docs/boundaries.md: the module grid, the
  *     customize screen and every tile is the shell's.
- *  4. The registry ships no console command. The core ships exactly one —
- *     TeamBundle's `team:user:create`, the first administrator an installation
- *     cannot make through a screen — and devkit owns every other command the
- *     platform has. Reconciling the catalogue is a cache warmer.
+ *  4. The registry ships ONE console command, `registry:sync`, and names the
+ *     console component nowhere else. Devkit owns every other command the
+ *     platform has bar the team bundle's two; a second command here is a
+ *     seeder that belongs to devkit.
  */
 final class BoundaryTest extends TestCase
 {
@@ -191,16 +191,21 @@ final class BoundaryTest extends TestCase
     }
 
     /**
-     * NO COMMAND IN THIS BUNDLE. Reconciling the catalogue is a cache warmer, so
-     * an operator has nothing to remember, and devkit — a dev-only package —
-     * owns every command the platform has bar one: `team:user:create` is
-     * TeamBundle's, and TeamBundle's `Command/` namespace and services file are
-     * the only place in the core that may name the console component. A
-     * `Command/` directory here is that ruling being undone by accident.
+     * ONE COMMAND IN THIS BUNDLE, AND THE CONSOLE COMPONENT IS NAMED ONLY WHERE
+     * IT IS WIRED. `registry:sync` is the step of an install that only the
+     * registry can do — reconcile the catalogue with the installed providers —
+     * so it ships here, on a production installation, beside the tables it
+     * fills. Everything else a person types belongs to devkit, a dev-only
+     * package; a second file under `Command/` is that ruling being undone.
      */
-    public function testTheRegistryShipsNoConsoleCommand(): void
+    public function testTheRegistryShipsExactlyOneConsoleCommand(): void
     {
-        self::assertDirectoryDoesNotExist(self::BUNDLE.'/Command', 'Commands belong to devkit.');
+        $commands = glob(self::BUNDLE.'/Command/*.php');
+        self::assertSame(
+            [self::BUNDLE.'/Command/RegistrySyncCommand.php'],
+            false === $commands ? [] : $commands,
+            'registry:sync is the one command; a seeder belongs to devkit.',
+        );
 
         $offenders = [];
         foreach (self::sources() as $path => $code) {
@@ -209,8 +214,13 @@ final class BoundaryTest extends TestCase
                 $offenders[] = $path;
             }
         }
+        sort($offenders);
 
-        self::assertSame([], $offenders, 'Only TeamBundle\'s Command/ namespace may name the console component.');
+        self::assertSame(
+            ['Command/RegistrySyncCommand.php', 'config/services.php'],
+            $offenders,
+            'Only the command and the file that wires it may name the console component.',
+        );
     }
 
     /**

@@ -14,11 +14,13 @@ declare(strict_types=1);
 namespace Uhifadhi\Core\Tests\Core;
 
 use Doctrine\DBAL\Connection;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerAggregate;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
-use Uhifadhi\Bundle\RegistryBundle\EventListener\RegistrySyncListener;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
@@ -101,23 +103,23 @@ final class CoreBootTest extends KernelTestCase
     }
 
     /**
-     * A DEPLOY IS `doctrine:migrations:migrate` AND THEN `cache:warmup`, and this
-     * is the pair of things it does to the five bundles at once: every warmer they
-     * contribute runs, and the registry is reconciled with whatever module
-     * providers the installation carries.
-     *
-     * Both halves run here against a database with no registry tables in it —
-     * the state a fresh installation is in before its first migration — and the
-     * whole point is that neither throws.
+     * A DEPLOY IS `doctrine:migrations:migrate`, `registry:sync` AND THEN
+     * `cache:warmup`, and this is what the last two do to the five bundles at
+     * once, against a database with no registry tables in it — the state a
+     * fresh installation is in before its first migration.
      *
      * NO BUNDLE HERE READS THE DATABASE WHILE THE CACHE IS WARMED. That is not a
      * style rule: doctrine-bundle's metadata warmer fails the command outright if
      * anything loaded ORM metadata before it, and the pass the kernel runs while
-     * it compiles the container does not include it.
+     * it compiles the container does not include it. So every warmer runs, and
+     * throws nothing, on an empty database.
      *
-     * @see \Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Sync\PristineCacheWarmUpTest which asserts that on a pristine prod cache, where the warmer in question exists
+     * AND `registry:sync` TYPED BEFORE THE MIGRATION REFUSES, naming the step
+     * that comes first, rather than filling nothing and exiting zero.
+     *
+     * @see \Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Sync\PristineCacheWarmUpTest which asserts the warm-up on a pristine prod cache, where the warmer in question exists
      */
-    public function testADeployWarmsEveryCacheAndReconcilesTheRegistry(): void
+    public function testADeployWarmsEveryCacheAndRegistrySyncRefusesBeforeTheFirstMigration(): void
     {
         $kernel = self::bootKernel();
 
@@ -135,15 +137,14 @@ final class CoreBootTest extends KernelTestCase
         $warmer->enableOptionalWarmers();
         $warmer->warmUp($kernel->getCacheDir(), $kernel->getBuildDir());
 
-        $listener = self::getContainer()->get('registry.sync_listener');
-        \assert($listener instanceof RegistrySyncListener);
+        $application = new Application($kernel);
+        $application->setAutoExit(false);
+        $application->setCatchExceptions(false);
+        $output = new BufferedOutput();
 
-        @unlink($listener->stampFile());
-        $listener->reconcileOnce();
+        $status = $application->run(new ArrayInput(['command' => 'registry:sync']), $output);
 
-        self::assertFileDoesNotExist(
-            $listener->stampFile(),
-            'nothing to reconcile before the first migration, and nothing remembered as done',
-        );
+        self::assertSame(1, $status, 'nothing to reconcile before the first migration, and the command says so');
+        self::assertStringContainsString('Run doctrine:migrations:migrate first', $output->fetch());
     }
 }

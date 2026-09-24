@@ -33,8 +33,9 @@ use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\InstallationTestCase;
  * are one-line mistakes to make and neither is visible until somebody's screen
  * changes overnight.
  *
- * The sync runs from a cache warmer, so a deploy reconciles the catalogue by
- * clearing the cache and nothing has to be remembered on the command line.
+ * The sync is what `registry:sync` runs; these specifications call the service
+ * directly, because they are about what it does and reports rather than about
+ * the command that types it.
  */
 final class RegistrySyncTest extends InstallationTestCase
 {
@@ -48,7 +49,7 @@ final class RegistrySyncTest extends InstallationTestCase
 
     /**
      * ZERO MODULES IS A SUCCESSFUL SYNC. A fresh installation, one registry, no
-     * modules: the warmer has to run and report nothing rather than fail on an
+     * modules: the sync has to run and report nothing rather than fail on an
      * empty iterator.
      */
     public function testSyncingAnInstallationWithNoModulesSucceedsAndWritesNothing(): void
@@ -59,7 +60,7 @@ final class RegistrySyncTest extends InstallationTestCase
         $result = $this->sync();
 
         self::assertSame([], $this->areaModules()->allFor($area));
-        self::assertSame(0, $result->modules);
+        self::assertSame(0, $result->modules());
         self::assertSame(0, $result->areaAssignments);
         self::assertFalse($result->skipped);
     }
@@ -178,11 +179,18 @@ final class RegistrySyncTest extends InstallationTestCase
         $this->area('North');
         $this->area('South');
 
+        // install() reconciled once already, before the areas existed: the
+        // modules are kept from that run, and the area rows are this one's.
         $result = $this->sync();
 
-        self::assertSame(2, $result->modules);
+        self::assertSame([], $result->added);
+        self::assertSame(['sightings', 'ferries'], $result->kept);
+        self::assertSame([], $result->retired);
         self::assertSame(4, $result->areaAssignments, 'two modules × two areas, all new');
 
         self::assertSame(0, $this->sync()->areaAssignments, 'a second run backfills nothing');
+
+        $this->install(['sightings'], freshDatabase: false);
+        self::assertSame(['ferries'], $this->sync()->retired, 'a module whose bundle is gone is named, and its row stays');
     }
 }

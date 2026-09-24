@@ -21,10 +21,10 @@ and where each piece lives in the bundle.
 - **Declared permissions** — the granular permissions modules declare, gathered
   for the host to fold into its matrix. Declared, never granted.
 - **The sync** — the reconciliation that brings the catalogue into step with what
-  is installed, once per build, without ever overruling an admin. There is no
-  command: the core ships none. It runs at the end of a console command, which is
-  what a deploy is made of — migrate, then warm the cache up — and never on a
-  request, so serving a page opens the registry no connection of its own.
+  is installed, without ever overruling an admin. `registry:sync` runs it and
+  reports what it did; it is typed after `doctrine:migrations:migrate` and before
+  `cache:warmup`, and never runs on a request, so serving a page opens the
+  registry no connection of its own.
 - **The route gate** — where an area has parked a module, that module's routes
   answer 404 there. One enforcement point, no per-module code, and nothing
   rendered: see `docs/guarantees.md` for how a request is recognised and
@@ -96,7 +96,7 @@ in a list, nothing more.
 | The catalogue and the per-area ledger | `Entity/`, `Repository/` |
 | The runtime | `Service/` |
 | The route gate, applied to every request | `EventListener/ParkedModuleListener.php` |
-| The create-only sync, and its deploy hook on the end of a console command | `Service/RegistrySyncService.php`, `EventListener/RegistrySyncListener.php` |
+| The create-only sync, and the command that runs and reports it | `Service/RegistrySyncService.php`, `Command/RegistrySyncCommand.php` |
 | Test host app | `tests/Integration/TestKernel.php` |
 | A host, minimally: area entity + resolved target entity | `tests/Integration/Fixtures/HostKernel.php` |
 

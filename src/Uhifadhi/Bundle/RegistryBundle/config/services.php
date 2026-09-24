@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use Psr\Container\ContainerInterface;
+use Symfony\Component\Console\Application;
 use Uhifadhi\Bundle\RegistryBundle\Access\RegistryConcerns;
+use Uhifadhi\Bundle\RegistryBundle\Command\RegistrySyncCommand;
 use Uhifadhi\Bundle\RegistryBundle\EventListener\ParkedModuleListener;
-use Uhifadhi\Bundle\RegistryBundle\EventListener\RegistrySyncListener;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\RegistryBundle\Repository\ModuleRepository;
@@ -61,7 +61,7 @@ use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
  *   registry.module_route_gate     is this request for a module the area parked?
  *   registry.parked_module_listener  the gate, applied to every incoming request
  *   registry.sync                  the create-only reconciliation itself
- *   registry.sync_listener         the deploy hook that runs it, at the end of a console command
+ *   registry.command.sync          `registry:sync`, the command that runs it and reports
  */
 return static function (ContainerConfigurator $container): void {
     $services = $container->services();
@@ -150,13 +150,10 @@ return static function (ContainerConfigurator $container): void {
         ->tag('kernel.event_listener', ['event' => 'kernel.request', 'priority' => 8]);
 
     /*
-     * THE RECONCILIATION, AND ITS DEPLOY HOOK further down. The core ships no
-     * console command; the catalogue is brought into step with the installed
-     * providers once per build, by the listener at the end of this file.
-     *
-     * Every tag there is written out by hand: nothing here is autoconfigured, so
-     * neither the listener tags nor the service-subscriber tag that gives the
-     * listener its lazy locator is applied for us.
+     * THE RECONCILIATION, AND THE COMMAND THAT RUNS IT further down. The
+     * catalogue is brought into step with the installed providers by
+     * `registry:sync`, typed once per install and per upgrade, after the
+     * migrations and before the warm-up.
      */
     $services->set('registry.sync', RegistrySyncService::class)
         ->args([
@@ -187,38 +184,29 @@ return static function (ContainerConfigurator $container): void {
         ->factory([DependencyOrderComparator::class, 'fromComposer'])
         ->args([service('doctrine.migrations.configuration')]);
 
-    $services->set('registry.sync_listener', RegistrySyncListener::class)
-        // THE SUBSCRIBER IS TAGGED BY HAND because this bundle autoconfigures
-        // nothing:
-        //   "The container detects service subscribers via autoconfiguration.
-        //    If you disabled it, add the `container.service_subscriber` tag to
-        //    the definition of the service that implements
-        //    ServiceSubscriberInterface"
-        //   "when the container finds a service implementing
-        //    ServiceSubscriberInterface, it creates a locator with the
-        //    subscribed services and injects it into the constructor argument
-        //    type-hinted with Psr\Container\ContainerInterface"
-        // @see https://symfony.com/doc/current/service_container/service_subscribers_locators.html
-        // ResolveServiceSubscribersPass swaps a Psr ContainerInterface reference
-        // for the subscriber's own locator; any other id would inject the real
-        // container. @see vendor/symfony/dependency-injection/Compiler/ResolveServiceSubscribersPass.php
-        ->args([
-            service(ContainerInterface::class),
-            '%kernel.cache_dir%/uhifadhi/registry-sync.stamp',
-        ])
-        ->tag('container.service_subscriber')
-        // THE END OF A CONSOLE COMMAND IS THE WHOLE OF THE HOOK. A deploy
-        // migrates and then warms the cache up, and the registry is in step by
-        // the time the second command returns; a request is served without it.
-        //
-        // `kernel.event_listener` AND A CONSOLE EVENT: the tag's name says
-        // kernel, but what it registers is a listener on the application's one
-        // `event_dispatcher` — the same dispatcher the console application is
-        // given — and the pass that reads the tag treats `event` as an opaque
-        // string, so a console event name is as good as a kernel one.
-        // @see https://symfony.com/doc/current/reference/dic_tags.html#kernel-event-listener
-        // @see https://symfony.com/doc/current/components/console/events.html#the-consoleevents-terminate-event
-        // @see vendor/symfony/event-dispatcher/DependencyInjection/RegisterListenersPass.php
-        // @see vendor/symfony/console/ConsoleEvents.php — `const TERMINATE = 'console.terminate'`
-        ->tag('kernel.event_listener', ['event' => 'console.terminate', 'method' => 'onConsoleTerminate']);
+    /*
+     * `registry:sync` — THE ONE COMMAND THIS BUNDLE SHIPS. An install and an
+     * upgrade both end in the same four lines, and this is the third of them:
+     * clear, migrate, sync, warm up.
+     *
+     *   "If you can't use PHP attributes, register the command as a service and
+     *    tag it with the console.command tag."
+     *   — https://symfony.com/doc/current/console.html#registering-the-command
+     *
+     * A BARE TAG, because the name and the description are on the class: the
+     * compiler pass reads #[AsCommand] whether or not anything was
+     * autoconfigured, and registers the service lazily under the name it finds.
+     * @see vendor/symfony/console/DependencyInjection/AddConsoleCommandPass.php — registerCommand()
+     *
+     * GUARDED ON THE COMPONENT, as FrameworkBundle guards the file that carries
+     * every one of its commands (FrameworkExtension::hasConsole() is
+     * class_exists(Application::class)). A container compiled where there is
+     * no console must not carry a service whose class it cannot load.
+     * @see vendor/symfony/framework-bundle/DependencyInjection/FrameworkExtension.php
+     */
+    if (class_exists(Application::class)) {
+        $services->set('registry.command.sync', RegistrySyncCommand::class)
+            ->args([service('registry.sync')])
+            ->tag('console.command');
+    }
 };

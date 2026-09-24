@@ -22,7 +22,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
 use Uhifadhi\Contracts\ModuleProviderInterface;
 
 /**
- * RECONCILE THE REGISTRY WITH WHAT IS INSTALLED — what a deploy does.
+ * RECONCILE THE REGISTRY WITH WHAT IS INSTALLED — what `registry:sync` does.
  *
  * PROVIDER-DRIVEN, WITHOUT EXCEPTION. Every row comes from a tagged
  * {@see ModuleProviderInterface}: a module declares itself and appears here,
@@ -72,11 +72,19 @@ final readonly class RegistrySyncService
         //    that renames itself between releases is followed; a module that
         //    changed nothing is written back identically.
         $bySlug = [];
+        $added = [];
+        $kept = [];
         $order = 0;
         foreach ($this->providers as $provider) {
             $row = $this->mapper->toRow($provider, $order++);
 
-            $module = $this->modules->findBySlug($row['slug']) ?? new Module();
+            $module = $this->modules->findBySlug($row['slug']);
+            if (null === $module) {
+                $module = new Module();
+                $added[] = $row['slug'];
+            } else {
+                $kept[] = $row['slug'];
+            }
             $module->setSlug($row['slug'])
                 ->setName($row['name'])
                 ->setCategory($row['category'])
@@ -90,6 +98,16 @@ final readonly class RegistrySyncService
             $bySlug[$row['slug']] = [$module, $row['active']];
         }
         $this->em->flush();
+
+        // The rows whose provider is gone are named, not touched — see the
+        // class docblock for why a deploy never deletes them.
+        $retired = [];
+        foreach ($this->modules->catalogue() as $module) {
+            $slug = (string) $module->getSlug();
+            if (!isset($bySlug[$slug])) {
+                $retired[] = $slug;
+            }
+        }
 
         // 2) Backfill every area with the modules it has no row for at all —
         //    including the areas created between two deploys, which is the half
@@ -116,15 +134,14 @@ final readonly class RegistrySyncService
         }
         $this->em->flush();
 
-        return new RegistrySyncResult(\count($bySlug), $backfilled);
+        return new RegistrySyncResult($added, $kept, $retired, $backfilled);
     }
 
     /**
-     * THE FRESH-INSTALL GUARD. The reconciliation is hooked to the end of a
-     * console command, and a command can be run BEFORE the first
+     * THE FRESH-INSTALL GUARD. `registry:sync` can be typed BEFORE the first
      * `doctrine:migrations:migrate` — so the registry's own tables may be absent,
      * and asking the schema manager is cheaper and more honest than catching the
-     * driver's error afterwards.
+     * driver's error afterwards. The command turns this answer into its exit code.
      */
     private function tablesExist(): bool
     {

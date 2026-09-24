@@ -33,12 +33,12 @@ use Uhifadhi\Bundle\TeamBundle\Service\UserService;
  * THE FIRST ADMINISTRATOR — the one account an installation cannot make through
  * a screen, because every screen is behind the sign-in it does not yet have.
  *
- * THE CORE SHIPS NO CONSOLE COMMAND, AND THIS IS THE ONE DOCUMENTED EXCEPTION.
- * Every other command the platform has belongs to devkit, which installs
- * through `require-dev` and is therefore absent from a production build. That
- * arrangement cannot hold this one: a production installation is built WITHOUT
- * development packages, and the account an operator has to make is needed
- * exactly there — on the server, once, after the deploy.
+ * THE CORE'S COMMANDS ARE THE ONES A PRODUCTION BUILD MUST RUN, AND THIS IS
+ * ONE OF THEM. Every other command the platform has belongs to devkit, which
+ * installs through `require-dev` and is therefore absent from a production
+ * build. That arrangement cannot hold this one: a production installation is
+ * built WITHOUT development packages, and the account an operator has to make
+ * is needed exactly there — on the server, once, after the deploy.
  *
  *     docker exec <web> php bin/console team:user:create
  *

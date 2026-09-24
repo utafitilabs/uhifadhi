@@ -297,11 +297,12 @@ return static function (ContainerConfigurator $container): void {
         ->args([service(ApiTokenRepository::class), service('doctrine.orm.entity_manager')]);
 
     /*
-     * THE FIRST ADMINISTRATOR, AND THE ONE CONSOLE COMMAND THE CORE SHIPS.
-     * Every other command the platform has belongs to devkit, which installs
-     * through require-dev; this one cannot, because a production installation is
-     * built WITHOUT development packages and the first account is needed exactly
-     * there — on the server, once, after the deploy.
+     * THE FIRST ADMINISTRATOR — a command a production build must run, which
+     * is the only kind the core ships (the registry's `registry:sync` is
+     * another). Every other command the platform has belongs to devkit, which
+     * installs through require-dev; this one cannot, because a production
+     * installation is built WITHOUT development packages and the first account
+     * is needed exactly there — on the server, once, after the deploy.
      *
      *   "If you can't use PHP attributes, register the command as a service and
      *    tag it with the console.command tag."

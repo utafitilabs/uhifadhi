@@ -56,8 +56,10 @@ cannot name an area class itself.
 
 ```bash
 bin/console doctrine:database:create
+bin/console cache:clear --no-warmup
 bin/console doctrine:migrations:migrate
-bin/console cache:warmup                  # the registry reconciles itself
+bin/console registry:sync
+bin/console cache:warmup
 ```
 
 Two tables, `module` and `area_module`, and the registry ships the version that
@@ -72,18 +74,19 @@ a table before the one its foreign key points at.
 
 ### What reconciles the catalogue, and when
 
-There is **no seed command**. The catalogue is reconciled **at the end of a
-console command**, once per build: a deploy hook runs
-`doctrine:migrations:migrate` and then `cache:warmup`, so the first of those two
-commands reconciles the build and the second finds the work done. A manual
-install types the same two lines — the warm-up once, after migrating — and every
-later command in that build reconciles nothing.
+`registry:sync`, typed once after every install and every upgrade — after the
+migrations, before the warm-up. It reads every installed module bundle's
+provider, upserts a catalogue row per slug, gives every area the rows it lacks,
+and prints a ledger: the modules **added**, **kept** and **retired** (a retired
+module's rows stay; only the report names it) and the area rows created. Typed
+again it changes nothing. Typed before the registry's tables exist it exits
+non-zero and names `doctrine:migrations:migrate` as the step that comes first.
 
 **A web request reconciles nothing and opens no connection on the registry's
-account.** The catalogue is filled by the deploy that migrated the tables, so a
-request arriving on an installation that has not migrated yet — a proxy's probe
-of a liveness route that reads no database — is answered without the registry
-asking the database anything.
+account.** The catalogue is filled by the command in the deploy that migrated
+the tables, so a request arriving on an installation that has not migrated yet —
+a proxy's probe of a liveness route that reads no database — is answered without
+the registry asking the database anything.
 
 ## Parking a module closes its routes
 

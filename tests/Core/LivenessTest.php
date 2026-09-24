@@ -17,16 +17,16 @@ use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Uhifadhi\Bundle\RegistryBundle\EventListener\RegistrySyncListener;
 use Uhifadhi\Core\Tests\Application\Kernel;
 
 /**
  * THE LIVENESS ROUTE READS NO DATABASE, AND THE CORE KEEPS IT THAT WAY.
  *
  * An installation puts `/up` behind its proxy's healthcheck: it answers out of
- * the container alone, so a probe for it reports on the process. A bundle that
- * reaches for the database on `kernel.request` turns that promise into its
- * opposite — the healthcheck starts depending on a database the route never
+ * the container alone, so a probe for it reports on the process. The registry
+ * is reconciled by `registry:sync`, a command, and never on a request; a bundle
+ * that reached for the database on `kernel.request` would turn that promise
+ * into its opposite — the healthcheck starts depending on a database the route never
  * reads, and it fails on an installation that has migrated nothing yet, which is
  * exactly when a probe is being watched.
  *
@@ -69,16 +69,9 @@ final class LivenessTest extends KernelTestCase
         $connection->executeStatement('CREATE SCHEMA public');
         $connection->close();
 
-        // A build no deploy has reconciled yet — the stamp is what one leaves —
-        // so nothing here is answered out of work somebody already did.
-        $listener = self::getContainer()->get('registry.sync_listener');
-        \assert($listener instanceof RegistrySyncListener);
-        @unlink($listener->stampFile());
-
         $response = $kernel->handle(Request::create('/up'));
 
         self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
         self::assertFalse($connection->isConnected(), 'the liveness route was answered out of the database');
-        self::assertFileDoesNotExist($listener->stampFile(), 'a request reconciled the registry');
     }
 }

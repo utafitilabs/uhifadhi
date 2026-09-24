@@ -54,12 +54,21 @@ composer require uhifadhi/uhifadhi
 ```
 
 Flex writes one `config/bundles.php` line per core bundle and copies one
-`config/packages/<bundle>.yaml` each. Then the tables:
+`config/packages/<bundle>.yaml` each. Then the four lines every install and
+every upgrade end in:
 
 ```bash
-bin/console doctrine:migrations:migrate
-bin/console cache:warmup                  # the registry reconciles itself
+bin/console cache:clear --no-warmup       # the container that knows the new packages
+bin/console doctrine:migrations:migrate   # the tables
+bin/console registry:sync                 # the catalogue, in step with the installed modules
+bin/console cache:warmup                  # every cache, on a schema that exists
 ```
+
+`registry:sync` prints what it did — the modules added, kept and retired — and
+exits non-zero, naming `doctrine:migrations:migrate` as the step that comes
+first, when it is typed before the registry's tables exist. It is idempotent
+and create-only for the per-area rows: an area's on/off choices and ordering
+are never revisited by a deploy.
 
 **The core ships its own migrations.** Each bundle that owns tables carries a
 `migrations/` directory under its own namespace and registers it from its
@@ -84,11 +93,10 @@ passphrase is never echoed. [`TeamBundle`'s
 README](src/Uhifadhi/Bundle/TeamBundle/README.md#then-the-first-administrator)
 documents the scripted and piped forms.
 
-**That command is the one exception to a standing rule.** The core ships **no
-console commands** — devkit, a development-only package, owns every command the
-platform has — and `team:user:create` is the single documented exception, because
-a production installation is built without development packages and the first
-account has to be made where the deployment is.
+**The core's console surface is three commands**, each something a production
+installation must run without development packages: `registry:sync`,
+`team:user:create` and `team:performance:snapshot`. Devkit, a development-only
+package, owns every other command the platform has.
 
 ### The order versions run in
 
@@ -135,8 +143,11 @@ of them is imagined to come first.
 # 1. Back the database up. Nothing below replaces this.
 # 2. Read what is about to run.
 bin/console doctrine:migrations:migrate --dry-run
-# 3. Run it.
+# 3. Run it — the same four lines as an install.
+bin/console cache:clear --no-warmup
 bin/console doctrine:migrations:migrate
+bin/console registry:sync
+bin/console cache:warmup
 ```
 
 Two hatches when it goes wrong. `doctrine:migrations:version --add

@@ -24,8 +24,8 @@ use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures\HostKernel;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\InstallationTestCase;
 
 /**
- * A DEPLOY, AS THE OPERATOR RUNS IT: the two cache commands, without debug, on
- * a cache directory that holds nothing.
+ * A DEPLOY, AS THE OPERATOR RUNS IT: `registry:sync` and then the cache
+ * commands, without debug, on a cache directory that holds nothing.
  *
  * That is the state a production image is built in, and it is the one state the
  * rest of this suite cannot reach: every other specification boots a debug
@@ -43,9 +43,10 @@ use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\InstallationTestCase;
  *
  * The kernel warms the cache ONCE WHILE IT COMPILES THE CONTAINER, and that
  * pass runs the non-optional warmers only — Doctrine's is optional, so it is
- * not in it. A non-optional warmer that reads the database therefore loads
- * metadata in a pass Doctrine's warmer is absent from, and poisons the pass the
- * command runs next, in the same process.
+ * not in it. This is why the registry contributes no warmer and the
+ * reconciliation is a command of its own, run in its own process: a warmer
+ * that read the database would load metadata in a pass Doctrine's warmer is
+ * absent from, and poison the pass the command runs next, in the same process.
  * @see vendor/symfony/http-kernel/Kernel.php — `initializeContainer()` warms the cache after a rebuild, enabling the optional warmers only when the cache and build directories differ
  */
 final class PristineCacheWarmUpTest extends InstallationTestCase
@@ -53,28 +54,48 @@ final class PristineCacheWarmUpTest extends InstallationTestCase
     /**
      * @return iterable<string, array{string}>
      */
-    public static function deployCommands(): iterable
+    public static function cacheCommands(): iterable
     {
         yield 'cache:warmup' => ['cache:warmup'];
         yield 'cache:clear' => ['cache:clear'];
     }
 
-    #[DataProvider('deployCommands')]
-    public function testADeployCommandSucceedsOnAPristineCacheAndReconcilesTheRegistry(string $command): void
+    /**
+     * The cache commands read no database and touch no catalogue: on a
+     * pristine prod cache each succeeds, and the catalogue is exactly as
+     * `registry:sync` left it — which, before it has run, is empty.
+     */
+    #[DataProvider('cacheCommands')]
+    public function testACacheCommandSucceedsOnAPristineCacheAndReconcilesNothing(string $command): void
     {
-        // A migrated installation carrying an area, and no module on it yet:
-        // the catalogue is what the deploy has to fill.
         $this->install([]);
         $this->area('Deployed area');
 
         $kernel = $this->deployed(['sightings' => []]);
-        $output = new BufferedOutput();
 
-        $application = new Application($kernel);
-        $application->setAutoExit(false);
-        $status = $application->run(new ArrayInput(['command' => $command]), $output);
+        self::assertSame(0, $this->console($kernel, $command));
 
-        self::assertSame(0, $status, $output->fetch());
+        self::assertSame(
+            [],
+            $this->connection($kernel)->fetchFirstColumn('SELECT slug FROM module'),
+            'a cache command is not the reconciliation',
+        );
+
+        $kernel->shutdown();
+    }
+
+    /**
+     * THE DEPLOY IN ORDER: `registry:sync` fills the catalogue, then
+     * `cache:warmup` — its own process, as it is on a server — builds every
+     * cache, Doctrine's metadata cache among them.
+     */
+    public function testRegistrySyncThenWarmUpIsADeploy(): void
+    {
+        $this->install([]);
+        $this->area('Deployed area');
+
+        $kernel = $this->deployed(['sightings' => []]);
+        self::assertSame(0, $this->console($kernel, 'registry:sync'));
 
         $connection = $this->connection($kernel);
         self::assertSame(
@@ -82,45 +103,39 @@ final class PristineCacheWarmUpTest extends InstallationTestCase
             $connection->fetchFirstColumn('SELECT slug FROM module ORDER BY slug'),
             'the deploy reconciled the catalogue with the installed providers',
         );
-        self::assertCount(
-            1,
-            $connection->fetchFirstColumn('SELECT id FROM area_module'),
-            'and gave the area its row',
-        );
+        self::assertCount(1, $connection->fetchFirstColumn('SELECT id FROM area_module'), 'and gave the area its row');
+        $kernel->shutdown();
 
+        $kernel = $this->deployed(['sightings' => []], pristine: false);
+        self::assertSame(0, $this->console($kernel, 'cache:warmup'));
+        self::assertFileExists($kernel->getBuildDir().'/doctrine/orm/default_metadata.php', "Doctrine's own warmer did its work");
         $kernel->shutdown();
     }
 
-    /**
-     * Doctrine's own warmer did its work rather than being skipped — the file it
-     * writes is the evidence, and an installation's runtime reads metadata from
-     * it instead of parsing attributes on every request.
-     */
-    public function testWarmingUpAPristineCacheBuildsTheMetadataCache(): void
+    private function console(DeployedHostKernel $kernel, string $command): int
     {
-        $this->install([]);
-
-        $kernel = $this->deployed(['sightings' => []]);
-
         $application = new Application($kernel);
         $application->setAutoExit(false);
-        $application->run(new ArrayInput(['command' => 'cache:warmup']), new BufferedOutput());
+        $output = new BufferedOutput();
 
-        self::assertFileExists($kernel->getBuildDir().'/doctrine/orm/default_metadata.php');
+        $status = $application->run(new ArrayInput(['command' => $command]), $output);
+        self::assertSame(0, $status, $output->fetch());
 
-        $kernel->shutdown();
+        return $status;
     }
 
     /**
      * @param array<string, array<string, mixed>> $modules
      */
-    private function deployed(array $modules): DeployedHostKernel
+    private function deployed(array $modules, bool $pristine = true): DeployedHostKernel
     {
         self::ensureKernelShutdown();
         HostKernel::$modules = $modules;
 
         $kernel = new DeployedHostKernel('prod', false);
-        self::remove($kernel->getCacheDir());
+        if ($pristine) {
+            self::remove($kernel->getCacheDir());
+        }
         $kernel->boot();
 
         return $kernel;
@@ -129,7 +144,7 @@ final class PristineCacheWarmUpTest extends InstallationTestCase
     private function connection(DeployedHostKernel $kernel): Connection
     {
         // `framework.test` publishes a locator over the private services, which
-        // is how a specification reaches an entity manager in a kernel it is
+        // is how a specification reaches a connection in a kernel it is
         // driving by hand.
         $container = $kernel->getContainer()->get('test.service_container');
         \assert($container instanceof ContainerInterface);

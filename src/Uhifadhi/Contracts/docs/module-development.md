@@ -892,16 +892,21 @@ under `bundles/<lowercased bundle class name minus "Bundle">` and content-versio
 No `assets:install`, no symlink. Relative `url()`s inside a CSS file there are rewritten, so a
 vendor stylesheet's own images come along for free.
 
-`assets/` is yours to declare, in `prependExtension()`, the way `symfony/ux-turbo` does:
+`assets/` is yours to declare, in `prependExtension()`, the way every `symfony/ux` bundle does
+([creating a UX bundle](https://symfony.com/doc/current/frontend/create_ux_bundle.html),
+`vendor/symfony/ux-map/src/UXMapBundle.php`):
 
 ```php
 // src/YourVendorSightingsBundle.php
 if ($builder->hasExtension('framework') && interface_exists(AssetMapperInterface::class)) {
-    $container->extension('framework', ['asset_mapper' => ['paths' => [
+    $builder->prependExtensionConfig('framework', ['asset_mapper' => ['paths' => [
         \dirname(__DIR__).'/assets' => '@your-vendor/sightings-module',
     ]]]);
 }
 ```
+
+**Prepend it**, on the builder: `$container->extension()` appends even inside `prependExtension()`,
+and an appended path overrules the installation's own `framework` config instead of deferring to it.
 
 Guard it on **both** conditions. `hasExtension('framework')` because you may be in a kernel that
 has none; `interface_exists(AssetMapperInterface::class)` because AssetMapper is optional and a

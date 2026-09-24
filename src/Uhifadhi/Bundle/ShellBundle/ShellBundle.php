@@ -313,7 +313,18 @@ final class ShellBundle extends AbstractBundle
         // The bundle's public/ dir needs none of this: AssetMapper exposes it
         // as `bundles/shell/` on its own.
         if ($builder->hasExtension('framework') && interface_exists(AssetMapperInterface::class)) {
-            $container->extension('framework', [
+            // PREPENDED, THE SHAPE EVERY symfony/ux BUNDLE WRITES. `extension()`
+            // appends even when called from prependExtension(), which puts this
+            // path LAST, where it overrules an installation's own framework
+            // config instead of deferring to it; prepended, "any other settings
+            // done explicitly inside the config/* files would override these
+            // prepended settings".
+            //
+            // @see https://symfony.com/doc/current/bundles/prepend_extension.html
+            // @see https://symfony.com/doc/current/frontend/create_ux_bundle.html
+            // @see vendor/symfony/ux-map/src/UXMapBundle.php:117
+            // @see vendor/symfony/ux-chartjs/src/DependencyInjection/ChartjsExtension.php:58
+            $builder->prependExtensionConfig('framework', [
                 'asset_mapper' => [
                     'paths' => [
                         __DIR__.'/assets' => self::ASSET_NAMESPACE,

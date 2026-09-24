@@ -45,6 +45,9 @@ use Uhifadhi\Bundle\AtlasBundle\Model\SatelliteSource;
  * promise: the body attribute settles what the ground is, and the plate settles
  * what is drawn on it and what it is dressed in. The rendering itself is a
  * runtime ({@see MapPlateRuntime}), so a page with no map pays for none of it.
+ *
+ * @see https://symfony.com/doc/current/templating/twig_extension.html — the extension declares, the runtime renders
+ * @see vendor/symfony/twig-bundle/DependencyInjection/TwigExtension.php — registerForAutoconfiguration(ExtensionInterface::class)->addTag('twig.extension'); a reusable bundle is not autoconfigured, so AtlasBundle::loadExtension() writes that tag by hand
  */
 final class MapExtension extends AbstractExtension
 {

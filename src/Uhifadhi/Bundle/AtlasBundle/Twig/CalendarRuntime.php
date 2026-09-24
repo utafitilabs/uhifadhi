@@ -39,6 +39,9 @@ use Uhifadhi\Contracts\Atlas\YearMonth;
  * THE HEIGHT COMES THROUGH THE SAME DOOR THE PLATE'S AND THE CHART'S DO:
  * a custom property handed in attributes sizes the CELL, since that is
  * what a month's height is made of.
+ *
+ * @see https://symfony.com/doc/current/templating/twig_extension.html — a lazy-loaded extension's work lives in a RuntimeExtensionInterface class named from the extension as [Runtime::class, 'method']
+ * @see vendor/symfony/twig-bundle/DependencyInjection/Compiler/RuntimeLoaderPass.php — the 'twig.runtime' tag AtlasBundle::loadExtension() writes by hand, collected into twig.runtime_loader
  */
 final readonly class CalendarRuntime implements RuntimeExtensionInterface
 {

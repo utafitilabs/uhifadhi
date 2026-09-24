@@ -35,6 +35,10 @@ use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
  * AN EMPTY CHART IS NOT DRAWN. A box with axes and no line in it reads
  * as a measurement of nought; the caller is told there is nothing and
  * says so in its own words.
+ *
+ * @see https://symfony.com/doc/current/templating/twig_extension.html — a lazy-loaded extension's work lives in a RuntimeExtensionInterface class named from the extension as [Runtime::class, 'method']
+ * @see vendor/symfony/twig-bundle/DependencyInjection/Compiler/RuntimeLoaderPass.php — the 'twig.runtime' tag AtlasBundle::loadExtension() writes by hand, collected into twig.runtime_loader
+ * @see vendor/symfony/twig-bundle/Resources/config/twig.php — 'twig.runtime_loader', the ContainerRuntimeLoader that builds this class on the first call
  */
 final readonly class ChartRuntime implements RuntimeExtensionInterface
 {

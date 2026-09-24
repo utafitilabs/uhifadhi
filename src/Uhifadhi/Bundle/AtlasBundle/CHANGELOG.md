@@ -8,6 +8,17 @@
 
 Not released yet.
 
+ * A CHART CAN BE A RANKING, FIGURED, SCALED AND KEYED IN CHIPS — the four
+   things a module's design drew that `atlas_chart()` could not: `ChartKind::Ranked`
+   (bars sideways, the name on the left — Chart.js `indexAxis: 'y'`),
+   `AtlasChart::$figures` (`ChartFigures`: the figure past every bar's end,
+   drawn by an inline plugin the plate puts on in `chartjs:pre-connect`, no
+   dependency added to a host), `AtlasChart::$axis` (`AxisScale`: the value
+   scale's `max` and `ticks.stepSize`, with `AxisScale::covering()` for the
+   smallest covering multiple), and `AtlasChart::$legend` (`ChartLegend::Chips`:
+   the house pills under the box through the shell's `data-cat` door, the
+   library's legend off). Documented in docs/components.md, "Charts"
+
  * A ZONE LABEL FOLLOWS ITS PLATE WHEN THE PLATE CHANGES SIZE. A label is a
    permanent tooltip, and Leaflet re-places one only on `zoom` and
    `viewreset` — neither of which the plate's own catching-up fires, since

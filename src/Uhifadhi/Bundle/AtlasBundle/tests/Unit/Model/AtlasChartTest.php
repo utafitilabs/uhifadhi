@@ -18,7 +18,10 @@ use PHPUnit\Framework\TestCase;
 use Symfony\UX\Chartjs\Model\Chart as UxChart;
 use Uhifadhi\Bundle\AtlasBundle\Chart\ChartBuilder;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
+use Uhifadhi\Bundle\AtlasBundle\Model\AxisScale;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartFigures;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
 
 /**
@@ -37,9 +40,196 @@ use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
  * be the library inventing a quiet month.
  */
 #[CoversClass(AtlasChart::class)]
+#[CoversClass(AxisScale::class)]
+#[CoversClass(ChartFigures::class)]
 #[CoversClass(ChartBuilder::class)]
 final class AtlasChartTest extends TestCase
 {
+    /**
+     * A RANKING READS SIDEWAYS: the name on the left, the bar running right,
+     * the longest on top. Chart.js draws it as a bar chart whose index axis is
+     * `y` — the one option the docs give for a horizontal bar chart.
+     *
+     * @see https://www.chartjs.org/docs/latest/charts/bar.html#horizontal-bar-chart — "set the `indexAxis` property in the options object to `'y'`. The default for this property is `'x'`"
+     */
+    public function testARankingIsBarsWhoseIndexAxisIsY(): void
+    {
+        $chart = self::builder()->chart(new AtlasChart(
+            ChartKind::Ranked,
+            ['Endulen', 'Lerai'],
+            [new ChartSeries('Patrols', [46.0, 27.0])],
+        ));
+
+        self::assertSame(UxChart::TYPE_BAR, $chart->getType());
+        self::assertSame('y', self::at($chart->getOptions(), 'indexAxis'));
+        // The value axis is the horizontal one now, and it is the one that
+        // starts at nought and carries the grid; the names carry none.
+        self::assertTrue(self::at(self::scale($chart, 'x'), 'beginAtZero'));
+        self::assertFalse(self::at(self::under(self::scale($chart, 'y'), 'grid'), 'display'));
+        self::assertArrayNotHasKey('indexAxis', self::builder()->chart(new AtlasChart(ChartKind::Bar, ['a'], [new ChartSeries('S', [1.0])]))->getOptions());
+    }
+
+    /**
+     * THE CALLER MAY STATE THE AXIS. A ranking's gridlines land on whole
+     * numbers only if somebody rounds the top of the scale, and the rule is
+     * the caller's — "the smallest covering multiple of three" is patrol's,
+     * not the platform's. What the atlas does is put the two numbers where
+     * Chart.js reads them.
+     *
+     * @see https://www.chartjs.org/docs/latest/axes/cartesian/linear.html — `max`: "User defined maximum number for the scale, overrides maximum value from data" (options.scales[scaleId]); `ticks.stepSize`: "User-defined fixed step size for the scale" (options.scales[scaleId].ticks)
+     */
+    public function testAStatedAxisBecomesTheValueScalesMaximumAndStep(): void
+    {
+        $vertical = self::builder()->chart(new AtlasChart(
+            ChartKind::Bar,
+            ['W1'],
+            [new ChartSeries('Patrols', [41.0])],
+            axis: new AxisScale(max: 45.0, step: 15.0),
+        ));
+        $ranked = self::builder()->chart(new AtlasChart(
+            ChartKind::Ranked,
+            ['Endulen'],
+            [new ChartSeries('Patrols', [46.0])],
+            axis: new AxisScale(max: 48.0, step: 16.0),
+        ));
+
+        // On a vertical chart the value axis is `y`; on a ranking it is `x`.
+        self::assertSame(45.0, self::at(self::scale($vertical, 'y'), 'max'));
+        self::assertSame(15.0, self::at(self::under(self::scale($vertical, 'y'), 'ticks'), 'stepSize'));
+        self::assertArrayNotHasKey('max', self::scale($vertical, 'x'));
+        self::assertSame(48.0, self::at(self::scale($ranked, 'x'), 'max'));
+        self::assertSame(16.0, self::at(self::under(self::scale($ranked, 'x'), 'ticks'), 'stepSize'));
+        self::assertArrayNotHasKey('max', self::scale($ranked, 'y'));
+    }
+
+    /** An axis nobody stated leaves the scale to the library's own ticks. */
+    public function testAnUnstatedAxisLeavesTheScaleToTheLibrary(): void
+    {
+        $chart = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['a'], [new ChartSeries('S', [1.0])]));
+
+        self::assertArrayNotHasKey('max', self::scale($chart, 'y'));
+        self::assertArrayNotHasKey('ticks', self::scale($chart, 'y'));
+    }
+
+    /**
+     * THE SMALLEST COVERING MULTIPLE, stated once for every caller whose
+     * gridlines must land on whole numbers: the top of the scale is the
+     * smallest multiple of the step count that still covers the largest
+     * value, never below the count itself — so an empty month still has a
+     * width to measure against.
+     */
+    public function testACoveringAxisRoundsUpToAMultipleOfItsTickCountAndNeverBelowIt(): void
+    {
+        self::assertEquals(new AxisScale(3.0, 1.0), AxisScale::covering(0.0, 3));
+        self::assertEquals(new AxisScale(3.0, 1.0), AxisScale::covering(0.0167, 3));
+        self::assertEquals(new AxisScale(3.0, 1.0), AxisScale::covering(3.0, 3));
+        self::assertEquals(new AxisScale(6.0, 2.0), AxisScale::covering(3.2, 3));
+        self::assertEquals(new AxisScale(9.0, 3.0), AxisScale::covering(7.0, 3));
+        self::assertEquals(new AxisScale(48.0, 16.0), AxisScale::covering(46.0, 3));
+    }
+
+    /** A scale that cannot be drawn is refused where it is stated. */
+    public function testAnAxisWithNoRoomOrNoStepIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new AxisScale(max: 0.0, step: 0.0);
+    }
+
+    /**
+     * THE FIGURE ON THE BAR. The design writes "46" and "128 h" at the end
+     * of each bar; Chart.js core draws no value labels and the importmap
+     * ships no datalabels plugin, so the atlas draws them with an INLINE
+     * plugin of its own on the plate, configured under its id here — which
+     * is where the docs put a plugin's options.
+     *
+     * @see https://www.chartjs.org/docs/latest/developers/plugins.html — "Plugin options are located under the `options.plugins` config and are scoped by the plugin ID: `options.plugins.{plugin-id}`"
+     * @see https://www.chartjs.org/docs/latest/configuration/layout.html — `layout.padding`: "The padding to add inside the chart", default 0 — the room the figure past the last bar needs
+     */
+    public function testStatedFiguresAreTheInlinePluginsOptionsAndRoomIsMadeForThem(): void
+    {
+        $ranked = self::builder()->chart(new AtlasChart(
+            ChartKind::Ranked,
+            ['S. Laizer'],
+            [new ChartSeries('Patrol-hours', [128.0])],
+            figures: new ChartFigures(unit: 'h'),
+        ));
+        $vertical = self::builder()->chart(new AtlasChart(
+            ChartKind::Bar,
+            ['W1'],
+            [new ChartSeries('Patrols', [41.0])],
+            figures: new ChartFigures(),
+        ));
+        $bare = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['W1'], [new ChartSeries('Patrols', [41.0])]));
+
+        $plugins = self::at($ranked->getOptions(), 'plugins');
+        self::assertIsArray($plugins);
+        self::assertSame(['unit' => 'h', 'precision' => 0], self::at($plugins, ChartBuilder::FIGURES_PLUGIN));
+        // A ranking's figures sit past the bar's right end; a column's above its top.
+        self::assertSame(['right' => 36], self::at(self::under($ranked->getOptions(), 'layout'), 'padding'));
+        self::assertSame(['top' => 16], self::at(self::under($vertical->getOptions(), 'layout'), 'padding'));
+
+        $none = self::at($bare->getOptions(), 'plugins');
+        self::assertIsArray($none);
+        self::assertArrayNotHasKey(ChartBuilder::FIGURES_PLUGIN, $none);
+        self::assertArrayNotHasKey('layout', $bare->getOptions());
+    }
+
+    /**
+     * THE CHIP LEGEND TURNS THE CANVAS LEGEND OFF. A legend drawn twice —
+     * once in pills under the plate, once by the library inside it — names
+     * every series twice; when the plate draws the chips, the library's own
+     * is switched off by the one option the docs give for it.
+     *
+     * @see https://www.chartjs.org/docs/latest/configuration/legend.html — `display`, boolean, default true: "Is the legend shown?" (options.plugins.legend)
+     */
+    public function testTheChipLegendSwitchesTheCanvasLegendOff(): void
+    {
+        $series = [new ChartSeries('foot', [1.0]), new ChartSeries('vehicle', [2.0])];
+        $canvas = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['W1'], $series));
+        $chips = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['W1'], $series, legend: ChartLegend::Chips));
+        $none = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['W1'], $series, legend: ChartLegend::None));
+
+        self::assertTrue(self::at(self::legend($canvas), 'display'));
+        self::assertFalse(self::at(self::legend($chips), 'display'));
+        self::assertFalse(self::at(self::legend($none), 'display'));
+    }
+
+    /**
+     * THE LEGEND'S ROWS COME FROM THE SERIES, in order, each wearing the
+     * category the builder gave its bars — so the pill under the plate and
+     * the bar above it cannot disagree — and the target line last, as the
+     * idle chip, because a dashed grey line is not a category.
+     */
+    public function testTheLegendRowsAreTheSeriesInTheirCategoriesAndTheTargetLast(): void
+    {
+        $chart = new AtlasChart(
+            ChartKind::Bar,
+            ['W1'],
+            [new ChartSeries('foot', [1.0], cat: 7), new ChartSeries('vehicle', [2.0]), new ChartSeries('drone', [3.0], '#E05B41')],
+            target: 2.0,
+            legend: ChartLegend::Chips,
+        );
+
+        self::assertSame([
+            ['label' => 'foot', 'cat' => 7, 'swatch' => null],
+            ['label' => 'vehicle', 'cat' => 2, 'swatch' => null],
+            ['label' => 'drone', 'cat' => null, 'swatch' => '#E05B41'],
+            ['label' => 'Target', 'cat' => null, 'swatch' => null],
+        ], $chart->legendRows());
+    }
+
+    /** @return array<array-key, mixed> */
+    private static function legend(UxChart $chart): array
+    {
+        $plugins = self::at($chart->getOptions(), 'plugins');
+        self::assertIsArray($plugins);
+        $legend = self::at($plugins, 'legend');
+        self::assertIsArray($legend);
+
+        return $legend;
+    }
+
     public function testARunOverTimeIsALineWithItsLabelsAndItsHoles(): void
     {
         $chart = self::builder()->chart(new AtlasChart(
@@ -180,6 +370,21 @@ final class AtlasChartTest extends TestCase
         self::assertIsArray($scale);
 
         return $scale;
+    }
+
+    /**
+     * A nested block of a payload, asserted to be one rather than cast.
+     *
+     * @param array<array-key, mixed> $payload
+     *
+     * @return array<array-key, mixed>
+     */
+    private static function under(array $payload, string $key): array
+    {
+        $block = self::at($payload, $key);
+        self::assertIsArray($block);
+
+        return $block;
     }
 
     /** @param array<array-key, mixed> $payload */

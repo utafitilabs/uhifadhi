@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AtlasBundle\Model;
 
+use Uhifadhi\Contracts\Atlas\PlatePalette;
+
 /**
  * ONE CHART, STATED RATHER THAN DRAWN.
  *
@@ -29,6 +31,12 @@ namespace Uhifadhi\Bundle\AtlasBundle\Model;
  *
  * A TARGET IS A FACT. It is what somebody committed to, and a chart of
  * attainment without it is a chart of a number.
+ *
+ * THREE MORE THINGS A CALLER MAY STATE, none of them a look: the top and
+ * step of the value axis ({@see AxisScale}), that the figures are written
+ * on the bars ({@see ChartFigures}), and where the legend goes
+ * ({@see ChartLegend}). Each is a fact about how the chart is READ; how
+ * it is drawn stays the atlas's.
  */
 final readonly class AtlasChart
 {
@@ -44,7 +52,38 @@ final readonly class AtlasChart
         public string $unit = '',
         /** What the target line is called, where "Target" is not the word. */
         public string $targetLabel = 'Target',
+        /** The top of the value axis and its step, where the caller has a rule; null leaves it to the library. */
+        public ?AxisScale $axis = null,
+        /** The figure at the end of every bar; null draws none and a hover answers instead. */
+        public ?ChartFigures $figures = null,
+        public ChartLegend $legend = ChartLegend::Canvas,
     ) {
+    }
+
+    /**
+     * THE ROWS A CHIP LEGEND IS DRAWN FROM: every series in order, wearing
+     * the category the builder gives its marks — stated, or its position in
+     * the palette — and the target last, with no category, because a dashed
+     * grey line is not one.
+     *
+     * @return list<array{label: string, cat: int|null, swatch: string|null}>
+     */
+    public function legendRows(): array
+    {
+        $rows = [];
+        foreach ($this->series as $position => $series) {
+            $rows[] = [
+                'label' => $series->label,
+                'cat' => null !== $series->swatch ? null : $series->cat ?? ($position % PlatePalette::CATEGORIES) + 1,
+                'swatch' => $series->swatch,
+            ];
+        }
+
+        if (null !== $this->target) {
+            $rows[] = ['label' => $this->targetLabel, 'cat' => null, 'swatch' => null];
+        }
+
+        return $rows;
     }
 
     /** A chart nobody published a point in is not drawn at all. */

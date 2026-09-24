@@ -5,8 +5,8 @@ is on a visual in PHP and calls one Twig function; it writes no JavaScript, hold
 about imagery, chrome or fullscreen, and cannot make its own map look different from anybody
 else's.
 
-Today the atlas ships **maps**. Charts and calendars are the same shape and are coming; their
-APIs are not written here because they are not written yet.
+The atlas ships **maps** and **charts**; calendars are the same shape and are documented with
+their API once it settles.
 
 ## Contents
 
@@ -27,6 +27,14 @@ APIs are not written here because they are not written yet.
   - [A filter change keeps fullscreen](#a-filter-change-keeps-fullscreen)
 - [The events](#the-events)
 - [A whole module template](#a-whole-module-template)
+- [Charts](#charts)
+  - [The five kinds](#the-five-kinds)
+  - [A ranking](#a-ranking)
+  - [The figure on the bar](#the-figure-on-the-bar)
+  - [A stated axis](#a-stated-axis)
+  - [The chip legend](#the-chip-legend)
+  - [How tall a chart is](#how-tall-a-chart-is)
+  - [What each statement becomes in Chart.js](#what-each-statement-becomes-in-chartjs)
 - [What a module must not do](#what-a-module-must-not-do)
 
 ## How a module gets a map
@@ -489,6 +497,152 @@ return new Response($this->twig->render('@Sightings/sightings/plate.html.twig', 
 That is the whole of it. No controller file in `assets/`, no `controllers.json` entry, no
 Leaflet, no chrome markup, no legend markup.
 
+## Charts
+
+A chart is stated the way a map is: a module builds an `AtlasChart` in PHP — a kind, the axis
+labels, its series, perhaps a target — and writes one line of Twig. The colours, the grid, the
+axes, the legend and the height are the atlas's; a series is a category (`cat`, 1 to 18, its
+position in the palette), never a colour.
+
+```php
+use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
+
+$chart = new AtlasChart(
+    ChartKind::Bar,
+    ['W1', 'W2', 'W3'],
+    [
+        new ChartSeries('foot', [34.0, 28.0, 41.0], cat: 1),
+        new ChartSeries('vehicle', [18.0, 22.0, 30.0], cat: 2),
+    ],
+    unit: 'patrols',
+);
+```
+
+```twig
+{{ atlas_chart(chart, 'Patrols per week', 'One bar per type, every week of the month.') }}
+```
+
+The fourth argument is attributes for the canvas — an `aria-label`, a data attribute of your own.
+A chart nobody published a point in is not drawn: the plate says so in the house's own words.
+
+### The five kinds
+
+| Kind | What the data is | Chart.js |
+|---|---|---|
+| `Line` | a run over time | `type: 'line'` |
+| `Bar` | a comparison across categories | `type: 'bar'` |
+| `Stacked` | parts of a whole, period by period | `type: 'bar'`, both scales `stacked` |
+| `Diverging` | a movement either side of nought | `type: 'bar'`, value axis not pinned at nought |
+| `Ranked` | a comparison read as a league table — sideways, the name on the left, the longest on top | `type: 'bar'`, `indexAxis: 'y'` |
+
+### A ranking
+
+`ChartKind::Ranked` is the horizontal bar. The caller hands the rows already ordered — the atlas
+draws them top to bottom as given — and the value axis becomes the horizontal one.
+
+```php
+new AtlasChart(
+    ChartKind::Ranked,
+    ['Endulen', 'Nainokanoka', 'Lerai'],
+    [new ChartSeries('Patrols', [46.0, 38.0, 27.0])],
+    unit: 'patrols',
+    axis: AxisScale::covering(46.0, 3),
+    figures: new ChartFigures(),
+);
+```
+
+Chart.js: "To achieve this, you will have to set the `indexAxis` property in the options object
+to `'y'`. The default for this property is `'x'` and thus will show vertical bars"
+([charts/bar — Horizontal Bar Chart](https://www.chartjs.org/docs/latest/charts/bar.html#horizontal-bar-chart)).
+The builder writes `indexAxis: 'y'` and swaps which letter carries the names and which the values.
+
+### The figure on the bar
+
+`figures: new ChartFigures(unit: 'h', precision: 0)` writes the figure past the end of every
+bar — `46`, `128 h` — so a ranking is read without a hover. A null point gets no figure.
+
+Chart.js core draws no value labels, and the host's importmap ships `chart.js` alone — no
+datalabels plugin, and the atlas adds no dependency to a host. What the docs give instead is an
+**inline plugin**: "`new Chart(ctx, { plugins: [{ … }] })`", where "plugins must define a unique
+id in order to be configurable" and "plugin options are located under the `options.plugins`
+config and are scoped by the plugin ID"
+([developers/plugins](https://www.chartjs.org/docs/latest/developers/plugins.html)). So the
+builder writes the options under `options.plugins.figures` and the plate's own controller puts an
+inline plugin of that id on the config in `chartjs:pre-connect` — the event the UX bridge fires
+with the whole config before it calls `new Chart()`
+(`vendor/symfony/ux-chartjs/assets/dist/controller.js`). The plugin's `afterDatasetsDraw`
+([api/interfaces/Plugin](https://www.chartjs.org/docs/latest/api/interfaces/Plugin.html)) walks
+`chart.getDatasetMeta(index).data` for every visible dataset
+([developers/api](https://www.chartjs.org/docs/latest/developers/api.html)) and writes each
+figure in the plate's own ink and mono face, read from the element it is mounted on — so the
+figures turn over with the theme like every other word. The builder also adds `layout.padding`
+past the last bar ([configuration/layout](https://www.chartjs.org/docs/latest/configuration/layout.html))
+so the longest bar's figure is not clipped by the canvas edge.
+
+A module never writes a plugin of its own; if a figure needs to say something else, the gap is
+in `ChartFigures`.
+
+### A stated axis
+
+`axis: new AxisScale(max: 45.0, step: 15.0)` pins the top of the value axis and the distance
+between its gridlines. The rule is the caller's — a ranking wants its gridlines on whole numbers
+and a module may have a rule of its own for where the top lands; `AxisScale::covering($largest,
+3)` is the common one: the smallest multiple of three that still covers the largest value, never
+below three, so an empty month keeps a width to measure against. Left unstated, the library picks
+its own ticks.
+
+Chart.js: `max` — "User defined maximum number for the scale, overrides maximum value from
+data" (`options.scales[scaleId]`); `ticks.stepSize` — "User-defined fixed step size for the
+scale" (`options.scales[scaleId].ticks`)
+([axes/cartesian/linear](https://www.chartjs.org/docs/latest/axes/cartesian/linear.html)). The
+builder writes both on the value scale — `y` on a standing chart, `x` on a ranking.
+
+### The chip legend
+
+`legend: ChartLegend::Chips` draws the legend as a row of the house's `.chip` pills under the box,
+one per series in order, each wearing its category through the shell's `data-cat` door — the same
+token the bars above it were drawn in, so the pill and the bar cannot disagree. The target line,
+where there is one, is the idle pill last. When the chips are drawn the library's own legend is
+switched off, so no series is named twice: `plugins.legend.display: false` — "Is the legend
+shown?", default true
+([configuration/legend](https://www.chartjs.org/docs/latest/configuration/legend.html)).
+
+`ChartLegend::Canvas` (the default) leaves the library's legend inside the canvas, drawn where
+more than one thing is plotted; `ChartLegend::None` draws none — a single series named in the
+title needs no key.
+
+```html
+<div class="chart-legend">
+    <span class="chip" data-cat="1">foot</span>
+    <span class="chip" data-cat="2">vehicle</span>
+    <span class="chip idle">Target</span>
+</div>
+```
+
+The plate's sheet writes the row and the ink (`.chart-plate > .chart-legend > .chip[data-cat]`);
+the pill's shape stays the shell's and is not restated.
+
+### How tall a chart is
+
+The box is 196px, the platform's, and a caller changes it only through the same custom-property
+door a plate's height comes through: `{{ atlas_chart(chart, '', '', {'--chart-height': '240px'}) }}`.
+
+Known difference, for the design side to settle: the module designs draw their chart plots at
+209px (a 470×176 viewBox at the card's width); the platform's box is 196px and stays so until the
+design rules one number for every chart.
+
+### What each statement becomes in Chart.js
+
+| Statement | Chart.js option | Documented at |
+|---|---|---|
+| `ChartKind::Ranked` | `options.indexAxis: 'y'`; value scale `x`, index scale `y` | [charts/bar](https://www.chartjs.org/docs/latest/charts/bar.html#horizontal-bar-chart) |
+| `AxisScale(max, step)` | `options.scales.<value>.max`, `options.scales.<value>.ticks.stepSize` | [axes/cartesian/linear](https://www.chartjs.org/docs/latest/axes/cartesian/linear.html) |
+| `ChartFigures(unit, precision)` | `options.plugins.figures = {unit, precision}`, `options.layout.padding`, and the plate's inline plugin `{id: 'figures', afterDatasetsDraw}` | [developers/plugins](https://www.chartjs.org/docs/latest/developers/plugins.html), [configuration/layout](https://www.chartjs.org/docs/latest/configuration/layout.html) |
+| `ChartLegend::Chips` / `None` | `options.plugins.legend.display: false`, plus the plate's own `.chart-legend` markup | [configuration/legend](https://www.chartjs.org/docs/latest/configuration/legend.html) |
+| `ChartSeries::$cat` | `backgroundColor`/`borderColor` as `var(--cat-n)`, resolved by the plate at mount and on theme flip | [ux-chartjs `chartjs:pre-connect`](https://symfony.com/bundles/ux-chartjs/current/index.html) |
+
 ## What a module must not do
 
 - **Do not create a map yourself.** `new Map()` from UX Map skips the imagery, the control stack
@@ -499,3 +653,6 @@ Leaflet, no chrome markup, no legend markup.
 - **Do not style the plate.** `.map-plate`, `.map-body`, `.viewer`, `.map-filters`, `.map-legend` and the
   chrome classes are the atlas's vocabulary; a module that restyles them makes its own map the
   odd one out, and a module that clamps a height around one breaks its fullscreen.
+- **Do not draw a chart of your own.** No `<svg>` bar in a template, no Chart.js plugin, no chart
+  options: if a design draws something `AtlasChart` cannot state, the gap is in the atlas and is
+  filled here for every module at once.

@@ -17,7 +17,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Twig\Environment;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
+use Uhifadhi\Bundle\AtlasBundle\Model\AxisScale;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartFigures;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
 use Uhifadhi\Bundle\AtlasBundle\Tests\Integration\TestKernel;
 use Uhifadhi\Bundle\AtlasBundle\Twig\ChartRuntime;
@@ -80,6 +83,94 @@ final class AtlasChartTest extends TestCase
         self::assertStringContainsString('data-controller="uhifadhi--atlas-bundle--chart-plate"', $html);
         self::assertStringContainsString('aria-label="Seats"', $html);
         self::assertStringNotContainsString('--chart-height', substr($html, strpos($html, 'chart-box') ?: 0));
+    }
+
+    /**
+     * A RANKING, FIGURED AND SCALED, ALL THE WAY TO THE MARKUP A BROWSER IS
+     * SERVED: the index axis, the stated maximum and step, and the figures'
+     * options are in the view the library's controller reads.
+     */
+    public function testARankedChartCarriesItsAxisAndFiguresIntoTheServedView(): void
+    {
+        $html = self::render(new AtlasChart(
+            ChartKind::Ranked,
+            ['Endulen', 'Lerai'],
+            [new ChartSeries('Patrols', [46.0, 27.0])],
+            unit: 'patrols',
+            axis: AxisScale::covering(46.0, 3),
+            figures: new ChartFigures(),
+        ));
+
+        $view = self::view($html);
+        self::assertSame('bar', $view['type']);
+        self::assertSame('y', self::at($view, 'options', 'indexAxis'));
+        self::assertSame(48, self::at($view, 'options', 'scales', 'x', 'max'));
+        self::assertSame(16, self::at($view, 'options', 'scales', 'x', 'ticks', 'stepSize'));
+        self::assertSame(['unit' => '', 'precision' => 0], self::at($view, 'options', 'plugins', 'figures'));
+        // No chip legend was asked for, so none is drawn — and one series draws no canvas legend either.
+        self::assertStringNotContainsString('chart-legend', $html);
+        self::assertFalse(self::at($view, 'options', 'plugins', 'legend', 'display'));
+    }
+
+    /**
+     * THE CHIP LEGEND IS THE PLATE'S OWN MARKUP: one house pill per series
+     * under the box, wearing the series' category through the shell's
+     * `data-cat` door, the target as the idle pill — and the canvas legend
+     * off, so nothing is named twice.
+     */
+    public function testTheChipLegendIsDrawnUnderThePlateFromTheSeries(): void
+    {
+        $html = self::render(new AtlasChart(
+            ChartKind::Bar,
+            ['W1', 'W2'],
+            [new ChartSeries('foot', [34.0, 28.0], cat: 1), new ChartSeries('drone', [6.0, 4.0], cat: 3), new ChartSeries('legacy', [1.0, 1.0], '#E05B41')],
+            target: 30.0,
+            legend: ChartLegend::Chips,
+        ));
+
+        self::assertStringContainsString('<div class="chart-legend">', $html);
+        self::assertStringContainsString('<span class="chip" data-cat="1">foot</span>', $html);
+        self::assertStringContainsString('<span class="chip" data-cat="3">drone</span>', $html);
+        self::assertStringContainsString('<span class="chip" style="--cat:#E05B41">legacy</span>', $html);
+        self::assertStringContainsString('<span class="chip idle">Target</span>', $html);
+        self::assertFalse(self::at(self::view($html), 'options', 'plugins', 'legend', 'display'));
+        // The legend follows the box and precedes the caption.
+        self::assertLessThan(strpos($html, 'chart-legend'), strpos($html, 'chart-box'));
+    }
+
+    /**
+     * THE VIEW THE LIBRARY'S CONTROLLER READS, decoded out of the served
+     * attribute — the one place a browser learns what the chart is.
+     *
+     * @return array<array-key, mixed>
+     */
+    private static function view(string $html): array
+    {
+        self::assertSame(1, preg_match('/data-symfony--ux-chartjs--chart-view-value="([^"]+)"/', $html, $match));
+        $attribute = $match[1] ?? null;
+        self::assertIsString($attribute);
+        $view = json_decode(html_entity_decode($attribute, \ENT_QUOTES | \ENT_HTML5), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertIsArray($view);
+
+        return $view;
+    }
+
+    /**
+     * A value down a path of keys, each block asserted to exist rather than
+     * cast — the payload is the library's plain array.
+     *
+     * @param array<array-key, mixed> $payload
+     */
+    private static function at(array $payload, string ...$path): mixed
+    {
+        $value = $payload;
+        foreach ($path as $key) {
+            self::assertIsArray($value);
+            self::assertArrayHasKey($key, $value);
+            $value = $value[$key];
+        }
+
+        return $value;
     }
 
     /** @param array<string, bool|string> $attributes */

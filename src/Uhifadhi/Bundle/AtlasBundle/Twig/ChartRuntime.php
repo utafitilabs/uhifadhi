@@ -18,6 +18,7 @@ use Twig\Environment;
 use Twig\Extension\RuntimeExtensionInterface;
 use Uhifadhi\Bundle\AtlasBundle\Chart\ChartBuilder;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
 
 /**
  * WHAT A MODULE WRITES TO HAVE A CHART: `{{ render_chart(chart) }}`.
@@ -35,6 +36,12 @@ use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
  * AN EMPTY CHART IS NOT DRAWN. A box with axes and no line in it reads
  * as a measurement of nought; the caller is told there is nothing and
  * says so in its own words.
+ *
+ * THE CHIP LEGEND IS DRAWN HERE, NOT IN THE CANVAS. A chart that asks for
+ * one gets a row of the house's pills under the box, one per series,
+ * wearing the series' category through the shell's `data-cat` door — the
+ * same vocabulary every chip on the page is written in — and the
+ * library's own legend switched off by the builder.
  *
  * @see https://symfony.com/doc/current/templating/twig_extension.html — a lazy-loaded extension's work lives in a RuntimeExtensionInterface class named from the extension as [Runtime::class, 'method']
  * @see vendor/symfony/twig-bundle/DependencyInjection/Compiler/RuntimeLoaderPass.php — the 'twig.runtime' tag AtlasBundle::loadExtension() writes by hand, collected into twig.runtime_loader
@@ -88,6 +95,7 @@ final readonly class ChartRuntime implements RuntimeExtensionInterface
             'empty' => $chart->isEmpty(),
             'unit' => $chart->unit,
             'canvas' => $chart->isEmpty() ? '' : $this->chartjs->renderChart($this->charts->chart($chart), $attributes),
+            'legend' => ChartLegend::Chips === $chart->legend && !$chart->isEmpty() ? $chart->legendRows() : [],
             'boxStyle' => implode(';', array_map(
                 static fn (string $property, string $value): string => $property.':'.$value,
                 array_keys($boxStyle),

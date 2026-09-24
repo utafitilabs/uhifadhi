@@ -22,9 +22,26 @@ import { Controller } from '@hotwired/stimulus';
  * builder's, untouched — this walks the built configuration, swaps token
  * strings for values, and hands it back.
  *
+ * AND IT WRITES THE FIGURE ON THE BAR, where the builder asked for one.
+ * Chart.js core draws no value labels and the host ships no plugin for them,
+ * so the plate carries an INLINE plugin — the `plugins: [...]` array on the
+ * chart config the docs describe — put on in the same pre-connect, before
+ * the bridge hands the config to `new Chart()`. The builder writes the
+ * plugin's options under its id, which is where Chart.js scopes them; the
+ * plugin reads them back in its draw hook.
+ *
  * @see https://symfony.com/bundles/ux-chartjs/current/index.html — `chartjs:pre-connect`
+ * @see https://www.chartjs.org/docs/latest/developers/plugins.html — inline plugins: `new Chart(ctx, { plugins: [{ ... }] })`; "Plugins must define a unique id in order to be configurable"; options under `options.plugins.{plugin-id}`
+ * @see https://www.chartjs.org/docs/latest/api/interfaces/Plugin.html — `afterDatasetsDraw(chart, args, options)`
+ * @see https://www.chartjs.org/docs/latest/developers/api.html — `getDatasetMeta(index).data`, `isDatasetVisible(index)`
  */
 const TOKEN = /^var\(\s*(--[a-zA-Z0-9-]+)\s*\)$/;
+
+/** The id the builder writes the figures' options under: ChartBuilder::FIGURES_PLUGIN. */
+const FIGURES = 'figures';
+
+/** The gap between a bar's end and its figure, in canvas pixels. */
+const FIGURE_GAP = 6;
 
 /** The properties a colour can reach a dataset or a scale through. */
 const PAINTED = ['backgroundColor', 'borderColor', 'color', 'pointBackgroundColor', 'pointBorderColor'];
@@ -33,7 +50,10 @@ export default class extends Controller {
     connect() {
         this.swatches = new Map();
 
-        this.onPreConnect = (event) => this.paint(event.detail.config);
+        this.onPreConnect = (event) => {
+            this.paint(event.detail.config);
+            this.figure(event.detail.config);
+        };
         this.element.addEventListener('chartjs:pre-connect', this.onPreConnect);
 
         /* The theme is a class on <html>, and it is put there before the first
@@ -63,6 +83,59 @@ export default class extends Controller {
                 }
             }
         }
+    }
+
+    /**
+     * THE FIGURES PLUGIN, put on a chart whose options ask for one. Inline,
+     * so it is this chart's and no other's; identified, so its options are
+     * the block the builder wrote under the same id.
+     */
+    figure(config) {
+        if (!config.options?.plugins?.[FIGURES]) {
+            return;
+        }
+
+        const element = this.element;
+
+        config.plugins = [...(config.plugins ?? []), {
+            id: FIGURES,
+            afterDatasetsDraw(chart, args, options) {
+                const ctx = chart.ctx;
+                const ink = getComputedStyle(element);
+                const sideways = 'y' === chart.options.indexAxis;
+                const unit = options.unit ? ` ${options.unit}` : '';
+
+                ctx.save();
+                ctx.font = `600 10px ${ink.getPropertyValue('--font-mono').trim() || 'monospace'}`;
+                ctx.fillStyle = ink.color;
+
+                chart.data.datasets.forEach((dataset, index) => {
+                    if (!chart.isDatasetVisible(index) || 'line' === (dataset.type ?? chart.config.type)) {
+                        return;
+                    }
+
+                    chart.getDatasetMeta(index).data.forEach((bar, point) => {
+                        const value = dataset.data[point];
+                        if (null === value || undefined === value) {
+                            return;
+                        }
+
+                        const figure = Number(value).toFixed(options.precision ?? 0) + unit;
+                        if (sideways) {
+                            ctx.textAlign = 'left';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(figure, bar.x + FIGURE_GAP, bar.y);
+                        } else {
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'bottom';
+                            ctx.fillText(figure, bar.x, bar.y - FIGURE_GAP / 2);
+                        }
+                    });
+                });
+
+                ctx.restore();
+            },
+        }];
     }
 
     /**

@@ -42,6 +42,15 @@
 .chart-plate > .chart-box canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
 .chart-plate > .use { margin: 10px 2px 0; }
 
+/* THE CHIP LEGEND: the house pill under the box, one per series, coloured by
+   the category the shell's `data-cat` door resolves into `--cat` — so the pill
+   and the bar above it are the same token. The pill's shape is the shell's
+   and is not restated here; what the plate adds is the row and the ink.
+   Design: the legend under PL·09 in areas/kilimani/modules/patrols. */
+.chart-plate > .chart-legend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.chart-plate > .chart-legend > .chip[data-cat],
+.chart-plate > .chart-legend > .chip[style] { color: var(--cat); border-color: color-mix(in srgb, var(--cat) 45%, transparent); }
+
 /* NOBODY PUBLISHED A POINT. Not an empty box with axes — which reads as a
    measurement of nought — but a sentence, in the same dashed treatment
    every honest absence in this platform wears. */

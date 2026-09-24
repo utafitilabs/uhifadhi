@@ -80,7 +80,7 @@ final class PlateSubjectTest extends WebTestCase
         $area = $this->anArea();
         /** @var StationService $stations */
         $stations = static::getContainer()->get('test_public.area.stations');
-        $station = $stations->add($area, 'Seneto Gate Post', -29.75, -3.2);
+        $station = $stations->add($area, 'Eastgate Post', -29.75, -3.2);
 
         $subject = self::subjectIn($this->body('/areas/'.$area->getUuidString().'/stations/'.$station->getUuidString()));
 
@@ -127,7 +127,7 @@ final class PlateSubjectTest extends WebTestCase
         if ($posted) {
             /** @var StationService $stations */
             $stations = static::getContainer()->get('test_public.area.stations');
-            $stations->add($area, 'Seneto Gate Post', -29.75, -3.2);
+            $stations->add($area, 'Eastgate Post', -29.75, -3.2);
         }
 
         return self::subjectIn($this->body('/areas/'.$area->getUuidString().$tail));

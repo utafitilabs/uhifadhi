@@ -67,11 +67,11 @@ final class StationFigureContractTest extends TestCase
 
     public function testAStationRefCarriesWhatAProviderNeedsToFindItsRecords(): void
     {
-        $ref = new StationRef('01a0-station', '01a0-area', 'Seneto Gate Post');
+        $ref = new StationRef('01a0-station', '01a0-area', 'Eastgate Post');
 
         self::assertSame('01a0-station', $ref->stationUuid);
         self::assertSame('01a0-area', $ref->areaUuid);
-        self::assertSame('Seneto Gate Post', $ref->name);
+        self::assertSame('Eastgate Post', $ref->name);
     }
 
     /** A ref with no name is a ref no caption can print. */
@@ -85,7 +85,7 @@ final class StationFigureContractTest extends TestCase
     public function testARequestCarriesEveryStationOfTheAreaAndThePeriodAsked(): void
     {
         $request = new StationFigureRequest(
-            [new StationRef('s1', 'a1', 'Seneto'), new StationRef('s2', 'a1', 'Lerai')],
+            [new StationRef('s1', 'a1', 'Eastgate'), new StationRef('s2', 'a1', 'Fig Tree')],
             FigurePeriod::month(new \DateTimeImmutable('2026-08-14 10:00:00')),
         );
 

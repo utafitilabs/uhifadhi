@@ -34,7 +34,7 @@ final class StationCodeTest extends IntegrationTestCase
 {
     public function testThefirstPostOfAnAreaIsIssuedTheFirstCode(): void
     {
-        $station = $this->stations()->add($this->anArea(), 'Seneto Gate Post', -29.75, -3.2);
+        $station = $this->stations()->add($this->anArea(), 'Eastgate Post', -29.75, -3.2);
 
         self::assertSame('ST-01', $station->getCode());
     }
@@ -44,8 +44,8 @@ final class StationCodeTest extends IntegrationTestCase
         $first = $this->anArea('First Reserve');
         $second = $this->anArea('Second Reserve');
 
-        $this->stations()->add($first, 'Seneto Gate Post', -29.75, -3.2);
-        $next = $this->stations()->add($first, 'Lerai Ranger Station', -29.8, -3.2);
+        $this->stations()->add($first, 'Eastgate Post', -29.75, -3.2);
+        $next = $this->stations()->add($first, 'Fig Tree Ranger Station', -29.8, -3.2);
         $elsewhere = $this->stations()->add($second, 'Munge Camp', -29.6, -3.2);
 
         self::assertSame('ST-02', $next->getCode());
@@ -57,8 +57,8 @@ final class StationCodeTest extends IntegrationTestCase
     {
         $area = $this->anArea();
 
-        $given = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2, 'ST-07');
-        $next = $this->stations()->add($area, 'Lerai Ranger Station', -29.8, -3.2);
+        $given = $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2, 'ST-07');
+        $next = $this->stations()->add($area, 'Fig Tree Ranger Station', -29.8, -3.2);
 
         self::assertSame('ST-07', $given->getCode());
         self::assertSame('ST-08', $next->getCode());

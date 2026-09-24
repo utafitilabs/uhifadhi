@@ -33,7 +33,7 @@ final class FakePersonPostings implements PersonPostingProviderInterface
         $out = [];
         foreach ($userUuids as $uuid) {
             $out[$uuid] = \in_array($uuid, self::$stationed, true)
-                ? [new PersonPosting(self::STATION, 'Seneto Gate Post', 'ST-01', self::AREA, 'Sample Area', 'Crater', new \DateTimeImmutable('2024-01-14'), true, '/areas/'.self::AREA.'/stations/'.self::STATION)]
+                ? [new PersonPosting(self::STATION, 'Eastgate Post', 'ST-01', self::AREA, 'Sample Area', 'Crater', new \DateTimeImmutable('2024-01-14'), true, '/areas/'.self::AREA.'/stations/'.self::STATION)]
                 : [];
         }
 

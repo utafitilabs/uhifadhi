@@ -45,11 +45,11 @@ final class ZoneStationServiceTest extends IntegrationTestCase
         $west = $this->aZone($area, 'West', self::A_WEST_HALF);
         $east = $this->aZone($area, 'East', self::A_EAST_HALF);
 
-        $seneto = $this->aStation($area, 'Seneto Gate Post', -29.75);
-        $this->aStation($area, 'Lerai Ranger Station', -29.8);
+        $eastgate = $this->aStation($area, 'Eastgate Post', -29.75);
+        $this->aStation($area, 'Fig Tree Ranger Station', -29.8);
         $this->aStation($area, 'Munge Camp', -29.25);
-        $this->postings()->post($seneto, $this->aPerson('J. Mollel'), PostingSource::WrittenHere);
-        $this->postings()->post($seneto, $this->aPerson('T. Ndosi'), PostingSource::FromTheirPage);
+        $this->postings()->post($eastgate, $this->aPerson('J. Mollel'), PostingSource::WrittenHere);
+        $this->postings()->post($eastgate, $this->aPerson('T. Ndosi'), PostingSource::FromTheirPage);
 
         $staffing = $this->service()->staffing($area);
 
@@ -73,7 +73,7 @@ final class ZoneStationServiceTest extends IntegrationTestCase
     {
         $area = $this->anArea();
         $zone = $this->aZone($area, 'West', self::A_WEST_HALF);
-        $station = $this->aStation($area, 'Seneto Gate Post', -29.75);
+        $station = $this->aStation($area, 'Eastgate Post', -29.75);
 
         $lead = $this->postings()->post($station, $this->aPerson('J. Mollel'), PostingSource::WrittenHere);
         $this->postings()->appointLeader($lead);
@@ -82,7 +82,7 @@ final class ZoneStationServiceTest extends IntegrationTestCase
         $cards = $this->service()->cardsFor($zone);
 
         self::assertCount(1, $cards);
-        self::assertSame('Seneto Gate Post', $cards[0]->name);
+        self::assertSame('Eastgate Post', $cards[0]->name);
         self::assertSame('ST-01', $cards[0]->code);
         self::assertSame(2, $cards[0]->posted);
         self::assertSame('J. Mollel', $cards[0]->leaderName);
@@ -110,7 +110,7 @@ final class ZoneStationServiceTest extends IntegrationTestCase
     {
         $area = $this->anArea();
         $zone = $this->aZone($area, 'West', self::A_WEST_HALF);
-        $station = $this->aStation($area, 'Seneto Gate Post', -29.75);
+        $station = $this->aStation($area, 'Eastgate Post', -29.75);
 
         for ($i = 0; $i < StationCard::FACES + 3; ++$i) {
             $this->postings()->post($station, $this->aPerson('R. Ranger'.$i), PostingSource::WrittenHere);

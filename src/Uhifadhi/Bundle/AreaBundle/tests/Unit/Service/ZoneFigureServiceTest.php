@@ -41,7 +41,7 @@ use Uhifadhi\Contracts\Kpi\ZoneRef;
 final class ZoneFigureServiceTest extends TestCase
 {
     private const string CRATER = '01a0-crater';
-    private const string ENDULEN = '01a0-endulen';
+    private const string SOUTHERN_VALLEY = '01a0-southern-valley';
 
     public function testItAsksEveryProviderWhoseModuleTheAreaRuns(): void
     {
@@ -79,7 +79,7 @@ final class ZoneFigureServiceTest extends TestCase
             running: ['patrols'],
         );
 
-        self::assertSame([], $set->forZone(self::ENDULEN));
+        self::assertSame([], $set->forZone(self::SOUTHERN_VALLEY));
     }
 
     /**
@@ -121,7 +121,7 @@ final class ZoneFigureServiceTest extends TestCase
         );
 
         self::assertSame(82.0, $set->covered(self::CRATER)?->value);
-        self::assertNull($set->covered(self::ENDULEN));
+        self::assertNull($set->covered(self::SOUTHERN_VALLEY));
     }
 
     /** Every provider is asked about the whole set at once, never zone by zone. */
@@ -132,7 +132,7 @@ final class ZoneFigureServiceTest extends TestCase
         $this->collect([$patrols], running: ['patrols']);
 
         self::assertSame(1, $patrols->calls);
-        self::assertSame([self::CRATER, self::ENDULEN], $patrols->lastRequest?->zoneUuids());
+        self::assertSame([self::CRATER, self::SOUTHERN_VALLEY], $patrols->lastRequest?->zoneUuids());
     }
 
     /** Nothing is asked when there are no zones: an unzoned area has no question. */
@@ -159,7 +159,7 @@ final class ZoneFigureServiceTest extends TestCase
     private function collect(array $providers, array $running): ZoneFigureSet
     {
         return new ZoneFigureService($providers)->collect(
-            [new ZoneRef(self::CRATER, '01a0-area', 'Crater'), new ZoneRef(self::ENDULEN, '01a0-area', 'Endulen')],
+            [new ZoneRef(self::CRATER, '01a0-area', 'Crater'), new ZoneRef(self::SOUTHERN_VALLEY, '01a0-area', 'Southern Valley')],
             FigurePeriod::month(new \DateTimeImmutable('2026-08-14')),
             static fn (string $slug): bool => \in_array($slug, $running, true),
         );

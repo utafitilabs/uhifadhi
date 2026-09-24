@@ -17,7 +17,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Model;
  * A NAME AS IT ARRIVES IN A FILE, AND AS THE PRODUCT WILL SAY IT.
  *
  * GIS exports shout. A shapefile's attribute table is very often upper-case
- * throughout — CRATER, NAINOKANOKA, OLBALBAL — because that is how the tool
+ * throughout — CRATER, HIGHLANDS, LAKESHORE — because that is how the tool
  * that wrote it writes, not because anybody decided the zone is called that.
  * Imported straight, those names shout everywhere the product says them: in
  * the register, on the plate's key, in the sidebar's menu, in a sentence in
@@ -25,7 +25,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Model;
  * names all caps, even their menu items.
  *
  * SO A NAME THAT IS ENTIRELY UPPER-CASE IS TITLE-CASED, and nothing else is
- * touched. A mixed-case name has been written BY somebody — "Lerai Forest",
+ * touched. A mixed-case name has been written BY somebody — "Forest Edge",
  * "du Toit's Kloof", "NCA Highlands" — and the one thing worse than a
  * shouting name is a corrected one that is now wrong. The test is whether the
  * name contains a lower-case letter: one is enough to say a person chose the
@@ -59,7 +59,7 @@ final readonly class ImportedName
 
     /**
      * FIRST LETTER OF EVERY WORD, and a word begins after a space, a hyphen
-     * or an apostrophe — "OL DOINYO" is two words, "MBULU-KARATU" is two, and
+     * or an apostrophe — "OL DOINYO" is two words, "RIDGE-ESCARPMENT" is two, and
      * "O'BRIEN" is one word with two capitals in it.
      *
      * `mb_convert_case` with MB_CASE_TITLE would not do: it treats an

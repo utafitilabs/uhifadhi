@@ -86,7 +86,7 @@ final class ZoneFigureContractTest extends TestCase
     public function testARequestCarriesEveryZoneOfTheAreaAndThePeriodAsked(): void
     {
         $request = new ZoneFigureRequest(
-            [new ZoneRef('z1', 'a1', 'Crater'), new ZoneRef('z2', 'a1', 'Endulen')],
+            [new ZoneRef('z1', 'a1', 'Crater'), new ZoneRef('z2', 'a1', 'Southern Valley')],
             FigurePeriod::month(new \DateTimeImmutable('2026-08-14 10:00:00')),
         );
 

@@ -21,7 +21,7 @@ namespace Uhifadhi\Contracts\Shell;
  * nothing about the viewer, so the source resolves the current request itself —
  * which a host or a team-aware bundle is already positioned to do — and hands
  * back an already-composed {@see UserBadge}: a name, its initials and an
- * optional context line like "NCAA · operator".
+ * optional context line like "UCA · operator".
  *
  * IT HANDS OVER STRINGS, NOT AN ACCOUNT. The shell requires no module and above
  * all not the package that defines a user, so this contract cannot traffic in a
@@ -32,7 +32,7 @@ namespace Uhifadhi\Contracts\Shell;
  *
  * WHERE THE RICHER LINE COMES FROM. A bare source that knows only a name builds
  * a badge with {@see UserBadge::fromName()} and gets derived initials and no
- * context line. The organization-and-role line ("NCAA · operator"), a chosen
+ * context line. The organization-and-role line ("UCA · operator"), a chosen
  * avatar, a tier label — that is team/host knowledge, and a team-aware source
  * supplies it by building the value object directly. The shell draws whatever
  * arrives and knows none of it.

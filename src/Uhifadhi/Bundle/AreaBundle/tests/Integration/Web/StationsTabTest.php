@@ -47,7 +47,7 @@ final class StationsTabTest extends WebTestCase
 
         self::assertStringContainsString('Leaders appointed', $body);
         self::assertStringContainsString('People stationed', $body);
-        self::assertStringContainsString('Seneto Gate Post', $body);
+        self::assertStringContainsString('Eastgate Post', $body);
         self::assertStringContainsString('ST-01', $body);
         self::assertStringContainsString('Western Sector', $body);
         self::assertStringContainsString('map-plate', $body);
@@ -134,7 +134,7 @@ final class StationsTabTest extends WebTestCase
         $unled = $this->stations()->add($area, 'Eastern Outpost', -29.25, -3.2);
         $this->postings()->post($unled, $this->aPerson('B.', 'Mwita'), PostingSource::WrittenHere);
 
-        self::assertSame(['Seneto Gate Post'], $this->listed($this->tab($area).'?lead=yes'));
+        self::assertSame(['Eastgate Post'], $this->listed($this->tab($area).'?lead=yes'));
         self::assertSame(['Eastern Outpost'], $this->listed($this->tab($area).'?lead=no'));
         // And the chip is on the bar, offering both answers.
         $bar = $this->body($this->tab($area));
@@ -149,7 +149,7 @@ final class StationsTabTest extends WebTestCase
         [$area] = $this->aStaffedPost();
         $this->stations()->add($area, 'Eastern Outpost', -29.25, -3.2);
 
-        self::assertSame(['Seneto Gate Post'], $this->listed($this->tab($area).'?zone='.$this->zoneUuid($area)));
+        self::assertSame(['Eastgate Post'], $this->listed($this->tab($area).'?zone='.$this->zoneUuid($area)));
         self::assertSame(['Eastern Outpost'], $this->listed($this->tab($area).'?posted=no'));
         self::assertSame(['Eastern Outpost'], $this->listed($this->tab($area).'?q=eastern'));
     }
@@ -228,7 +228,7 @@ final class StationsTabTest extends WebTestCase
     {
         $area = $this->anArea();
         $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
-        $station = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
+        $station = $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2);
 
         $lead = $this->postings()->post($station, $this->aPerson('J.', 'Mollel'), PostingSource::WrittenHere);
         $this->postings()->appointLeader($lead);

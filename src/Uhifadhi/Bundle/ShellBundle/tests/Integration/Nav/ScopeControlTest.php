@@ -48,8 +48,8 @@ final class ScopeControlTest extends ContractTestCase
     {
         FixtureScopeSource::$scopes = [
             Scope::organization(),
-            Scope::area('area-1', 'Ngorongoro'),
-            Scope::area('area-2', 'Pololeti Game Reserve'),
+            Scope::area('area-1', 'Kilimani Crater'),
+            Scope::area('area-2', 'Mbuyu Game Reserve'),
         ];
 
         $html = $this->render('@Shell/_scope_control.html.twig', [
@@ -59,7 +59,7 @@ final class ScopeControlTest extends ContractTestCase
         $crawler = new Crawler($html);
 
         self::assertSame(
-            ['Organization — all areas', 'Ngorongoro', 'Pololeti Game Reserve'],
+            ['Organization — all areas', 'Kilimani Crater', 'Mbuyu Game Reserve'],
             $crawler->filter('.ov-ctl option')->each(static fn (Crawler $n): string => trim($n->text())),
         );
         self::assertSame('Scope', trim($crawler->filter('.ov-ctl .k')->text()));
@@ -72,7 +72,7 @@ final class ScopeControlTest extends ContractTestCase
      */
     public function testTheControlIsARealFormAndNotAScriptedOne(): void
     {
-        FixtureScopeSource::$scopes = [Scope::organization(), Scope::area('area-1', 'Ngorongoro')];
+        FixtureScopeSource::$scopes = [Scope::organization(), Scope::area('area-1', 'Kilimani Crater')];
 
         $crawler = new Crawler($this->render('@Shell/_scope_control.html.twig', [
             'scopes' => $this->scopes()->available(),
@@ -92,7 +92,7 @@ final class ScopeControlTest extends ContractTestCase
      */
     public function testAViewerWithOneSliceIsOfferedNoControl(): void
     {
-        FixtureScopeSource::$scopes = [Scope::area('area-1', 'Ngorongoro')];
+        FixtureScopeSource::$scopes = [Scope::area('area-1', 'Kilimani Crater')];
 
         $html = $this->render('@Shell/_scope_control.html.twig', [
             'scopes' => $this->scopes()->available(),
@@ -114,7 +114,7 @@ final class ScopeControlTest extends ContractTestCase
     /** The first slice is the one a page opens on. */
     public function testThePageOpensOnTheFirstSliceOffered(): void
     {
-        FixtureScopeSource::$scopes = [Scope::organization(), Scope::area('area-1', 'Ngorongoro')];
+        FixtureScopeSource::$scopes = [Scope::organization(), Scope::area('area-1', 'Kilimani Crater')];
 
         self::assertTrue($this->scopes()->current()?->isOrganization());
     }
@@ -122,8 +122,8 @@ final class ScopeControlTest extends ContractTestCase
     /** The organization and an area are told apart by what they name, never by a label. */
     public function testAScopeIsComparedByWhatItNames(): void
     {
-        self::assertTrue(Scope::area('a', 'Ngorongoro')->is(Scope::area('a', 'renamed since')));
-        self::assertFalse(Scope::area('a', 'Ngorongoro')->is(Scope::organization()));
+        self::assertTrue(Scope::area('a', 'Kilimani Crater')->is(Scope::area('a', 'renamed since')));
+        self::assertFalse(Scope::area('a', 'Kilimani Crater')->is(Scope::organization()));
         self::assertTrue(Scope::organization('all areas')->is(Scope::organization('every area')));
     }
 }

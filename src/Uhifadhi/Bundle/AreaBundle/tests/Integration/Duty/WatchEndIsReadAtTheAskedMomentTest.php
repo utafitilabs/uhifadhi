@@ -107,7 +107,7 @@ final class WatchEndIsReadAtTheAskedMomentTest extends IntegrationTestCase
 
         $stations = static::getContainer()->get('test_public.area.stations');
         \assert($stations instanceof StationService);
-        $station = $stations->add($area, 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
+        $station = $stations->add($area, 'Eastgate Post', -29.75, -3.2, 'ST-01');
         $station->setCatchmentM(500);
         $this->em->flush();
 

@@ -68,7 +68,7 @@ final class UserBadgeSourceInterfaceTest extends TestCase
         $named = new class implements UserBadgeSourceInterface {
             public function badge(): UserBadge
             {
-                return UserBadge::fromName('N. Kileo', 'NCAA · operator');
+                return UserBadge::fromName('N. Kileo', 'UCA · operator');
             }
         };
 

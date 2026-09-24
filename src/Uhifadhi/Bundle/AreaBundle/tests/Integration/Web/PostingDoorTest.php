@@ -145,7 +145,7 @@ final class PostingDoorTest extends WebTestCase
     private function anEmptyPost(): array
     {
         $area = $this->anArea();
-        $station = $this->stations()->add($area, 'Naiyobi Outpost', -29.75, -3.2, 'ST-08');
+        $station = $this->stations()->add($area, 'Ridge Outpost', -29.75, -3.2, 'ST-08');
 
         return [$area, $station];
     }

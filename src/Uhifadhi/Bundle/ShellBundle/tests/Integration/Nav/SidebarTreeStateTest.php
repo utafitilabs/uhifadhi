@@ -54,7 +54,7 @@ final class SidebarTreeStateTest extends ContractTestCase
      * THE SIDEBAR THE FRAMES ARE DRAWN FROM — every section the design shows,
      * with the path to `$at` marked the way a source marks it.
      *
-     * `$at` is a path of labels, "Areas/Ngorongoro/Modules/Roster/Today". A
+     * `$at` is a path of labels, "Areas/Kilimani Crater/Modules/Roster/Today". A
      * source lights every rung of it, because the shell's own invariant is one
      * lit row among SIBLINGS: the path is what a source can see, and turning
      * it into one ground and a line of ink is the shell's job.
@@ -70,8 +70,8 @@ final class SidebarTreeStateTest extends ContractTestCase
         HostKernel::$navSources = [
             'observatory' => new NavSection('Observatory', [
                 new NavItem(label: 'Areas', url: '/areas', icon: 'shell:map', current: $this->lit('Areas'), children: [
-                    $this->area('Ngorongoro', true),
-                    $this->area('Pololeti', false),
+                    $this->area('Kilimani Crater', true),
+                    $this->area('Olkeju', false),
                 ]),
                 new NavItem(label: 'Performance', url: '/performance', icon: 'shell:trending-up', current: $this->lit('Performance'), children: [
                     new NavItem(label: 'Overview', url: '/performance', current: $this->lit('Performance/Overview')),
@@ -223,33 +223,33 @@ final class SidebarTreeStateTest extends ContractTestCase
     /** FRAME A — on an area overview. */
     public function testFrameAnAreaOverview(): void
     {
-        $this->sidebarAt('Areas/Ngorongoro/Overview');
+        $this->sidebarAt('Areas/Kilimani Crater/Overview');
         $crawler = $this->crawl('@fixtures/body_only_page.html.twig');
 
         self::assertSame('Overview', $this->theRowTheyAreOn($crawler));
-        self::assertSame(['Areas', 'Ngorongoro'], $this->thePathAbove($crawler));
+        self::assertSame(['Areas', 'Kilimani Crater'], $this->thePathAbove($crawler));
 
         // The area is open to its tabs. Modules is a row, not a list: its
         // modules are one rung too deep. The other area is shut to its name.
-        self::assertSame(['Areas', 'Areas/Ngorongoro'], $this->whatIsOpen($crawler));
+        self::assertSame(['Areas', 'Areas/Kilimani Crater'], $this->whatIsOpen($crawler));
     }
 
     /** FRAME B — on a module's own screen, four rungs down. */
     public function testFrameAModuleScreen(): void
     {
-        $this->sidebarAt('Areas/Ngorongoro/Modules/Roster/Today');
+        $this->sidebarAt('Areas/Kilimani Crater/Modules/Roster/Today');
         $crawler = $this->crawl('@fixtures/body_only_page.html.twig');
 
         self::assertSame('Today', $this->theRowTheyAreOn($crawler));
-        self::assertSame(['Areas', 'Ngorongoro', 'Modules', 'Roster'], $this->thePathAbove($crawler));
+        self::assertSame(['Areas', 'Kilimani Crater', 'Modules', 'Roster'], $this->thePathAbove($crawler));
 
         // Four rungs open, because the viewer is standing on the fourth.
         // Patrols and Incidents stay shut: siblings of the path, not on it.
         self::assertSame([
             'Areas',
-            'Areas/Ngorongoro',
-            'Areas/Ngorongoro/Modules',
-            'Areas/Ngorongoro/Modules/Roster',
+            'Areas/Kilimani Crater',
+            'Areas/Kilimani Crater/Modules',
+            'Areas/Kilimani Crater/Modules/Roster',
         ], $this->whatIsOpen($crawler));
 
         // And the leaf is the fifth rung, drawn with no marker of its own.
@@ -336,7 +336,7 @@ final class SidebarTreeStateTest extends ContractTestCase
      */
     public function testFrameTheCollapsedRailMarksTheSectionHoldingTheCurrentRow(): void
     {
-        $this->sidebarAt('Areas/Ngorongoro/Modules/Roster/Today');
+        $this->sidebarAt('Areas/Kilimani Crater/Modules/Roster/Today');
         $crawler = $this->crawl('@fixtures/body_only_page.html.twig');
 
         $sections = $crawler->filter('nav.nav > .nav-item')->each(
@@ -361,14 +361,14 @@ final class SidebarTreeStateTest extends ContractTestCase
      */
     public function testTheRowTheViewerIsOnShowsItsOwnChildrenAndNotItsGrandchildren(): void
     {
-        $this->sidebarAt('Areas/Ngorongoro/Modules');
+        $this->sidebarAt('Areas/Kilimani Crater/Modules');
         $crawler = $this->crawl('@fixtures/body_only_page.html.twig');
 
         self::assertSame('Modules', $this->theRowTheyAreOn($crawler));
         self::assertSame([
             'Areas',
-            'Areas/Ngorongoro',
-            'Areas/Ngorongoro/Modules',
+            'Areas/Kilimani Crater',
+            'Areas/Kilimani Crater/Modules',
         ], $this->whatIsOpen($crawler));
 
         // One rung, and no further: the three module rows are drawn, and

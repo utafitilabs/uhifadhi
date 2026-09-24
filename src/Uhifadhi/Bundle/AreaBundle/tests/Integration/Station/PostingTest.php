@@ -121,15 +121,15 @@ final class PostingTest extends IntegrationTestCase
     public function testSomebodyStandingAtOnePostIsNotPostedToASecond(): void
     {
         $area = $this->anArea();
-        $first = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
-        $second = $this->stations()->add($area, 'Lerai Ranger Station', -29.7, -3.2);
+        $first = $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2);
+        $second = $this->stations()->add($area, 'Fig Tree Ranger Station', -29.7, -3.2);
         $person = $this->aPerson('J. Mollel');
         $this->postings()->post($first, $person, PostingSource::WrittenHere);
 
         $this->expectException(PostingException::class);
         // The refusal names where they already stand: the person asking has
         // almost always forgotten rather than meant it.
-        $this->expectExceptionMessageMatches('/posted to Seneto Gate Post/');
+        $this->expectExceptionMessageMatches('/posted to Eastgate Post/');
 
         $this->postings()->post($second, $person, PostingSource::WrittenHere);
     }
@@ -137,8 +137,8 @@ final class PostingTest extends IntegrationTestCase
     /** AND NOT TO A POST IN ANOTHER AREA EITHER — one posting is one posting. */
     public function testSomebodyStandingInOneAreaIsNotPostedInAnother(): void
     {
-        $north = $this->stations()->add($this->anArea('Northern Reserve'), 'Seneto Gate Post', -29.75, -3.2);
-        $south = $this->stations()->add($this->anArea('Southern Reserve'), 'Endulen Ranger Station', -29.6, -3.4);
+        $north = $this->stations()->add($this->anArea('Northern Reserve'), 'Eastgate Post', -29.75, -3.2);
+        $south = $this->stations()->add($this->anArea('Southern Reserve'), 'Riverbend Ranger Station', -29.6, -3.4);
         $person = $this->aPerson('A. Sanka');
         $this->postings()->post($north, $person, PostingSource::WrittenHere);
 
@@ -155,8 +155,8 @@ final class PostingTest extends IntegrationTestCase
     public function testEndingThePostingFreesThePersonForTheNextOne(): void
     {
         $area = $this->anArea();
-        $first = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
-        $second = $this->stations()->add($area, 'Lerai Ranger Station', -29.7, -3.2);
+        $first = $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2);
+        $second = $this->stations()->add($area, 'Fig Tree Ranger Station', -29.7, -3.2);
         $person = $this->aPerson('M. Kisanga');
         $this->postings()->end($this->postings()->post($first, $person, PostingSource::WrittenHere));
 
@@ -218,8 +218,8 @@ final class PostingTest extends IntegrationTestCase
     public function testEachStationHasItsOwnLeader(): void
     {
         $area = $this->anArea();
-        $first = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
-        $second = $this->stations()->add($area, 'Lerai Ranger Station', -29.7, -3.2);
+        $first = $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2);
+        $second = $this->stations()->add($area, 'Fig Tree Ranger Station', -29.7, -3.2);
 
         $a = $this->postings()->post($first, $this->aPerson('J. Mollel'), PostingSource::WrittenHere);
         $b = $this->postings()->post($second, $this->aPerson('A. Sanka'), PostingSource::WrittenHere);
@@ -305,7 +305,7 @@ final class PostingTest extends IntegrationTestCase
 
     private function aStation(): Station
     {
-        return $this->stations()->add($this->anArea(), 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
+        return $this->stations()->add($this->anArea(), 'Eastgate Post', -29.75, -3.2, 'ST-01');
     }
 
     private function aPerson(string $name): HostPerson

@@ -49,7 +49,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
         $crawler = $this->visit('/team/assignments');
 
         self::assertSame(
-            ['Seneto Gate Post · ST-01 · Crater · 2 stationed', 'Naiyobi Outpost · ST-08 · Naiyobi · nobody stationed'],
+            ['Eastgate Post · ST-01 · Crater · 2 stationed', 'Ridge Outpost · ST-08 · Ridge · nobody stationed'],
             $crawler->filter('tr.sxgrp td')->each(static fn (Crawler $c): string => trim(preg_replace('/\s+/', ' ', $c->text()) ?? '')),
         );
 
@@ -107,7 +107,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
         $options = $this->visit('/team/assignments')->filter('.lfilt details')->eq(0)->filter('.i-ddopt');
 
         self::assertSame(
-            ['all areas', 'Ngorongoro', 'Amboni Caves'],
+            ['all areas', 'Kilimani Crater', 'Sekenke'],
             $options->each(static fn (Crawler $c): string => trim($c->filter('.i-ddopt-l')->text())),
         );
         self::assertSame('0', $options->last()->filter('.i-ddopt-n')->text());
@@ -134,8 +134,8 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
             $this->visit('/team/assignments?q=mollel')->filter('table.tbl tbody')->text(),
         );
         self::assertStringContainsString(
-            'Naiyobi',
-            $this->visit('/team/assignments?q=naiyobi')->filter('table.tbl tbody')->text(),
+            'Ridge',
+            $this->visit('/team/assignments?q=ridge')->filter('table.tbl tbody')->text(),
         );
     }
 
@@ -145,7 +145,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
         $this->ground();
 
         self::assertSame(
-            ['Naiyobi Outpost · ST-08 · Naiyobi · nobody stationed'],
+            ['Ridge Outpost · ST-08 · Ridge · nobody stationed'],
             $this->visit('/team/assignments?posted=no')->filter('tr.sxgrp td')
                 ->each(static fn (Crawler $c): string => trim(preg_replace('/\s+/', ' ', $c->text()) ?? '')),
         );
@@ -206,7 +206,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
     }
 
     /**
-     * The ground, and the people standing on it: two at Seneto — one leading —
+     * The ground, and the people standing on it: two at Eastgate — one leading —
      * and a station with nobody, in an installation whose second area has no
      * station at all.
      */
@@ -226,16 +226,16 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
         $this->administrator();
 
         FakeStationDirectory::$areas = [
-            new DirectoryArea('area-ngorongoro', 'Ngorongoro'),
-            new DirectoryArea('area-amboni', 'Amboni Caves'),
+            new DirectoryArea('area-kilimani', 'Kilimani Crater'),
+            new DirectoryArea('area-sekenke', 'Sekenke'),
         ];
         FakeStationDirectory::$stations = [
             new PostedStation(
                 uuid: 'st-01',
-                name: 'Seneto Gate Post',
+                name: 'Eastgate Post',
                 code: 'ST-01',
-                areaUuid: 'area-ngorongoro',
-                areaName: 'Ngorongoro',
+                areaUuid: 'area-kilimani',
+                areaName: 'Kilimani Crater',
                 zoneName: 'Crater',
                 posts: [
                     new StationPost(self::uuid($joseph), new \DateTimeImmutable('2026-01-04'), true),
@@ -244,11 +244,11 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
             ),
             new PostedStation(
                 uuid: 'st-08',
-                name: 'Naiyobi Outpost',
+                name: 'Ridge Outpost',
                 code: 'ST-08',
-                areaUuid: 'area-ngorongoro',
-                areaName: 'Ngorongoro',
-                zoneName: 'Naiyobi',
+                areaUuid: 'area-kilimani',
+                areaName: 'Kilimani Crater',
+                zoneName: 'Ridge',
             ),
         ];
     }

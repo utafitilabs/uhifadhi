@@ -217,8 +217,8 @@ asks nothing. `GET /api/areas/mine` is that cache:
       "name": "Northern Conservation Reserve",
       "areaKm2": 9903.4,                     // ST_Area on the spheroid, to a tenth
       "stations": [                          // the area's posts, in the /stations?near= shape
-        { "uuid": "0192f3c2-…", "name": "Seneto Gate Post", "code": "ST-01",
-          "lat": -3.2, "lon": 35.5, "catchmentM": 300 }
+        { "uuid": "0192f3c2-…", "name": "Eastgate Post", "code": "ST-01",
+          "lat": -3.2, "lon": -29.5, "catchmentM": 300 }
       ],
       "team": [{ "id": "sl-0142", "name": "…" }],
       "boundary": { "type": "MultiPolygon", "coordinates": [ /* lon, lat */ ] },
@@ -292,7 +292,7 @@ may claim.
 // 200 — /stations
 {
   "stations": [
-    { "uuid": "…", "name": "North Gate Post", "code": "ST-01", "lat": -3.2, "lon": 35.5, "catchmentM": 300 }
+    { "uuid": "…", "name": "North Gate Post", "code": "ST-01", "lat": -3.2, "lon": -29.5, "catchmentM": 300 }
   ]
 }
 ```

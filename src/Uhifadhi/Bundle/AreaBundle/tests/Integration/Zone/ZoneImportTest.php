@@ -261,11 +261,11 @@ final class ZoneImportTest extends IntegrationTestCase
         $result = $this->import($area, $this->collection([
             $this->feature(['name' => 'CRATER'], $this->squareAt(-29.9)),
             $this->feature(['name' => 'OL DOINYO LENGAI'], $this->squareAt(-29.7)),
-            $this->feature(['name' => 'Lerai Forest'], $this->squareAt(-29.5)),
+            $this->feature(['name' => 'Forest Edge'], $this->squareAt(-29.5)),
             $this->feature(['name' => 'NCA Highlands'], $this->squareAt(-29.3)),
         ]));
 
-        self::assertSame(['Crater', 'Ol Doinyo Lengai', 'Lerai Forest', 'NCA Highlands'], $result->added);
+        self::assertSame(['Crater', 'Ol Doinyo Lengai', 'Forest Edge', 'NCA Highlands'], $result->added);
     }
 
     /** @return list<list<list<float>>> */

@@ -41,46 +41,46 @@ use Uhifadhi\Contracts\Kpi\StationRef;
 #[CoversClass(StationFigureSet::class)]
 final class StationFigureServiceTest extends TestCase
 {
-    private const string SENETO = '01a0-seneto';
-    private const string LERAI = '01a0-lerai';
+    private const string EASTGATE = '01a0-eastgate';
+    private const string FIG_TREE = '01a0-fig-tree';
 
     public function testItAsksEveryProviderWhoseModuleTheAreaRuns(): void
     {
         $set = $this->collect(
             providers: [
-                $this->provider('patrols', [self::SENETO => [$this->figure('patrols', 'Patrols', 17.0)]]),
-                $this->provider('incidents', [self::SENETO => [$this->figure('incidents', 'Incidents', 6.0)]]),
+                $this->provider('patrols', [self::EASTGATE => [$this->figure('patrols', 'Patrols', 17.0)]]),
+                $this->provider('incidents', [self::EASTGATE => [$this->figure('incidents', 'Incidents', 6.0)]]),
             ],
             running: ['patrols', 'incidents'],
         );
 
-        self::assertCount(2, $set->forStation(self::SENETO));
+        self::assertCount(2, $set->forStation(self::EASTGATE));
         self::assertSame(['patrols', 'incidents'], array_map(
             static fn (DepartmentKpi $k): string => $k->key,
-            $set->forStation(self::SENETO),
+            $set->forStation(self::EASTGATE),
         ));
     }
 
     /** A module parked in this area contributes nothing here, and is not asked. */
     public function testAParkedModuleIsNotAsked(): void
     {
-        $patrols = $this->provider('patrols', [self::SENETO => [$this->figure('patrols', 'Patrols', 17.0)]]);
-        $incidents = $this->provider('incidents', [self::SENETO => [$this->figure('incidents', 'Incidents', 6.0)]]);
+        $patrols = $this->provider('patrols', [self::EASTGATE => [$this->figure('patrols', 'Patrols', 17.0)]]);
+        $incidents = $this->provider('incidents', [self::EASTGATE => [$this->figure('incidents', 'Incidents', 6.0)]]);
 
         $set = $this->collect([$patrols, $incidents], running: ['patrols']);
 
-        self::assertCount(1, $set->forStation(self::SENETO));
+        self::assertCount(1, $set->forStation(self::EASTGATE));
         self::assertFalse($incidents->asked);
     }
 
     public function testAZoneNoProviderSpokeAboutHasNoFigures(): void
     {
         $set = $this->collect(
-            [$this->provider('patrols', [self::SENETO => [$this->figure('patrols', 'Patrols', 17.0)]])],
+            [$this->provider('patrols', [self::EASTGATE => [$this->figure('patrols', 'Patrols', 17.0)]])],
             running: ['patrols'],
         );
 
-        self::assertSame([], $set->forStation(self::LERAI));
+        self::assertSame([], $set->forStation(self::FIG_TREE));
     }
 
     /**
@@ -92,14 +92,14 @@ final class StationFigureServiceTest extends TestCase
         $set = $this->collect([], running: []);
 
         self::assertTrue($set->isEmpty());
-        self::assertSame([], $set->forStation(self::SENETO));
+        self::assertSame([], $set->forStation(self::EASTGATE));
     }
 
     /** One provider with figures is enough for the set not to be empty. */
     public function testASetWithAnyFigureIsNotEmpty(): void
     {
         $set = $this->collect(
-            [$this->provider('patrols', [self::SENETO => [$this->figure('patrols', 'Patrols', 17.0)]])],
+            [$this->provider('patrols', [self::EASTGATE => [$this->figure('patrols', 'Patrols', 17.0)]])],
             running: ['patrols'],
         );
 
@@ -114,16 +114,16 @@ final class StationFigureServiceTest extends TestCase
     public function testTheDockIsTheHeadlineFigures(): void
     {
         $set = $this->collect(
-            [$this->provider('patrols', [self::SENETO => [
+            [$this->provider('patrols', [self::EASTGATE => [
                 $this->figure('something-else', 'Distance', 412.0),
                 $this->figure(StationFigureProviderInterface::HEADLINE, 'Patrols', 23.0),
             ]])],
             running: ['patrols'],
         );
 
-        self::assertCount(1, $set->dockFor(self::SENETO));
-        self::assertSame('Patrols', $set->dockFor(self::SENETO)[0]->label);
-        self::assertSame([], $set->dockFor(self::LERAI));
+        self::assertCount(1, $set->dockFor(self::EASTGATE));
+        self::assertSame('Patrols', $set->dockFor(self::EASTGATE)[0]->label);
+        self::assertSame([], $set->dockFor(self::FIG_TREE));
     }
 
     /** Every provider is asked about the whole set at once, never zone by zone. */
@@ -134,7 +134,7 @@ final class StationFigureServiceTest extends TestCase
         $this->collect([$patrols], running: ['patrols']);
 
         self::assertSame(1, $patrols->calls);
-        self::assertSame([self::SENETO, self::LERAI], $patrols->lastRequest?->stationUuids());
+        self::assertSame([self::EASTGATE, self::FIG_TREE], $patrols->lastRequest?->stationUuids());
     }
 
     /** Nothing is asked when there are no zones: an unzoned area has no question. */
@@ -161,7 +161,7 @@ final class StationFigureServiceTest extends TestCase
     private function collect(array $providers, array $running): StationFigureSet
     {
         return new StationFigureService($providers)->collect(
-            [new StationRef(self::SENETO, '01a0-area', 'Seneto Gate Post'), new StationRef(self::LERAI, '01a0-area', 'Lerai Ranger Post')],
+            [new StationRef(self::EASTGATE, '01a0-area', 'Eastgate Post'), new StationRef(self::FIG_TREE, '01a0-area', 'Fig Tree Ranger Post')],
             FigurePeriod::month(new \DateTimeImmutable('2026-08-14')),
             static fn (string $slug): bool => \in_array($slug, $running, true),
         );

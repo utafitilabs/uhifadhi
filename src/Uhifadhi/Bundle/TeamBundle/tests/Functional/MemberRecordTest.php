@@ -453,11 +453,11 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     {
         $this->withSuccessor();
         $sergeant = $this->position('Sergeant', ['surveys.read']);
-        $ngorongoro = $this->area('Ngorongoro');
+        $kilimani = $this->area('Kilimani Crater');
         $ecology = $this->department('Ecology');
         $frank = $this->person('Frank', 'Massawe');
         $frank->setPosition($sergeant);
-        $this->place($frank, [$ngorongoro], [$ecology]);
+        $this->place($frank, [$kilimani], [$ecology]);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/'.$frank->getUuidString());
@@ -478,7 +478,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         self::assertCount(1, $position);
         self::assertStringContainsString('Sergeant', $position->filter('.pcard b')->first()->text());
         $pills = $position->filter('.pmx-sk.on')->each(static fn (Crawler $c): string => trim($c->text()));
-        self::assertContains('Ngorongoro', $pills);
+        self::assertContains('Kilimani Crater', $pills);
         self::assertContains('Ecology', $pills);
         self::assertStringContainsString('Change the position', $position->filter('.pcard-foot a.ov-open')->text());
         self::assertStringEndsWith('/configure', (string) $position->filter('.pcard-foot a.ov-open')->attr('href'));
@@ -489,7 +489,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $row = $ledger->filter('.pmk-row.thru')->first();
         self::assertCount(1, $row);
         self::assertStringContainsString('read', $row->filter('.pmc.on')->text());
-        self::assertStringContainsString('Ngorongoro', $row->filter('.pmx-sc')->text());
+        self::assertStringContainsString('Kilimani Crater', $row->filter('.pmx-sc')->text());
         self::assertStringContainsString('Sergeant', $row->filter('.pml-thru')->text());
         self::assertStringContainsString('See it on the position', $ledger->filter('.pcard-foot a.ov-open')->text());
 
@@ -520,10 +520,10 @@ final class MemberRecordTest extends WebTestCaseWithSchema
             self::assertResponseIsSuccessful();
             $card = $crawler->filter('.c.stcard');
             self::assertCount(1, $card->filter('[data-fixture-plate="'.FakePersonPostings::STATION.'"]'), 'The plate the ground drew is on the card.');
-            self::assertStringContainsString('Seneto Gate Post', $card->text());
+            self::assertStringContainsString('Eastgate Post', $card->text());
             self::assertStringContainsString('ST-01', $card->text());
             self::assertStringContainsString('The station', $card->filter('.stcard-foot a.ov-open')->text());
-            self::assertStringContainsString('stationed at Seneto Gate Post', $crawler->filter('p.pgsub')->text());
+            self::assertStringContainsString('stationed at Eastgate Post', $crawler->filter('p.pgsub')->text());
         } finally {
             FakePersonPostings::$stationed = [];
         }

@@ -21,7 +21,7 @@ use Uhifadhi\Bundle\AreaBundle\Model\ImportedName;
  * A FILE THAT SHOUTS IS NOT AN INSTALLATION THAT DECIDED.
  *
  * GIS exports write their attribute tables in upper case, so zone names
- * arrived as CRATER and NAINOKANOKA and then shouted everywhere the product
+ * arrived as CRATER and HIGHLANDS and then shouted everywhere the product
  * said them — the register, the plate's key, the sidebar's own menu items,
  * the middle of a sentence. The owner asked why, and the answer was that
  * nobody had decided it; a tool had.
@@ -37,13 +37,13 @@ final class ImportedNameTest extends TestCase
     {
         yield 'a shouted one word' => ['CRATER', 'Crater'];
         yield 'a shouted several' => ['OL DOINYO LENGAI', 'Ol Doinyo Lengai'];
-        yield 'a hyphen is a word break' => ['MBULU-KARATU', 'Mbulu-Karatu'];
+        yield 'a hyphen is a word break' => ['RIDGE-ESCARPMENT', 'Ridge-Escarpment'];
         yield 'and so is an apostrophe' => ["O'BRIEN PLAIN", "O'Brien Plain"];
-        yield 'the typographic one too' => ['NGORONGORO’S RIM', 'Ngorongoro’S Rim'];
-        yield 'a bracket opens a word' => ['KAKESIO (SOUTH)', 'Kakesio (South)'];
+        yield 'the typographic one too' => ['CRATER’S RIM', 'Crater’S Rim'];
+        yield 'a bracket opens a word' => ['HIGHLANDS (SOUTH)', 'Highlands (South)'];
 
         // Untouched: somebody wrote these.
-        yield 'mixed case is a decision' => ['Lerai Forest', 'Lerai Forest'];
+        yield 'mixed case is a decision' => ['Forest Edge', 'Forest Edge'];
         yield 'an initialism inside one' => ['NCA Highlands', 'NCA Highlands'];
         yield 'a lower-case particle' => ["du Toit's Kloof", "du Toit's Kloof"];
         yield 'all lower case' => ['crater', 'crater'];

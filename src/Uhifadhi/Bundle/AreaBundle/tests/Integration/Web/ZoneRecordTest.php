@@ -54,7 +54,7 @@ final class ZoneRecordTest extends WebTestCase
         self::assertStringContainsString('Western Sector', $body);
         self::assertStringContainsString('Extent', $body);
         self::assertStringContainsString('Stations', $body);
-        self::assertStringContainsString('Seneto Gate Post', $body);
+        self::assertStringContainsString('Eastgate Post', $body);
         self::assertStringContainsString('J. Mollel', $body);
         self::assertStringContainsString('map-plate', $body);
         // A record, so no tab strip and no figure cards.
@@ -176,9 +176,9 @@ final class ZoneRecordTest extends WebTestCase
         $this->boot();
         $this->signIn();
         [$area, $zone] = $this->aWorkedZone();
-        $this->stations()->add($area, 'Lerai Ranger Station', -29.8, -3.2);
+        $this->stations()->add($area, 'Fig Tree Ranger Station', -29.8, -3.2);
 
-        self::assertSame(['Seneto Gate Post'], $this->listed($this->record($area, $zone).'?q=seneto'));
+        self::assertSame(['Eastgate Post'], $this->listed($this->record($area, $zone).'?q=eastgate'));
         self::assertCount(2, $this->listed($this->record($area, $zone)));
     }
 
@@ -271,7 +271,7 @@ final class ZoneRecordTest extends WebTestCase
     {
         $area = $this->anArea();
         $zone = $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
-        $station = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
+        $station = $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2);
 
         $lead = $this->postings()->post($station, $this->aPerson('J.', 'Mollel'), PostingSource::WrittenHere);
         $this->postings()->appointLeader($lead);

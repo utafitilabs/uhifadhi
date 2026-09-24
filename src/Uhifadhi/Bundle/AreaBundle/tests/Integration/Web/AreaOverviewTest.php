@@ -47,7 +47,7 @@ final class AreaOverviewTest extends WebTestCase
         $this->boot();
         $this->signIn();
         $area = $this->anArea();
-        $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
+        $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2);
 
         $body = $this->body($area);
 

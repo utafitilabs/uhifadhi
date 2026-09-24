@@ -43,7 +43,7 @@ final class FieldContractKeysTest extends FieldApiTestCase
     private const array TEAM_MEMBER = ['id', 'name'];
 
     /** Pinned on both sides; the handset's `FieldContractTest` holds the same value. */
-    private const string HANDSET_FIXTURE_SHA256 = '1d60b24b015fc0b82cfce73f0696057c3df22c37c7245e14a5b71f62135684ca';
+    private const string HANDSET_FIXTURE_SHA256 = '432c5a6c9e5575c2344b280bac4fc9736dcb9d1446e60539224528ed8dfcb246';
 
     public function testTheAccountDocumentCarriesExactlyTheContractsKeys(): void
     {
@@ -95,7 +95,7 @@ final class FieldContractKeysTest extends FieldApiTestCase
         $area = $this->area('Northern Conservation Reserve');
         $this->officeStaff('Naomi', 'Kileo');
         $ranger = $this->ranger();
-        $this->postTo($this->station($area, 'Eastgate Post', 35.5, -3.2, 300, 'ST-01'), $ranger);
+        $this->postTo($this->station($area, 'Eastgate Post', -29.5, -3.2, 300, 'ST-01'), $ranger);
 
         $body = $this->get('/api/areas/mine', $this->tokenFor($ranger));
 

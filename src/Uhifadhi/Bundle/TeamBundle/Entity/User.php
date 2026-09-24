@@ -336,7 +336,7 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
      * they hold none.
      *
      * A POSITION'S HOLDERS ARE READ WITH THEIR DATES — "J. Mollel ·
-     * Ngorongoro · since 12 Jun 2026" — and the date is a fact about the
+     * Kilimani Crater · since 12 Jun 2026" — and the date is a fact about the
      * holding rather than about the person or the position, so it lives on
      * the row that joins them. Null on an existing holder is "unknown", the
      * honest answer for a holding written before the day was recorded.

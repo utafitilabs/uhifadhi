@@ -45,7 +45,7 @@ final class StationRecordTest extends WebTestCase
 
         $body = $this->body($this->record($area, $station));
 
-        self::assertStringContainsString('Seneto Gate Post', $body);
+        self::assertStringContainsString('Eastgate Post', $body);
         self::assertStringContainsString('ST-01', $body);
         self::assertStringContainsString('Who is stationed here', $body);
         self::assertStringContainsString('What happened here', $body);
@@ -343,7 +343,7 @@ final class StationRecordTest extends WebTestCase
     private function aStaffedPostIn(AreaOfInterest $area): array
     {
         $this->aZone($area, 'West', self::A_WEST_HALF);
-        $station = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
+        $station = $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2, 'ST-01');
 
         $lead = $this->postings()->post($station, $this->aPerson('J.', 'Mollel'), PostingSource::WrittenHere);
         $this->postings()->appointLeader($lead);

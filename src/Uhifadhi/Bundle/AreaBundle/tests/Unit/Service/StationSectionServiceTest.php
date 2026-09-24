@@ -43,22 +43,22 @@ use Uhifadhi\Contracts\Kpi\StationRef;
 #[CoversClass(ContributedStationSection::class)]
 final class StationSectionServiceTest extends TestCase
 {
-    private const string SENETO = '01a0-seneto';
-    private const string LERAI = '01a0-lerai';
+    private const string EASTGATE = '01a0-eastgate';
+    private const string FIG_TREE = '01a0-fig-tree';
 
     public function testItAsksEveryContributorWhoseModuleTheAreaRuns(): void
     {
         $bands = $this->collect(
             contributors: [
-                $this->contributor('roster', [self::SENETO => [$this->section('watch', 'Watch and presence')]]),
-                $this->contributor('permits', [self::SENETO => [$this->section('gate', 'Gate permits')]]),
+                $this->contributor('roster', [self::EASTGATE => [$this->section('watch', 'Watch and presence')]]),
+                $this->contributor('permits', [self::EASTGATE => [$this->section('gate', 'Gate permits')]]),
             ],
             running: ['roster', 'permits'],
         );
 
         self::assertSame(['roster', 'permits'], array_map(
             static fn (ContributedStationSection $band): string => $band->moduleSlug,
-            $bands[self::SENETO],
+            $bands[self::EASTGATE],
         ));
     }
 
@@ -70,23 +70,23 @@ final class StationSectionServiceTest extends TestCase
     public function testEveryBandCarriesTheSlugOfTheModuleThatContributedIt(): void
     {
         $bands = $this->collect(
-            [$this->contributor('roster', [self::SENETO => [$this->section('watch', 'Watch and presence')]])],
+            [$this->contributor('roster', [self::EASTGATE => [$this->section('watch', 'Watch and presence')]])],
             running: ['roster'],
         );
 
-        self::assertSame('roster', $bands[self::SENETO][0]->moduleSlug);
-        self::assertSame('watch', $bands[self::SENETO][0]->section->id);
+        self::assertSame('roster', $bands[self::EASTGATE][0]->moduleSlug);
+        self::assertSame('watch', $bands[self::EASTGATE][0]->section->id);
     }
 
     /** A module parked in this area contributes nothing here, and is not asked. */
     public function testAParkedModuleIsNotAsked(): void
     {
-        $roster = $this->contributor('roster', [self::SENETO => [$this->section('watch', 'Watch and presence')]]);
-        $permits = $this->contributor('permits', [self::SENETO => [$this->section('gate', 'Gate permits')]]);
+        $roster = $this->contributor('roster', [self::EASTGATE => [$this->section('watch', 'Watch and presence')]]);
+        $permits = $this->contributor('permits', [self::EASTGATE => [$this->section('gate', 'Gate permits')]]);
 
         $bands = $this->collect([$roster, $permits], running: ['roster']);
 
-        self::assertCount(1, $bands[self::SENETO]);
+        self::assertCount(1, $bands[self::EASTGATE]);
         self::assertFalse($permits->asked);
     }
 
@@ -97,11 +97,11 @@ final class StationSectionServiceTest extends TestCase
     public function testAPostNoContributorSpokeAboutHasNoBands(): void
     {
         $bands = $this->collect(
-            [$this->contributor('roster', [self::SENETO => [$this->section('watch', 'Watch and presence')]])],
+            [$this->contributor('roster', [self::EASTGATE => [$this->section('watch', 'Watch and presence')]])],
             running: ['roster'],
         );
 
-        self::assertSame([], $bands[self::LERAI]);
+        self::assertSame([], $bands[self::FIG_TREE]);
     }
 
     /** With nothing installed every post reads the same empty answer. */
@@ -109,8 +109,8 @@ final class StationSectionServiceTest extends TestCase
     {
         $bands = $this->collect([], running: []);
 
-        self::assertSame([], $bands[self::SENETO]);
-        self::assertSame([], $bands[self::LERAI]);
+        self::assertSame([], $bands[self::EASTGATE]);
+        self::assertSame([], $bands[self::FIG_TREE]);
     }
 
     /** Every contributor is asked about the whole set at once, never post by post. */
@@ -121,7 +121,7 @@ final class StationSectionServiceTest extends TestCase
         $this->collect([$roster], running: ['roster']);
 
         self::assertSame(1, $roster->calls);
-        self::assertSame([self::SENETO, self::LERAI], $roster->lastRequest?->stationUuids());
+        self::assertSame([self::EASTGATE, self::FIG_TREE], $roster->lastRequest?->stationUuids());
     }
 
     /** The surface travels with the question, because the two differ. */
@@ -130,7 +130,7 @@ final class StationSectionServiceTest extends TestCase
         $roster = $this->contributor('roster', []);
 
         new StationSectionService([$roster])->collect(
-            [new StationRef(self::SENETO, '01a0-area', 'Seneto Gate Post')],
+            [new StationRef(self::EASTGATE, '01a0-area', 'Eastgate Post')],
             StationSurface::Configure,
             static fn (string $slug): bool => true,
         );
@@ -152,10 +152,10 @@ final class StationSectionServiceTest extends TestCase
     /** The record page asks the same question about a set of one. */
     public function testOnePostIsTheSameQuestionWithASetOfOne(): void
     {
-        $roster = $this->contributor('roster', [self::SENETO => [$this->section('watch', 'Watch and presence')]]);
+        $roster = $this->contributor('roster', [self::EASTGATE => [$this->section('watch', 'Watch and presence')]]);
 
         $bands = new StationSectionService([$roster])->forOne(
-            new StationRef(self::SENETO, '01a0-area', 'Seneto Gate Post'),
+            new StationRef(self::EASTGATE, '01a0-area', 'Eastgate Post'),
             StationSurface::Record,
             static fn (string $slug): bool => true,
         );
@@ -176,8 +176,8 @@ final class StationSectionServiceTest extends TestCase
     {
         return new StationSectionService($contributors)->collect(
             [
-                new StationRef(self::SENETO, '01a0-area', 'Seneto Gate Post'),
-                new StationRef(self::LERAI, '01a0-area', 'Lerai Ranger Station'),
+                new StationRef(self::EASTGATE, '01a0-area', 'Eastgate Post'),
+                new StationRef(self::FIG_TREE, '01a0-area', 'Fig Tree Ranger Station'),
             ],
             StationSurface::Record,
             static fn (string $slug): bool => \in_array($slug, $running, true),

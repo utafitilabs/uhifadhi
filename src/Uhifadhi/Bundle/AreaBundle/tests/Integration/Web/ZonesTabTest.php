@@ -51,7 +51,7 @@ final class ZonesTabTest extends WebTestCase
         self::assertStringContainsString('map-plate', $body);
         self::assertStringContainsString('map-legend', $body);
         // And the two cards under it.
-        self::assertStringContainsString('Seneto Gate Post', $body);
+        self::assertStringContainsString('Eastgate Post', $body);
         self::assertStringContainsString('J. Mollel', $body);
         self::assertStringContainsString('class="atabs"', $body);
     }
@@ -117,7 +117,7 @@ final class ZonesTabTest extends WebTestCase
         [$area] = $this->anAreaWithAZonedPost();
         $this->stations()->add($area, 'Eastern Outpost', -29.25, -3.2);
 
-        self::assertSame(['Seneto Gate Post'], $this->listed($this->tab($area).'?q=seneto'));
+        self::assertSame(['Eastgate Post'], $this->listed($this->tab($area).'?q=eastgate'));
         self::assertSame(['Eastern Outpost'], $this->listed($this->tab($area).'?zone=unzoned'));
         self::assertSame(['Eastern Outpost'], $this->listed($this->tab($area).'?lead=no'));
     }
@@ -182,7 +182,7 @@ final class ZonesTabTest extends WebTestCase
     {
         $area = $this->anArea();
         $zone = $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
-        $station = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
+        $station = $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2);
 
         $lead = $this->postings()->post($station, $this->aPerson('J.', 'Mollel'), PostingSource::WrittenHere);
         $this->postings()->appointLeader($lead);

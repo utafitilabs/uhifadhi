@@ -278,7 +278,7 @@ final class ZoneConfigureTest extends WebTestCase
 
         $body = $this->body($this->section($area).'?open='.$zone->getUuidString());
 
-        self::assertStringContainsString('Seneto Gate Post', $body);
+        self::assertStringContainsString('Eastgate Post', $body);
         self::assertStringContainsString('ST-01', $body);
         self::assertStringContainsString('J. Mollel leads', $body);
         // The card links to the post's own record, which is where people are read.
@@ -334,7 +334,7 @@ final class ZoneConfigureTest extends WebTestCase
         /** @var PostingService $postings */
         $postings = static::getContainer()->get('test_public.area.postings');
 
-        $station = $stations->add($area, 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
+        $station = $stations->add($area, 'Eastgate Post', -29.75, -3.2, 'ST-01');
         $lead = $postings->post($station, $this->aPerson('J.', 'Mollel'), PostingSource::WrittenHere);
         $postings->appointLeader($lead);
         $postings->post($station, $this->aPerson('T.', 'Ndosi'), PostingSource::FromTheirPage);

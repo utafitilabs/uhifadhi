@@ -100,7 +100,7 @@ final class FieldAreasEndpointTest extends FieldApiTestCase
     public function testStationsAreTheAreasPostsInTheShapeTheNearEndpointUses(): void
     {
         $area = $this->area('Northern Conservation Reserve');
-        $this->station($area, 'Seneto Gate Post', 35.5, -3.2, 300, 'ST-01');
+        $this->station($area, 'Eastgate Post', -29.5, -3.2, 300, 'ST-01');
 
         $body = $this->get(self::ENDPOINT, $this->tokenFor($this->ranger()));
         $stations = self::nested($body, 'areas', 0, 'stations');
@@ -110,7 +110,7 @@ final class FieldAreasEndpointTest extends FieldApiTestCase
         $post = $stations[0];
         self::assertIsArray($post);
         self::assertSame(['uuid', 'name', 'code', 'lat', 'lon', 'catchmentM'], array_keys($post));
-        self::assertSame('Seneto Gate Post', $post['name']);
+        self::assertSame('Eastgate Post', $post['name']);
         self::assertSame('ST-01', $post['code'], 'what a ranger says on the radio, beside the name');
         self::assertSame(300, $post['catchmentM']);
     }
@@ -130,7 +130,7 @@ final class FieldAreasEndpointTest extends FieldApiTestCase
         $first = $this->area('Aardvark Reserve');
         $second = $this->area('Zebra Reserve');
         $ranger = $this->ranger();
-        $this->postTo($this->station($second, 'Seneto Gate Post', 35.5, -3.2), $ranger);
+        $this->postTo($this->station($second, 'Eastgate Post', -29.5, -3.2), $ranger);
 
         $body = $this->get(self::ENDPOINT, $this->tokenFor($ranger));
 
@@ -181,7 +181,7 @@ final class FieldAreasEndpointTest extends FieldApiTestCase
 
         // Their authority is confined to one area by their department's scope.
         $ranger = $this->ranger(department: $this->areaDepartment('Aardvark Wardens', $theirs));
-        $this->postTo($this->station($elsewhere, 'Seneto Gate Post', 35.5, -3.2), $ranger);
+        $this->postTo($this->station($elsewhere, 'Eastgate Post', -29.5, -3.2), $ranger);
 
         $body = $this->get(self::ENDPOINT, $this->tokenFor($ranger));
 

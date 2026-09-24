@@ -143,7 +143,7 @@ final class TopicContractTest extends TestCase
     /** A ground series nobody published a figure in is not drawn. */
     public function testAGroundSeriesOfNothingIsNotDrawn(): void
     {
-        self::assertTrue(new GeoSeries('k', 'T', [new GeoFigure('a', 'Ngorongoro', null)])->isEmpty());
-        self::assertFalse(new GeoSeries('k', 'T', [new GeoFigure('a', 'Ngorongoro', 0.0)])->isEmpty());
+        self::assertTrue(new GeoSeries('k', 'T', [new GeoFigure('a', 'Kilimani Crater', null)])->isEmpty());
+        self::assertFalse(new GeoSeries('k', 'T', [new GeoFigure('a', 'Kilimani Crater', 0.0)])->isEmpty());
     }
 }

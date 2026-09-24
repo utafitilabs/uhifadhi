@@ -38,7 +38,7 @@ final class StationPlateTest extends WebTestCase
 
         self::assertNotNull($plate);
         self::assertStringContainsString('stplate', $plate->html, 'The design\'s box, drawn.');
-        self::assertStringContainsString('Seneto Gate Post and the ground around it', $plate->html);
+        self::assertStringContainsString('Eastgate Post and the ground around it', $plate->html);
         self::assertMatchesRegularExpression('/data-controller="[^"]*map/', $plate->html, 'A real map, not a picture of one.');
         self::assertStringNotContainsString('map-legend', $plate->html, 'A thumbnail beside the record carries no legend; the station record has it.');
     }
@@ -63,6 +63,6 @@ final class StationPlateTest extends WebTestCase
         /** @var StationService $service */
         $service = static::getContainer()->get('test_public.area.stations');
 
-        return $service->add($this->anArea(), 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
+        return $service->add($this->anArea(), 'Eastgate Post', -29.75, -3.2, 'ST-01');
     }
 }

@@ -255,8 +255,8 @@ read twice. Three words now, each meaning one thing:
 
 | The idea | The word | In a sentence |
 | --- | --- | --- |
-| the place | **station** | "Seneto Gate is a station" |
-| a person's placement there | **stationed at** | "3 rangers stationed at Seneto Gate" |
+| the place | **station** | "Eastgate is a station" |
+| a person's placement there | **stationed at** | "3 rangers stationed at Eastgate" |
 | the placement as a noun | **assignment** | "End the assignment" |
 
 Every user-facing word in the core is swept: page titles, tab captions, table
@@ -264,7 +264,7 @@ headings, empty states, flashes, hints and the station event log ("T. Ndosi
 stationed here", "J. Mollel's assignment ended"). `CheckInStatusKind::AtPost`
 now reads **"at a station"**.
 
-**Park-given names are untouched.** A station called "Seneto Gate Post" keeps
+**Park-given names are untouched.** A station called "Eastgate Post" keeps
 its name — it is a proper noun the organization chose, not the product's word
 for the idea, and the sweep deliberately leaves such names alone.
 

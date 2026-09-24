@@ -19,7 +19,7 @@ use Uhifadhi\Contracts\Shell\UserBadge;
 
 /**
  * THE VIEWER'S CARD, AS DATA — a name, its initials, and an optional context
- * line ("NCAA · operator"). The value object carries plain strings and nothing
+ * line ("UCA · operator"). The value object carries plain strings and nothing
  * else: it names no account class and imports nothing, because the shell that
  * draws it requires no module and no user package. Whoever knows who is signed
  * in composes one of these and hands it over through the contract.
@@ -28,11 +28,11 @@ final class UserBadgeTest extends TestCase
 {
     public function testItCarriesTheThreeThingsTheCardDraws(): void
     {
-        $badge = new UserBadge('N. Kileo', 'NK', 'NCAA · operator');
+        $badge = new UserBadge('N. Kileo', 'NK', 'UCA · operator');
 
         self::assertSame('N. Kileo', $badge->name);
         self::assertSame('NK', $badge->initials);
-        self::assertSame('NCAA · operator', $badge->context);
+        self::assertSame('UCA · operator', $badge->context);
     }
 
     public function testTheContextLineIsOptional(): void
@@ -81,9 +81,9 @@ final class UserBadgeTest extends TestCase
 
     public function testFromNameCarriesAContextLineWhenGivenOne(): void
     {
-        $badge = UserBadge::fromName('N. Kileo', 'NCAA · operator');
+        $badge = UserBadge::fromName('N. Kileo', 'UCA · operator');
 
-        self::assertSame('NCAA · operator', $badge->context);
+        self::assertSame('UCA · operator', $badge->context);
         self::assertSame('NK', $badge->initials);
     }
 }

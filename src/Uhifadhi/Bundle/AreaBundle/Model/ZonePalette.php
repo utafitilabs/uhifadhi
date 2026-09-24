@@ -35,7 +35,7 @@ use Uhifadhi\Contracts\Atlas\PlatePalette;
  * IT WRAPS AT EIGHTEEN, and the tenth zone is answered rather than repeated.
  * RULED 2026-09-21: past nine the categorical set continues as a SECOND
  * LIGHTNESS RING of the same nine hues — the same hue one step further from
- * the ground — never a tenth hue. So an area with eleven zones (Ngorongoro
+ * the ground — never a tenth hue. So an area with eleven zones (Kilimani Crater
  * has eleven) gets eleven distinct marks, the last two reading as kin to the
  * first two rather than as duplicates of them. The step itself is the
  * palette's, in the shell's sheet; all this knows is the position.

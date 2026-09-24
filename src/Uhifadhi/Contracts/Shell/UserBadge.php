@@ -15,7 +15,7 @@ namespace Uhifadhi\Contracts\Shell;
 
 /**
  * THE VIEWER'S CARD IN THE TOP BAR, AS DATA: a name, its initials, and an
- * optional context line — the "NCAA · operator" under the name.
+ * optional context line — the "UCA · operator" under the name.
  *
  * It carries PLAIN STRINGS and names no account class. The shell that draws it
  * requires no module and above all not the package that defines a user, so a

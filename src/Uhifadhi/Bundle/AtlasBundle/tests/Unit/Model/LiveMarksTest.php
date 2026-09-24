@@ -56,7 +56,7 @@ final class LiveMarksTest extends TestCase
         return array_values(array_map(self::arr(...), self::arr(self::arr($layer->features)['features'] ?? null)));
     }
 
-    private static function position(string $name, int $minutesAgo, float $lat = -3.2, float $lon = 35.5): LivePosition
+    private static function position(string $name, int $minutesAgo, float $lat = -3.2, float $lon = -29.5): LivePosition
     {
         return new LivePosition(
             personUuid: strtolower(str_replace(' ', '-', $name)),
@@ -83,8 +83,8 @@ final class LiveMarksTest extends TestCase
     public function testEveryPositionInTheReadIsOneFeature(): void
     {
         $layer = LiveMarks::layer(self::presence(
-            self::position('J. Mollel', 4, -3.20, 35.50),
-            self::position('T. Ndosi', 11, -3.21, 35.51),
+            self::position('J. Mollel', 4, -3.20, -29.50),
+            self::position('T. Ndosi', 11, -3.21, -29.51),
         ));
 
         self::assertSame(LiveMarks::LAYER_ID, $layer->id);
@@ -92,7 +92,7 @@ final class LiveMarksTest extends TestCase
         self::assertSame(PlatePalette::ACCENT, $layer->swatch);
         self::assertCount(2, self::features($layer));
         self::assertSame(
-            [35.50, -3.20],
+            [-29.50, -3.20],
             self::arr(self::features($layer)[0]['geometry'])['coordinates'],
             'GeoJSON is longitude first, and a marker one axis out is a marker in the wrong country.',
         );

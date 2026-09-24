@@ -63,7 +63,7 @@ final class LivePlateTest extends TestCase
             clientRef: 'w-1',
             state: DayState::AtPostVerified,
             latitude: -3.2,
-            longitude: 35.5,
+            longitude: -29.5,
             recordedAt: new \DateTimeImmutable(self::NOW.' -'.$minutesAgo.' minutes'),
         );
     }

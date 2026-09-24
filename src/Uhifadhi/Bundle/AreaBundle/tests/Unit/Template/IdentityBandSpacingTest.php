@@ -33,7 +33,7 @@ use PHPUnit\Framework\TestCase;
  * place.
  *
  * @see /Users/eemjema/Programming/DesignsProjects/uhifadhi-web/uhifadhi.css lines 101-103 — the band's own margin
- * @see /Users/eemjema/Programming/DesignsProjects/uhifadhi-web/areas/ngorongoro/modules/roster/station.html line 54 — the band, then `.grid g2` with no margin
+ * @see /Users/eemjema/Programming/DesignsProjects/uhifadhi-web/areas/kilimani/modules/roster/station.html line 54 — the band, then `.grid g2` with no margin
  * @see /Users/eemjema/Programming/DesignsProjects/uhifadhi-web/presets/areas-index/areas-index.css line 172 — `.ax-hero-kpis{margin:0}`, the gap given back
  */
 final class IdentityBandSpacingTest extends TestCase

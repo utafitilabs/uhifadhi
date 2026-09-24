@@ -150,7 +150,7 @@ final readonly class AreaRegister
     }
 
     /**
-     * WHERE THE AREA IS, as a band states it: "3.2°S 35.5°E".
+     * WHERE THE AREA IS, as a band states it: "3.2°S 29.5°W".
      *
      * HEMISPHERES, NEVER SIGNS. A minus in front of a latitude is a fact
      * about a coordinate system; south is a fact about the place, and it is

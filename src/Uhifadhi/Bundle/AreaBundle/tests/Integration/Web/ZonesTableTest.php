@@ -44,7 +44,7 @@ final class ZonesTableTest extends WebTestCase
         $this->signIn();
         $area = $this->threeZones();
 
-        self::assertSame(['Crater', 'Eyasi', 'Kakesio'], $this->rowsOf($this->tab($area)));
+        self::assertSame(['Crater', 'Highlands', 'Salt Flats'], $this->rowsOf($this->tab($area)));
     }
 
     /** The row states the ground, and what stands on it. */
@@ -53,7 +53,7 @@ final class ZonesTableTest extends WebTestCase
         $this->boot();
         $this->signIn();
         $area = $this->threeZones();
-        $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
+        $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2);
 
         $row = $this->rowHtml($this->tab($area), 'Crater');
 
@@ -83,7 +83,7 @@ final class ZonesTableTest extends WebTestCase
         $this->boot();
         $this->signIn();
 
-        $row = $this->rowHtml($this->tab($this->threeZones()), 'Eyasi');
+        $row = $this->rowHtml($this->tab($this->threeZones()), 'Highlands');
 
         self::assertStringContainsString('<em class="pnone">none</em>', $row);
     }
@@ -96,12 +96,12 @@ final class ZonesTableTest extends WebTestCase
 
         // BY EXTENT, widest first — Crater is the western half of the area.
         self::assertSame(
-            ['Crater', 'Eyasi', 'Kakesio'],
+            ['Crater', 'Highlands', 'Salt Flats'],
             $this->rowsOf($this->tab($area).'?order=extent'),
         );
         // AND BY POSTS, most first.
-        $this->stations()->add($area, 'Eyasi Station', -29.2, -3.5);
-        self::assertSame('Eyasi', $this->rowsOf($this->tab($area).'?order=stations')[0]);
+        $this->stations()->add($area, 'Highlands Station', -29.2, -3.5);
+        self::assertSame('Highlands', $this->rowsOf($this->tab($area).'?order=stations')[0]);
     }
 
     public function testTheHasStationsFilterNarrowsTheTable(): void
@@ -109,10 +109,10 @@ final class ZonesTableTest extends WebTestCase
         $this->boot();
         $this->signIn();
         $area = $this->threeZones();
-        $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
+        $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2);
 
         self::assertSame(['Crater'], $this->rowsOf($this->tab($area).'?stations=some'));
-        self::assertSame(['Eyasi', 'Kakesio'], $this->rowsOf($this->tab($area).'?stations=none'));
+        self::assertSame(['Highlands', 'Salt Flats'], $this->rowsOf($this->tab($area).'?stations=none'));
     }
 
     /** Its own search key: three lists on one page, and only one may own `q`. */
@@ -122,7 +122,7 @@ final class ZonesTableTest extends WebTestCase
         $this->signIn();
         $area = $this->threeZones();
 
-        self::assertSame(['Eyasi'], $this->rowsOf($this->tab($area).'?zq=eya'));
+        self::assertSame(['Highlands'], $this->rowsOf($this->tab($area).'?zq=high'));
         // The stations card's own search is untouched by it.
         self::assertStringContainsString('name="zq"', $this->body($this->tab($area)));
     }
@@ -223,8 +223,8 @@ final class ZonesTableTest extends WebTestCase
     {
         $area = $this->anArea();
         $this->aZone($area, 'Crater', self::A_WEST_HALF);
-        $this->aZone($area, 'Eyasi', '{"type":"MultiPolygon","coordinates":[[[[-29.5,-3.6],[-29.2,-3.6],[-29.2,-3.2],[-29.5,-3.2],[-29.5,-3.6]]]]}');
-        $this->aZone($area, 'Kakesio', '{"type":"MultiPolygon","coordinates":[[[[-29.2,-3.2],[-29.0,-3.2],[-29.0,-2.8],[-29.2,-2.8],[-29.2,-3.2]]]]}');
+        $this->aZone($area, 'Highlands', '{"type":"MultiPolygon","coordinates":[[[[-29.5,-3.6],[-29.2,-3.6],[-29.2,-3.2],[-29.5,-3.2],[-29.5,-3.6]]]]}');
+        $this->aZone($area, 'Salt Flats', '{"type":"MultiPolygon","coordinates":[[[[-29.2,-3.2],[-29.0,-3.2],[-29.0,-2.8],[-29.2,-2.8],[-29.2,-3.2]]]]}');
 
         return $area;
     }

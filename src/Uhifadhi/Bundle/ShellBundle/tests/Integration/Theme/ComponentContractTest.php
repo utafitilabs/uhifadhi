@@ -763,7 +763,7 @@ final class ComponentContractTest extends ContractTestCase
      * it is that it is a RING and not a repeat: eighteen positions, eighteen
      * distinct values, in each of the three readings.
      *
-     * An area with eleven zones — Ngorongoro has eleven — got nine colours
+     * An area with eleven zones — Kilimani Crater has eleven — got nine colours
      * and two repeats before this, so two zones at opposite ends of a plate
      * drew the same ring and the key beside it said two different names.
      */

@@ -33,7 +33,7 @@
    looked different above a calendar than above a filter bar would be two
    products. Only the row it sits in is here.
 
-   Design: areas/ngorongoro/modules/roster/*.html and the patrols month.
+   Design: areas/kilimani/modules/roster/*.html and the patrols month.
    ════════════════════════════════════════════════════════════════════════ */
 .cal-plate { position: relative; display: flex; flex-direction: column; }
 .cal-plate > .use { margin: 10px 2px 0; }

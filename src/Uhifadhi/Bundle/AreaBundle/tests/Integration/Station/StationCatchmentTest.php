@@ -42,7 +42,7 @@ final class StationCatchmentTest extends IntegrationTestCase
     /** A new post opens with the design's ring rather than with none. */
     public function testANewPostOpensWithTheDefaultRing(): void
     {
-        $station = $this->stations()->add($this->anArea(), 'Seneto Gate Post', -29.75, -3.2);
+        $station = $this->stations()->add($this->anArea(), 'Eastgate Post', -29.75, -3.2);
 
         self::assertSame(StationService::DEFAULT_CATCHMENT_M, $station->getCatchmentM());
         self::assertSame(1500, StationService::DEFAULT_CATCHMENT_M, 'the design says 1.5 km');
@@ -66,7 +66,7 @@ final class StationCatchmentTest extends IntegrationTestCase
 
     public function testTheRingIsChangedThroughTheService(): void
     {
-        $station = $this->stations()->add($this->anArea(), 'Lerai Ranger Station', -29.7, -3.2);
+        $station = $this->stations()->add($this->anArea(), 'Fig Tree Ranger Station', -29.7, -3.2);
 
         $this->stations()->setCatchment($station, 1000);
 

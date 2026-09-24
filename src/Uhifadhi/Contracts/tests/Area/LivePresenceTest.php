@@ -102,7 +102,7 @@ final class LivePresenceTest extends TestCase
             clientRef: 'w1',
             state: DayState::AtPostVerified,
             latitude: -3.2,
-            longitude: 35.5,
+            longitude: -29.5,
             recordedAt: new \DateTimeImmutable($recordedAt),
         );
     }

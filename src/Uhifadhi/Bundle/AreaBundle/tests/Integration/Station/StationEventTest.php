@@ -50,7 +50,7 @@ final class StationEventTest extends IntegrationTestCase
 
     public function testRecordingAStationOpensItsLog(): void
     {
-        $station = $this->stations()->add($this->anArea(), 'Seneto Gate Post', -29.75, -3.2, 'ST-01', 'n.kileo');
+        $station = $this->stations()->add($this->anArea(), 'Eastgate Post', -29.75, -3.2, 'ST-01', 'n.kileo');
 
         $lines = $this->log($station);
         self::assertCount(1, $lines);
@@ -64,9 +64,9 @@ final class StationEventTest extends IntegrationTestCase
     {
         $station = $this->aStation();
 
-        $this->stations()->rename($station, 'Seneto Main Gate', 'n.kileo');
+        $this->stations()->rename($station, 'Eastgate Main Gate', 'n.kileo');
 
-        self::assertSame('“Seneto Gate Post” renamed to “Seneto Main Gate”', $this->log($station)[0]->getHeadline());
+        self::assertSame('“Eastgate Post” renamed to “Eastgate Main Gate”', $this->log($station)[0]->getHeadline());
     }
 
     /** Renaming to the same name is not an event, because nothing happened. */
@@ -75,7 +75,7 @@ final class StationEventTest extends IntegrationTestCase
         $station = $this->aStation();
         $before = \count($this->log($station));
 
-        $this->stations()->rename($station, 'Seneto Gate Post');
+        $this->stations()->rename($station, 'Eastgate Post');
 
         self::assertCount($before, $this->log($station));
     }
@@ -109,7 +109,7 @@ final class StationEventTest extends IntegrationTestCase
     public function testAnImportThatChangesTheZoneWritesALineOnTheStation(): void
     {
         $area = $this->anArea();
-        $station = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
+        $station = $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2);
         $this->aZone($area, 'West', self::A_WEST_HALF);
         $this->stations()->rederiveFor($area, 'a zoning scheme was imported');
 
@@ -124,7 +124,7 @@ final class StationEventTest extends IntegrationTestCase
     {
         $area = $this->anArea();
         $zone = $this->aZone($area, 'West', self::A_WEST_HALF);
-        $station = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
+        $station = $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2);
 
         $this->zones()->remove($zone);
 
@@ -136,7 +136,7 @@ final class StationEventTest extends IntegrationTestCase
     {
         $area = $this->anArea();
         $this->aZone($area, 'West', self::A_WEST_HALF);
-        $station = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
+        $station = $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2);
         $before = \count($this->log($station));
 
         // A second zone, nowhere near this post.
@@ -198,7 +198,7 @@ final class StationEventTest extends IntegrationTestCase
     public function testTheLogIsNewestFirst(): void
     {
         $station = $this->aStation();
-        $this->stations()->rename($station, 'Seneto Main Gate');
+        $this->stations()->rename($station, 'Eastgate Main Gate');
 
         self::assertSame(StationEventKind::Renamed, $this->log($station)[0]->getKind());
         self::assertSame(StationEventKind::Recorded, $this->log($station)[1]->getKind());
@@ -252,7 +252,7 @@ final class StationEventTest extends IntegrationTestCase
 
     private function aStation(): Station
     {
-        return $this->stations()->add($this->anArea(), 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
+        return $this->stations()->add($this->anArea(), 'Eastgate Post', -29.75, -3.2, 'ST-01');
     }
 
     private function aPerson(string $name): HostPerson

@@ -39,7 +39,7 @@ final class PlacementTest extends TestCase
         $placement = new Placement();
 
         self::assertTrue($placement->reachesNothing());
-        self::assertFalse($placement->coversArea(new StubArea(1, 'ngorongoro')));
+        self::assertFalse($placement->coversArea(new StubArea(1, 'kilimani')));
         self::assertFalse($placement->coversArea(null));
         self::assertSame([], $placement->getAreas());
     }
@@ -56,17 +56,17 @@ final class PlacementTest extends TestCase
 
     public function testNamedGroundCoversWhatItNamesAndRefusesWhatItDoesNot(): void
     {
-        $ngorongoro = new StubArea(1, 'ngorongoro');
-        $pololeti = new StubArea(2, 'pololeti');
-        $mbozi = new StubArea(3, 'mbozi');
+        $kilimani = new StubArea(1, 'kilimani');
+        $olkeju = new StubArea(2, 'olkeju');
+        $mbuyu = new StubArea(3, 'mbuyu');
 
-        $placement = new Placement()->inAreas([$ngorongoro, $pololeti]);
+        $placement = new Placement()->inAreas([$kilimani, $olkeju]);
 
         self::assertFalse($placement->isWholeOrganization());
-        self::assertSame([$ngorongoro, $pololeti], $placement->getAreas());
-        self::assertTrue($placement->coversArea($ngorongoro));
-        self::assertTrue($placement->coversArea($pololeti));
-        self::assertFalse($placement->coversArea($mbozi), 'the worked example in the ruling: the right position in the wrong area is refused.');
+        self::assertSame([$kilimani, $olkeju], $placement->getAreas());
+        self::assertTrue($placement->coversArea($kilimani));
+        self::assertTrue($placement->coversArea($olkeju));
+        self::assertFalse($placement->coversArea($mbuyu), 'the worked example in the ruling: the right position in the wrong area is refused.');
     }
 
     /**
@@ -75,9 +75,9 @@ final class PlacementTest extends TestCase
      */
     public function testAnAreaIsMatchedOnItsPublicAddressRatherThanOnIdentity(): void
     {
-        $placement = new Placement()->inAreas([new StubArea(1, 'ngorongoro')]);
+        $placement = new Placement()->inAreas([new StubArea(1, 'kilimani')]);
 
-        self::assertTrue($placement->coversArea(new StubArea(1, 'ngorongoro')));
+        self::assertTrue($placement->coversArea(new StubArea(1, 'kilimani')));
     }
 
     /**
@@ -86,7 +86,7 @@ final class PlacementTest extends TestCase
      */
     public function testNoAreaInContextIsCoveredByAnybodyPlacedAtAll(): void
     {
-        self::assertTrue(new Placement()->inAreas([new StubArea(1, 'ngorongoro')])->coversArea(null));
+        self::assertTrue(new Placement()->inAreas([new StubArea(1, 'kilimani')])->coversArea(null));
         self::assertTrue(new Placement()->acrossTheOrganization()->coversArea(null));
         self::assertFalse(new Placement()->coversArea(null), 'unplaced is not "everywhere": the model fails closed.');
     }
@@ -157,12 +157,12 @@ final class PlacementTest extends TestCase
 
     public function testChoosingOneBreadthClearsTheOther(): void
     {
-        $ngorongoro = new StubArea(1, 'ngorongoro');
+        $kilimani = new StubArea(1, 'kilimani');
 
-        $placement = new Placement()->inAreas([$ngorongoro])->acrossTheOrganization();
+        $placement = new Placement()->inAreas([$kilimani])->acrossTheOrganization();
         self::assertNull($placement->getAreas(), 'saying "everywhere" after naming ground drops the ground, rather than keeping a list nothing reads.');
 
-        $placement->inAreas([$ngorongoro]);
+        $placement->inAreas([$kilimani]);
         self::assertFalse($placement->isWholeOrganization());
     }
 

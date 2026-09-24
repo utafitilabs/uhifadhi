@@ -22,7 +22,7 @@ use Uhifadhi\Contracts\Entity\UserInterface;
  * PROVENANCE IS A STRING, on purpose: it has to survive the account being
  * removed, so it is written down at the time rather than pointed at. What
  * gets written down is therefore the last chance to write something a person
- * will recognise — and "n.kileo@ncaa.go.tz imported 11 zones" is a sentence
+ * will recognise — and "n.kileo@uca.example imported 11 zones" is a sentence
  * about a login, where "N. Kileo imported 11 zones" is a sentence about a
  * colleague.
  *

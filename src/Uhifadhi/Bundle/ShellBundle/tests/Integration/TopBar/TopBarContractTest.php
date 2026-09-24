@@ -91,7 +91,7 @@ final class TopBarContractTest extends ContractTestCase
      */
     public function testTheViewerCardIsRenderedFromTheContract(): void
     {
-        HostKernel::$userBadge = new UserBadge('N. Kileo', 'NK', 'NCAA · operator');
+        HostKernel::$userBadge = new UserBadge('N. Kileo', 'NK', 'UCA · operator');
 
         $crawler = $this->crawl(self::PAGE);
 
@@ -99,7 +99,7 @@ final class TopBarContractTest extends ContractTestCase
         self::assertCount(1, $card);
         self::assertSame('NK', trim($card->filter('.avatar')->text()));
         self::assertSame('N. Kileo', trim($card->filter('.uinfo b')->text()));
-        self::assertSame('NCAA · operator', trim($card->filter('.uinfo em')->text()));
+        self::assertSame('UCA · operator', trim($card->filter('.uinfo em')->text()));
     }
 
     /**
@@ -142,7 +142,7 @@ final class TopBarContractTest extends ContractTestCase
      */
     public function testTheCardIsReadLiveSoItVanishesTheSameRequestTheViewerGoes(): void
     {
-        HostKernel::$userBadge = new UserBadge('N. Kileo', 'NK', 'NCAA · operator');
+        HostKernel::$userBadge = new UserBadge('N. Kileo', 'NK', 'UCA · operator');
         self::assertStringContainsString('N. Kileo', $this->render(self::PAGE));
 
         HostKernel::$userBadge = null;

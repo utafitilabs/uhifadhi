@@ -37,13 +37,13 @@ final class StationDirectoryTest extends IntegrationTestCase
     /** Every area's stations in one answer, because a reader counts across all of them. */
     public function testItReadsEveryAreasStationsInOneAnswer(): void
     {
-        $ngorongoro = $this->anArea('Ngorongoro');
-        $pololeti = $this->anArea('Pololeti');
-        $this->stations()->add($ngorongoro, 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
-        $this->stations()->add($pololeti, 'Mkwaju Station', -29.5, -3.4, 'ST-02');
+        $kilimani = $this->anArea('Kilimani Crater');
+        $olkeju = $this->anArea('Olkeju');
+        $this->stations()->add($kilimani, 'Eastgate Post', -29.75, -3.2, 'ST-01');
+        $this->stations()->add($olkeju, 'Mkwaju Station', -29.5, -3.4, 'ST-02');
 
         self::assertSame(
-            ['Ngorongoro/ST-01', 'Pololeti/ST-02'],
+            ['Kilimani Crater/ST-01', 'Olkeju/ST-02'],
             array_map(static fn (PostedStation $s): string => $s->areaName.'/'.$s->code, $this->directory()->stations()),
         );
     }
@@ -52,7 +52,7 @@ final class StationDirectoryTest extends IntegrationTestCase
     public function testAStationNobodyStandsAtIsStillInTheAnswer(): void
     {
         $area = $this->anArea();
-        $this->stations()->add($area, 'Naiyobi Outpost', -29.75, -3.2, 'ST-08');
+        $this->stations()->add($area, 'Ridge Outpost', -29.75, -3.2, 'ST-08');
 
         $stations = $this->directory()->stations();
 
@@ -89,7 +89,7 @@ final class StationDirectoryTest extends IntegrationTestCase
     /** A post on ground that belongs to no zone is legal, and says so. */
     public function testAStationOnNoZoneReportsNoZone(): void
     {
-        $this->stations()->add($this->anArea(), 'Lemagrut Roadside Station', -29.75, -3.2, 'ST-12');
+        $this->stations()->add($this->anArea(), 'Escarpment Roadside Station', -29.75, -3.2, 'ST-12');
 
         self::assertNull($this->directory()->stations()[0]->zoneName);
     }
@@ -97,11 +97,11 @@ final class StationDirectoryTest extends IntegrationTestCase
     /** An area with no station is still offered as a choice, reading nought. */
     public function testAnAreaWithNoStationIsStillOffered(): void
     {
-        $this->anArea('Ngorongoro');
-        $this->anArea('Amboni Caves');
+        $this->anArea('Kilimani Crater');
+        $this->anArea('Sekenke');
 
         self::assertSame(
-            ['Amboni Caves', 'Ngorongoro'],
+            ['Kilimani Crater', 'Sekenke'],
             array_map(static fn (DirectoryArea $a): string => $a->name, $this->directory()->areas()),
         );
     }
@@ -132,7 +132,7 @@ final class StationDirectoryTest extends IntegrationTestCase
 
     private function aStation(): Station
     {
-        return $this->stations()->add($this->anArea(), 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
+        return $this->stations()->add($this->anArea(), 'Eastgate Post', -29.75, -3.2, 'ST-01');
     }
 
     private function aPerson(string $name): HostPerson

@@ -75,7 +75,7 @@ interface ConfigurationSectionsInterface
     public function slug(): string;
 
     /**
-     * WHAT THE CONFIGURE PAGE IS CALLED, whole — "Ngorongoro — Patrols" — to
+     * WHAT THE CONFIGURE PAGE IS CALLED, whole — "Kilimani Crater — Patrols" — to
      * which the shell adds " · configure".
      *
      * The surface composes it because only the surface knows the words: the

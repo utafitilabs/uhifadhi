@@ -57,7 +57,7 @@ final class ZoneFeaturePlanTest extends TestCase
         yield 'overlaps a zone' => [$feature->overlapsZone('Crater', 41)];
         yield 'overlaps a zone, unmeasured' => [$feature->overlapsZone('Crater', null)];
         yield 'overlaps a feature' => [$feature->overlapsFeatureInTheFile('Angata Salei', 3)];
-        yield 'overlaps a long-named feature' => [$feature->overlapsFeatureInTheFile('Mbulumbulu', 1234)];
+        yield 'overlaps a long-named feature' => [$feature->overlapsFeatureInTheFile('Short-grass Plains', 1234)];
         yield 'no geometry' => [$feature->noGeometry()];
         yield 'not a polygon' => [$feature->notAPolygon()];
     }

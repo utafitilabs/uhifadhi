@@ -63,7 +63,7 @@ final class LivePositionsTest extends IntegrationTestCase
         $position = $live->positions[0];
         self::assertSame($this->personUuid, $position->personUuid);
         self::assertSame('Asha Mollel', $position->personName);
-        self::assertSame('Seneto Gate Post', $position->stationName);
+        self::assertSame('Eastgate Post', $position->stationName);
         self::assertEqualsWithDelta(-3.2001, $position->latitude, 0.00001);
         self::assertEqualsWithDelta(-29.7501, $position->longitude, 0.00001);
         self::assertSame(DayState::AtPostVerified, $position->state);
@@ -199,7 +199,7 @@ final class LivePositionsTest extends IntegrationTestCase
 
         /** @var StationService $stations */
         $stations = static::getContainer()->get('test_public.area.stations');
-        $station = $stations->add($area, 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
+        $station = $stations->add($area, 'Eastgate Post', -29.75, -3.2, 'ST-01');
         $station->setCatchmentM($catchment);
         $this->em->flush();
 

@@ -25,7 +25,7 @@ use Uhifadhi\Contracts\Atlas\PlatePalette;
  * swatch on its card. Two zones drawing alike is therefore not a cosmetic
  * problem — it is a map that answers "which zone is this" with two names.
  *
- * Ngorongoro has ELEVEN, which is why this is the number the test names: the
+ * Kilimani Crater has ELEVEN, which is why this is the number the test names: the
  * register wrapped at nine before the ring was ruled, and the tenth and
  * eleventh zones came out wearing the first and second zones' colours.
  */

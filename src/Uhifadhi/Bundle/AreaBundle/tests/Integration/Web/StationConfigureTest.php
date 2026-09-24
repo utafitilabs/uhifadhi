@@ -48,7 +48,7 @@ final class StationConfigureTest extends WebTestCase
 
         $body = $this->body($this->section($area));
 
-        self::assertStringContainsString('Seneto Gate Post', $body);
+        self::assertStringContainsString('Eastgate Post', $body);
         self::assertStringContainsString('ST-01', $body);
         self::assertStringContainsString('Western Sector', $body);
         self::assertStringContainsString('2 stationed', $body);
@@ -78,11 +78,11 @@ final class StationConfigureTest extends WebTestCase
         $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
 
         $this->submit($area, '/stations/add', [
-            'name' => 'Seneto Gate Post', 'lat' => '-3.2', 'lon' => '-29.75',
+            'name' => 'Eastgate Post', 'lat' => '-3.2', 'lon' => '-29.75',
         ]);
 
         self::assertSame(Response::HTTP_FOUND, $this->browser()->getResponse()->getStatusCode());
-        $station = $this->stationsRepository()->findOneBy(['name' => 'Seneto Gate Post']);
+        $station = $this->stationsRepository()->findOneBy(['name' => 'Eastgate Post']);
         self::assertInstanceOf(Station::class, $station);
         self::assertSame('ST-01', $station->getCode());
         self::assertSame('Western Sector', $station->getZone()?->getName());
@@ -104,7 +104,7 @@ final class StationConfigureTest extends WebTestCase
         $area = $this->anArea();
 
         $this->submit($area, '/stations/add', [
-            'name' => 'Seneto Gate Post',
+            'name' => 'Eastgate Post',
             'lat' => '-3.2',
             'lon' => '-29.75',
             'elevation' => '2286',
@@ -112,7 +112,7 @@ final class StationConfigureTest extends WebTestCase
             'opened' => '2024-01-14',
         ]);
 
-        $station = $this->stationsRepository()->findOneBy(['name' => 'Seneto Gate Post']);
+        $station = $this->stationsRepository()->findOneBy(['name' => 'Eastgate Post']);
         self::assertInstanceOf(Station::class, $station);
         self::assertSame(2286, $station->getElevationM());
         self::assertSame('crater rim road', $station->getLocality());
@@ -126,9 +126,9 @@ final class StationConfigureTest extends WebTestCase
         $this->signIn();
         $area = $this->anArea();
 
-        $this->submit($area, '/stations/add', ['name' => 'Seneto Gate Post']);
+        $this->submit($area, '/stations/add', ['name' => 'Eastgate Post']);
 
-        self::assertNull($this->stationsRepository()->findOneBy(['name' => 'Seneto Gate Post']));
+        self::assertNull($this->stationsRepository()->findOneBy(['name' => 'Eastgate Post']));
         self::assertStringContainsString('it needs a point', $this->body($this->section($area)));
     }
 
@@ -139,7 +139,7 @@ final class StationConfigureTest extends WebTestCase
         [$area, $station] = $this->aStaffedPost();
         $uuid = (string) $station->getUuidString();
 
-        $this->submit($area, '/stations/'.$uuid.'/rename', ['name' => 'Seneto Main Gate'], $uuid);
+        $this->submit($area, '/stations/'.$uuid.'/rename', ['name' => 'Eastgate Main Gate'], $uuid);
         $this->submit($area, '/stations/'.$uuid.'/point', ['lat' => '-3.1', 'lon' => '-29.4'], $uuid);
         $this->submit($area, '/stations/'.$uuid.'/describe', [
             'elevation' => '2286', 'locality' => 'crater rim road',
@@ -148,7 +148,7 @@ final class StationConfigureTest extends WebTestCase
         $this->em->clear();
         $station = $this->stationsRepository()->findOneBy(['uuid' => $uuid]);
         self::assertInstanceOf(Station::class, $station);
-        self::assertSame('Seneto Main Gate', $station->getName());
+        self::assertSame('Eastgate Main Gate', $station->getName());
         self::assertSame(2286, $station->getElevationM());
         self::assertSame('crater rim road', $station->getLocality());
         // The point moved east, out of the western zone, and the zone followed it.
@@ -172,14 +172,14 @@ final class StationConfigureTest extends WebTestCase
         $uuid = (string) $station->getUuidString();
 
         $this->submit($area, '/stations/add', [
-            'name' => 'Nasera Rock Post',
+            'name' => 'Lakeshore Post',
             'lat' => '-3.26140',
             'lon' => '-29.41883',
         ]);
         $this->submit($area, '/stations/'.$uuid.'/point', ['lat' => '-3.19684', 'lon' => '-29.47122'], $uuid);
 
         $this->em->clear();
-        $added = $this->stationsRepository()->findOneBy(['name' => 'Nasera Rock Post']);
+        $added = $this->stationsRepository()->findOneBy(['name' => 'Lakeshore Post']);
         self::assertInstanceOf(Station::class, $added);
         self::assertStringContainsString('-3.2614', (string) $added->getPoint());
         self::assertStringContainsString('-29.41883', (string) $added->getPoint());
@@ -221,7 +221,7 @@ final class StationConfigureTest extends WebTestCase
         $this->stations()->add($area, 'Eastern Outpost', -29.25, -3.2);
 
         self::assertSame(['Eastern Outpost'], $this->listed($this->section($area).'?zone=unzoned'));
-        self::assertSame(['Seneto Gate Post'], $this->listed($this->section($area).'?q=seneto'));
+        self::assertSame(['Eastgate Post'], $this->listed($this->section($area).'?q=eastgate'));
         self::assertSame(['Eastern Outpost'], $this->listed($this->section($area).'?posted=no'));
     }
 
@@ -321,10 +321,10 @@ final class StationConfigureTest extends WebTestCase
 
         self::assertSame([], $this->postings()->standingAt($station));
         self::assertSame([], $this->listed($this->section($area)));
-        self::assertSame(['Seneto Gate Post'], $this->listed($this->section($area).'?active=no'));
+        self::assertSame(['Eastgate Post'], $this->listed($this->section($area).'?active=no'));
 
         $this->submit($area, '/stations/'.$uuid.'/activity', ['active' => '1'], $uuid.'&active=no');
-        self::assertSame(['Seneto Gate Post'], $this->listed($this->section($area)));
+        self::assertSame(['Eastgate Post'], $this->listed($this->section($area)));
     }
 
     /** A post of another area is not this section's to change. */
@@ -368,7 +368,7 @@ final class StationConfigureTest extends WebTestCase
         $this->boot();
         $this->signIn();
         $area = $this->aLiveArea();
-        $station = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
+        $station = $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2, 'ST-01');
 
         // ONE CARD IS OPEN AT A TIME on this page, and a card's fields —
         // the area's and the modules' alike — exist only while it is.
@@ -390,7 +390,7 @@ final class StationConfigureTest extends WebTestCase
         $this->boot();
         $this->signIn();
         $area = $this->anArea();
-        $station = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
+        $station = $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2, 'ST-01');
 
         $body = $this->body($this->section($area).'?open='.$station->getUuidString());
 
@@ -464,7 +464,7 @@ final class StationConfigureTest extends WebTestCase
     {
         $area = $this->anArea();
         $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
-        $station = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
+        $station = $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2);
 
         $lead = $this->postings()->post($station, $this->aPerson('J.', 'Mollel'), PostingSource::WrittenHere);
         $this->postings()->appointLeader($lead);

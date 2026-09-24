@@ -132,7 +132,7 @@ not `UhifadhiRegistryBundle`. Yours is a single-bundle package, so use the first
 organization is in neither chain — `UhifadhiLabs\…` names nothing.
 
 **And the application is `App\`.** A project created from the
-[uhifadhi skeleton](https://github.com/uhifadhilabs/skeleton) is a stock Symfony application with
+[uhifadhi skeleton](https://github.com/utafitilabs/skeleton) is a stock Symfony application with
 the stock root, which is exactly the point: `Uhifadhi\` is reserved for platform packages, so a
 class under `Uhifadhi\` is always somebody's bundle and never the host you installed it into. Bind to
 `App\Entity\…` in your own examples, and see [Stubs vs contracts](#stubs-vs-contracts) for the one

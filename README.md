@@ -7,7 +7,7 @@ and one tag on this repository is the platform version.
 The core arrives whole and is never picked apart. What a deployment can *do* —
 patrols, incidents, rosters — arrives as **modules**, each its own package.
 
-New to uhifadhi? Start with [uhifadhi/skeleton](https://github.com/uhifadhilabs/skeleton),
+New to uhifadhi? Start with [uhifadhi/skeleton](https://github.com/utafitilabs/skeleton),
 which says what the platform is and how an installation is created. This
 repository is the core that installation runs on, written for the developer who
 updates it or builds a module against it.
@@ -280,7 +280,7 @@ The root [CHANGELOG-1.0.md](CHANGELOG-1.0.md) and [UPGRADE-1.0.md](UPGRADE-1.0.m
 are the release notes; each bundle also keeps its own `CHANGELOG.md`.
 
 **A tag is not done until the fleet gate is green.** The starter repository
-(`uhifadhilabs/skeleton`) carries `composer fleet-gate`, which creates a project
+(`utafitilabs/skeleton`) carries `composer fleet-gate`, which creates a project
 with its README's own commands and installs this core and every official module
 into it, one by one, signing in after each. Before tagging, run
 `composer fleet-gate:head` there, which installs from the sibling checkouts on

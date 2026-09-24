@@ -5,7 +5,7 @@ name: CI
 # before it is valid for review.
 on:
   push:
-    branches: [main]
+    branches: ['**']   # every version line (0.1, 0.2, …) and every feature branch
   pull_request:
 
 permissions:
@@ -97,7 +97,7 @@ jobs:
   # how a shell selector a module restated stayed invisible until somebody
   # pushed the core: the module's suite was measuring a snapshot.
   #
-  # So every module the fleet ships is checked out at main, POINTED AT THIS
+  # So every module the fleet ships is checked out at its current line, POINTED AT THIS
   # CORE COMMIT, and put through its own `composer check`. A module that
   # breaks against the core the core is about to become fails the core's
   # push, which is where the breakage was introduced and where it is cheap.
@@ -176,11 +176,12 @@ jobs:
         with:
           path: core
 
-      - name: Check out the module at main
+      - name: Check out the module at its current line
         uses: actions/checkout@v4
         with:
-          repository: uhifadhilabs/${{ matrix.module }}-module
-          ref: main
+          repository: utafitilabs/${{ matrix.module }}-module
+          # No ref: the repository's default branch is its current version line
+          # (0.3, 0.7, …), the Symfony shape — main no longer exists.
           # Every fleet module is public, so the job's own token checks it out.
           # A private module would need a Contents:read token added here.
           path: module

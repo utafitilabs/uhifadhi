@@ -13,7 +13,7 @@ repository, and how to work on it.
 ## The architecture
 
 **Uhifadhi is one skeleton and a set of modules.**
-[`uhifadhi/uhifadhi`](https://github.com/uhifadhilabs/uhifadhi) is the project
+[`uhifadhi/uhifadhi`](https://github.com/utafitilabs/uhifadhi) is the project
 skeleton — copied once, never updated; everything else arrives as a module,
 updated forever. A module **registers with the registry**
 ([`RegistryBundle`](../../RegistryBundle/README.md)) and

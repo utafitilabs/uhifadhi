@@ -1,6 +1,6 @@
 {
     "name": "@uhifadhi/uhifadhi",
-    "description": "Front-end behaviour of the core \u2014 every Stimulus controller the registry, the shell, the team screens and the area screens ship, mapped into an installation through AssetMapper.",
+    "description": "Front-end behaviour of the core — every Stimulus controller the registry, the shell, the team screens and the area screens ship, mapped into an installation through AssetMapper.",
     "license": "AGPL-3.0-or-later",
     "symfony": {
         "controllers": {
@@ -37,6 +37,12 @@
             "grants": {
                 "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/grants_controller.js",
                 "name": "uhifadhi--team-bundle--grants",
+                "fetch": "lazy",
+                "enabled": true
+            },
+            "yes-no": {
+                "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/yes_no_controller.js",
+                "name": "uhifadhi--team-bundle--yes-no",
                 "fetch": "lazy",
                 "enabled": true
             },

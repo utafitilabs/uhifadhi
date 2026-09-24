@@ -110,6 +110,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'team_placement_area',
                 'team_placement_department',
                 'team_position',
+                'team_settings',
                 'team_user',
                 'widget_custom_preset',
                 'widget_preference',
@@ -186,6 +187,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260922000100',
                 'Uhifadhi\\Bundle\\RegistryBundle\\Migrations\\Version20260924000100',
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260924000100',
+                'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260924000200',
             ],
             $this->plannedVersions(),
         );

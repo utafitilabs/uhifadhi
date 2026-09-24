@@ -202,16 +202,24 @@ jobs:
       #
       # The version is stated rather than guessed: `actions/checkout` leaves
       # a detached HEAD, and Composer's guesser would name the commit rather
-      # than the branch, which no `^1.0@dev` constraint accepts.
+      # than the branch. The module's own constraint is a caret against tags
+      # (`^0.1`), which a dev version does not satisfy under a stable floor, so
+      # the requirement is rewritten to this line's dev version for the run —
+      # the module is being tested against the core's NEXT commit on purpose.
       - name: Point the module at this core commit
         working-directory: module
         run: |
+          line="$(jq -r '.extra["branch-alias"]["dev-main"] // empty' ../core/composer.json)"
+          line="${line:-$(git -C ../core rev-parse --abbrev-ref HEAD)}"
+          case "$line" in HEAD) line="$(git -C ../core branch -r --contains HEAD | grep -v HEAD | head -1 | sed 's#.*origin/##')";; esac
+          version="${line%-dev}.x-dev"
+          echo "core line $line → $version"
           tmp="$(mktemp)"
-          jq '.repositories = ([{
+          jq --arg v "$version" '.repositories = ([{
                 type: "path",
                 url: "../core",
-                options: { versions: { "uhifadhi/uhifadhi": "1.0.x-dev" } }
-              }] + (.repositories // []))' composer.json > "$tmp"
+                options: { versions: { "uhifadhi/uhifadhi": $v } }
+              }] + (.repositories // [])) | .require["uhifadhi/uhifadhi"] = $v' composer.json > "$tmp"
           mv "$tmp" composer.json
           composer validate --no-check-all --no-check-publish
 

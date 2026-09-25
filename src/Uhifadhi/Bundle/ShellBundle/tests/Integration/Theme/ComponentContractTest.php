@@ -194,6 +194,11 @@ final class ComponentContractTest extends ContractTestCase
 
             // A FIGURE'S MOVEMENT against the previous period, in a KPI's sub.
             'delta',
+
+            // THE CARET PAIR beside a row's grip in an ordered list — one
+            // step up, one step down; the shell's reorder controller draws
+            // the slot and the lifted row itself.
+            'reorder',
         ];
     }
 

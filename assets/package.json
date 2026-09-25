@@ -135,6 +135,12 @@
                 "fetch": "eager",
                 "enabled": true,
                 "name": "uhifadhi--shell-bundle--register-fold"
+            },
+            "reorder": {
+                "main": "../src/Uhifadhi/Bundle/ShellBundle/assets/controllers/reorder_controller.js",
+                "name": "uhifadhi--shell-bundle--reorder",
+                "fetch": "eager",
+                "enabled": true
             }
         },
         "importmap": {

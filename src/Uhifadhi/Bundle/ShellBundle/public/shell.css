@@ -2822,3 +2822,64 @@ table.tbl tr.sxgrp:hover td { background: color-mix(in srgb, var(--fog) 6%, tran
     background: color-mix(in srgb, var(--fail) 8%, transparent);
 }
 .delta.flat { color: var(--dim); border-color: var(--ln2); }
+
+/* ==================== REORDER — moving a row within an ordered list ====================
+   The shell's `reorder` controller moves a row of any ordered list: the ranks
+   ladder, an area's running modules. The values are the design's
+   (DesignsProjects/uhifadhi-web/reorder.css).
+
+   THE CARET PAIR, written by the page beside each row's grip: lucide
+   chevron-up over chevron-down, 18×17 each so the pair is the 34px control
+   height, one step per press. The first row's up and the last row's down are
+   disabled, and the controller keeps them so as rows move. */
+.reorder {
+    display: inline-grid; grid-template-rows: 17px 17px; width: 18px; flex: none;
+    vertical-align: middle;
+}
+.reorder button {
+    display: grid; place-items: center; width: 18px; height: 17px; padding: 0;
+    border: 0; border-radius: 4px; background: none; color: var(--dim); cursor: pointer;
+}
+.reorder button svg { width: 12px; height: 12px; }
+.reorder button:hover { color: var(--acc); }
+.reorder button:focus-visible { outline: 2px solid var(--acc); outline-offset: -2px; }
+.reorder button:disabled { opacity: .3; color: var(--dim); cursor: default; }
+
+/* THE GAP, written by the controller while a row is dragged: the row's own
+   element (a div, or a table row holding one cell across the table) with one
+   dashed place inside it at the dragged row's height. It opens where the row
+   will land and closes behind it. The dash is the lists' own line one step
+   firmer, so it reads as a place and not as one more separator. */
+.reorder-slot { position: relative; --reorder-h: 45px; }
+tr.reorder-slot > td { padding: 0; border: 0; }
+.reorder-gap {
+    box-sizing: border-box; height: var(--reorder-h);
+    border: 1px dashed var(--ln2); border-radius: 8px;
+    background: color-mix(in srgb, var(--raised) 35%, transparent);
+    animation: reorder-open .18s cubic-bezier(.32, .72, 0, 1);
+}
+.reorder-slot.closing .reorder-gap { animation: reorder-close .18s cubic-bezier(.32, .72, 0, 1) forwards; }
+@keyframes reorder-open {
+    from { height: 0; opacity: 0; }
+    to { height: var(--reorder-h); opacity: 1; }
+}
+@keyframes reorder-close {
+    from { height: var(--reorder-h); opacity: 1; }
+    to { height: 0; opacity: 0; }
+}
+
+/* THE LIFTED ROW rides the pointer on the plate's ground and the overlay's
+   shadow, its own rules gone; on release it settles into the slot. */
+.reorder-lifted {
+    z-index: 60; border-color: transparent; border-radius: 8px; cursor: grabbing;
+    background: linear-gradient(180deg, var(--p1), var(--p2));
+    box-shadow: var(--lift);
+}
+.reorder-lifted > td { background: transparent; border-color: transparent; }
+.reorder-settling { transition: transform .18s cubic-bezier(.32, .72, 0, 1); }
+
+@media (prefers-reduced-motion: reduce) {
+    .reorder-gap,
+    .reorder-slot.closing .reorder-gap { animation: none; }
+    .reorder-settling { transition: none; }
+}

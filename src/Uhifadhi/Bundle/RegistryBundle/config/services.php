@@ -15,16 +15,20 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Symfony\Component\Console\Application;
 use Uhifadhi\Bundle\RegistryBundle\Access\RegistryConcerns;
+use Uhifadhi\Bundle\RegistryBundle\Command\FactsRebuildCommand;
 use Uhifadhi\Bundle\RegistryBundle\Command\RegistrySyncCommand;
 use Uhifadhi\Bundle\RegistryBundle\EventListener\ParkedModuleListener;
 use Uhifadhi\Bundle\RegistryBundle\Facts\FactProviders;
 use Uhifadhi\Bundle\RegistryBundle\Facts\FactReader;
+use Uhifadhi\Bundle\RegistryBundle\Message\RecomputeOpenFacts;
+use Uhifadhi\Bundle\RegistryBundle\MessageHandler\RecomputeOpenFactsHandler;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\RegistryBundle\Repository\FigureFactRepository;
 use Uhifadhi\Bundle\RegistryBundle\Repository\ModuleRepository;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleLedger;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
+use Uhifadhi\Bundle\RegistryBundle\Service\FactRebuildService;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleEntryRouteResolver;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleRouteGate;
@@ -69,6 +73,9 @@ use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
  *   registry.command.sync          `registry:sync`, the command that runs it and reports
  *   registry.facts.providers       every module that computes facts, and the figures they declared
  *   registry.facts.reader          the facts ledger, read (aliased from FactReaderInterface)
+ *   registry.facts.rebuild         asks the modules for their figures and files them
+ *   registry.facts.recompute_handler  the worker's side of the schedule
+ *   registry.command.facts_rebuild `uhifadhi:facts:rebuild`, the operator's recompute over a range
  */
 return static function (ContainerConfigurator $container): void {
     $services = $container->services();
@@ -114,6 +121,26 @@ return static function (ContainerConfigurator $container): void {
     $services->set('registry.facts.reader', FactReader::class)
         ->args([service(FigureFactRepository::class), service('registry.facts.providers')]);
     $services->alias(FactReaderInterface::class, 'registry.facts.reader');
+
+    /*
+     * THE ONE WRITER OF THE LEDGER, and the worker's handler that runs it
+     * for the periods open now. "Now" is the framework's `clock` service.
+     *
+     * The handler is tagged by hand with the message it handles:
+     *   "If autoconfiguration is disabled, manually register handlers using
+     *    the messenger.message_handler tag with the handles attribute"
+     *   — https://symfony.com/doc/current/messenger.html#manually-configuring-handlers
+     */
+    $services->set('registry.facts.rebuild', FactRebuildService::class)
+        ->args([
+            service('registry.facts.providers'),
+            service(FigureFactRepository::class),
+            service('clock'),
+        ]);
+
+    $services->set('registry.facts.recompute_handler', RecomputeOpenFactsHandler::class)
+        ->args([service('registry.facts.rebuild')])
+        ->tag('messenger.message_handler', ['handles' => RecomputeOpenFacts::class]);
 
     $services->set('registry.provider_mapper', ProviderCatalogueMapper::class)
         ->args([param('registry.default_category')]);
@@ -232,6 +259,10 @@ return static function (ContainerConfigurator $container): void {
     if (class_exists(Application::class)) {
         $services->set('registry.command.sync', RegistrySyncCommand::class)
             ->args([service('registry.sync')])
+            ->tag('console.command');
+
+        $services->set('registry.command.facts_rebuild', FactsRebuildCommand::class)
+            ->args([service('registry.facts.rebuild'), service('clock')])
             ->tag('console.command');
     }
 };

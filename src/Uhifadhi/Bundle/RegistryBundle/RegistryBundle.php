@@ -20,8 +20,11 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use Uhifadhi\Bundle\RegistryBundle\DependencyInjection\Compiler\InstallationMigrationsPathFirstPass;
 use Uhifadhi\Bundle\RegistryBundle\DependencyInjection\RegistryConfiguration;
+use Uhifadhi\Bundle\RegistryBundle\Scheduler\RecomputeOpenFactsTask;
 use Uhifadhi\Contracts\Facts\FactProviderInterface;
 use Uhifadhi\Contracts\ModuleProviderInterface;
+
+use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
 /**
  * THE REGISTRY — the runtime every uhifadhi module registers with.
@@ -219,5 +222,27 @@ final class RegistryBundle extends AbstractBundle
         // catalogue rows. Nothing claims it yet — the switch exists so the first
         // thing that needs it has somewhere to hang.
         $builder->setParameter('registry.dev_tools', true === ($config['dev_tools'] ?? false));
+
+        // THE FACTS SCHEDULE. One `scheduler.task` tag per cron expression on
+        // the task that queues the recompute — the tag `#[AsCronTask]` writes,
+        // written by hand because a reusable bundle is not autoconfigured. The
+        // framework puts each on the `default` schedule.
+        // @see Scheduler/RecomputeOpenFactsTask.php
+        $facts = \is_array($config['facts'] ?? null) ? $config['facts'] : [];
+        $schedule = \is_array($facts['schedule'] ?? null) ? $facts['schedule'] : [];
+        $timezone = \is_string($facts['timezone'] ?? null) ? $facts['timezone'] : null;
+
+        $task = $container->services()
+            ->set('registry.facts.schedule_task', RecomputeOpenFactsTask::class)
+            ->args([service('messenger.default_bus')]);
+
+        foreach ($schedule as $expression) {
+            $task->tag('scheduler.task', array_filter([
+                'trigger' => 'cron',
+                'expression' => $expression,
+                'timezone' => $timezone,
+                'schedule' => 'default',
+            ], static fn (mixed $value): bool => null !== $value));
+        }
     }
 }

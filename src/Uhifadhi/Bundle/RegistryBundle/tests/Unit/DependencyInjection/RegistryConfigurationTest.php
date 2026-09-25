@@ -78,4 +78,38 @@ final class RegistryConfigurationTest extends TestCase
 
         $this->process(['modules' => ['sightings' => ['enabled' => true]]]);
     }
+
+    /**
+     * THE FACTS SCHEDULE: every hour of the working day and once at night,
+     * in the installation's own zone — the default an installation gets
+     * without saying anything.
+     */
+    public function testTheFactsAreRecomputedHourlyByDayAndOnceAtNight(): void
+    {
+        $config = $this->process([]);
+
+        self::assertSame(['schedule' => ['0 6-20 * * *', '0 2 * * *'], 'timezone' => null], $config['facts']);
+    }
+
+    public function testAnInstallationMaySetItsOwnCadence(): void
+    {
+        $config = $this->process(['facts' => ['schedule' => ['*/30 * * * *'], 'timezone' => 'Africa/Dar_es_Salaam']]);
+
+        self::assertSame(['schedule' => ['*/30 * * * *'], 'timezone' => 'Africa/Dar_es_Salaam'], $config['facts']);
+    }
+
+    /** No cadence at all would leave the ledger to go stale in silence. */
+    public function testAnEmptyCadenceIsRefused(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->process(['facts' => ['schedule' => []]]);
+    }
+
+    public function testACadenceThatIsNotACronExpressionIsRefused(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->process(['facts' => ['schedule' => ['every hour']]]);
+    }
 }

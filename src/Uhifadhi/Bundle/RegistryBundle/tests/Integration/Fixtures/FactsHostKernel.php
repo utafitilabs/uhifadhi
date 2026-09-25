@@ -29,9 +29,20 @@ use Uhifadhi\Contracts\Facts\FactProviderInterface;
  */
 class FactsHostKernel extends HostKernel
 {
+    /**
+     * The installation's `registry:` configuration, set before booting.
+     *
+     * @var array<string, mixed>
+     */
+    public static array $registry = [];
+
     protected function configureContainer(ContainerConfigurator $container): void
     {
         parent::configureContainer($container);
+
+        if ([] !== static::$registry) {
+            $container->extension('registry', static::$registry);
+        }
 
         $services = $container->services();
 
@@ -43,7 +54,9 @@ class FactsHostKernel extends HostKernel
         foreach ([
             'registry.facts.reader',
             FigureFactRepository::class,
+            'registry.facts.rebuild',
             'registry.facts.providers',
+            'registry.facts.schedule_task',
         ] as $id) {
             $services->alias('test.'.$id, $id)->public();
         }
@@ -51,6 +64,6 @@ class FactsHostKernel extends HostKernel
 
     public function getCacheDir(): string
     {
-        return parent::getCacheDir().'-facts';
+        return parent::getCacheDir().'-facts-'.substr(hash('xxh128', serialize(static::$registry)), 0, 8);
     }
 }

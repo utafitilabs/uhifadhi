@@ -18,12 +18,12 @@ use Symfony\Component\Console\CommandLoader\CommandLoaderInterface;
 use Uhifadhi\Core\Tests\Application\Kernel;
 
 /**
- * THE CORE'S CONSOLE SURFACE IS FOUR COMMANDS, AND THIS IS WHERE THAT IS TRUE
+ * THE CORE'S CONSOLE SURFACE IS FIVE COMMANDS, AND THIS IS WHERE THAT IS TRUE
  * OR NOT.
  *
  * The rule and its exceptions, stated once for all five bundles at once.
  * Everything the platform can be told to do is a screen, because a command is
- * a door with no page and nobody to explain itself to; the four that are not
+ * a door with no page and nobody to explain itself to; the five that are not
  * screens are all things a PRODUCTION installation must be able to run
  * without development packages, which is the whole of the exception:
  *
@@ -42,6 +42,11 @@ use Uhifadhi\Core\Tests\Application\Kernel;
  *   `area:presence:rebuild`     the facts on the check-in rows recomputed
  *                               from the kept pings — after a station's point
  *                               moves or a zone set is replaced.
+ *   `uhifadhi:facts:rebuild`    the facts ledger recomputed over a range of
+ *                               months — after the deploy that brings a
+ *                               module's facts, and after a rule they depend
+ *                               on changes; the schedule never recomputes a
+ *                               closed period, so this is what does.
  *
  * Every other command the platform has belongs to devkit, which installs
  * through `require-dev` and is absent from a production build.
@@ -58,8 +63,11 @@ use Uhifadhi\Core\Tests\Application\Kernel;
  */
 final class OneConsoleCommandTest extends KernelTestCase
 {
-    /** The five bundles' own command namespaces — one per configuration root. */
-    private const array NAMESPACES = ['registry', 'shell', 'atlas', 'team', 'area'];
+    /**
+     * The five bundles' own command namespaces — one per configuration root —
+     * and the platform's, which a command spanning every module is named under.
+     */
+    private const array NAMESPACES = ['registry', 'shell', 'atlas', 'team', 'area', 'uhifadhi'];
 
     protected static function getKernelClass(): string
     {
@@ -82,7 +90,7 @@ final class OneConsoleCommandTest extends KernelTestCase
         }
     }
 
-    public function testTheOnlyCommandsTheCoreShipsAreTheFourAProductionInstallationRuns(): void
+    public function testTheOnlyCommandsTheCoreShipsAreTheFiveAProductionInstallationRuns(): void
     {
         self::bootKernel();
 
@@ -104,8 +112,8 @@ final class OneConsoleCommandTest extends KernelTestCase
 
         sort($ours);
 
-        self::assertSame(['area:presence:rebuild', 'registry:sync', 'team:performance:snapshot', 'team:user:create'], $ours, \sprintf(
-            'The core ships four commands, all of them things a production installation must run; this one carries [%s]. Everything else belongs to devkit.',
+        self::assertSame(['area:presence:rebuild', 'registry:sync', 'team:performance:snapshot', 'team:user:create', 'uhifadhi:facts:rebuild'], $ours, \sprintf(
+            'The core ships five commands, all of them things a production installation must run; this one carries [%s]. Everything else belongs to devkit.',
             implode(', ', $ours),
         ));
     }

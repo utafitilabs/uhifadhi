@@ -15,12 +15,16 @@ namespace Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Facts;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Uhifadhi\Bundle\RegistryBundle\Repository\FigureFactRepository;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures\FactsHostKernel;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures\SurveyFactProvider;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures\TallyFactProvider;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\RegistryKernelTestCase;
 use Uhifadhi\Contracts\Facts\FactReaderInterface;
+use Uhifadhi\Contracts\Facts\FactRequest;
 use Uhifadhi\Contracts\Facts\FactSubject;
 use Uhifadhi\Contracts\Facts\FactValue;
 
@@ -90,6 +94,57 @@ abstract class FactsTestCase extends RegistryKernelTestCase
             $periodKey,
             new \DateTimeImmutable($at),
         );
+    }
+
+    /**
+     * Type a console command into the booted installation.
+     *
+     * @param array<string, string|list<string>> $input
+     *
+     * @return array{int, string} the exit status and what it printed
+     *
+     * @see https://symfony.com/doc/current/console.html#testing-commands
+     */
+    protected function console(array $input): array
+    {
+        $kernel = self::$kernel;
+        \assert(null !== $kernel);
+
+        $application = new Application($kernel);
+        $application->setAutoExit(false);
+        $application->setCatchExceptions(true);
+
+        $output = new BufferedOutput();
+        $status = $application->run(new ArrayInput($input), $output);
+
+        return [$status, $output->fetch()];
+    }
+
+    /**
+     * What a provider was asked, as "period: figure, figure [subject]".
+     *
+     * @param list<FactRequest> $asked
+     *
+     * @return list<string>
+     */
+    protected static function asked(array $asked): array
+    {
+        return array_map(
+            static fn (FactRequest $request): string => $request->period->key.': '.implode(', ', $request->figureKeys)
+                .(null === $request->subjectUuid ? '' : ' ['.$request->subjectUuid.']'),
+            $asked,
+        );
+    }
+
+    /** One stored value, read straight from the table. */
+    protected function stored(string $subject, string $figure, string $periodKey): ?float
+    {
+        $value = $this->em()->getConnection()->fetchOne(
+            'SELECT value FROM figure_fact WHERE subject_uuid = :s AND figure_key = :f AND period_key = :p',
+            ['s' => $subject, 'f' => $figure, 'p' => $periodKey],
+        );
+
+        return is_numeric($value) ? (float) $value : null;
     }
 
     protected function rows(): int

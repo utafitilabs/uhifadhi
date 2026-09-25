@@ -191,20 +191,22 @@ final class BoundaryTest extends TestCase
     }
 
     /**
-     * ONE COMMAND IN THIS BUNDLE, AND THE CONSOLE COMPONENT IS NAMED ONLY WHERE
-     * IT IS WIRED. `registry:sync` is the step of an install that only the
+     * TWO COMMANDS IN THIS BUNDLE, AND THE CONSOLE COMPONENT IS NAMED ONLY WHERE
+     * THEY ARE WIRED. `registry:sync` is the step of an install that only the
      * registry can do — reconcile the catalogue with the installed providers —
-     * so it ships here, on a production installation, beside the tables it
-     * fills. Everything else a person types belongs to devkit, a dev-only
-     * package; a second file under `Command/` is that ruling being undone.
+     * and `uhifadhi:facts:rebuild` is the recompute an operator runs on a
+     * production installation after a rule the facts depend on changes; both
+     * ship here, beside the tables they fill. Everything else a person types
+     * belongs to devkit, a dev-only package; a third file under `Command/` is
+     * that ruling being undone.
      */
-    public function testTheRegistryShipsExactlyOneConsoleCommand(): void
+    public function testTheRegistryShipsExactlyTwoConsoleCommands(): void
     {
         $commands = glob(self::BUNDLE.'/Command/*.php');
         self::assertSame(
-            [self::BUNDLE.'/Command/RegistrySyncCommand.php'],
+            [self::BUNDLE.'/Command/FactsRebuildCommand.php', self::BUNDLE.'/Command/RegistrySyncCommand.php'],
             false === $commands ? [] : $commands,
-            'registry:sync is the one command; a seeder belongs to devkit.',
+            'registry:sync and uhifadhi:facts:rebuild are the commands; a seeder belongs to devkit.',
         );
 
         $offenders = [];
@@ -217,9 +219,9 @@ final class BoundaryTest extends TestCase
         sort($offenders);
 
         self::assertSame(
-            ['Command/RegistrySyncCommand.php', 'config/services.php'],
+            ['Command/FactsRebuildCommand.php', 'Command/RegistrySyncCommand.php', 'config/services.php'],
             $offenders,
-            'Only the command and the file that wires it may name the console component.',
+            'Only the commands and the file that wires them may name the console component.',
         );
     }
 

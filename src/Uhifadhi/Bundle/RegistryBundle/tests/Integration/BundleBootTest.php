@@ -19,6 +19,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\Mapping\Driver\MappingDriverChain;
 use Uhifadhi\Bundle\RegistryBundle\Entity\AreaModule;
+use Uhifadhi\Bundle\RegistryBundle\Entity\FigureFact;
 use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 
@@ -93,9 +94,9 @@ final class BundleBootTest extends RegistryKernelTestCase
         // interface, which a host that has not got there yet must still boot.
         // Canonicalising, not ordering: what comes out of the driver is whatever
         // order the directory was read in, which is the filesystem's business and
-        // not a promise this bundle makes. The claim is that both are mapped.
+        // not a promise this bundle makes. The claim is that all three are mapped.
         self::assertEqualsCanonicalizing(
-            [Module::class, AreaModule::class],
+            [Module::class, AreaModule::class, FigureFact::class],
             array_map(
                 static fn (ClassMetadata $metadata): string => $metadata->getName(),
                 $em->getMetadataFactory()->getAllMetadata(),

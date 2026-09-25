@@ -380,6 +380,21 @@ final class ComponentContractTest extends ContractTestCase
     }
 
     /**
+     * THE PHONE DRAWER'S THREE PIECES ARE FURNITURE, STYLED AND UNLISTED. The
+     * opener in the top bar, the close mark in the sidebar head and the scrim
+     * beside the aside are written by the shell's own template on every page;
+     * a module never writes one, so none of them is vocabulary — and every one
+     * of them is styled, or a phone gets a bare button in the bar.
+     */
+    public function testThePhoneDrawersFurnitureIsStyledAndIsNotVocabulary(): void
+    {
+        foreach (['side-open', 'side-close', 'side-scrim'] as $class) {
+            self::assertMatchesRegularExpression('/\.'.preg_quote($class, '/').'\s*\{/', $this->stylesheet(), \sprintf('.%s is drawn on every page and styled nowhere.', $class));
+            self::assertNotContains($class, LayoutContract::COMPONENTS, \sprintf('.%s is the frame\'s furniture; a module that wrote it would be drawing the frame.', $class));
+        }
+    }
+
+    /**
      * THE PAGE-ACTION ROW IS THE FRAME'S, WHOLE. `page.html.twig` writes
      * `<div class="pgact">` itself and gives a module filling
      * `shell_page_actions` no way to add a class to it, so the row's layout can

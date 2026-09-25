@@ -22,13 +22,31 @@
    enabled in the host's assets/controllers.json by Flex on install, and are
    addressed by StimulusBundle's namespaced identifier for a UX package —
    `uhifadhi--shell-bundle--<controller>`. Nothing is built and nothing is
-   copied into an application. #}
+   copied into an application.
+
+   THE SIDEBAR CONTROLLER SITS ON `.shell`, NOT ON THE ASIDE, because below
+   900px the sidebar is a drawer (ruled 2026-09-25) whose opener lives in the
+   top bar and whose scrim lies beside the aside — and a Stimulus action only
+   reaches a controller whose element contains it. The aside, the opener, the
+   close mark and the main column are its targets; Escape is heard on the
+   document, because focus may be anywhere when it is pressed:
+
+     "Sometimes a controller needs to listen for events dispatched on the
+      global window or document objects."
+     https://stimulus.hotwired.dev/reference/actions (Global Events; the
+     `keydown.esc` key filter is on the same page)
+
+   A host that replaces `shell_sidebar` or `shell_main` keeps the controller
+   and loses only the targets it dropped; the controller asks before it uses
+   one. #}
 {% extends '@Shell/document.html.twig' %}
 
 {% block body %}
-    <div class="shell">
+    <div class="shell" data-controller="uhifadhi--shell-bundle--sidebar"
+         data-action="keydown.esc@document->uhifadhi--shell-bundle--sidebar#close">
         {% block shell_sidebar %}
-            <aside class="side" id="side" data-controller="uhifadhi--shell-bundle--sidebar">
+            <aside class="side" id="side" data-uhifadhi--shell-bundle--sidebar-target="side"
+                   data-action="click->uhifadhi--shell-bundle--sidebar#follow">
                 <div class="side-top">
                     {% block shell_sidebar_brand %}
                         {%- set _brand = shell_brand() -%}
@@ -39,6 +57,11 @@
                     {% endblock %}
                     <button class="collapse-btn" type="button" data-action="uhifadhi--shell-bundle--sidebar#toggle"
                             title="Collapse sidebar" aria-label="Collapse sidebar">{{ ux_icon('shell:chevrons-left') }}</button>
+                    {# THE CLOSE MARK — the drawer's, drawn only below 900px,
+                       where the collapse button beside it is not. #}
+                    <button class="side-close" type="button" data-uhifadhi--shell-bundle--sidebar-target="closer"
+                            data-action="uhifadhi--shell-bundle--sidebar#close"
+                            title="Close menu" aria-label="Close menu">{{ ux_icon('shell:x') }}</button>
                 </div>
 
                 {% block shell_sidebar_nav %}
@@ -53,13 +76,28 @@
             </aside>
         {% endblock %}
 
+        {# THE SCRIM over the page while the drawer is out — a tap on it closes.
+           Decoration to a screen reader, which closes with Escape or the close
+           mark. Outside `shell_sidebar` so a host's own aside still gets one. #}
+        <div class="side-scrim" aria-hidden="true" data-action="click->uhifadhi--shell-bundle--sidebar#close"></div>
+
         {% block shell_main %}
-            <main class="main">
+            <main class="main" data-uhifadhi--shell-bundle--sidebar-target="main">
                 {% block shell_banner %}{% endblock %}
 
                 {% block shell_topbar %}
                     <header class="topbar">
                         <span class="tb-right">
+                            {# THE OPENER — the drawer's, at the bar's left and only
+                               below 900px. It names what it opens and says
+                               whether it is open; the drawer is closed on every
+                               load, because open is derived per tap and never
+                               remembered. #}
+                            <button class="tb-icon side-open" type="button" data-uhifadhi--shell-bundle--sidebar-target="opener"
+                                    data-action="uhifadhi--shell-bundle--sidebar#open"
+                                    aria-controls="side" aria-expanded="false"
+                                    title="Open menu" aria-label="Open menu">{{ ux_icon('shell:menu') }}</button>
+
                             {# WHOSE INSTALLATION THIS IS — the brand's accent rule,
                                the organization's full name, a hairline, the short
                                name. The chrome says UHIFADHI, the product, in the

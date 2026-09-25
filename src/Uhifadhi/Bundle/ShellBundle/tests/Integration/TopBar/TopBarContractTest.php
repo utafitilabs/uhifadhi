@@ -58,7 +58,7 @@ final class TopBarContractTest extends ContractTestCase
         $crawler = $this->crawl(self::PAGE);
 
         // The wired toggle: a real button, addressed by the shell's controller.
-        $toggle = $crawler->filter('header.topbar button.tb-icon');
+        $toggle = $crawler->filter('header.topbar button.tb-icon:not(.side-open)');
         self::assertCount(1, $toggle);
         self::assertSame('uhifadhi--shell-bundle--theme#toggle', $toggle->attr('data-action'));
 
@@ -132,7 +132,7 @@ final class TopBarContractTest extends ContractTestCase
         $crawler = $this->crawl(self::PAGE);
 
         self::assertCount(1, $crawler->filter('header.topbar'));
-        self::assertCount(1, $crawler->filter('header.topbar button.tb-icon'), 'The toggle is the shell\'s own and stays.');
+        self::assertCount(1, $crawler->filter('header.topbar button.tb-icon:not(.side-open)'), 'The toggle is the shell\'s own and stays.');
         self::assertCount(0, $crawler->filter('header.topbar span.user'), 'No viewer to name means no card, not an empty one.');
     }
 

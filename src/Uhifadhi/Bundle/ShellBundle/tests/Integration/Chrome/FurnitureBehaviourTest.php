@@ -58,7 +58,7 @@ final class FurnitureBehaviourTest extends ContractTestCase
     {
         yield 'the theme toggle' => [
             '@fixtures/bare_shell_page.html.twig',
-            'header.topbar button.tb-icon',
+            'header.topbar button.tb-icon:not(.side-open)',
             'theme#toggle',
         ];
 
@@ -66,6 +66,18 @@ final class FurnitureBehaviourTest extends ContractTestCase
             '@fixtures/bare_shell_page.html.twig',
             'aside.side button.collapse-btn',
             'sidebar#toggle',
+        ];
+
+        yield 'the drawer opener' => [
+            '@fixtures/bare_shell_page.html.twig',
+            'header.topbar button.side-open',
+            'sidebar#open',
+        ];
+
+        yield 'the drawer close mark' => [
+            '@fixtures/bare_shell_page.html.twig',
+            'aside.side button.side-close',
+            'sidebar#close',
         ];
 
         yield 'a tree caret' => [

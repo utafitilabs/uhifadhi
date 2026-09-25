@@ -308,10 +308,16 @@ body::before {
    controller on click. `html.shell-rail` is the same fact on the one element
    that exists BEFORE the sidebar is parsed, set by the document's inline
    pre-paint script — without it a remembered rail is applied when the
-   controller connects, and a 236px sidebar visibly jumps to 66px on every load.
+   controller connects, and a 264px sidebar visibly jumps to 66px on every load.
    Every rule below therefore reads from both, and the controller keeps them in
-   step. */
-.side.rail, html.shell-rail .side { width: 66px; }
+   step.
+
+   THE RAIL IS A DESKTOP STATE, so every rule that draws it sits in a
+   (min-width: 901px) query. Below that the sidebar is a drawer showing the
+   full tree (ruled 2026-09-25), and a remembered rail must not reach it. */
+@media (min-width: 901px) {
+    .side.rail, html.shell-rail .side { width: 66px; }
+}
 .side-top { display: flex; align-items: center; gap: 8px; padding: 2px 2px 16px; }
 .side .brand { display: flex; align-items: center; gap: 10px; flex: 1; padding: 4px; text-decoration: none; color: rgb(var(--c-tx)); overflow: hidden; }
 .side .brand .brandmark { width: 32px; height: 32px; flex-shrink: 0; display: block; }
@@ -372,14 +378,16 @@ body::before {
 .side .row svg { width: 17px; height: 17px; flex-shrink: 0; }
 
 /* The collapsed rail: labels have nowhere to go, so they go. */
-:is(.side.rail, html.shell-rail .side) .brand b,
-:is(.side.rail, html.shell-rail .side) .nav-item span,
-:is(.side.rail, html.shell-rail .side) .row span { display: none; }
-:is(.side.rail, html.shell-rail .side) .side-top { flex-direction: column; gap: 10px; }
-:is(.side.rail, html.shell-rail .side) .collapse-btn svg { transform: rotate(180deg); }
-:is(.side.rail, html.shell-rail .side) .nav-item,
-:is(.side.rail, html.shell-rail .side) .row { justify-content: center; padding-left: 0; padding-right: 0; gap: 0; }
-:is(.side.rail, html.shell-rail .side) .brand { justify-content: center; padding-left: 0; padding-right: 0; }
+@media (min-width: 901px) {
+    :is(.side.rail, html.shell-rail .side) .brand b,
+    :is(.side.rail, html.shell-rail .side) .nav-item span,
+    :is(.side.rail, html.shell-rail .side) .row span { display: none; }
+    :is(.side.rail, html.shell-rail .side) .side-top { flex-direction: column; gap: 10px; }
+    :is(.side.rail, html.shell-rail .side) .collapse-btn svg { transform: rotate(180deg); }
+    :is(.side.rail, html.shell-rail .side) .nav-item,
+    :is(.side.rail, html.shell-rail .side) .row { justify-content: center; padding-left: 0; padding-right: 0; gap: 0; }
+    :is(.side.rail, html.shell-rail .side) .brand { justify-content: center; padding-left: 0; padding-right: 0; }
+}
 
 .main { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; }
 .main > .page { width: 100%; }
@@ -577,6 +585,66 @@ body::before {
 }
 @media (max-width: 640px) { .uinfo { display: none; } }
 
+/* ==================== THE PHONE FRAME: THE SIDEBAR AS A DRAWER ====================
+   Ruled 2026-09-25, drawn in DesignsProjects/shell-module (design.css, the
+   phone frame; pages/frame-phone.html). Below 900px — the width at which the
+   incidents slide-over already says there is no sidebar to preserve — the
+   sidebar is an off-canvas drawer: hidden on load, sliding in from the left
+   over the page with a scrim, the FULL tree (never the rail, which lives in
+   the desktop query above), scrolling inside itself as it does on a desktop,
+   the brand at its head and a close mark beside it. The top bar's opener
+   brings it in; the collapse button goes, because a drawer has no rail.
+
+   EVERY MOTION VALUE IS THE SLIDE-OVER'S (DesignsProjects/uhifadhi-web/
+   incidents-report-options.css, "B · THE SLIDE-OVER DRAWER"): the --scrim
+   token and its 2px blur, the scrim's .28s ease fade, the panel's .3s
+   cubic-bezier(.32,.72,0,1) slide, the ln2 edge, the p1→p2 ground and the
+   --lift shadow. The close mark is the slide-over's `.x`: 26px, an ln2
+   hairline, radius 8. It slides from the left here.
+
+   A CLOSED DRAWER IS `visibility: hidden`, not only off-screen: out of the tab
+   order and the accessibility tree. The visibility waits for the slide to end
+   on the way out and flips at once on the way in, so the close mark is
+   focusable the moment the controller moves focus to it. */
+.side-open { display: none; }
+.side-close {
+    display: none; place-items: center; width: 26px; height: 26px; flex-shrink: 0;
+    border: 1px solid var(--c-ln2); border-radius: 8px; background: none;
+    color: rgb(var(--c-fog)); cursor: pointer; padding: 0; font-family: inherit;
+}
+.side-close:hover { color: rgb(var(--c-tx)); border-color: rgb(var(--c-fog)); }
+.side-close svg { width: 14px; height: 14px; }
+.side-scrim { display: none; }
+@media (max-width: 900px) {
+    .side {
+        position: fixed; top: 0; left: 0; bottom: 0; height: 100vh; height: 100dvh;
+        width: 264px; max-width: calc(100vw - 56px); z-index: 61;
+        border-right: 1px solid var(--c-ln2);
+        background: linear-gradient(180deg, var(--p1), var(--p2));
+        transform: translateX(-100%); visibility: hidden;
+        transition: transform .3s cubic-bezier(.32, .72, 0, 1), visibility 0s linear .3s;
+    }
+    .shell.drawer-open .side {
+        transform: none; visibility: visible; box-shadow: var(--lift);
+        transition: transform .3s cubic-bezier(.32, .72, 0, 1), visibility 0s;
+    }
+    .side-scrim {
+        display: block; position: fixed; inset: 0; z-index: 60;
+        background: var(--scrim); backdrop-filter: blur(2px);
+        opacity: 0; pointer-events: none; transition: opacity .28s ease;
+    }
+    .shell.drawer-open .side-scrim { opacity: 1; pointer-events: auto; }
+    html.shell-drawer { overflow: hidden; }
+    .side-open { display: grid; }
+    .side .collapse-btn { display: none; }
+    .side-close { display: grid; }
+}
+/* The drawer arrives and leaves without moving where motion is refused; it
+   still arrives, because the drawer is the menu. */
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
+    .side, .side-scrim { transition: none; }
+}
+
 /* The footer row. NOT `.page`: the frame owns that class and owns exactly one
    of them per screen, so this carries its own and borrows the measure. */
 .shell-foot { position: relative; z-index: 1; max-width: 1280px; width: 100%; margin: auto auto 0; padding: 0 22px 26px; box-sizing: border-box; }
@@ -598,8 +666,10 @@ body::before {
     padding: 10px 12px 3px; white-space: nowrap; overflow: hidden;
 }
 .nav .nav-hd:first-child { padding-top: 2px; }
-:is(.side.rail, html.shell-rail .side) .nav-hd,
-:is(.side.rail, html.shell-rail .side) .ntree { display: none; }
+@media (min-width: 901px) {
+    :is(.side.rail, html.shell-rail .side) .nav-hd,
+    :is(.side.rail, html.shell-rail .side) .ntree { display: none; }
+}
 
 .ntree { position: relative; margin: 1px 0 4px; }
 .ntree a, .ntree span.nta, .ntree span.ntt, .ntree span.ntm {
@@ -721,7 +791,9 @@ body::before {
 .nav .nav-item.closed > .chev,
 .nav .nta.closed > .chev,
 .nav .ntt.closed > .chev { transform: rotate(-90deg); }
-:is(.side.rail, html.shell-rail .side) .nav .chev { display: none; }
+@media (min-width: 901px) {
+    :is(.side.rail, html.shell-rail .side) .nav .chev { display: none; }
+}
 
 /* ONE GROUND PER TREE — ruled 2026-09-20. In the owner's words: "marking parent
    and child active with bg is a bit too much — the parent just gets the green as
@@ -756,10 +828,12 @@ body::before {
    the row the viewer is on carries an accent dot beside its icon. That section
    is exactly the one drawn `.path`, so there is no second flag to keep in step:
    expanding restores the derived tree, never a remembered one. */
-:is(.side.rail, html.shell-rail .side) .nav-item { position: relative; }
-:is(.side.rail, html.shell-rail .side) .nav-item.path::after {
-    content: ""; position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
-    width: 5px; height: 5px; border-radius: 99px; background: rgb(var(--c-acc));
+@media (min-width: 901px) {
+    :is(.side.rail, html.shell-rail .side) .nav-item { position: relative; }
+    :is(.side.rail, html.shell-rail .side) .nav-item.path::after {
+        content: ""; position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+        width: 5px; height: 5px; border-radius: 99px; background: rgb(var(--c-acc));
+    }
 }
 
 /* ==================== THE PAGE FRAME ==================== */
@@ -2345,7 +2419,6 @@ table.tbl tr:hover .open-btn {
 .pvfoot form { display: contents; }
 
 @media (max-width: 640px) {
-    .side { position: fixed; transform: translateX(-100%); }
     .page { padding-left: 16px; padding-right: 16px; }
 }
 

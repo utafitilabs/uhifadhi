@@ -39,6 +39,7 @@
         "symfony/framework-bundle": "^7.3 || ^8.0",
         "symfony/http-foundation": "^7.3 || ^8.0",
         "symfony/http-kernel": "^7.3 || ^8.0",
+        "symfony/lock": "^7.3 || ^8.0",
         "symfony/messenger": "^7.3 || ^8.0",
         "symfony/scheduler": "^7.3 || ^8.0",
         "symfony/service-contracts": "^3.5",

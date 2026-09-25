@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Facts;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use Symfony\Component\Lock\LockInterface;
 use Symfony\Component\Scheduler\RecurringMessage;
+use Symfony\Component\Scheduler\Schedule;
 use Symfony\Component\Scheduler\ScheduleProviderInterface;
 use Uhifadhi\Bundle\RegistryBundle\Scheduler\RecomputeOpenFactsTask;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures\FactsHostKernel;
@@ -76,6 +78,51 @@ final class FactsScheduleTest extends FactsTestCase
         sort($triggers);
 
         self::assertSame(['0 2 * * *', '0 6-20 * * *'], $triggers);
+    }
+
+    /**
+     * THE CORE'S SCHEDULE REMEMBERS ITS LAST RUN, and a worker that was down
+     * runs a missed recompute once when it starts again, not once per missed
+     * hour — on the framework's `cache.app` pool and its default lock, so an
+     * installation configures nothing:
+     *
+     *   "->stateful($this->cache) // ensure missed tasks are executed"
+     *   "->processOnlyLastMissedRun(true) // ensure only last missed task is run"
+     *   "->lock($this->lockFactory->createLock('my-lock')) // ensure only one worker"
+     *   — https://symfony.com/doc/current/scheduler.html#efficient-management-with-symfony-scheduler
+     */
+    public function testTheCoreAloneScheduleIsStatefulAndRunsOnlyTheLastMissedRun(): void
+    {
+        $schedule = $this->defaultSchedule();
+
+        self::assertTrue($schedule->shouldProcessOnlyLastMissedRun());
+        self::assertSame(self::getContainer()->get('cache.app'), $schedule->getState());
+        self::assertInstanceOf(LockInterface::class, $schedule->getLock());
+    }
+
+    public function testTheScheduleStateSurvivesAKernelReboot(): void
+    {
+        $state = $this->defaultSchedule()->getState();
+        self::assertNotNull($state);
+        $state->delete('registry.test.schedule_probe');
+        self::assertSame('before', $state->get('registry.test.schedule_probe', static fn (): string => 'before'));
+
+        self::ensureKernelShutdown();
+        self::bootKernel();
+
+        $rebooted = $this->defaultSchedule()->getState();
+        self::assertNotNull($rebooted);
+        self::assertSame('before', $rebooted->get('registry.test.schedule_probe', static fn (): string => 'after'));
+
+        $rebooted->delete('registry.test.schedule_probe');
+    }
+
+    private function defaultSchedule(): Schedule
+    {
+        $provider = self::getContainer()->get('scheduler.provider.default');
+        self::assertInstanceOf(ScheduleProviderInterface::class, $provider);
+
+        return $provider->getSchedule();
     }
 
     public function testAnInstallationSetsItsOwnCadence(): void

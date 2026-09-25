@@ -33,7 +33,10 @@ Not released yet.
    `Version20260925210000` (`IF NOT EXISTS`); requires
    `symfony/doctrine-messenger`
  * the `default` schedule needs no class of the installation's: the Scheduler
-   builds it, and its `scheduler_default` transport, from the core's tasks
+   builds it, and its `scheduler_default` transport, from the core's tasks;
+   it is stateful on `cache.app`, runs only the last missed run — a recompute
+   missed while the worker was down runs once on restart — and holds the
+   framework's default lock; requires `symfony/lock`
 
  * A MODULE SAYS WHAT IT IS, in one line: `ModuleProviderInterface::description()`
    (null by the trait's default), kept on the catalogue row and printed under

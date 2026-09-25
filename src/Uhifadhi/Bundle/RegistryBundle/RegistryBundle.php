@@ -15,10 +15,12 @@ namespace Uhifadhi\Bundle\RegistryBundle;
 
 use Doctrine\Migrations\Version\Comparator;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
+use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use Uhifadhi\Bundle\RegistryBundle\DependencyInjection\Compiler\InstallationMigrationsPathFirstPass;
+use Uhifadhi\Bundle\RegistryBundle\DependencyInjection\Compiler\StatefulDefaultSchedulePass;
 use Uhifadhi\Bundle\RegistryBundle\DependencyInjection\RegistryConfiguration;
 use Uhifadhi\Bundle\RegistryBundle\Doctrine\StatementTimeoutMiddleware;
 use Uhifadhi\Bundle\RegistryBundle\Scheduler\RecomputeOpenFactsTask;
@@ -136,6 +138,12 @@ final class RegistryBundle extends AbstractBundle
         // package ships, so the version an installation generates for its own
         // entities is never written into vendor/.
         $container->addCompilerPass(new InstallationMigrationsPathFirstPass());
+
+        // THE `default` SCHEDULE IS STATEFUL, runs only the last missed run
+        // and holds the default lock — completed after the framework's
+        // AddScheduleMessengerPass builds it (same type, lower priority).
+        // @see DependencyInjection/Compiler/StatefulDefaultSchedulePass.php
+        $container->addCompilerPass(new StatefulDefaultSchedulePass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, -10);
     }
 
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void

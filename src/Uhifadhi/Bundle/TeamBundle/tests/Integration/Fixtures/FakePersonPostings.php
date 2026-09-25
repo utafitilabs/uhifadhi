@@ -17,24 +17,30 @@ use Uhifadhi\Contracts\People\PersonPosting;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 
 /**
- * THE GROUND'S ANSWER TO "WHERE DOES THIS PERSON WORK?", faked: a test names
- * who is stationed, everybody else is stationed nowhere.
+ * WHERE PEOPLE WORK, answered by a fixture: this kernel installs no area
+ * package, so the seam is answered the way an installation's ground answers
+ * it. A test states who stands where in {@see $at}, keyed by the person's
+ * uuid; everybody else stands nowhere.
  */
 final class FakePersonPostings implements PersonPostingProviderInterface
 {
     public const string STATION = '019a0000-0000-7000-8000-00000000f1e1';
     public const string AREA = '019a0000-0000-7000-8000-00000000a0ea';
 
-    /** @var list<string> the uuids of the people a test has stationed */
-    public static array $stationed = [];
+    /** @var array<string, list<PersonPosting>> the standing postings a test has made, by person */
+    public static array $at = [];
+
+    /** The one station of the sample area, for a test that needs somebody stationed somewhere. */
+    public static function eastgate(bool $leader = true): PersonPosting
+    {
+        return new PersonPosting(self::STATION, 'Eastgate Post', 'ST-01', self::AREA, 'Sample Area', 'Crater', new \DateTimeImmutable('2024-01-14'), $leader, '/areas/'.self::AREA.'/stations/'.self::STATION);
+    }
 
     public function postingsFor(array $userUuids): array
     {
         $out = [];
         foreach ($userUuids as $uuid) {
-            $out[$uuid] = \in_array($uuid, self::$stationed, true)
-                ? [new PersonPosting(self::STATION, 'Eastgate Post', 'ST-01', self::AREA, 'Sample Area', 'Crater', new \DateTimeImmutable('2024-01-14'), true, '/areas/'.self::AREA.'/stations/'.self::STATION)]
-                : [];
+            $out[$uuid] = self::$at[$uuid] ?? [];
         }
 
         return $out;

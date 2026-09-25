@@ -36,6 +36,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DeclaringConcernSource
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DeclaringModuleProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitContentCollector;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeModuleProvider;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakePeopleFacet;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakePersonPostings;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeRecordCells;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeStationDirectory;
@@ -49,6 +50,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\SilentModuleProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\SurveyKpiProvider;
 use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;
+use Uhifadhi\Contracts\People\PeopleFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 use Uhifadhi\Contracts\People\PersonRecordCellProviderInterface;
 use Uhifadhi\Contracts\People\StationPlateProviderInterface;
@@ -337,6 +339,10 @@ final class TestKernel extends Kernel
         $container->services()
             ->set('fake.person_postings', FakePersonPostings::class)
             ->tag(PersonPostingProviderInterface::TAG);
+        // A MODULE'S DROPDOWN ON THE PEOPLE REGISTER, from the seam a module tags.
+        $container->services()
+            ->set('fake.people_facet', FakePeopleFacet::class)
+            ->tag(PeopleFacetProviderInterface::TAG);
         $container->services()
             ->set('fake.station_plates', FakeStationPlates::class)
             ->tag(StationPlateProviderInterface::TAG);

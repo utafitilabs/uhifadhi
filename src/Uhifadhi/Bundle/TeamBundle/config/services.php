@@ -89,6 +89,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\FieldSignIn;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
+use Uhifadhi\Bundle\TeamBundle\Service\PeopleFacetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
 use Uhifadhi\Bundle\TeamBundle\Service\PersonRankService;
@@ -131,6 +132,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
 use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;
 use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
+use Uhifadhi\Contracts\People\PeopleFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
@@ -1030,6 +1032,21 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('team.roster_facets', RosterFacets::class);
 
+    /*
+     * THE REGISTER'S DROPDOWNS THAT COME THROUGH A SEAM: the station, from
+     * whoever owns the ground, and one dropdown per module that tags
+     * `uhifadhi.people_facets`. Both are tagged iterators, the documented way
+     * a service consumes every implementation of a tag
+     * (https://symfony.com/doc/current/service_container/tags.html#reference-tagged-services),
+     * exactly as `area.person_facets` and the member controller's posting
+     * seam are wired.
+     */
+    $services->set('team.people_facets', PeopleFacetService::class)
+        ->args([
+            tagged_iterator(PersonPostingProviderInterface::TAG),
+            tagged_iterator(PeopleFacetProviderInterface::TAG),
+        ]);
+
     $services->set('team.controller.team', TeamController::class)
         ->args([
             service('twig'),
@@ -1043,6 +1060,7 @@ return static function (ContainerConfigurator $container): void {
             service(RankHoldingRepository::class),
             service('team.roster_facets'),
             service('team.csv_export'),
+            service('team.people_facets'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(TeamController::class, 'team.controller.team')->public();

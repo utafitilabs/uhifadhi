@@ -24,6 +24,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\RankHolding;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\RosterStateEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Bundle\TeamBundle\Model\PeopleFacetSet;
 use Uhifadhi\Bundle\TeamBundle\Model\RosterQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
@@ -32,6 +33,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\RankRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\RankScaleRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\CsvExportService;
+use Uhifadhi\Bundle\TeamBundle\Service\PeopleFacetService;
 use Uhifadhi\Bundle\TeamBundle\Service\RosterFacets;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamSettingsService;
@@ -102,6 +104,8 @@ final readonly class TeamController
         private RankHoldingRepository $holdings,
         private RosterFacets $facets,
         private CsvExportService $csv,
+        /** THE STATION AND THE MODULES' DROPDOWNS, through their seams. */
+        private PeopleFacetService $seamFacets,
     ) {
     }
 
@@ -125,7 +129,7 @@ final readonly class TeamController
     #[IsGranted(self::EXPORT_PAIR)]
     public function export(Request $request): Response
     {
-        $people = $this->users->findRosterRows(RosterQuery::fromRequest($request));
+        $people = $this->users->findRosterRows($this->query($request, $this->users->findAllByName())[0]);
         $usesRanks = $this->settings->current()->usesRanks();
         $held = $usesRanks ? $this->holdings->findCurrentByPeople($people) : [];
 
@@ -187,21 +191,25 @@ final readonly class TeamController
      */
     public function context(Request $request): array
     {
-        $query = RosterQuery::fromRequest($request);
-        $page = $this->users->findRoster($query);
         $everybody = $this->users->findAllByName();
+        [$query, $seam] = $this->query($request, $everybody);
+        $page = $this->users->findRoster($query);
         $positions = $this->positions->findAllOrdered();
         $departments = $this->departments->findAllOrdered();
         $usesRanks = $this->settings->current()->usesRanks();
         $scales = $usesRanks ? $this->scales->findAllOrdered() : [];
 
+        // THE BAR'S ORDER IS THE DESIGN'S: position, department, station,
+        // rank, whatever the modules contribute, account.
         $facets = [
             $this->facets->position($everybody, $positions),
             $this->facets->department($everybody, $departments),
+            $seam->station,
         ];
         if ($usesRanks) {
             $facets[] = $this->facets->rank($everybody, $scales, $this->ranks->findActiveOrdered(), $this->holdings->countCurrentByRank());
         }
+        array_push($facets, ...$seam->contributed);
         $facets[] = $this->facets->account($everybody);
 
         return [
@@ -225,6 +233,30 @@ final readonly class TeamController
             'ranksHeld' => $usesRanks ? $this->holdings->findCurrentByPeople($page->items) : [],
             'teamManage' => (string) Grant::of(TeamConcerns::DIRECTORY, Verb::Manage),
         ];
+    }
+
+    /**
+     * THE REQUEST READ AS A QUERY, WITH THE SEAM FACETS ASKED: the seams are
+     * read once for everybody, so the counts in the bar and the people a
+     * choice leaves come from one reading — the same one for the page and
+     * for the export.
+     *
+     * @param list<User> $everybody
+     *
+     * @return array{0: RosterQuery, 1: PeopleFacetSet}
+     */
+    private function query(Request $request, array $everybody): array
+    {
+        $uuids = [];
+        foreach ($everybody as $person) {
+            $uuid = $person->getUuidString();
+            if (null !== $uuid) {
+                $uuids[] = $uuid;
+            }
+        }
+        $seam = $this->seamFacets->read($uuids);
+
+        return [$seam->narrow(RosterQuery::fromRequest($request, $seam->keys())), $seam];
     }
 
     /*

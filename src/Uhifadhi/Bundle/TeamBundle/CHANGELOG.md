@@ -27,6 +27,17 @@ Not released yet.
    positions in its tab and keeps a department with no position as a dimmed row; modules per
    department are read against the department that reads the most. `Model\SectionBar` is
    removed. No team template writes a `.sxbar` row (`VisualsAreTheAtlasTest`)
+ * THE PEOPLE REGISTER FILTERS BY STATION AND BY WHAT A MODULE CONTRIBUTES
+   (ruled 2026-09-25). The Station dropdown lists where people stand,
+   read through the posting seam, grouped by area once postings span
+   several, with Not stationed last; it sits after Department. Every
+   module that tags `uhifadhi.people_facets` puts one dropdown after Rank,
+   drawn as the house grouped dropdown and opening left. Both narrow the
+   rows and the CSV export as the register's own facets do; the CSV's
+   columns are the table's and gain none. `RosterQuery` carries
+   `station`, the contributed choices in `facets`, and the people a seam
+   choice leaves in `only`; `PeopleFacetService` reads both seams once
+   per request into a `PeopleFacetSet`.
 
  * TEAM'S CONFIGURE PAGE IS THREE SECTIONS (ruled 2026-09-24), each an
    address of its own on the shape every area configure section wears:

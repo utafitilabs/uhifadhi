@@ -220,6 +220,15 @@ class UserRepository extends ServiceEntityRepository
             null => null,
         };
 
+        // A SEAM FACET NAMES ITS PEOPLE rather than a column: the station and
+        // a module's dropdown answer with identifiers, and the roster's one
+        // query narrows to them. A choice that left nobody leaves nobody.
+        if (null !== $query->only) {
+            [] === $query->only
+                ? $qb->andWhere('1 = 0')
+                : $qb->andWhere('u.uuid IN (:only)')->setParameter('only', $query->only);
+        }
+
         if (RosterQuery::NO_RANK === $query->rank) {
             $held = $this->getEntityManager()->createQueryBuilder()
                 ->select('1')->from(RankHolding::class, 'hn')

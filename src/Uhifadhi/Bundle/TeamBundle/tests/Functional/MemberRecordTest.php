@@ -513,7 +513,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $this->withSuccessor();
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
-        FakePersonPostings::$stationed = [(string) $grace->getUuidString()];
+        FakePersonPostings::$at = [(string) $grace->getUuidString() => [FakePersonPostings::eastgate()]];
 
         try {
             $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
@@ -525,7 +525,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
             self::assertStringContainsString('The station', $card->filter('.stcard-foot a.ov-open')->text());
             self::assertStringContainsString('stationed at Eastgate Post', $crawler->filter('p.pgsub')->text());
         } finally {
-            FakePersonPostings::$stationed = [];
+            FakePersonPostings::$at = [];
         }
     }
 

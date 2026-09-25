@@ -60,6 +60,10 @@ final readonly class RosterQuery
     /** The Rank facet's "No rank" option. */
     public const string NO_RANK = 'none';
 
+    /** The Station facet's query key, and its "Not stationed" option. */
+    public const string STATION = 'station';
+    public const string NO_STATION = 'none';
+
     /**
      * @param string|null $q          matched with ILIKE across first name, last name,
      *                                email and ranger code — exactly what the search
@@ -78,6 +82,25 @@ final readonly class RosterQuery
         public ?string $department = null,
         public int $page = 1,
         public ?string $rank = null,
+        /** A station's uuid, {@see NO_STATION}, or null for any — answered through the posting seam. */
+        public ?string $station = null,
+        /**
+         * THE DROPDOWNS MODULES CONTRIBUTED, key → chosen value. Their keys
+         * are the providers' and are read off the request only when named,
+         * so an unknown parameter stays an unknown parameter.
+         *
+         * @var array<string, string>
+         */
+        public array $facets = [],
+        /**
+         * THE PEOPLE A SEAM FACET LEAVES, or null when none is chosen. A
+         * seam answers with identifiers rather than with a join, so the
+         * roster's one query narrows to them by uuid; an empty list is a
+         * choice that leaves nobody.
+         *
+         * @var list<string>|null
+         */
+        public ?array $only = null,
     ) {
     }
 
@@ -86,7 +109,10 @@ final readonly class RosterQuery
      * than a filter on emptiness, and anything unrecognised is dropped: a URL
      * naming a tier that does not exist should show the whole roster, not a 400.
      */
-    public static function fromRequest(Request $request): self
+    /**
+     * @param list<string> $facetKeys the query keys the contributed dropdowns write, from the providers
+     */
+    public static function fromRequest(Request $request, array $facetKeys = []): self
     {
         $string = static function (string $key) use ($request): ?string {
             $value = $request->query->get($key);
@@ -98,6 +124,14 @@ final readonly class RosterQuery
         $tier = $string('tier');
         $state = $string('state');
 
+        $facets = [];
+        foreach ($facetKeys as $key) {
+            $value = $string($key);
+            if (null !== $value) {
+                $facets[$key] = $value;
+            }
+        }
+
         return new self(
             q: $string('q'),
             tier: null !== $tier ? TeamRoleEnum::tryFrom($tier) : null,
@@ -106,7 +140,20 @@ final readonly class RosterQuery
             department: $string('department'),
             page: $request->query->getInt('page', 1),
             rank: $string('rank'),
+            station: $string(self::STATION),
+            facets: $facets,
         );
+    }
+
+    /**
+     * THIS QUERY, NARROWED TO THESE PEOPLE — what the seam facets write once
+     * they have been asked who each choice leaves.
+     *
+     * @param list<string> $uuids
+     */
+    public function narrowedTo(array $uuids): self
+    {
+        return new self($this->q, $this->tier, $this->position, $this->state, $this->department, $this->page, $this->rank, $this->station, $this->facets, $uuids);
     }
 
     /** Whether anything is narrowing the list — what the "showing N of M" line turns on. */
@@ -117,7 +164,9 @@ final readonly class RosterQuery
             || null !== $this->position
             || null !== $this->state
             || null !== $this->department
-            || null !== $this->rank;
+            || null !== $this->rank
+            || null !== $this->station
+            || [] !== $this->facets;
     }
 
     /**
@@ -138,6 +187,8 @@ final readonly class RosterQuery
             'state' => $this->state?->value,
             'department' => $this->department,
             'rank' => $this->rank,
+            self::STATION => $this->station,
+            ...$this->facets,
             'page' => $this->page > 1 ? $this->page : null,
         ];
 

@@ -105,7 +105,7 @@ final class PeopleRegisterRanksTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team');
 
-        self::assertSame(['position', 'department', 'rank', 'account'], $crawler->filter('.tm-tools details.i-dd')->each(static fn (Crawler $d): string => (string) $d->attr('data-facet')));
+        self::assertSame(['position', 'department', 'station', 'rank', 'account'], $crawler->filter('.tm-tools details.i-dd')->each(static fn (Crawler $d): string => (string) $d->attr('data-facet')));
         self::assertCount(0, $crawler->filter('.tm-tools select'), 'no select is left in the bar');
         self::assertSame(
             ['Any 2', 'Ranger 0', 'No position 2'],

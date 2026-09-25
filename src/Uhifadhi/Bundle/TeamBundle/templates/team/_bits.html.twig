@@ -90,6 +90,17 @@
     {%- endif -%}
 {% endmacro %}
 
+{# THE RANK CELL — one fact per column: the short code is the fact and the
+   name its gloss. With several scales the code carries its scale, so two
+   scales never read as one. A person holding no rank reads a dash. #}
+{% macro rank_cell(holding, severalScales) %}
+    {%- if holding -%}
+        <span class="tm-rk"><b>{{ holding.rank.shortCode }}{% if severalScales %}<i class="ld">{{ holding.rank.scale.name }}</i>{% endif %}</b><em>{{ holding.rank.name }}</em></span>
+    {%- else -%}
+        <span class="tm-rk none">&mdash;</span>
+    {%- endif -%}
+{% endmacro %}
+
 {% macro ranger_code(user) %}
     {%- if user.rangerCode -%}<span class="tm-code">{{ user.rangerCode|upper }}</span>
     {%- else -%}<span class="tm-code none">&mdash;</span>{%- endif -%}

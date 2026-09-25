@@ -277,7 +277,7 @@ final class GrantVoterTest extends IntegrationTestCase
 
         self::assertSame(VoterInterface::ACCESS_ABSTAIN, $this->vote($person, ['nothing-declares.read']));
         self::assertSame(VoterInterface::ACCESS_ABSTAIN, $this->vote($person, ['not-even-a-pair']));
-        self::assertSame(VoterInterface::ACCESS_ABSTAIN, $this->vote($person, ['directory.export']), 'the directory declares no export verb, so that cell is not a pair.');
+        self::assertSame(VoterInterface::ACCESS_ABSTAIN, $this->vote($person, ['positions.export']), 'positions declare no export verb, so that cell is not a pair.');
     }
 
     /**

@@ -1,0 +1,32 @@
+{# ONE GROUPED DROPDOWN OF THE PEOPLE REGISTER'S BAR — the house `.i-dd`.
+
+   A `<details>` WHOSE OPTIONS ARE LINKS: the address is the state, so a
+   filtered register is a link somebody can send, and the control opens,
+   chooses and clears with no script. The menu is headed with the facet's
+   word, then Any with the whole set's count, then the option runs — each
+   under its own head when it has one — and the absence option last.
+
+   `facet` is a Model\Facet, `chosen` the value in the address, `query` the
+   RosterQuery that writes the links. #}
+{% set chosenLabel = facet.labelOf(chosen) %}
+<details class="i-dd{{ facet.opensLeft ? ' r' }}" data-facet="{{ facet.label }}">
+    <summary class="mchip i-ddt{{ chosenLabel is not null ? ' on' }}">
+        <span class="i-ddval">{{ chosenLabel ?? facet.any }}</span>
+        <span class="i-ddcaret">&#9662;</span>
+    </summary>
+    <div class="i-ddmenu">
+        <span class="i-ddhead">{{ facet.label }}</span>
+        <a class="i-ddopt{{ chosenLabel is null ? ' on' }}" href="{{ path('team_index', query.with(facet.key, null)) }}"><span class="i-dot"></span><span class="i-ddopt-l">Any</span><span class="i-ddopt-n">{{ facet.total }}</span></a>
+        {% for group in facet.groups %}
+            <span class="i-ddsep"></span>
+            {% if group.head %}<span class="i-ddhead">{{ group.head }}</span>{% endif %}
+            {% for option in group.options %}
+                <a class="i-ddopt{{ chosen == option.value ? ' on' }}" href="{{ path('team_index', query.with(facet.key, option.value)) }}"><span class="i-dot"></span><span class="i-ddopt-l">{{ option.label }}</span><span class="i-ddopt-n">{{ option.count }}</span></a>
+            {% endfor %}
+        {% endfor %}
+        {% if facet.absent %}
+            <span class="i-ddsep"></span>
+            <a class="i-ddopt{{ chosen == facet.absent.value ? ' on' }}" href="{{ path('team_index', query.with(facet.key, facet.absent.value)) }}"><span class="i-dot"></span><span class="i-ddopt-l">{{ facet.absent.label }}</span><span class="i-ddopt-n">{{ facet.absent.count }}</span></a>
+        {% endif %}
+    </div>
+</details>

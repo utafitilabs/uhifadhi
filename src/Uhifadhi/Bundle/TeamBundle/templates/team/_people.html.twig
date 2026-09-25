@@ -36,44 +36,32 @@
                 <a class="fchip{{ query.tier == tier ? ' on' : '' }}" href="{{ path('team_index', query.toParams({tier: tier.value, page: null})) }}">{{ tier.label }} <span class="n">{{ tierCounts[tier.value] }}</span></a>
             {% endfor %}
 
-            {# ONE FLAT LIST. It used to be grouped, and it had to be: two of
-               an installation's positions could both be called "Analyst". A
-               position belongs to no department now and its name is unique
-               across the organization, so the word disambiguates itself. #}
-            <select class="fld sel" name="position" aria-label="Filter by position">
-                <option value="">Any position</option>
-                {% for position in positions %}
-                    <option value="{{ position.uuidString }}"{{ query.position == position.uuidString ? ' selected' : '' }}>{{ position.name }}</option>
-                {% endfor %}
-                <option value="none"{{ query.position == 'none' ? ' selected' : '' }}>&mdash; no position &mdash;</option>
-            </select>
+            {# THE GROUPED DROPDOWNS — position, department, rank (while the
+               organization uses ranks) and account. Each counts the whole
+               roster and writes its choice into the address. #}
+            {% for facet in facets %}
+                {{ include('@Team/team/_facet.html.twig', {facet: facet, chosen: query.chosen(facet.key)}) }}
+            {% endfor %}
 
-            {# A SELECT RATHER THAN MORE CHIPS, because this is two independent
-               axes rather than one more facet of tier. A deactivated person stays
-               in every list by ruling, so the list needs a way to say "just the
-               active ones" — and, as importantly, a way to find the switched-off
-               ones again, which is the whole reason they were not deleted. #}
-            <select class="fld sel" name="state" aria-label="Filter by account state">
-                <option value="">Any state</option>
-                {% for state in states %}
-                    <option value="{{ state.value }}"{{ query.state == state ? ' selected' : '' }}>{{ state.label }}</option>
-                {% endfor %}
-            </select>
-
-            <button class="fchip" type="submit">Filter</button>
+            {# THE EXPORT DOOR states the set it exports, and the set is the
+               bar's filter — every page of it, not the page on screen. #}
+            {% if door('directory.export') %}
+                <a class="tm-export" href="{{ path('team_people_export', query.toParams({page: null})) }}" title="The rows this filter shows, as CSV &middot; directory.export">{{ ux_icon('shell:download') }}export <b>{{ page.total }}</b> rows &middot; CSV</a>
+            {% endif %}
             <span class="tm-shown">showing <b>{{ page.items|length }}</b> of {{ page.total }}</span>
         </form>
     {% endif %}
 
     <div class="tm-scroll">
         <table class="tbl">
-            <thead><tr><th>Person</th><th>Tier</th><th>Position</th><th>Ranger code</th><th>Account</th><th></th></tr></thead>
+            <thead><tr><th>Person</th><th>Tier</th><th>Position</th>{% if usesRanks %}<th>Rank</th>{% endif %}<th>Ranger code</th><th>Account</th><th></th></tr></thead>
             <tbody>
                 {% for person in page.items %}
                     <tr{{ person.isActive ? '' : ' class="tm-off"' }}>
                         <td>{{ bits.person(person, person == app.user) }}</td>
                         <td>{{ bits.tier_pill(person.teamRole) }}</td>
                         <td>{{ bits.position_cell(person, path('team_positions')) }}</td>
+                        {% if usesRanks %}<td>{{ bits.rank_cell(ranksHeld[person.id] ?? null, severalScales) }}</td>{% endif %}
                         <td>{{ bits.ranger_code(person) }}</td>
                         <td>{{ bits.account_cell(person) }}</td>
                         <td class="tm-acts">{{ bits.open_button(person) }}</td>
@@ -82,7 +70,7 @@
                     {# A FILTER THAT MATCHES NOBODY IS A RESULT, not an error, and
                        it says which filter produced it — otherwise it reads as an
                        installation with nobody in it. #}
-                    <tr><td colspan="6">
+                    <tr><td colspan="{{ usesRanks ? 7 : 6 }}">
                         <div class="tm-nores">
                             {{ bits.icon_search() }}
                             <span>Nobody matches {% if query.q %}&ldquo;{{ query.q }}&rdquo;{% else %}these filters{% endif %}.

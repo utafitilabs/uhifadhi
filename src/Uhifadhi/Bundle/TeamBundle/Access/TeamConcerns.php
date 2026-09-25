@@ -65,7 +65,7 @@ final readonly class TeamConcerns implements ConcernSourceInterface
             key: self::DIRECTORY,
             label: 'Directory',
             description: 'Who is on the team: their name, their position and where they are placed.',
-            verbs: [Verb::Read, Verb::Manage],
+            verbs: [Verb::Read, Verb::Manage, Verb::Export],
             scopeKinds: $people,
         );
 

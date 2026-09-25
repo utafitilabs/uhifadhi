@@ -54,6 +54,12 @@ final readonly class RosterQuery
      */
     public const string NO_POSITION = 'none';
 
+    /** The Department facet's "No department" option: placed nowhere. */
+    public const string NO_DEPARTMENT = 'none';
+
+    /** The Rank facet's "No rank" option. */
+    public const string NO_RANK = 'none';
+
     /**
      * @param string|null $q          matched with ILIKE across first name, last name,
      *                                email and ranger code — exactly what the search
@@ -71,6 +77,7 @@ final readonly class RosterQuery
         public ?RosterStateEnum $state = null,
         public ?string $department = null,
         public int $page = 1,
+        public ?string $rank = null,
     ) {
     }
 
@@ -98,6 +105,7 @@ final readonly class RosterQuery
             state: null !== $state ? RosterStateEnum::tryFrom($state) : null,
             department: $string('department'),
             page: $request->query->getInt('page', 1),
+            rank: $string('rank'),
         );
     }
 
@@ -108,7 +116,8 @@ final readonly class RosterQuery
             || null !== $this->tier
             || null !== $this->position
             || null !== $this->state
-            || null !== $this->department;
+            || null !== $this->department
+            || null !== $this->rank;
     }
 
     /**
@@ -128,6 +137,7 @@ final readonly class RosterQuery
             'position' => $this->position,
             'state' => $this->state?->value,
             'department' => $this->department,
+            'rank' => $this->rank,
             'page' => $this->page > 1 ? $this->page : null,
         ];
 
@@ -139,5 +149,25 @@ final readonly class RosterQuery
             $params,
             static fn (string|int|null $value): bool => null !== $value && '' !== $value,
         );
+    }
+
+    /**
+     * THE ADDRESS WITH ONE FACET CHOSEN, or cleared by null — the shape the
+     * grouped dropdown writes its options with. A new filter starts on page
+     * one: page three of a narrower set may not exist.
+     *
+     * @return array<string, string|int>
+     */
+    public function with(string $key, ?string $value): array
+    {
+        return $this->toParams([$key => $value, 'page' => null]);
+    }
+
+    /** The value a facet has chosen in the address, as the address writes it. */
+    public function chosen(string $key): ?string
+    {
+        $value = $this->toParams()[$key] ?? null;
+
+        return null === $value ? null : (string) $value;
     }
 }

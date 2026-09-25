@@ -20,13 +20,21 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
+use Uhifadhi\Bundle\TeamBundle\Entity\RankHolding;
+use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\RosterStateEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\RosterQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\RankHoldingRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\RankRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\RankScaleRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Bundle\TeamBundle\Service\CsvExportService;
+use Uhifadhi\Bundle\TeamBundle\Service\RosterFacets;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
+use Uhifadhi\Bundle\TeamBundle\Service\TeamSettingsService;
 use Uhifadhi\Contracts\Access\Grant;
 use Uhifadhi\Contracts\Access\Verb;
 
@@ -75,12 +83,22 @@ final readonly class TeamController
     /** The section's second tab: everybody who can sign in here. */
     public const string PEOPLE = 'team_index';
 
+    /** The People register's rows, as CSV. */
+    public const string EXPORT = 'team_people_export';
+    public const string EXPORT_PAIR = TeamConcerns::DIRECTORY.'.export';
+
     public function __construct(
         private Environment $twig,
         private UserRepository $users,
         private PositionRepository $positions,
         private DepartmentRepository $departments,
         private TeamOverview $overview,
+        private TeamSettingsService $settings,
+        private RankScaleRepository $scales,
+        private RankRepository $ranks,
+        private RankHoldingRepository $holdings,
+        private RosterFacets $facets,
+        private CsvExportService $csv,
     ) {
     }
 
@@ -92,6 +110,55 @@ final readonly class TeamController
         // one shape with no library and no presets — the People table, its
         // filters and its pager. Widgets stay on the data surfaces.
         return new Response($this->twig->render('@Team/team/index.html.twig', $this->context($request)));
+    }
+
+    /**
+     * THE ROWS THE REGISTER'S FILTER SHOWS, AS CSV — every page of them, in
+     * the register's order, under the directory's export verb. The Rank
+     * columns are written while the organization uses ranks, as the Rank
+     * column is drawn.
+     */
+    #[Route('/team/people.csv', name: self::EXPORT, methods: ['GET'])]
+    #[IsGranted(self::EXPORT_PAIR)]
+    public function export(Request $request): Response
+    {
+        $people = $this->users->findRosterRows(RosterQuery::fromRequest($request));
+        $usesRanks = $this->settings->current()->usesRanks();
+        $held = $usesRanks ? $this->holdings->findCurrentByPeople($people) : [];
+
+        $header = ['Person', 'Email', 'Tier', 'Position'];
+        if ($usesRanks) {
+            array_push($header, 'Rank', 'Rank name', 'Scale');
+        }
+        array_push($header, 'Ranger code', 'Account');
+
+        $rows = [];
+        foreach ($people as $person) {
+            $row = [$person->getFullName(), $person->getEmail(), $person->getTeamRole()->label(), $person->getPosition()?->getName()];
+            if ($usesRanks) {
+                $holding = $held[(int) $person->getId()] ?? null;
+                array_push($row, $holding?->getRank()->getShortCode(), $holding?->getRank()->getName(), self::scaleOf($holding));
+            }
+            array_push($row, null === $person->getRangerCode() ? null : mb_strtoupper($person->getRangerCode()), self::account($person));
+            $rows[] = $row;
+        }
+
+        return $this->csv->response('people.csv', $header, $rows);
+    }
+
+    /** The scale's name, and only when it has one — a single scale is not named. */
+    private static function scaleOf(?RankHolding $holding): ?string
+    {
+        return $holding?->getRank()->getScale()->getName();
+    }
+
+    private static function account(User $person): string
+    {
+        if (!$person->isActive()) {
+            return 'Deactivated';
+        }
+
+        return $person->isVerified() ? 'Verified' : 'Never signed in';
     }
 
     /**
@@ -118,20 +185,41 @@ final readonly class TeamController
     public function context(Request $request): array
     {
         $query = RosterQuery::fromRequest($request);
+        $page = $this->users->findRoster($query);
+        $everybody = $this->users->findAllByName();
+        $positions = $this->positions->findAllOrdered();
+        $departments = $this->departments->findAllOrdered();
+        $usesRanks = $this->settings->current()->usesRanks();
+        $scales = $usesRanks ? $this->scales->findAllOrdered() : [];
+
+        $facets = [
+            $this->facets->position($everybody, $positions),
+            $this->facets->department($everybody, $departments),
+        ];
+        if ($usesRanks) {
+            $facets[] = $this->facets->rank($everybody, $scales, $this->ranks->findActiveOrdered(), $this->holdings->countCurrentByRank());
+        }
+        $facets[] = $this->facets->account($everybody);
 
         return [
             'query' => $query,
             // The paged shape, for the table direction: its whole state is the URL.
-            'page' => $this->users->findRoster($query),
+            'page' => $page,
             // The unpaged shape, for the five banded directions. A band cut in
             // half by a pager is a band that lies about its own count.
-            'everybody' => $this->users->findAllByName(),
+            'everybody' => $everybody,
             'overview' => $this->overview->build(),
             'tierCounts' => $this->users->countByTier(),
             'tiers' => TeamRoleEnum::cases(),
             'states' => RosterStateEnum::cases(),
-            'departments' => $this->departments->findAllOrdered(),
-            'positions' => $this->positions->findAllOrdered(),
+            'departments' => $departments,
+            'positions' => $positions,
+            'facets' => $facets,
+            'usesRanks' => $usesRanks,
+            'severalScales' => \count($scales) > 1,
+            // THE RANK EACH ROW'S PERSON HOLDS NOW, keyed by the person's id —
+            // one query for the page, never one per row.
+            'ranksHeld' => $usesRanks ? $this->holdings->findCurrentByPeople($page->items) : [],
             'teamManage' => (string) Grant::of(TeamConcerns::DIRECTORY, Verb::Manage),
         ];
     }

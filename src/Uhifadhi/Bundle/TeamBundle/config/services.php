@@ -100,6 +100,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PostingDoorService;
 use Uhifadhi\Bundle\TeamBundle\Service\RankBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\RankService;
 use Uhifadhi\Bundle\TeamBundle\Service\RolesBoard;
+use Uhifadhi\Bundle\TeamBundle\Service\RosterFacets;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
@@ -1022,6 +1023,8 @@ return static function (ContainerConfigurator $container): void {
      * on the action, so the gate is a permission this installation's matrix can
      * grant and revoke rather than a tier nobody can audit.
      */
+    $services->set('team.roster_facets', RosterFacets::class);
+
     $services->set('team.controller.team', TeamController::class)
         ->args([
             service('twig'),
@@ -1029,7 +1032,12 @@ return static function (ContainerConfigurator $container): void {
             service(PositionRepository::class),
             service(DepartmentRepository::class),
             service('team.overview'),
-            service('security.token_storage'),
+            service('team.settings'),
+            service(RankScaleRepository::class),
+            service(RankRepository::class),
+            service(RankHoldingRepository::class),
+            service('team.roster_facets'),
+            service('team.csv_export'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(TeamController::class, 'team.controller.team')->public();

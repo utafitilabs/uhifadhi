@@ -299,11 +299,11 @@ final class TeamPageTest extends WebTestCase
         $this->client->loginUser($naomi);
         $crawler = $this->client->request('GET', '/team');
 
-        $select = $crawler->filter('select[name="position"]');
-        self::assertCount(0, $select->filter('optgroup'));
+        $facet = $crawler->filter('details.i-dd[data-facet="position"]');
+        self::assertSame(['position'], $facet->filter('.i-ddhead')->each(static fn (\Symfony\Component\DomCrawler\Crawler $c): string => $c->text()), 'one run, no group heads');
         self::assertSame(
-            ['Any position', 'Analyst', 'Ranger', 'Senior Ranger', '— no position —'],
-            $select->filter('option')->each(static fn (\Symfony\Component\DomCrawler\Crawler $c): string => $c->text()),
+            ['Any', 'Analyst', 'Ranger', 'Senior Ranger', 'No position'],
+            $facet->filter('a.i-ddopt .i-ddopt-l')->each(static fn (\Symfony\Component\DomCrawler\Crawler $c): string => $c->text()),
         );
     }
 

@@ -14,11 +14,13 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
+use Uhifadhi\Bundle\TeamBundle\Entity\RankHolding;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\RosterStateEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
@@ -122,6 +124,44 @@ class UserRepository extends ServiceEntityRepository
      */
     public function findRoster(RosterQuery $query): Page
     {
+        $qb = $this->rosterBuilder($query);
+
+        $page = max(1, $query->page);
+        $qb->setFirstResult(($page - 1) * RosterQuery::PER_PAGE)
+            ->setMaxResults(RosterQuery::PER_PAGE);
+
+        // fetchJoinCollection: true — the department filter joins a to-MANY
+        // (a placement names several departments), so the paginator needs its
+        // distinct-identifier pass or a person in two departments is counted
+        // twice and the page is short.
+        $paginator = new Paginator($qb->getQuery(), null !== $query->department && RosterQuery::NO_DEPARTMENT !== $query->department);
+
+        /** @var list<User> $items */
+        $items = array_values(iterator_to_array($paginator));
+
+        return new Page($items, \count($paginator), $page, RosterQuery::PER_PAGE);
+    }
+
+    /**
+     * EVERY ROW THE ROSTER'S FILTER LEAVES, in the register's order and with
+     * no pager — what the export door writes out.
+     *
+     * @return list<User>
+     */
+    public function findRosterRows(RosterQuery $query): array
+    {
+        $qb = $this->rosterBuilder($query);
+        $paginator = new Paginator($qb->getQuery(), null !== $query->department && RosterQuery::NO_DEPARTMENT !== $query->department);
+
+        /** @var list<User> $rows */
+        $rows = array_values(iterator_to_array($paginator));
+
+        return $rows;
+    }
+
+    /** THE ROSTER'S ONE FILTER, shared by the paged register and its export. */
+    private function rosterBuilder(RosterQuery $query): QueryBuilder
+    {
         $qb = $this->createQueryBuilder('u')
             ->leftJoin('u.position', 'p')
             ->addSelect('p')
@@ -156,7 +196,10 @@ class UserRepository extends ServiceEntityRepository
                 : $qb->andWhere('1 = 0');
         }
 
-        if (null !== $query->department) {
+        if (RosterQuery::NO_DEPARTMENT === $query->department) {
+            // PLACED NOWHERE: no placement, so no department either.
+            $qb->andWhere('u.placement IS NULL');
+        } elseif (null !== $query->department) {
             $uuid = Uuid::isValid($query->department) ? Uuid::fromString($query->department) : null;
             if (null !== $uuid) {
                 // EITHER PLACED ACROSS ALL DEPARTMENTS OR NAMED IN THIS ONE.
@@ -177,20 +220,26 @@ class UserRepository extends ServiceEntityRepository
             null => null,
         };
 
-        $page = max(1, $query->page);
-        $qb->setFirstResult(($page - 1) * RosterQuery::PER_PAGE)
-            ->setMaxResults(RosterQuery::PER_PAGE);
+        if (RosterQuery::NO_RANK === $query->rank) {
+            $held = $this->getEntityManager()->createQueryBuilder()
+                ->select('1')->from(RankHolding::class, 'hn')
+                ->andWhere('hn.person = u')->andWhere('hn.until IS NULL');
+            $qb->andWhere($qb->expr()->not($qb->expr()->exists($held->getDQL())));
+        } elseif (null !== $query->rank) {
+            // THE RANK HELD NOW, never one held before: a promotion moves a
+            // person out of the rank they left.
+            $uuid = Uuid::isValid($query->rank) ? Uuid::fromString($query->rank) : null;
+            if (null !== $uuid) {
+                $held = $this->getEntityManager()->createQueryBuilder()
+                    ->select('1')->from(RankHolding::class, 'hr')->join('hr.rank', 'rr')
+                    ->andWhere('hr.person = u')->andWhere('hr.until IS NULL')->andWhere('rr.uuid = :rank');
+                $qb->andWhere($qb->expr()->exists($held->getDQL()))->setParameter('rank', $uuid, UuidType::NAME);
+            } else {
+                $qb->andWhere('1 = 0');
+            }
+        }
 
-        // fetchJoinCollection: true — the department filter joins a to-MANY
-        // (a placement names several departments), so the paginator needs its
-        // distinct-identifier pass or a person in two departments is counted
-        // twice and the page is short.
-        $paginator = new Paginator($qb->getQuery(), null !== $query->department);
-
-        /** @var list<User> $items */
-        $items = array_values(iterator_to_array($paginator));
-
-        return new Page($items, \count($paginator), $page, RosterQuery::PER_PAGE);
+        return $qb;
     }
 
     /**

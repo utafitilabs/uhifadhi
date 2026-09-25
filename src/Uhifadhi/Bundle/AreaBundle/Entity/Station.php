@@ -85,7 +85,7 @@ class Station
      * when it was put there until somebody does. Written with the point, by
      * {@see \Uhifadhi\Bundle\AreaBundle\Service\StationService}.
      */
-    #[ORM\Column(length: 16, enumType: StationPositionSource::class)]
+    #[ORM\Column(length: 16, enumType: StationPositionSource::class, options: ['default' => 'surveyed'])]
     private StationPositionSource $positionSource = StationPositionSource::Surveyed;
 
     /**

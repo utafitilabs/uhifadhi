@@ -28,14 +28,12 @@ final class Version20260925220000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'station.position_source: surveyed or estimated, existing stations backfilled as surveyed';
+        return 'station.position_source: surveyed or estimated, existing stations and any row inserted without it read surveyed';
     }
 
     public function up(Schema $schema): void
     {
-        $this->addSql('ALTER TABLE station ADD position_source VARCHAR(16) DEFAULT NULL');
-        $this->addSql("UPDATE station SET position_source = 'surveyed'");
-        $this->addSql('ALTER TABLE station ALTER position_source SET NOT NULL');
+        $this->addSql("ALTER TABLE station ADD position_source VARCHAR(16) DEFAULT 'surveyed' NOT NULL");
     }
 
     public function down(Schema $schema): void

@@ -44,8 +44,12 @@
        fifth wrapped an orphan onto a second line on a small laptop. A card's
        movement is read from the period history — the figure written down while
        the last closed period was still true — and a period nobody wrote gets no
-       pill at all. #}
-    <div class="grid kstrip" data-kpi>
+       pill at all.
+
+       THE DESIGN'S FLUSH ROW: `grid w-flush dp-kstrip` in team/overview.html,
+       whose `.dp-kstrip` is the shell's `.kstrip`; `w-flush` gives the row's
+       margin back, and team.css reads the qualifier as a sentence. #}
+    <div class="grid w-flush kstrip" data-kpi>
         {% for kpi in kpis %}
             <div class="c kpi{{ kpi.hot ? ' hot' }}">
                 <span class="tab">{{ kpi.label }}</span>
@@ -78,7 +82,7 @@
                across every area at once. An area whose stations nobody is
                stationed at keeps its column — the nought is the reading. #}
             {% if postingsChart %}
-                {{ atlas_chart(postingsChart, '', '', {'--chart-height': '140px', 'role': 'img', 'aria-label': 'Assignments by area'}) }}
+                {{ atlas_chart(postingsChart, '', '', {'--chart-height': '114px', 'role': 'img', 'aria-label': 'Assignments by area'}) }}
             {% else %}
                 <p class="use">No area has a station yet.</p>
             {% endif %}

@@ -1866,6 +1866,17 @@ tr.tm-bandrow.vacant .tm-band b { color: rgb(var(--c-fog)); }
    names the people behind its number instead of restating the label. */
 [data-tm] .kstrip { grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); }
 
+/* A SECTION OVERVIEW'S FIGURE ROW (`[data-kpi]`) is the design's `.dp-kstrip`
+   row, which reads the qualifier as a SENTENCE the delta pill ends: a flex row
+   turns every text run into a column of its own and the line breaks into
+   ragged blocks. So the qualifier is a block at 1.55, and the card is as tall
+   as the tallest qualifier in the row makes it — the grid still draws the
+   four the same height — rather than the shell's fixed 107px, which a
+   two-line qualifier overflows. Design: team/overview.html and
+   departments/overview.html (`.dp-kstrip .c.kpi .sub` in widgets.css). */
+.grid.kstrip[data-kpi] .c.kpi { height: auto; }
+.grid.kstrip[data-kpi] .c.kpi .sub { display: block; line-height: 1.55; }
+
 /* ==========================================================================
    TEAM · PAGES — the member record and the invite flow
    Ported from team-pages.css.

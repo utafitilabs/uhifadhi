@@ -65,6 +65,43 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
     }
 
     /**
+     * THE ROW IS THE DESIGN'S FLUSH FIGURE ROW (`grid w-flush dp-kstrip` in
+     * team/overview.html; the shell's `.kstrip` is the design's `.dp-kstrip`):
+     * no margin of its own under it, and the qualifier read as a sentence the
+     * pill sits at the end of, not a row of flex columns.
+     */
+    public function testTheKpiRowIsTheDesignsFlushFigureRow(): void
+    {
+        $this->installation();
+
+        $row = $this->visit('/team/overview')->filter('[data-kpi]');
+
+        self::assertCount(1, $row);
+        self::assertSame('grid w-flush kstrip', $row->attr('class'));
+
+        $css = (string) file_get_contents(\dirname(__DIR__, 2).'/public/team.css');
+        self::assertStringContainsString('.grid.kstrip[data-kpi] .c.kpi { height: auto; }', $css);
+        self::assertStringContainsString('.grid.kstrip[data-kpi] .c.kpi .sub { display: block; line-height: 1.55; }', $css);
+    }
+
+    /**
+     * A FIGURE THAT FELL READS WITH THE DESIGN'S MINUS SIGN (U+2212,
+     * `&minus;` in the design), never a hyphen, in the bad pill.
+     */
+    public function testAFallingFigureWearsTheMinusSign(): void
+    {
+        $this->installation();
+
+        $closed = PerformanceHistory::monthKey(new \DateTimeImmutable('first day of last month'));
+        $this->history()->recordForInstallation($closed, TeamFigures::PEOPLE, 99.0);
+
+        $pill = $this->visit('/team/overview')->filter('.kstrip .c.kpi')->eq(0)->filter('.delta');
+
+        self::assertSame('delta bad', $pill->attr('class'));
+        self::assertMatchesRegularExpression('/^\x{2212}\d+$/u', trim($pill->text()));
+    }
+
+    /**
      * A PERIOD NOBODY WROTE HAS NO PILL. An installation whose snapshot has
      * never run has no previous figure, and a delta reading zero would say
      * the figure held steady — a claim it cannot make.
@@ -198,6 +235,11 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
         self::assertSame('var(--acc)', self::at($view, 'data', 'datasets', '0', 'backgroundColor'));
         self::assertSame(2, self::at($view, 'data', 'datasets', '0', 'minBarLength'));
         self::assertSame(40, self::at($view, 'data', 'datasets', '0', 'maxBarThickness'));
+        // The design's columns are `rx="1.5"`, its nought stubs `rx="1"`.
+        self::assertSame([1.5, 1], self::at($view, 'data', 'datasets', '0', 'borderRadius'));
+        self::assertFalse(self::at($view, 'data', 'datasets', '0', 'borderSkipped'));
+        // The design's 640×140 plot drawn across the half card at the reference width.
+        self::assertStringContainsString('--chart-height:114px', (string) $card->filter('.chart-plate')->attr('style'));
         self::assertSame(8, self::at($view, 'options', 'scales', 'y', 'max'));
         self::assertSame(4, self::at($view, 'options', 'scales', 'y', 'ticks', 'stepSize'));
         self::assertFalse(self::at($view, 'options', 'plugins', 'legend', 'display'));

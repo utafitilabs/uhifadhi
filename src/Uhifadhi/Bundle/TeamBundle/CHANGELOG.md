@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * THE TEAM OVERVIEW'S FIGURE ROW IS THE DESIGN'S FLUSH ROW: `grid w-flush kstrip`, and a section
+   overview's `[data-kpi]` row reads each qualifier as a sentence (`display: block`, 1.55) in a
+   card as tall as its row, not the shell's fixed 107px. A falling figure's pill reads with the
+   minus sign (U+2212), on the departments overview too. "Assignments by area" draws its columns
+   at the design's `rx="1.5"` (`AtlasChart::$barRadius`) in a 114px box
+
  * THE MODULES MATRIX'S KEY IS THE ATLAS'S DOT KEY, `atlas_key()`, in the marks its cells
    wear: attached, not attached, and the sentence after them. No team template writes a
    `.sxmxkey` (`VisualsAreTheAtlasTest`)

@@ -74,6 +74,9 @@ final readonly class TeamSectionOverview
     /** The width the design draws an area's column at, in pixels. */
     private const float COLUMN_WIDTH = 40.0;
 
+    /** The corner radius the design draws an area's column with (`rx="1.5"`). */
+    private const float COLUMN_RADIUS = 1.5;
+
     public function __construct(
         private UserRepository $users,
         private PositionRepository $positions,
@@ -502,6 +505,7 @@ final readonly class TeamSectionOverview
             legend: ChartLegend::None,
             noughts: ChartNoughts::Hairline,
             barWidth: self::COLUMN_WIDTH,
+            barRadius: self::COLUMN_RADIUS,
         );
     }
 

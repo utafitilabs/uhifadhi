@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Uhifadhi\Bundle\AreaBundle\Entity\Trait\TimestampableTrait;
 use Uhifadhi\Bundle\AreaBundle\Entity\Trait\UuidTrait;
+use Uhifadhi\Bundle\AreaBundle\Enum\StationPositionSource;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 
 /**
@@ -78,6 +79,14 @@ class Station
 
     #[ORM\Column(type: 'point')]
     private ?string $point = null;
+
+    /**
+     * WHERE THE POINT CAME FROM: surveyed when somebody recorded it, estimated
+     * when it was put there until somebody does. Written with the point, by
+     * {@see \Uhifadhi\Bundle\AreaBundle\Service\StationService}.
+     */
+    #[ORM\Column(length: 16, enumType: StationPositionSource::class)]
+    private StationPositionSource $positionSource = StationPositionSource::Surveyed;
 
     /**
      * THE ZONE ITS POINT FALLS IN, cached. Written only by the service that
@@ -179,6 +188,18 @@ class Station
     public function setPoint(string $point): static
     {
         $this->point = $point;
+
+        return $this;
+    }
+
+    public function getPositionSource(): StationPositionSource
+    {
+        return $this->positionSource;
+    }
+
+    public function setPositionSource(StationPositionSource $positionSource): static
+    {
+        $this->positionSource = $positionSource;
 
         return $this;
     }

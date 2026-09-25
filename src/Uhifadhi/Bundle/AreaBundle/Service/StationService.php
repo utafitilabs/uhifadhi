@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Service;
 use Doctrine\ORM\EntityManagerInterface;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Station;
+use Uhifadhi\Bundle\AreaBundle\Enum\StationPositionSource;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 
 /**
@@ -90,6 +91,9 @@ final readonly class StationService
      * A STATION, AT A POINT. Longitude then latitude, in that order, because
      * GeoJSON and PostGIS both put them that way round and a product that
      * reversed them once would reverse them everywhere.
+     *
+     * SURVEYED UNLESS SAID OTHERWISE: a point typed on the form is a point
+     * somebody recorded. A caller that invents one says so.
      */
     public function add(
         AreaOfInterest $area,
@@ -102,12 +106,14 @@ final readonly class StationService
         ?string $locality = null,
         ?\DateTimeImmutable $openedAt = null,
         ?int $catchmentM = self::DEFAULT_CATCHMENT_M,
+        StationPositionSource $positionSource = StationPositionSource::Surveyed,
     ): Station {
         $station = new Station()
             ->setArea($area)
             ->setName(trim($name))
             ->setCode(self::orNull($code) ?? $this->nextCode($area))
             ->setPoint(self::pointAt($lon, $lat))
+            ->setPositionSource($positionSource)
             ->setElevationM($elevationM)
             ->setLocality(self::orNull($locality))
             ->setOpenedAt($openedAt)
@@ -128,6 +134,8 @@ final readonly class StationService
      * re-asked — and the log says how far it went and which way, because "the
      * point changed" is a fact nobody can check and "340 m west" is one
      * somebody can walk to.
+     *
+     * A POINT SOMEBODY PLACED IS SURVEYED, whatever the post stood on before.
      */
     public function moveTo(Station $station, float $lon, float $lat, ?string $actor = null): Station
     {
@@ -139,7 +147,7 @@ final readonly class StationService
         $to = self::pointAt($lon, $lat);
         [$metres, $heading] = $this->stations->stDisplacement((string) $station->getPoint(), $to);
 
-        $station->setPoint($to);
+        $station->setPoint($to)->setPositionSource(StationPositionSource::Surveyed);
         $this->entityManager->flush();
 
         if ($metres > 0) {

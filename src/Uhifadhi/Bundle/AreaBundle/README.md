@@ -14,6 +14,7 @@ installed on its own as `uhifadhi/area-bundle`.
 - [Installation](#installation)
 - [The area](#the-area)
 - [The zone](#the-zone)
+- [The station](#the-station)
 - [Modules point at your ground](#modules-point-at-your-ground)
 - [What a module contributes to an area](#what-a-module-contributes-to-an-area)
 - [What a field client caches](#what-a-field-client-caches)
@@ -148,6 +149,18 @@ in two zones at once.
 
 **An area with no zones is the normal state.** `ZoneService::zoneOf()` answers
 `null` without complaint.
+
+## The station
+
+A **station** is a post in an area: a point, a name, an optional code, and the
+zone its point falls in (derived, never typed). `StationService` is the only
+supported way a station gets a point.
+
+`positionSource` (`Enum\StationPositionSource`) says where that point came from:
+`surveyed` when somebody recorded it — added on the form, or moved on the
+configure page, which always makes it `surveyed` — and `estimated` when a caller
+put it there until somebody does (`StationService::add(…, positionSource:
+StationPositionSource::Estimated)`).
 
 ## Modules point at your ground
 

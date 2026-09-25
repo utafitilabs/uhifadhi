@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * `Station::$positionSource` (`Enum\StationPositionSource`: `surveyed`, `estimated`) says where a
+   station's point came from. `StationService::add()` records `surveyed` unless the caller passes
+   `positionSource`; `StationService::moveTo()` sets `surveyed`. Migration `Version20260925220000`
+   adds `station.position_source`, sets every stored station to `surveyed` and makes it NOT NULL
  * A PING WRITES ITS RANGER'S OWN ROW: `duty_checkin` carries the watch's facts — `ping_count`,
    `first_ping_at`, `last_ping_at`, the newest fix (`last_fix`, `last_fix_at`,
    `last_fix_accuracy_m`, `last_fix_battery_pct`), `last_fix_m` to the watch's post, `closest_m`

@@ -20,6 +20,7 @@ use Uhifadhi\Bundle\AreaBundle\Controller\StationEditController;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\AreaBundle\Enum\PostingSource;
+use Uhifadhi\Bundle\AreaBundle\Enum\StationPositionSource;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
@@ -187,6 +188,31 @@ final class StationConfigureTest extends WebTestCase
         $moved = $this->stationsRepository()->findOneBy(['uuid' => $uuid]);
         self::assertInstanceOf(Station::class, $moved);
         self::assertStringContainsString('-3.19684', (string) $moved->getPoint());
+    }
+
+    /**
+     * A POINT PLACED ON THE CONFIGURE PAGE IS SURVEYED — a post added there,
+     * and an estimated post moved there.
+     */
+    public function testAPointPlacedOnTheConfigurePageIsSurveyed(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+        $uuid = (string) $station->getUuidString();
+        $station->setPositionSource(StationPositionSource::Estimated);
+        $this->em->flush();
+
+        $this->submit($area, '/stations/add', ['name' => 'Lakeshore Post', 'lat' => '-3.26140', 'lon' => '-29.41883']);
+        $this->submit($area, '/stations/'.$uuid.'/point', ['lat' => '-3.19684', 'lon' => '-29.47122'], $uuid);
+
+        $this->em->clear();
+        $added = $this->stationsRepository()->findOneBy(['name' => 'Lakeshore Post']);
+        self::assertInstanceOf(Station::class, $added);
+        self::assertSame(StationPositionSource::Surveyed, $added->getPositionSource());
+        $moved = $this->stationsRepository()->findOneBy(['uuid' => $uuid]);
+        self::assertInstanceOf(Station::class, $moved);
+        self::assertSame(StationPositionSource::Surveyed, $moved->getPositionSource());
     }
 
     /**

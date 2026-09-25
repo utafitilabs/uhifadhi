@@ -8,6 +8,17 @@
 
 Not released yet.
 
+ * ONE CONTROL MOVES A ROW WITHIN AN ORDERED LIST: the `reorder` Stimulus controller
+   (`uhifadhi--shell-bundle--reorder`, eager). A pointer drag on the grip — mouse, pen or
+   touch — lifts the row on the `--lift` shadow and opens a dashed slot of its height where it
+   will land, closing behind it (`.18s cubic-bezier(.32, .72, 0, 1)`); on release the row
+   settles there. The up and down carets (`.reorder`, a new component) and the arrow keys on the
+   focused grip move one step; the ends are disabled; the numbers repaint; a polite live line
+   says "X moved to position N". A form sends the order with its own fields; a list that saves
+   as it moves states `-url-value` and `-token-value` and every move posts `order[]`.
+   `.reorder-slot`, `.reorder-gap` and `.reorder-lifted` are the controller's. The shell's icon
+   set gains `shell:chevron-up`. Documented in docs/theming.md, "Moving a row within a list"
+
  * `sxbars`, `sxdot` AND `sxmxkey` ARE NO LONGER THE FRAME'S: the ranked bars, the matrix
    dot and the dot key are atlas components and their rules are in the atlas's chart.css,
    which every head carries. `LayoutContract::COMPONENTS` no longer lists them; `.sxmx`, the

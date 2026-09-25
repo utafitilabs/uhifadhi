@@ -193,7 +193,8 @@ hooks — is in
 - [The navigation contract and the area shell](docs/navigation.md) — how rows reach the
   sidebar and tabs reach a page.
 - [The theme](docs/theming.md) — the box model every page is measured in, the
-  token set, the Stimulus controllers the furniture moves by, and the tab icon.
+  token set, the Stimulus controllers the furniture moves by, the one control
+  that moves a row within an ordered list, and the tab icon.
 - [The component vocabulary](docs/components.md) — the classes a module writes on
   its own elements: the plate, the card's tab, the KPI, the register table, the
   pager and the person's mark.

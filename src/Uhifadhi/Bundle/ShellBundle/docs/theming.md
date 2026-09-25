@@ -10,6 +10,8 @@ the browser tab draws.
 - [The theme](#the-theme)
 - [The furniture moves](#the-furniture-moves)
 - [The frame on a phone](#the-frame-on-a-phone)
+- [One question before something is destroyed](#one-question-before-something-is-destroyed)
+- [Moving a row within a list](#moving-a-row-within-a-list)
 - [A time reads in the reader's zone](#a-time-reads-in-the-readers-zone)
 - [The tab icon](#the-tab-icon)
 
@@ -136,6 +138,7 @@ an application.
 | the drawer's close mark, its scrim, Escape | `sidebar` | close the drawer and hand focus back to the menu mark |
 | a tree caret | `sidebar-tree` | folds one branch; never navigates, never persisted |
 | a destructive submit | `confirm-modal` | asks the question, then submits the form it interrupted |
+| a row's grip and carets in an ordered list | `reorder` | drags the row with a slot where it will land, or steps it; renumbers and announces |
 
 Three consequences worth naming:
 
@@ -244,6 +247,53 @@ nobody wrote the controller, so every destructive button in the product deleted
 without asking, and no functional test could see it: a test that builds its own
 request never looks at an attribute. `tests/Unit/Assets/ConfirmModalContractTest`
 reads both sides of the seam as text for that reason.*
+
+## Moving a row within a list
+
+**One control moves a row within an ordered list, wherever the list is.** The
+ranks ladder and an area's running modules use it, and a module's own ordered
+list uses the same markup. Three ways to move, one result: a pointer drag on the
+grip (mouse, pen or touch), the up and down carets beside it, and the arrow keys
+while the grip has focus. A caret or a key moves the row one step; a drag moves
+it wherever it is released, and Escape puts it back.
+
+```twig
+{% set reorder = 'uhifadhi--shell-bundle--reorder' %}
+<ol data-controller="{{ reorder }}">
+    <li data-{{ reorder }}-target="row" data-reorder-name="Sightings" data-reorder-key="sightings">
+        <button type="button" aria-label="Move Sightings" data-{{ reorder }}-target="grip"
+                data-action="pointerdown->{{ reorder }}#grab pointermove->{{ reorder }}#move pointerup->{{ reorder }}#drop pointercancel->{{ reorder }}#cancel lostpointercapture->{{ reorder }}#cancel keydown.up->{{ reorder }}#up:prevent keydown.down->{{ reorder }}#down:prevent keydown.esc->{{ reorder }}#cancel">{{ ux_icon('shell:grip-vertical') }}</button>
+        <span class="reorder">
+            <button type="button" aria-label="Move Sightings up" data-{{ reorder }}-target="up" data-action="{{ reorder }}#up" disabled>{{ ux_icon('shell:chevron-up') }}</button>
+            <button type="button" aria-label="Move Sightings down" data-{{ reorder }}-target="down" data-action="{{ reorder }}#down">{{ ux_icon('shell:chevron-down') }}</button>
+        </span>
+        <span data-{{ reorder }}-target="number">1</span> Sightings
+    </li>
+    …
+</ol>
+<p class="visually-hidden" aria-live="polite" data-{{ reorder }}-target="status"></p>
+```
+
+| Part | Written by | What it is |
+|---|---|---|
+| `row` target | the page | a movable row; `data-reorder-name` is its label, `data-reorder-key` what is posted for it |
+| `grip` target | the page | a **button** with its label, so the keyboard reaches it; the controller gives it `touch-action: none` |
+| `.reorder`, `up` / `down` targets | the page | the caret pair: lucide chevron-up over chevron-down, 18×17 each, 34px together; the first row's up and the last row's down are drawn `disabled` and kept so as rows move |
+| `number` target | the page, optional | repainted from the row's place after every move |
+| `status` target | the page | one visually hidden `aria-live="polite"` line: "Sightings moved to position 2" |
+| `.reorder-slot` / `.reorder-gap` | the controller | the gap: the row's own kind of element (a table row holds one cell across the table), a 1px dashed `--ln2` place of the dragged row's height (`--reorder-h`), radius 8px; it opens where the row will land and closes behind it in `.18s cubic-bezier(.32, .72, 0, 1)` |
+| `.reorder-lifted` | the controller | the dragged row on the plate's ground and the `--lift` shadow, radius 8px, riding the pointer's y; a table row keeps each cell's width; on release it settles into the slot in the same `.18s` |
+
+**The order is the page's to send.** A form reads it from its own field order and
+sends it with Save, so the controller posts nothing. A list that saves as it moves
+states `-url-value` and `-token-value`, and after every move the rows' keys are
+posted as `order[]` with `_token`, each write chained after the last. A list whose
+first movable row is not number 1 — a pinned row holding the front — states
+`-first-value`. Nothing is remembered in the browser, and `prefers-reduced-motion`
+drops the opening, the closing and the settle, not the slot.
+
+`tests/Unit/Assets/ReorderControllerTest` reads the controller and the sheet as
+text; the drag itself is render-verified.
 
 ## A time reads in the reader's zone
 

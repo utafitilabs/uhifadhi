@@ -79,6 +79,7 @@ you write on an element; the parts each one brings are in the table.
 | The person's mark | `.avatar` | — |
 | The row affordance | `.open-btn` | fills on the **row's** hover, not its own |
 | The quiet button | `.tgl` | the secondary to `.cta` |
+| The caret pair | `.reorder` | two `button`s, up over down, beside a row's grip in an ordered list; the `reorder` controller writes `.reorder-slot`, `.reorder-gap` and `.reorder-lifted` itself ([Moving a row](theming.md#moving-a-row-within-a-list)) |
 
 **The way back is written as one line**, at the top of the page body:
 

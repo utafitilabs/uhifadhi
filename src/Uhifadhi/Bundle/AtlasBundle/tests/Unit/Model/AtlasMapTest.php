@@ -24,6 +24,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
 use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
 use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
 use Uhifadhi\Bundle\AtlasBundle\Model\LiveStream;
+use Uhifadhi\Bundle\AtlasBundle\Model\PointPick;
 use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
@@ -57,6 +58,9 @@ final class AtlasMapTest extends TestCase
             // NO STREAM WAS STATED, so the marks stay where the page put them
             // — stated as a null rather than left out, like the subject.
             'live' => null,
+            // NOTHING IS PICKED ON THIS PLATE: a click on the ground is a
+            // click on a map, and nothing else.
+            'pick' => null,
         ], $atlas->toArray());
     }
 
@@ -184,6 +188,41 @@ final class AtlasMapTest extends TestCase
 
         self::assertIsArray($boundary);
         self::assertFalse($boundary['scrim']);
+    }
+
+    /**
+     * A PLATE THAT PICKS A POINT STATES WHICH FORM A CLICK WRITES INTO and
+     * which two inputs of it hold the point; the plate owns the pin, the
+     * click, the drag and the caption, and the page extends nothing.
+     */
+    public function testAPickingPlateHandsTheFormAndItsInputsToTheBrowser(): void
+    {
+        $atlas = new AtlasMap(self::uxMap())->pickPoint(new PointPick('station-add', 'the new station'));
+
+        self::assertSame(
+            ['form' => 'station-add', 'name' => 'the new station', 'latitude' => 'lat', 'longitude' => 'lon', 'precision' => 5],
+            $atlas->toArray()['pick'],
+        );
+    }
+
+    /**
+     * AND ITS KEY NAMES THE PIN, last, after whatever the caller drew: the
+     * design's "The pin · being placed", in the accent, drawn as a pin.
+     */
+    public function testAPickingPlatesLegendEndsWithThePin(): void
+    {
+        $legend = new AtlasMap(self::uxMap())
+            ->addLegendItem(new LegendItem(label: 'Stations', swatch: PlatePalette::DIM))
+            ->pickPoint(new PointPick('station-add'))
+            ->legend();
+
+        $pin = end($legend);
+        self::assertInstanceOf(LegendItem::class, $pin);
+        self::assertSame('The pin', $pin->label);
+        self::assertSame('being placed', $pin->note);
+        self::assertSame(PlatePalette::ACCENT, $pin->swatch);
+        self::assertSame(LayerShape::Pin, $pin->shape);
+        self::assertNull($pin->layerId);
     }
 
     private static function uxMap(): UxMap

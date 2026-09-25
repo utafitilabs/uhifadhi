@@ -48,6 +48,9 @@ enum LayerShape: string
     /** Nobody's position — a key row for a mark the plate draws nowhere. */
     case LiveAbsent = 'live-absent';
 
+    /** The pin a picking plate places — a key row for the one mark the plate draws on a click. */
+    case Pin = 'pin';
+
     /**
      * The live dot's classes for this shape, or null where the shape is not
      * one of the dot's states.

@@ -1470,3 +1470,42 @@ is drawn with `atlas_thumbnail(thumbnail)` inside a positioned frame. `.ax-sat` 
 
 **What to change.** Replace the class name in any `use` statement; replace a hand-written
 `<img class="ax-sat">` and `<svg class="ax-outline">` pair with the one call.
+
+## Every chart wears the house ticks, and none has a tooltip
+
+**What changed.** `ChartBuilder` states every chart's tick labels (the mono face at 6.7px in
+`--fog`), the value axis's grid (the fog at 22%, 0.6px, no tick marks) and the index axis's line
+(the fog at 55%, 0.8px) as tokens the chart plate resolves, and switches Chart.js tooltips off
+(`plugins.tooltip.enabled: false`). `AtlasChart::$barRadius` rounds a chart's bars; unstated,
+they stay square.
+
+**What to change in a module.** Nothing for a module that states an `AtlasChart`. A figure that
+was only readable on hover is now read nowhere: write it on the bar (`ChartFigures`) or in the
+caption.
+
+## A station's point is picked by the atlas plate
+
+**What changed.** The stations section's plate picks a point through the atlas's pick mode:
+`AreaPlateService::picker()` states `AtlasMap::pickPoint(new PointPick('station-add', …))`, the
+plate draws the pin, the caption and the pin's key row, and the "Pick on the map" and "Move on
+the map" controls wear `data-atlas-pick`. `.pickcap` moved from `bundles/area/area.css` to
+`bundles/atlas/map.css`.
+
+**The `station-point` controller is deprecated** and does nothing; it is removed in the next
+release. Its file and its `assets/package.json` entry stay for this one, so an installation whose
+`assets/controllers.json` enables it still renders. Delete these lines from that file:
+
+```json
+"station-point": {
+    "enabled": true,
+    "fetch": "eager"
+}
+```
+
+(under `"@uhifadhi/area-bundle"`), then `cache:clear` and `asset-map:compile`.
+
+**What to change in a module.** A module that picked a point by listening to
+`atlas:map:connect` states `AtlasMap::pickPoint(PointPick)` instead and puts
+`data-atlas-pick="<form id>"`, `data-atlas-pick-mode` and `data-atlas-pick-name` on the controls
+that arm the plate for another form. Documented in the atlas's docs/components.md, "Picking a
+point".

@@ -23,6 +23,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\FeaturePopup;
 use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
 use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
 use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
+use Uhifadhi\Bundle\AtlasBundle\Model\PointPick;
 use Uhifadhi\Bundle\AtlasBundle\Model\StyleRule;
 use Uhifadhi\Bundle\AtlasBundle\Tests\Integration\TestKernel;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
@@ -102,6 +103,44 @@ final class RenderMapTest extends TestCase
 
         self::assertStringContainsString('Boundary only', $html);
         self::assertStringNotContainsString('#toggleLayer', $html);
+    }
+
+    /**
+     * A PICKING PLATE CARRIES ITS OWN CAPTION under the legend, in the
+     * design's words and its three states — at rest, adding, moving — with
+     * the readout and the commit hidden until there is a point; and its
+     * legend ends with the pin, drawn as one.
+     */
+    public function testAPickingPlateCarriesTheCaptionInItsThreeStatesAndThePinsKeyRow(): void
+    {
+        $html = self::render(static function (AtlasMap $map): void {
+            $map->pickPoint(new PointPick('station-add', 'the new station'));
+        });
+        $plate = new Crawler($html);
+        $controller = MapPlateRuntime::CONTROLLER;
+
+        $caption = $plate->filter('.map-plate > .pickcap');
+        self::assertCount(1, $caption);
+        self::assertSame('Pick the point · click the ground', $caption->filter('[data-atlas-pick-state="rest"]')->text());
+        self::assertNull($caption->filter('[data-atlas-pick-state="rest"]')->attr('hidden'));
+        self::assertStringStartsWith('Adding', $caption->filter('[data-atlas-pick-state="add"]')->text());
+        self::assertNotNull($caption->filter('[data-atlas-pick-state="add"]')->attr('hidden'));
+        self::assertStringEndsWith('· drag the pin', $caption->filter('[data-atlas-pick-state="move"]')->text());
+        self::assertCount(2, $caption->filter('[data-atlas-pick-named]'));
+        self::assertNotNull($caption->filter('[data-atlas-pick-point]')->attr('hidden'));
+        self::assertSame($controller.'#usePoint', $caption->filter('button[data-atlas-pick-use]')->attr('data-action'));
+        self::assertSame('Use this point', $caption->filter('button[data-atlas-pick-use]')->text());
+
+        $pin = $plate->filter('.map-legend .lay')->last();
+        self::assertStringContainsString('The pin', $pin->text());
+        self::assertSame('being placed', $pin->filter('em')->text());
+        self::assertCount(1, $pin->filter('.sw.pin'));
+    }
+
+    /** A plate that picks nothing has no caption. */
+    public function testAPlateThatPicksNothingHasNoCaption(): void
+    {
+        self::assertStringNotContainsString('pickcap', self::render());
     }
 
     public function testAMapWithNoLegendRendersNoLegend(): void

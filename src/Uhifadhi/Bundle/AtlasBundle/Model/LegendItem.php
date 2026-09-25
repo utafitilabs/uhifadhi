@@ -26,6 +26,9 @@ namespace Uhifadhi\Bundle\AtlasBundle\Model;
  *
  * `group` is the heading the row sits under. Rows sharing a group are drawn
  * together, so each contributor's layers read as that contributor's.
+ *
+ * `note` is the quiet word after the label where a row has no count — the
+ * design's "Zones · context", "The pin · being placed".
  */
 final readonly class LegendItem
 {
@@ -37,6 +40,7 @@ final readonly class LegendItem
         public ?int $count = null,
         public ?string $layerId = null,
         public bool $visible = true,
+        public ?string $note = null,
     ) {
     }
 }

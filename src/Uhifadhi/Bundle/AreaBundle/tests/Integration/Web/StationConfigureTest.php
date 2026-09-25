@@ -191,10 +191,10 @@ final class StationConfigureTest extends WebTestCase
 
     /**
      * THE PLATE IS ARMED BY A CONTROL THAT NAMES ITS FORM, and both forms the
-     * picker writes into carry the id it names. A button that arms a form
+     * picker writes into carry the id it names. A control that arms a form
      * that is not on the page is a click that does nothing at all.
      */
-    public function testEachFormThePickerWritesIntoIsOnThePageUnderTheIdTheButtonNames(): void
+    public function testEachFormThePickerWritesIntoIsOnThePageUnderTheIdTheControlNames(): void
     {
         $this->boot();
         $this->signIn();
@@ -204,12 +204,42 @@ final class StationConfigureTest extends WebTestCase
         $body = $this->body($this->section($area).'?open='.$uuid);
 
         self::assertStringContainsString('id="station-add"', $body);
-        self::assertStringContainsString('-form-param="station-add"', $body);
+        self::assertStringContainsString('data-atlas-pick="station-add"', $body);
         self::assertStringContainsString('id="move-'.$uuid.'"', $body);
-        self::assertStringContainsString('-form-param="move-'.$uuid.'"', $body);
+        self::assertStringContainsString('data-atlas-pick="move-'.$uuid.'"', $body);
         // The typed pair is the fallback, so it stays in both forms.
         self::assertStringContainsString('name="lat"', $body);
         self::assertStringContainsString('name="lon"', $body);
+    }
+
+    /**
+     * THE PLATE PICKS, AND THE PAGE EXTENDS NOTHING. The served plate carries
+     * the pick under the atlas key — the add form, what it is called, the
+     * pair of inputs and the precision — and its own caption; no element on
+     * the page names the area's retired picker controller.
+     */
+    public function testThePlatePicksThePointAndThePageNamesNoPickerOfItsOwn(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area] = $this->aStaffedPost();
+
+        $this->browser()->request('GET', $this->section($area));
+        $page = $this->browser()->getCrawler();
+
+        $extra = json_decode((string) $page->filter('[data-symfony--ux-leaflet-map--map-extra-value]')->attr('data-symfony--ux-leaflet-map--map-extra-value'), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertIsArray($extra);
+        self::assertIsArray($extra['atlas'] ?? null);
+        self::assertSame(
+            ['form' => 'station-add', 'name' => 'the new station', 'latitude' => 'lat', 'longitude' => 'lon', 'precision' => 5],
+            $extra['atlas']['pick'] ?? null,
+        );
+
+        self::assertCount(1, $page->filter('.map-plate > .pickcap'));
+        $pin = $page->filter('.map-legend .lay')->last();
+        self::assertStringStartsWith('The pin', trim($pin->text()));
+        self::assertSame('being placed', $pin->filter('em')->text());
+        self::assertStringNotContainsString('station-point', (string) $this->browser()->getResponse()->getContent());
     }
 
     /** THE ADDRESS IS THE STATE: each filter is a link, and it filters. */

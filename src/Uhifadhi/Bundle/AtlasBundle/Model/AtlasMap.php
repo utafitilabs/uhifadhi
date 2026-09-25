@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\AtlasBundle\Model;
 
 use Symfony\UX\Map\Map as UxMap;
 use Uhifadhi\Contracts\Area\LivePresence;
+use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
  * A map as the platform draws it: a UX Map map, plus everything the atlas adds
@@ -107,6 +108,9 @@ final class AtlasMap
      */
     private ?LiveStream $live = null;
 
+    /** Which form a click on the ground writes a point into, or nothing. */
+    private ?PointPick $pick = null;
+
     /** @var array<string, mixed> */
     private array $extra = [];
 
@@ -193,6 +197,32 @@ final class AtlasMap
         $this->live = $stream;
 
         return $this;
+    }
+
+    /**
+     * THE PLATE PICKS A POINT INTO A FORM: a click on the ground, or a drag of
+     * the pin, writes a latitude and a longitude into the inputs the pick
+     * names. The plate draws the pin, the caption under the legend in its
+     * three states, and a key row for the pin — here, after whatever the
+     * caller has stated so far, which is the design's order.
+     *
+     * One pick per plate: a second call replaces the form and leaves the one
+     * key row.
+     */
+    public function pickPoint(PointPick $pick): self
+    {
+        if (null === $this->pick) {
+            $this->legendRows[] = new LegendItem(label: 'The pin', swatch: PlatePalette::ACCENT, shape: LayerShape::Pin, note: 'being placed');
+        }
+        $this->pick = $pick;
+
+        return $this;
+    }
+
+    /** What the plate picks into, for the template that draws its caption. */
+    public function pick(): ?PointPick
+    {
+        return $this->pick;
     }
 
     /**
@@ -318,6 +348,7 @@ final class AtlasMap
      *     fit: bool,
      *     subject: array{geojson: array<string, mixed>, zoom: int|null}|null,
      *     live: array{hub: string, topics: list<string>}|null,
+     *     pick: array{form: string, name: string, latitude: string, longitude: string, precision: int}|null,
      * }
      */
     public function toArray(): array
@@ -335,6 +366,7 @@ final class AtlasMap
                 ? null
                 : ['geojson' => $this->subject, 'zoom' => $this->subjectZoom],
             'live' => $this->live?->toArray(),
+            'pick' => $this->pick?->toArray(),
         ];
     }
 

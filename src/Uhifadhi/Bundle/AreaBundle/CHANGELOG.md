@@ -8,6 +8,13 @@
 
 Not released yet.
 
+ * THE STATIONS SECTION'S PLATE PICKS THROUGH THE ATLAS: `AreaPlateService::picker()` states
+   `AtlasMap::pickPoint()` into the add form (`AreaPlateService::ADD_FORM`), and "Pick on the
+   map" and "Move on the map" wear `data-atlas-pick`; the plate draws the pin, the caption and
+   the pin's key row, and `.pickcap` left area.css for the atlas's map.css. The `station-point`
+   controller is deprecated as a no-op, kept with its `assets/package.json` entry (now
+   `enabled: false` for new installations) for this release and removed in the next; no Area
+   template names it (`StationPickTest`)
  * AN AREA'S FACE IS THE ATLAS'S THUMBNAIL: the register's cards and the flagship draw
    `atlas_thumbnail()`, the flagship's snippet an image like a card's rather than a background
    on the page. `Model\AreaThumbnail` is the atlas's `Model\Thumbnail`, and `.ax-sat` and

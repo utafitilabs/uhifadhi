@@ -123,6 +123,7 @@ final class MapPlateRuntime implements RuntimeExtensionInterface
             'element' => $this->renderer->renderMap($map->toUxMap(), $attributes),
             'groups' => false === $legend ? [] : self::group($map->legend()),
             'filters' => $filters,
+            'pick' => $map->pick(),
             'plateStyle' => implode(';', array_map(
                 static fn (string $property, string $value): string => $property.':'.$value,
                 array_keys($plateStyle),

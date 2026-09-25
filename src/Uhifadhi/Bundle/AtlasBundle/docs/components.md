@@ -24,6 +24,7 @@ their API once it settles.
   - [Where it is drawn](#where-it-is-drawn)
 - [The live stream](#the-live-stream)
 - [Base layers, fullscreen and fitting](#base-layers-fullscreen-and-fitting)
+- [Picking a point](#picking-a-point)
 - [What UX Map already models](#what-ux-map-already-models)
 - [render_map()](#render_map)
   - [A filter change keeps fullscreen](#a-filter-change-keeps-fullscreen)
@@ -448,6 +449,51 @@ $map
 ```
 
 With `fit(false)`, say where to look through the UX Map map underneath.
+
+## Picking a point
+
+A plate can write a point into a form: a click on the ground, or a drag of the pin, fills a
+latitude and a longitude input. The page states which form and writes no JavaScript:
+
+```php
+use Uhifadhi\Bundle\AtlasBundle\Model\PointPick;
+
+$map->pickPoint(new PointPick('station-add', 'the new station'));
+```
+
+`PointPick(form, name = '', latitude = 'lat', longitude = 'lon', precision = 5)`: `form` is the
+id of the form a click at rest writes into, `name` is what the caption calls that point,
+`latitude` and `longitude` are the `name`s of the two inputs in every form the plate writes into,
+and `precision` is how many decimals are written.
+
+The plate owns the rest:
+
+- **The pin** — the accent teardrop (`.atlas-pin`), a Leaflet `Marker` with `draggable: true`;
+  it starts wherever the form's inputs already hold a point, and arming for a point off the plate
+  brings it into view.
+- **The caption** under the legend (`.pickcap`), one of three states: *Pick the point · click the
+  ground* at rest; *Adding \<name\> · click the ground*; *Move \<name\> · drag the pin*; with the
+  point's readout and **Use this point** once there is a point.
+- **The key row** — *The pin · being placed*, last in the legend.
+
+**Adding writes straight through**: every click or drag writes the point. **Moving proposes**: the
+click or drag places the pin, and *Use this point* writes it. A click at rest is an add into the
+form PHP named. A pair typed into the armed form moves the pin.
+
+**Another form arms the plate** from a control anywhere on the page, heard from the document:
+
+```twig
+<button type="button" data-atlas-pick="move-{{ row.uuid }}" data-atlas-pick-mode="move"
+        data-atlas-pick-name="{{ row.name }}">Move on the map</button>
+```
+
+An element inside a form wearing `data-atlas-pick-note` is told the point written into it. One
+picking plate a page. The typed inputs stay the fallback: a page whose scripts never load keeps
+its form.
+
+Leaflet: [`Marker` `draggable` and `dragend`](https://leafletjs.com/reference.html#marker-draggable),
+[`DivIcon`](https://leafletjs.com/reference.html#divicon), whose `className` replaces Leaflet's own
+white square.
 
 ## What UX Map already models
 

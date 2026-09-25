@@ -31,8 +31,8 @@
             },
             "station-point": {
                 "main": "controllers/station_point_controller.js",
-                "fetch": "eager",
-                "enabled": true
+                "fetch": "lazy",
+                "enabled": false
             }
         }
     }

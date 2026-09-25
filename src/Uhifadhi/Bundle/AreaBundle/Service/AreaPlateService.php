@@ -24,6 +24,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\Boundary;
 use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
 use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
 use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
+use Uhifadhi\Bundle\AtlasBundle\Model\PointPick;
 use Uhifadhi\Bundle\AtlasBundle\Model\StyleRule;
 use Uhifadhi\Contracts\Atlas\PlatePalette;
 
@@ -48,6 +49,9 @@ use Uhifadhi\Contracts\Atlas\PlatePalette;
  */
 final readonly class AreaPlateService
 {
+    /** The id of the stations section's add form, which a click on the picker writes into. */
+    public const string ADD_FORM = 'station-add';
+
     /** The key's heading — the zones are the whole of it on this page. */
     public const string ZONES_GROUP = 'The zones';
 
@@ -151,12 +155,18 @@ final readonly class AreaPlateService
      * can be put somewhere on purpose, and the marks are there so that the
      * somewhere is not on top of a post that already exists.
      *
+     * THE PLATE PICKS THE POINT. A click on the ground writes into the add
+     * form ({@see self::ADD_FORM}) and a station's "Move on the map" arms it
+     * for that station's form; the atlas draws the pin, the caption and the
+     * pin's key row, and this page writes no JavaScript.
+     *
      * @param list<ZoneRow>                                                                        $rows  the area's zones, hued as everywhere else
      * @param list<array{uuid: string, name: string, point: string|null, posted: int, here: bool}> $posts every station in the area
      */
     public function picker(AreaOfInterest $area, array $rows, array $posts): AtlasMap
     {
-        return $this->withPosts($this->plate($area, $rows), $posts, false);
+        return $this->withPosts($this->plate($area, $rows), $posts, false)
+            ->pickPoint(new PointPick(self::ADD_FORM, 'the new station'));
     }
 
     /**

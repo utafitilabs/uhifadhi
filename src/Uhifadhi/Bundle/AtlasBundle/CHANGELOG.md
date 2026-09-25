@@ -8,6 +8,14 @@
 
 Not released yet.
 
+ * A PLATE PICKS A POINT INTO A FORM: `AtlasMap::pickPoint(PointPick)` names the form a click
+   writes into and the pair of inputs it fills; the plate draws a draggable pin (`.atlas-pin`),
+   the caption under the legend in its three states (`.pickcap`: at rest, adding, moving, with
+   the readout and "Use this point"), and a key row for the pin (`LayerShape::Pin`, and
+   `LegendItem::$note` for its "being placed"). A control anywhere on the page arms the plate
+   for another form with `data-atlas-pick`, `data-atlas-pick-mode` and `data-atlas-pick-name`.
+   Documented in docs/components.md, "Picking a point"
+
  * EVERY CHART WEARS THE HOUSE'S TICKS: tick labels in the mono face at 6.7px in `--fog`, the
    value axis's grid in the fog at 22% and 0.6px, the index axis's line in the fog at 55% and
    0.8px, and no tooltips — stated by `ChartBuilder` as tokens and resolved by the chart plate

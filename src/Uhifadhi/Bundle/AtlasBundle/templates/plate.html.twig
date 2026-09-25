@@ -65,7 +65,7 @@
                            state in a class because it is a drawing rather than a colour. #}
                         {% set swatch %}
                             {%- if item.shape.liveDot %}<span class="sw dot"><i class="{{ item.shape.liveDot }}"></i></span>
-                            {%- else %}<span class="sw{{ item.shape.value == 'line' ? ' ln' : '' }}" style="{{ item.shape.value == 'line' ? 'color:' ~ item.swatch : 'background:' ~ item.swatch }}"></span>
+                            {%- else %}<span class="sw{{ item.shape.value == 'line' ? ' ln' : '' }}{{ item.shape.value == 'pin' ? ' pin' : '' }}" style="{{ item.shape.value == 'line' ? 'color:' ~ item.swatch : 'background:' ~ item.swatch }}"></span>
                             {%- endif -%}
                         {% endset %}
                         {% if item.layerId %}
@@ -73,7 +73,7 @@
                                     data-action="{{ controller }}#toggleLayer"
                                     data-{{ controller }}-layer-param="{{ item.layerId }}"
                                     aria-pressed="{{ item.visible ? 'true' : 'false' }}">
-                                {{- swatch -}}{{ item.label }}{% if item.count is not null %}<em>{{ item.count }}</em>{% endif %}
+                                {{- swatch -}}{{ item.label }}{% if item.count is not null %}<em>{{ item.count }}</em>{% elseif item.note %}<em>{{ item.note }}</em>{% endif %}
                                 <span class="tog">{{ item.visible ? 'on' : 'off' }}</span>
                             </button>
                         {% else %}
@@ -82,11 +82,27 @@
                                either, and reading as on would claim the ground shows it. #}
                             {# `data-atlas-shape` names the shape the key is for, so a plate whose
                                marks move after the page is drawn can find the row to recount. #}
-                            <span class="lay{{ item.visible ? '' : ' off' }}" data-atlas-shape="{{ item.shape.value }}">{{- swatch -}}{{ item.label }}{% if item.count is not null %}<em>{{ item.count }}</em>{% endif %}</span>
+                            <span class="lay{{ item.visible ? '' : ' off' }}" data-atlas-shape="{{ item.shape.value }}">{{- swatch -}}{{ item.label }}{% if item.count is not null %}<em>{{ item.count }}</em>{% elseif item.note %}<em>{{ item.note }}</em>{% endif %}</span>
                         {% endif %}
                     {% endfor %}
                 </div>
             {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if pick %}
+        {# A PLATE THAT PICKS SAYS WHAT IT IS ARMED FOR — one caption, three
+           states, and only the true one shown: at rest it invites a pick,
+           adding names what is being added, moving names what is being
+           moved. The readout and the commit appear once there is a point to
+           read. The plate controller switches them; see AtlasMap::pickPoint(). #}
+        <div class="pickcap">
+            <span data-atlas-pick-state="rest"><b>Pick the point</b> &middot; click the ground</span>
+            <span data-atlas-pick-state="add" hidden><b>Adding <span data-atlas-pick-named></span></b> &middot; click the ground</span>
+            <span data-atlas-pick-state="move" hidden><b>Move <span data-atlas-pick-named></span></b> &middot; drag the pin</span>
+            <span class="sp"></span>
+            <span class="mono d" data-atlas-pick-point hidden></span>
+            <button type="button" class="btn sm" data-atlas-pick-use hidden data-action="{{ controller }}#usePoint">Use this point</button>
         </div>
     {% endif %}
 </div>

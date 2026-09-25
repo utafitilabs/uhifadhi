@@ -47,6 +47,9 @@ import { mountMapChrome } from 'uhifadhi/map-chrome';
  * feature; this controller evaluates them. No callback crosses the wire, which
  * is exactly why one controller can draw every module's layers.
  *
+ * IT PICKS A POINT INTO A FORM where PHP asked it to — see THE PICK MODE
+ * below — so a page that needs a point clicked writes no JavaScript either.
+ *
  * IT DISPATCHES ITS OWN LIFECYCLE — `atlas:map:connect` and
  * `atlas:map:layer:added` — so an installation can extend a plate without
  * forking it. A module should not need to.
@@ -202,6 +205,55 @@ function plateElementFor(link) {
 }
 
 /*
+ * THE PICK MODE — a plate that writes a point into a form.
+ *
+ * PHP states `AtlasMap::pickPoint(PointPick)`, which arrives as
+ * `extra.atlas.pick`: the id of the form a click at rest writes into, what the
+ * caption calls that point, the names of the two inputs that hold it and how
+ * many decimals are written. The plate owns everything else — the pin, the
+ * click on the ground, the drag of the pin, the point a form already holds,
+ * bringing the pin into view, and the caption's three states — so the page
+ * that asked for it writes no JavaScript and extends no plate.
+ *
+ * A CONTROL ANYWHERE ON THE PAGE ARMS THE PLATE FOR ANOTHER FORM by wearing
+ * `data-atlas-pick="<form id>"`, with `data-atlas-pick-mode` (`add` or
+ * `move`) and `data-atlas-pick-name`; heard from the document, like the swap
+ * verb, because such a control is somebody else's markup and is very often
+ * not inside the plate. ONE PICKING PLATE A PAGE: every picking plate answers
+ * an arming control.
+ *
+ * ADDING WRITES STRAIGHT THROUGH — the click is the answer. MOVING PROPOSES:
+ * a point that exists is moved on purpose, so the click or the drag places
+ * the pin and "Use this point" commits it.
+ *
+ * THE PIN IS A MARKER, NOT A CIRCLE. Leaflet drags a Marker — `draggable`,
+ * "Whether the marker is draggable with mouse/touch or not", and its
+ * `dragend` event — and never a CircleMarker; its drawing is the sheet's
+ * (`.atlas-pin`), handed over as a DivIcon whose `className` replaces
+ * Leaflet's own white square.
+ *
+ * @see https://leafletjs.com/reference.html#marker-draggable
+ * @see https://leafletjs.com/reference.html#marker-dragend
+ * @see https://leafletjs.com/reference.html#divicon — `html`, `className`, `iconSize`, `iconAnchor`
+ * @see leaflet 1.9.4 dist/leaflet-src.js, Marker.options (`draggable: false`, `autoPan: false`) and DivIcon.options (`className: 'leaflet-div-icon'`)
+ */
+const PICK = 'data-atlas-pick';
+const PICK_MODE = 'data-atlas-pick-mode';
+const PICK_NAME = 'data-atlas-pick-name';
+const PICK_NOTE = 'data-atlas-pick-note';
+
+/** The caption's parts, written by the plate template under a picking plate. */
+const PICK_STATE = 'data-atlas-pick-state';
+const PICK_NAMED = 'data-atlas-pick-named';
+const PICK_POINT = 'data-atlas-pick-point';
+const PICK_USE = 'data-atlas-pick-use';
+
+/* THE PIN'S BOX: the sheet draws a 16px teardrop turned onto its point, and
+   the point is the anchor — 8√2 below the centre, less the tip's rounding. */
+const PIN_SIZE = 16;
+const PIN_TIP = 18;
+
+/*
  * WHAT A FILTER CHANGE CAN CHANGE INSIDE THE PLATE — the chips themselves (their
  * counts and which one is pressed), the map element (the new features and the
  * whole atlas payload with them) and the legend (its rows and their counts).
@@ -281,6 +333,12 @@ export default class extends Controller {
         this.onSwapClick = (event) => this.swapLink(event);
         document.addEventListener('click', this.onSwapClick);
 
+        // THE PICK MODE'S ARMING CONTROLS, and the typed pair it keeps the pin on.
+        this.onPickClick = (event) => this.armFrom(event);
+        this.onPickTyped = (event) => this.typedPoint(event);
+        document.addEventListener('click', this.onPickClick);
+        document.addEventListener('change', this.onPickTyped);
+
         this.onOver = (event) => this.spotlightFrom(event.target);
         this.onOut = (event) => this.releaseFrom(event);
         document.addEventListener('mouseover', this.onOver);
@@ -292,6 +350,9 @@ export default class extends Controller {
     disconnect() {
         this.unsubscribe();
         document.removeEventListener('click', this.onSwapClick);
+        document.removeEventListener('click', this.onPickClick);
+        document.removeEventListener('change', this.onPickTyped);
+        this.pin = null;
         this.element.removeEventListener('ux:map:pre-connect', this.onPreConnect);
         this.element.removeEventListener('ux:map:connect', this.onConnect);
         document.removeEventListener('mouseover', this.onOver);
@@ -395,6 +456,14 @@ export default class extends Controller {
         });
 
         this.refit();
+
+        // A PLATE THAT PICKS A POINT is armed after the fit: the pin is what
+        // is being placed, never what the plate is framed on.
+        try {
+            this.startPick(atlas.pick);
+        } catch (error) {
+            console.error('[atlas] the plate could not start picking', error);
+        }
 
         /*
          * AND AGAIN ONCE THE PAGE HAS SETTLED. A plate is fitted while its
@@ -1250,6 +1319,206 @@ export default class extends Controller {
         if ('undefined' !== typeof ResizeObserver) {
             this.frameWatch = new ResizeObserver(() => this.settle());
             this.frameWatch.observe(frame);
+        }
+    }
+
+    /**
+     * THE PICK MODE, started on every map the plate is handed: at rest, on
+     * the form PHP named, with the pin wherever that form's point already is
+     * — or, on a second map, wherever the pin was.
+     */
+    startPick(pick) {
+        this.pick = pick?.form ? pick : null;
+        this.pin = null;
+        if (!this.pick) {
+            return;
+        }
+
+        this.picking ??= { mode: 'rest', form: document.getElementById(this.pick.form), name: this.pick.name ?? '', point: null };
+        this.picking.point ??= this.pointIn(this.picking.form);
+        this.map.on('click', (event) => this.pickAt(event.latlng.lat, event.latlng.lng));
+
+        if (this.picking.point) {
+            this.placePin(this.picking.point);
+        }
+        this.pickCaption();
+        this.pickReadout();
+    }
+
+    /**
+     * ARM THE PLATE FOR ONE FORM. The control says which form, what the
+     * caption calls the point and whether it is added or moved, so the plate
+     * never guesses which pair of boxes a click is about.
+     */
+    armFrom(event) {
+        const control = event.target.closest(`[${PICK}]`);
+        if (!control || !this.pick || !this.map) {
+            return;
+        }
+
+        const form = document.getElementById(control.getAttribute(PICK));
+        if (!form) {
+            return;
+        }
+
+        event.preventDefault();
+        this.picking = {
+            mode: 'move' === control.getAttribute(PICK_MODE) ? 'move' : 'add',
+            form,
+            name: control.getAttribute(PICK_NAME) ?? '',
+            point: this.pointIn(form),
+        };
+
+        if (this.picking.point) {
+            this.placePin(this.picking.point);
+            this.bringPinIntoView();
+        } else {
+            this.pin?.remove();
+            this.pin = null;
+        }
+
+        this.pickCaption();
+        this.pickReadout();
+        this.element.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    /** A click on the ground, or the pin let go of: one point, one readout. */
+    pickAt(lat, lng) {
+        if (!this.picking) {
+            return;
+        }
+
+        // A CLICK AT REST IS AN ADD, into the form PHP named.
+        if ('rest' === this.picking.mode) {
+            this.picking.mode = 'add';
+            this.pickCaption();
+        }
+
+        this.picking.point = { lat, lng };
+        this.placePin(this.picking.point);
+        this.pickReadout();
+
+        if ('add' === this.picking.mode) {
+            this.writePoint();
+        }
+    }
+
+    /** "Use this point" — the armed form takes what the pin is standing on. */
+    usePoint(event) {
+        event.preventDefault();
+        this.writePoint();
+    }
+
+    /** The point, into the stated inputs at the stated precision, and the form's note told. */
+    writePoint() {
+        const form = this.picking?.form;
+        const point = this.picking?.point;
+        if (!form || !point) {
+            return;
+        }
+
+        const lat = form.querySelector(`[name="${this.pick.latitude}"]`);
+        const lng = form.querySelector(`[name="${this.pick.longitude}"]`);
+        if (lat) {
+            lat.value = point.lat.toFixed(this.pick.precision);
+        }
+        if (lng) {
+            lng.value = point.lng.toFixed(this.pick.precision);
+        }
+
+        const note = form.querySelector(`[${PICK_NOTE}]`);
+        if (note) {
+            note.textContent = this.pointText(point);
+        }
+    }
+
+    /** A pair typed into the armed form moves the pin, so the two never disagree. */
+    typedPoint(event) {
+        const form = this.picking?.form;
+        if (!form || !form.contains(event.target)) {
+            return;
+        }
+
+        const point = this.pointIn(form);
+        if (point) {
+            this.picking.point = point;
+            this.placePin(point);
+            this.pickReadout();
+        }
+    }
+
+    /** The pin: one on the plate, the sheet's drawing, dragged to move it. */
+    placePin({ lat, lng }) {
+        if (!this.map) {
+            return;
+        }
+
+        if (this.pin) {
+            this.pin.setLatLng([lat, lng]);
+
+            return;
+        }
+
+        this.pin = this.L.marker([lat, lng], {
+            icon: this.L.divIcon({ className: 'atlas-pin', html: '<i></i>', iconSize: [PIN_SIZE, PIN_SIZE], iconAnchor: [PIN_SIZE / 2, PIN_TIP] }),
+            draggable: true,
+            autoPan: true,
+            keyboard: false,
+            zIndexOffset: 1000,
+        }).addTo(this.map);
+        this.pin.on('dragend', () => {
+            const at = this.pin.getLatLng();
+            this.pickAt(at.lat, at.lng);
+        });
+    }
+
+    /** A pin off the plate is brought on, at the zoom the reader is at. */
+    bringPinIntoView() {
+        const at = this.pin?.getLatLng();
+        if (at && !this.map.getBounds().contains(at)) {
+            this.map.panTo(at, { animate: false });
+        }
+    }
+
+    /** What a form already holds, or null where it holds no point. */
+    pointIn(form) {
+        if (!form || !this.pick) {
+            return null;
+        }
+
+        const lat = Number.parseFloat(form.querySelector(`[name="${this.pick.latitude}"]`)?.value ?? '');
+        const lng = Number.parseFloat(form.querySelector(`[name="${this.pick.longitude}"]`)?.value ?? '');
+
+        return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+    }
+
+    pointText(point) {
+        return `${point.lat.toFixed(this.pick.precision)}, ${point.lng.toFixed(this.pick.precision)}`;
+    }
+
+    /** One caption is shown, and it names the point it is about. */
+    pickCaption() {
+        for (const state of this.element.querySelectorAll(`[${PICK_STATE}]`)) {
+            const shown = state.getAttribute(PICK_STATE) === this.picking.mode;
+            state.hidden = !shown;
+            const named = state.querySelector(`[${PICK_NAMED}]`);
+            if (shown && named) {
+                named.textContent = this.picking.name;
+            }
+        }
+    }
+
+    /** The readout and the commit, once there is a point to read. */
+    pickReadout() {
+        const point = this.picking?.point;
+        const readout = this.element.querySelector(`[${PICK_POINT}]`);
+        const use = this.element.querySelector(`[${PICK_USE}]`);
+        if (readout) {
+            readout.textContent = point ? this.pointText(point) : '';
+            readout.hidden = !point;
+        }
+        if (use) {
+            use.hidden = !point;
         }
     }
 

@@ -128,9 +128,9 @@ final class PlateFitTest extends TestCase
         $controller = self::controller();
 
         self::assertSame(
-            2,
+            3,
             preg_match_all('/animate: false,?\n?\s*\}\)/', $controller),
-            'Both ways of arriving at a subject — fitting an extent and centring on a point — arrive at once.',
+            'Every way of arriving somewhere — fitting an extent, centring on a point, bringing a picked pin into view — arrives at once.',
         );
     }
 

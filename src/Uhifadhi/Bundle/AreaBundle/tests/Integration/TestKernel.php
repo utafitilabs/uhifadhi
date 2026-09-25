@@ -157,6 +157,7 @@ class TestKernel extends Kernel
         /* The day, and the pings that prove it — API-CONTRACT.md §13. */
         $services->alias('test_public.area.checkin_statuses', 'area.checkin_statuses')->public();
         $services->alias('test_public.area.presence', 'area.presence')->public();
+        $services->alias('test_public.area.presence_facts', 'area.presence_facts')->public();
         $services->alias('test_public.area.people_status', 'area.people_status')->public();
 
         /*

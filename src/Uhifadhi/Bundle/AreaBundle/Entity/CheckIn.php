@@ -46,12 +46,30 @@ use Uhifadhi\Contracts\Entity\UserInterface;
  * same moment as 06:00 in UTC and the difference is the whole day; the
  * ranger's own date is stored separately for exactly that reason.
  *
+ * THE ROW ALSO CARRIES WHAT THE WATCH REPORTED — facts, never verdicts. How
+ * many pings, the first and the last, the last fix and how far it lies from
+ * the watch's post, the nearest any fix came to that post, the zone the last
+ * fix falls in and the post nearest to it. They are written by
+ * {@see \Uhifadhi\Bundle\AreaBundle\Service\PresenceFactsService} in the
+ * same transaction as the ping or the claim that changed them, and nowhere
+ * else; `area:presence:rebuild` recomputes them from the pings, which are
+ * kept. Nothing here says "verified": that is judged when a page reads,
+ * against the ring as it stands then.
+ *
+ * OPEN WATCHES HAVE THEIR OWN INDEX. Every live read asks for the area's
+ * watches nobody has checked out of, so a partial index holds exactly those
+ * rows and stays the size of the headcount on duty, not of the history:
+ * "a partial index … contains entries only for those table rows that satisfy
+ * the predicate".
+ *
+ * @see https://www.postgresql.org/docs/current/indexes-partial.html
  * @see API-CONTRACT.md §13A
  */
 #[ORM\Entity(repositoryClass: CheckInRepository::class)]
 #[ORM\Table(name: 'duty_checkin')]
 #[ORM\UniqueConstraint(name: 'uniq_duty_checkin_ref', columns: ['area_id', 'client_ref'])]
 #[ORM\Index(name: 'idx_duty_checkin_day', columns: ['area_id', 'local_date'])]
+#[ORM\Index(name: 'idx_duty_checkin_open', columns: ['area_id', 'occurred_at'], options: ['where' => '(ended_at IS NULL)'])]
 #[ORM\HasLifecycleCallbacks]
 class CheckIn
 {
@@ -139,6 +157,47 @@ class CheckIn
     /** What is handed to the next watch. Absent means nothing is. */
     #[ORM\Column(name: 'handover_note', type: 'text', nullable: true)]
     private ?string $handoverNote = null;
+
+    /** HOW MANY PINGS THE WATCH SENT — the check-in's own position is a fix, not a ping. */
+    #[ORM\Column(name: 'ping_count', options: ['default' => 0])]
+    private int $pingCount = 0;
+
+    #[ORM\Column(name: 'first_ping_at', type: 'datetimetz_immutable', nullable: true)]
+    private ?\DateTimeImmutable $firstPingAt = null; // @phpstan-ignore property.unusedType (assigned by Doctrine from the row the facts statement wrote)
+
+    #[ORM\Column(name: 'last_ping_at', type: 'datetimetz_immutable', nullable: true)]
+    private ?\DateTimeImmutable $lastPingAt = null; // @phpstan-ignore property.unusedType (assigned by Doctrine from the row the facts statement wrote)
+
+    /** THE NEWEST FIX, the check-in's own position included: where the phone is now. */
+    #[ORM\Column(name: 'last_fix', type: 'point', nullable: true)]
+    private ?string $lastFix = null; // @phpstan-ignore property.unusedType (assigned by Doctrine from the row the facts statement wrote)
+
+    #[ORM\Column(name: 'last_fix_at', type: 'datetimetz_immutable', nullable: true)]
+    private ?\DateTimeImmutable $lastFixAt = null; // @phpstan-ignore property.unusedType (assigned by Doctrine from the row the facts statement wrote)
+
+    #[ORM\Column(name: 'last_fix_accuracy_m', nullable: true)]
+    private ?float $lastFixAccuracyM = null; // @phpstan-ignore property.unusedType (assigned by Doctrine from the row the facts statement wrote)
+
+    #[ORM\Column(name: 'last_fix_battery_pct', nullable: true)]
+    private ?int $lastFixBatteryPct = null; // @phpstan-ignore property.unusedType (assigned by Doctrine from the row the facts statement wrote)
+
+    /** Metres from the newest fix to the watch's post; null where there is no post or no fix. */
+    #[ORM\Column(name: 'last_fix_m', nullable: true)]
+    private ?float $lastFixM = null; // @phpstan-ignore property.unusedType (assigned by Doctrine from the row the facts statement wrote)
+
+    /** THE NEAREST ANY FIX CAME TO THE WATCH'S POST, in metres — what a ring is judged against. */
+    #[ORM\Column(name: 'closest_m', nullable: true)]
+    private ?float $closestM = null; // @phpstan-ignore property.unusedType (assigned by Doctrine from the row the facts statement wrote)
+
+    /** The zone the newest fix falls in, derived by geometry as a station's is. */
+    #[ORM\ManyToOne(targetEntity: Zone::class)]
+    #[ORM\JoinColumn(name: 'last_fix_zone_id', nullable: true, onDelete: 'SET NULL')]
+    private ?Zone $lastFixZone = null; // @phpstan-ignore property.unusedType (assigned by Doctrine from the row the facts statement wrote)
+
+    /** The working post nearest the newest fix — one nearest-neighbour lookup. */
+    #[ORM\ManyToOne(targetEntity: Station::class)]
+    #[ORM\JoinColumn(name: 'nearest_station_id', nullable: true, onDelete: 'SET NULL')]
+    private ?Station $nearestStation = null; // @phpstan-ignore property.unusedType (assigned by Doctrine from the row the facts statement wrote)
 
     /**
      * THE SECOND CLAIMS, APPENDED. A correction does not rewrite this row;
@@ -366,6 +425,61 @@ class CheckIn
         $this->handoverNote = $handoverNote;
 
         return $this;
+    }
+
+    public function getPingCount(): int
+    {
+        return $this->pingCount;
+    }
+
+    public function getFirstPingAt(): ?\DateTimeImmutable
+    {
+        return $this->firstPingAt;
+    }
+
+    public function getLastPingAt(): ?\DateTimeImmutable
+    {
+        return $this->lastPingAt;
+    }
+
+    public function getLastFix(): ?string
+    {
+        return $this->lastFix;
+    }
+
+    public function getLastFixAt(): ?\DateTimeImmutable
+    {
+        return $this->lastFixAt;
+    }
+
+    public function getLastFixAccuracyM(): ?float
+    {
+        return $this->lastFixAccuracyM;
+    }
+
+    public function getLastFixBatteryPct(): ?int
+    {
+        return $this->lastFixBatteryPct;
+    }
+
+    public function getLastFixM(): ?float
+    {
+        return $this->lastFixM;
+    }
+
+    public function getClosestM(): ?float
+    {
+        return $this->closestM;
+    }
+
+    public function getLastFixZone(): ?Zone
+    {
+        return $this->lastFixZone;
+    }
+
+    public function getNearestStation(): ?Station
+    {
+        return $this->nearestStation;
     }
 
     /** @return Collection<int, CheckInCorrection> */

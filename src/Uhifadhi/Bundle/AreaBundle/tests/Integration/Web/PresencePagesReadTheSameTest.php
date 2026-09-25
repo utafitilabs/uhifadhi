@@ -21,6 +21,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\PersonPosition;
 use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\AreaBundle\Enum\PositionSourceEnum;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
+use Uhifadhi\Bundle\AreaBundle\Service\PresenceFactsService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
 
@@ -113,7 +114,7 @@ final class PresencePagesReadTheSameTest extends WebTestCase
             ->setPositionAt(new \DateTimeImmutable(self::DAY.'T11:15:30+00:00'))
             ->setAccuracyM(12.0);
         $this->em->flush();
-        $this->recordFacts();
+        $this->facts()->recordClaimFix($fatuma);
         $this->em->clear();
 
         $area = $this->em->getRepository(AreaOfInterest::class)->find($area->getId());
@@ -124,12 +125,13 @@ final class PresencePagesReadTheSameTest extends WebTestCase
         return [$area, $eastgate];
     }
 
-    /**
-     * WHERE A FIXTURE THAT WRITES ROWS DIRECTLY BRINGS THE ROW FACTS INTO STEP.
-     * Empty while the reading derives everything from the pings.
-     */
-    private function recordFacts(): void
+    /** The row facts, folded in the way the write service folds them. */
+    private function facts(): PresenceFactsService
     {
+        $facts = static::getContainer()->get('test_public.area.presence_facts');
+        self::assertInstanceOf(PresenceFactsService::class, $facts);
+
+        return $facts;
     }
 
     private function assertSameAsRecorded(string $name, string $body): void
@@ -164,7 +166,16 @@ final class PresencePagesReadTheSameTest extends WebTestCase
             $body,
         );
 
-        return (string) preg_replace('/(?!'.self::DAY.')\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+00:00/', 'wall-clock', $body);
+        $body = (string) preg_replace('/(?!'.self::DAY.')\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+00:00/', 'wall-clock', $body);
+
+        // AND WHAT SUCH A STAMP PRINTS — "25 Sep · 15:42" is the run's minute.
+        $body = (string) preg_replace('/(<time[^>]*datetime="wall-clock"[^>]*>)[^<]*/', '$1wall-clock', $body);
+
+        // AND A LIVE MARK'S AGE, which the dashboard measures on the wall
+        // clock rather than the pinned one: where each mark stands, when it
+        // was fixed and whether it is stale are compared; how long ago that
+        // is from this run's minute is not.
+        return (string) preg_replace('/(&quot;age&quot;:&quot;)[^&]*(&quot;)/', '$1wall-clock$2', $body);
     }
 
     private function body(string $url): string
@@ -221,7 +232,7 @@ final class PresencePagesReadTheSameTest extends WebTestCase
         self::assertInstanceOf(AreaOfInterest::class, $area);
         self::assertNotNull($person);
 
-        $this->em->persist(new PersonPosition()
+        $this->em->persist($ping = new PersonPosition()
             ->setArea($area)
             ->setPerson($person)
             ->setCheckIn($checkIn)
@@ -232,6 +243,7 @@ final class PresencePagesReadTheSameTest extends WebTestCase
             ->setBatteryPct($battery)
             ->setSource(PositionSourceEnum::Gps));
         $this->em->flush();
+        $this->facts()->recordPings([$ping]);
     }
 
     private function stations(): StationService

@@ -44,9 +44,19 @@ use Uhifadhi\Contracts\Entity\UserInterface;
  * did — a later, better fix is a different moment, not a better version
  * of this one.
  *
- * NOTHING HERE DERIVES ANYTHING. No verdict, no distance, no state: the
- * reading is {@see PresenceService}'s and is computed when somebody
- * asks.
+ * EVERY WRITE MOVES ITS OWN ROW'S FACTS, IN ITS OWN TRANSACTION. The
+ * pings, the claim and the correction are stored and folded into the
+ * check-in row by {@see PresenceFactsService} before the commit, so a
+ * reader never sees one without the other — "all operations within one
+ * unit of work are executed in one transaction", here widened by hand to
+ * take the fold in.
+ *
+ * NO VERDICT IS STORED. Counts, instants, the newest fix and distances
+ * are facts; "verified" is {@see PresenceService}'s, judged when somebody
+ * reads, against the ring as it stands then.
+ *
+ * @see https://www.doctrine-project.org/projects/doctrine-orm/en/current/reference/transactions-and-concurrency.html — "Approach 2: Explicitly", `wrapInTransaction()`
+ * @see vendor/doctrine/orm/src/EntityManager.php — `wrapInTransaction()` begins, runs, flushes, commits
  */
 final readonly class CheckInService
 {
@@ -57,6 +67,8 @@ final readonly class CheckInService
         private PersonPositionRepository $positions,
         private StationRepository $stations,
         private CheckInStatusService $statuses,
+        /** THE ROW'S FACTS, folded in before each write commits. */
+        private PresenceFactsService $facts,
         /**
          * THE WIRE, ASKED SECOND. Every write here flushes first and then
          * publishes the one mark it changed; the publisher never throws, so
@@ -109,8 +121,11 @@ final readonly class CheckInService
             $checkIn->setPosition($fix['point'])->setPositionAt($fix['at'])->setAccuracyM($fix['accuracy']);
         }
 
-        $this->entityManager->persist($checkIn);
-        $this->entityManager->flush();
+        $this->entityManager->wrapInTransaction(function () use ($checkIn): void {
+            $this->entityManager->persist($checkIn);
+            $this->entityManager->flush();
+            $this->facts->recordClaimFix($checkIn);
+        });
         $this->publisher->publish((string) $area->getUuidString(), (string) $ranger->getUuidString());
 
         return [$checkIn, false];
@@ -135,11 +150,14 @@ final readonly class CheckInService
         // replaces one that did: a later, better fix is a different
         // moment, and this row is about the tap.
         $fix = DutyPayload::fix($body, $checkIn->getOccurredAt() ?? new \DateTimeImmutable());
+        $backFilled = false;
         if (null !== $fix && null === $checkIn->getPosition()) {
             $checkIn->setPosition($fix['point'])->setPositionAt($fix['at'])->setAccuracyM($fix['accuracy']);
+            $backFilled = true;
         }
 
         $area = $checkIn->getArea();
+        $corrected = false;
         foreach (DutyPayload::rows($body, 'corrections') as $row) {
             if (null === $area) {
                 break;
@@ -163,9 +181,20 @@ final readonly class CheckInService
 
             $checkIn->addCorrection($correction);
             $this->entityManager->persist($correction);
+            $corrected = true;
         }
 
-        $this->entityManager->flush();
+        $this->entityManager->wrapInTransaction(function () use ($checkIn, $backFilled, $corrected): void {
+            $this->entityManager->flush();
+            // A CORRECTION MAY NAME ANOTHER POST, and every distance is to a
+            // post: the watch is re-measured from its own pings. Otherwise a
+            // back-filled position is folded in as the claim's fix.
+            if ($corrected) {
+                $this->facts->remeasure($checkIn);
+            } elseif ($backFilled) {
+                $this->facts->recordClaimFix($checkIn);
+            }
+        });
 
         // A check-out or a correction moves the mark or takes it off; the
         // reading is derived after the flush, so what goes out is what is
@@ -206,7 +235,10 @@ final readonly class CheckInService
         $known = $this->positions->knownRefs($area, $refs);
         $accepted = [];
         $duplicate = false;
-        $stored = 0;
+        /** @var list<PersonPosition> $stored */
+        $stored = [];
+        /** @var array<string, CheckIn|null> $watches each watch the batch names, looked up once */
+        $watches = [];
 
         foreach ($rows as $row) {
             $ref = DutyPayload::requiredString($row, 'clientRef');
@@ -219,7 +251,11 @@ final readonly class CheckInService
                 continue;
             }
 
-            $checkIn = $this->checkIns->findByRef($area, DutyPayload::requiredString($row, 'checkinRef'));
+            $checkinRef = DutyPayload::requiredString($row, 'checkinRef');
+            if (!\array_key_exists($checkinRef, $watches)) {
+                $watches[$checkinRef] = $this->checkIns->findByRef($area, $checkinRef);
+            }
+            $checkIn = $watches[$checkinRef];
             if (null === $checkIn) {
                 continue;
             }
@@ -228,7 +264,7 @@ final readonly class CheckInService
             $fix = DutyPayload::fix($row, $recordedAt)
                 ?? throw DutyApiException::invalidGeometry('A ping is a position; this one has none.', ['clientRef' => $ref]);
 
-            $this->entityManager->persist(new PersonPosition()
+            $this->entityManager->persist($stored[] = new PersonPosition()
                 ->setArea($area)
                 ->setPerson($ranger)
                 ->setCheckIn($checkIn)
@@ -240,14 +276,18 @@ final readonly class CheckInService
                 ->setSource(PositionSourceEnum::tryFrom(DutyPayload::string($row, 'source') ?? '') ?? PositionSourceEnum::Gps));
 
             $accepted[] = $ref;
-            ++$stored;
         }
 
-        $this->entityManager->flush();
+        // THE PINGS AND THE ROWS THEY MOVE, COMMITTED TOGETHER. The fold
+        // reads this batch and each watch's row, never the pings before them.
+        $this->entityManager->wrapInTransaction(function () use ($stored): void {
+            $this->entityManager->flush();
+            $this->facts->recordPings($stored);
+        });
 
         // ONE FRAME PER BATCH, carrying the latest fix, and only where the
         // batch stored something: a batch the area already held moved nobody.
-        if ($stored > 0) {
+        if ([] !== $stored) {
             $this->publisher->publish((string) $area->getUuidString(), (string) $ranger->getUuidString());
         }
 

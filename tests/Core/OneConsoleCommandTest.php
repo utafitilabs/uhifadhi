@@ -18,12 +18,12 @@ use Symfony\Component\Console\CommandLoader\CommandLoaderInterface;
 use Uhifadhi\Core\Tests\Application\Kernel;
 
 /**
- * THE CORE'S CONSOLE SURFACE IS THREE COMMANDS, AND THIS IS WHERE THAT IS TRUE
+ * THE CORE'S CONSOLE SURFACE IS FOUR COMMANDS, AND THIS IS WHERE THAT IS TRUE
  * OR NOT.
  *
  * The rule and its exceptions, stated once for all five bundles at once.
  * Everything the platform can be told to do is a screen, because a command is
- * a door with no page and nobody to explain itself to; the three that are not
+ * a door with no page and nobody to explain itself to; the four that are not
  * screens are all things a PRODUCTION installation must be able to run
  * without development packages, which is the whole of the exception:
  *
@@ -39,6 +39,9 @@ use Uhifadhi\Core\Tests\Application\Kernel;
  *                               each period, because a closed period cannot be
  *                               recomputed and every movement on the
  *                               performance page is measured against one.
+ *   `area:presence:rebuild`     the facts on the check-in rows recomputed
+ *                               from the kept pings — after a station's point
+ *                               moves or a zone set is replaced.
  *
  * Every other command the platform has belongs to devkit, which installs
  * through `require-dev` and is absent from a production build.
@@ -79,7 +82,7 @@ final class OneConsoleCommandTest extends KernelTestCase
         }
     }
 
-    public function testTheOnlyCommandsTheCoreShipsAreTheThreeAProductionInstallationRuns(): void
+    public function testTheOnlyCommandsTheCoreShipsAreTheFourAProductionInstallationRuns(): void
     {
         self::bootKernel();
 
@@ -101,8 +104,8 @@ final class OneConsoleCommandTest extends KernelTestCase
 
         sort($ours);
 
-        self::assertSame(['registry:sync', 'team:performance:snapshot', 'team:user:create'], $ours, \sprintf(
-            'The core ships three commands, all of them things a production installation must run; this one carries [%s]. Everything else belongs to devkit.',
+        self::assertSame(['area:presence:rebuild', 'registry:sync', 'team:performance:snapshot', 'team:user:create'], $ours, \sprintf(
+            'The core ships four commands, all of them things a production installation must run; this one carries [%s]. Everything else belongs to devkit.',
             implode(', ', $ours),
         ));
     }

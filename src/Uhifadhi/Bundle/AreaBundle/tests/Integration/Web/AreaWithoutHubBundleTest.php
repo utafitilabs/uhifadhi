@@ -29,6 +29,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\PersonPositionRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInService;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
+use Uhifadhi\Bundle\AreaBundle\Service\PresenceFactsService;
 use Uhifadhi\Bundle\AreaBundle\Service\PresencePublisher;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceService;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceStreamService;
@@ -148,6 +149,8 @@ final class AreaWithoutHubBundleTest extends WebTestCase
         $statuses = static::getContainer()->get('test_public.area.checkin_statuses');
         /** @var PresenceService $presence */
         $presence = static::getContainer()->get('test_public.area.presence');
+        /** @var PresenceFactsService $facts */
+        $facts = static::getContainer()->get('test_public.area.presence_facts');
 
         return new CheckInService(
             $this->em,
@@ -156,6 +159,7 @@ final class AreaWithoutHubBundleTest extends WebTestCase
             $positions,
             $stations,
             $statuses,
+            $facts,
             new PresencePublisher(null, $presence, new MockClock(self::NOW), new NullLogger()),
         );
     }

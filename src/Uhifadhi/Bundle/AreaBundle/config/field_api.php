@@ -144,6 +144,7 @@ return static function (ContainerConfigurator $container): void {
             service(PersonPositionRepository::class),
             service(StationRepository::class),
             service(CheckInStatusService::class),
+            service('area.presence_facts'),
             service('area.presence_publisher'),
         ]);
     $services->alias(CheckInService::class, 'area.checkins');

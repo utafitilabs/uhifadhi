@@ -20,12 +20,11 @@ use Symfony\Component\Clock\MockClock;
 use Symfony\Component\Mercure\Jwt\StaticTokenProvider;
 use Symfony\Component\Mercure\MockHub;
 use Symfony\Component\Mercure\Update;
+use Uhifadhi\Bundle\AreaBundle\Service\PersonLivePositionsInterface;
 use Uhifadhi\Bundle\AreaBundle\Service\PresencePublisher;
 use Uhifadhi\Contracts\Area\DayState;
 use Uhifadhi\Contracts\Area\LivePosition;
-use Uhifadhi\Contracts\Area\LivePositionsInterface;
 use Uhifadhi\Contracts\Area\LivePresence;
-use Uhifadhi\Contracts\Shell\Scope;
 
 /**
  * ONE PERSON'S MARK ON THE WIRE, the moment their handset spoke.
@@ -45,7 +44,7 @@ final class PresencePublisherTest extends TestCase
 {
     private const string AREA = '0f6b0a60-0000-7000-8000-00000000000a';
     private const string PERSON = '0f6b0a60-0000-7000-8000-00000000000b';
-    private const string NOW = '2026-09-19T07:00:00+03:00';
+    public const string NOW = '2026-09-19T07:00:00+03:00';
 
     public function testItPublishesTheOneMarkToTheAreasPrivateTopic(): void
     {
@@ -144,7 +143,7 @@ final class PresencePublisherTest extends TestCase
         self::assertSame('error', $logger->records[0]['level']);
     }
 
-    private static function publisher(MockHub $hub, LivePositionsInterface $positions): PresencePublisher
+    private static function publisher(MockHub $hub, PersonLivePositionsInterface $positions): PresencePublisher
     {
         return new PresencePublisher($hub, $positions, new MockClock(self::NOW), new class extends AbstractLogger {
             public function log($level, string|\Stringable $message, array $context = []): void
@@ -169,23 +168,25 @@ final class PresencePublisherTest extends TestCase
         );
     }
 
-    private static function presence(LivePosition ...$positions): LivePositionsInterface
+    /**
+     * The one person's reading, as the area answers it: the positions it was
+     * built with when the person is asked for, nothing for anybody else.
+     */
+    private static function presence(LivePosition ...$positions): PersonLivePositionsInterface
     {
-        $presence = new LivePresence(array_values($positions), 15, new \DateTimeImmutable(self::NOW));
-
-        return new class($presence) implements LivePositionsInterface {
-            public function __construct(private readonly LivePresence $presence)
+        return new class(array_values($positions)) implements PersonLivePositionsInterface {
+            /** @param list<LivePosition> $positions */
+            public function __construct(private readonly array $positions)
             {
             }
 
-            public function liveIn(string $areaUuid, \DateTimeImmutable $asOf): LivePresence
+            public function liveOf(string $areaUuid, string $personUuid, \DateTimeImmutable $asOf): LivePresence
             {
-                return $this->presence;
-            }
-
-            public function forScope(Scope $scope, \DateTimeImmutable $asOf): LivePresence
-            {
-                return $this->presence;
+                return new LivePresence(
+                    array_values(array_filter($this->positions, static fn (LivePosition $p): bool => $p->personUuid === $personUuid)),
+                    15,
+                    new \DateTimeImmutable(PresencePublisherTest::NOW),
+                );
             }
         };
     }

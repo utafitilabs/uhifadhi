@@ -17,7 +17,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\CheckIn;
+use Uhifadhi\Bundle\AreaBundle\Entity\PersonPosition;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
+use Uhifadhi\Bundle\AreaBundle\Service\PresenceFactsService;
 
 /**
  * Symfony-standard kernel testing: KernelTestCase booting {@see TestKernel} with
@@ -145,5 +148,34 @@ abstract class IntegrationTestCase extends KernelTestCase
         $this->em->flush();
 
         return $zone;
+    }
+
+    /**
+     * A FIXTURE THAT WRITES PINGS STRAIGHT TO THE TABLE FOLDS THEM INTO THEIR
+     * ROWS the way the write service does — the reads judge from the row.
+     */
+    protected function foldPings(PersonPosition ...$pings): void
+    {
+        $this->presenceFacts()->recordPings(array_values($pings));
+    }
+
+    /** And a claim's own position, set on the row by hand. */
+    protected function foldClaimFix(CheckIn $checkIn): void
+    {
+        $this->presenceFacts()->recordClaimFix($checkIn);
+    }
+
+    /** And a correction written by hand: the watch is re-measured. */
+    protected function remeasure(CheckIn $checkIn): void
+    {
+        $this->presenceFacts()->remeasure($checkIn);
+    }
+
+    private function presenceFacts(): PresenceFactsService
+    {
+        $facts = static::getContainer()->get('test_public.area.presence_facts');
+        \assert($facts instanceof PresenceFactsService);
+
+        return $facts;
     }
 }

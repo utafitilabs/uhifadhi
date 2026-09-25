@@ -183,6 +183,7 @@ final class OrgScopeIsTheSumOfAreasTest extends IntegrationTestCase
             ->setSource(PositionSourceEnum::Gps);
         $this->em->persist($ping);
         $this->em->flush();
+        $this->foldPings($ping);
 
         return $area;
     }

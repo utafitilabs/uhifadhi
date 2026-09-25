@@ -458,6 +458,7 @@ final class WebKernel extends Kernel
         $services->alias('test_public.area.map_payload', 'area.map_payload')->public();
         /* The live-presence pair, reached by the suite proving the installation without a hub bundle. */
         $services->alias('test_public.area.presence', 'area.presence')->public();
+        $services->alias('test_public.area.presence_facts', 'area.presence_facts')->public();
         $services->alias('test_public.area.presence_stream', 'area.presence_stream')->public();
         $services->alias('test_public.area.checkin_statuses', 'area.checkin_statuses')->public();
         // The ledger's writer, so a test can arrange an area's composition the

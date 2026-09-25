@@ -409,6 +409,7 @@ final class PresenceTest extends IntegrationTestCase
         $checkIn->addCorrection($correction);
         $this->em->persist($correction);
         $this->em->flush();
+        $this->remeasure($checkIn);
     }
 
     private function aPing(CheckIn $checkIn, float $lon, float $lat): void
@@ -430,6 +431,7 @@ final class PresenceTest extends IntegrationTestCase
 
         $this->em->persist($ping);
         $this->em->flush();
+        $this->foldPings($ping);
     }
 
     private function presence(): PresenceService

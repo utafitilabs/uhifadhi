@@ -18,7 +18,6 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
 use Uhifadhi\Bundle\AtlasBundle\Model\LiveMarks;
-use Uhifadhi\Contracts\Area\LivePositionsInterface;
 
 /**
  * ONE PERSON'S MARK ON THE WIRE, the moment their handset spoke.
@@ -37,9 +36,11 @@ use Uhifadhi\Contracts\Area\LivePositionsInterface;
  * what a viewer of the plate already sees. Somebody who left the ground is
  * {@see LiveMarks::gone()}, the same key with nothing to draw.
  *
- * ONE DERIVATION. The position on the wire is read through the same
- * {@see LivePositionsInterface} the plate reads, at the clock's instant, so
- * a mark cannot be verified on the wire and unverified on the page.
+ * ONE DERIVATION, ONE ROW. The position on the wire is the same reading the
+ * plate draws, narrowed to the one person before it is read
+ * ({@see PersonLivePositionsInterface}): the frame costs that ranger's row,
+ * never the area's, and a mark cannot be verified on the wire and unverified
+ * on the page.
  *
  * THE HANDSET NEVER WAITS ON THE HUB. An installation may carry no hub
  * bundle at all — the core suggests symfony/mercure-bundle and the hub is
@@ -70,7 +71,7 @@ final readonly class PresencePublisher
     public function __construct(
         /** The hub, or null in an installation without the hub bundle. */
         private ?HubInterface $hub,
-        private LivePositionsInterface $positions,
+        private PersonLivePositionsInterface $positions,
         private ClockInterface $clock,
         private LoggerInterface $logger,
     ) {
@@ -106,7 +107,7 @@ final readonly class PresencePublisher
     /** The one mark, as the plate draws it, or the same key with nothing to draw. */
     private function frame(string $areaUuid, string $personUuid): string
     {
-        $presence = $this->positions->liveIn($areaUuid, $this->clock->now());
+        $presence = $this->positions->liveOf($areaUuid, $personUuid, $this->clock->now());
 
         $frame = LiveMarks::gone($personUuid);
         foreach ($presence->positions as $position) {

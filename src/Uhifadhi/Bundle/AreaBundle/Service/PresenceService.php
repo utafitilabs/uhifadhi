@@ -17,9 +17,9 @@ use Psr\Clock\ClockInterface;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\CheckIn;
 use Uhifadhi\Bundle\AreaBundle\Enum\CheckInStatusKind;
+use Uhifadhi\Bundle\AreaBundle\Model\WatchFacts;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\CheckInRepository;
-use Uhifadhi\Bundle\AreaBundle\Repository\PersonPositionRepository;
 use Uhifadhi\Contracts\Area\DayState;
 use Uhifadhi\Contracts\Area\LivePosition;
 use Uhifadhi\Contracts\Area\LivePositionsInterface;
@@ -32,14 +32,31 @@ use Uhifadhi\Contracts\Roster\WatchProviderInterface;
 use Uhifadhi\Contracts\Shell\Scope;
 
 /**
- * HOW A DAY READS — derived here, on every read, and stored nowhere.
+ * HOW A DAY READS — judged here, on every read, from facts stored on the
+ * check-in rows; no verdict is stored anywhere.
  *
  * THE CLAIM AND THE PROOF ARE TWO DIFFERENT RECORDS and this is the
  * only place they meet. A check-in says "at post"; the pings say where
  * the phone was; the post says what inside means. `verified` is the
  * answer to a question asked at the moment of asking — so a catchment
- * corrected next month re-derives every day that used it, which is
+ * corrected next month re-judges every day that used it, which is
  * precisely what a stored verdict could not do.
+ *
+ * FACTS ON THE ROW, JUDGEMENTS ON READ. What the pings said is folded
+ * into each watch's own row as they arrive — how many, the first and the
+ * last, the newest fix and its distance from the post, the nearest any
+ * fix came to the post ({@see PresenceFactsService}). Those are facts: a
+ * ring moved or a ping interval changed alters none of them. What is
+ * judged from them — verified or not and why, late, silent, still on
+ * watch — is judged here, against the ring and the interval as they
+ * stand at the moment of reading. `area:presence:rebuild` recomputes the
+ * facts from the kept pings whenever a post's point or the zones move.
+ *
+ * A READ COSTS THE ROWS, NOT THE PINGS. A board reads the day's rows, a
+ * live plate the open ones, a person's day that person's — a fixed number
+ * of statements, whatever the headcount and however many pings a watch
+ * sent. Only the roster, asked per open watch whether its rostered end
+ * has passed, adds one question per person on watch.
  *
  * UNVERIFIED IS NEVER AN ACCUSATION. It has three causes and the
  * reading says which: no position arrived, the post has no ring, or the
@@ -58,7 +75,7 @@ use Uhifadhi\Contracts\Shell\Scope;
  * own reading is where they ended, and the morning is still on the
  * record for anybody who asks for 06:30.
  */
-final readonly class PresenceService implements PresenceProviderInterface, LivePositionsInterface
+final readonly class PresenceService implements PresenceProviderInterface, LivePositionsInterface, PersonLivePositionsInterface
 {
     public function __construct(
         /**
@@ -80,7 +97,6 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
         private ClockInterface $clock,
         private AreaOfInterestRepository $areas,
         private CheckInRepository $checkIns,
-        private PersonPositionRepository $positions,
         // HOW OFTEN THIS AREA'S HANDSETS REPORT — the one reading of it.
         private PingInterval $pingInterval,
         /** @var iterable<WatchProviderInterface> */
@@ -113,8 +129,23 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
         // open on the same second.
         $asOf = $this->clock->now();
 
+        return $this->daysOf($this->checkIns->findForDay($area, $day), $areaUuid, $localDate, $asOf);
+    }
+
+    /**
+     * THE CLAIMS OF ONE DAY, FOLDED INTO PEOPLE — each watch judged from its
+     * own row's facts, read for the whole set in one statement.
+     *
+     * @param list<CheckIn> $checkIns
+     *
+     * @return list<PersonDay>
+     */
+    private function daysOf(array $checkIns, string $areaUuid, string $localDate, \DateTimeImmutable $asOf): array
+    {
+        $facts = $this->checkIns->findFactsFor($checkIns);
+
         $days = [];
-        foreach ($this->checkIns->findForDay($area, $day) as $checkIn) {
+        foreach ($checkIns as $checkIn) {
             $person = $checkIn->getPerson();
             $uuid = (string) $person?->getUuidString();
 
@@ -122,7 +153,7 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
                 'name' => $person?->getFullName() ?? '',
                 'watches' => [],
             ];
-            $days[$uuid]['watches'][] = $this->watch($checkIn, $areaUuid, $localDate, $asOf);
+            $days[$uuid]['watches'][] = $this->watch($checkIn, $facts[(int) $checkIn->getId()] ?? new WatchFacts(), $areaUuid, $localDate, $asOf);
         }
 
         $read = [];
@@ -156,7 +187,27 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
             return new LivePresence([], PingInterval::DEFAULT_MINUTES, $asOf);
         }
 
-        return new LivePresence($this->positionsIn($area, $asOf), $this->intervalOf($area), $asOf);
+        return new LivePresence($this->positionsIn($area, $this->checkIns->findOpenIn($area), $asOf), $this->intervalOf($area), $asOf);
+    }
+
+    /**
+     * ONE PERSON'S LIVE READING — the frame a ping publishes. The same
+     * derivation as {@see liveIn()}, over that person's open watches only,
+     * so the mark on the wire and the mark on the plate cannot disagree and
+     * building it costs one ranger's row.
+     */
+    public function liveOf(string $areaUuid, string $personUuid, \DateTimeImmutable $asOf): LivePresence
+    {
+        $area = $this->areas->findOneBy(['uuid' => $areaUuid]);
+        if (null === $area) {
+            return new LivePresence([], PingInterval::DEFAULT_MINUTES, $asOf);
+        }
+
+        return new LivePresence(
+            $this->positionsIn($area, $this->checkIns->findOpenForPerson($area, $personUuid), $asOf),
+            $this->intervalOf($area),
+            $asOf,
+        );
     }
 
     /**
@@ -188,7 +239,7 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
 
         $positions = [];
         foreach ($this->areas->findAllOrdered() as $area) {
-            foreach ($this->positionsIn($area, $asOf, $this->intervalOf($area)) as $position) {
+            foreach ($this->positionsIn($area, $this->checkIns->findOpenIn($area), $asOf, $this->intervalOf($area)) as $position) {
                 $positions[] = $position;
             }
         }
@@ -209,26 +260,30 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
 
     /**
      * ONE AREA'S LIVE POSITIONS, freshest first — the whole of the
-     * derivation, and the only place it happens.
+     * derivation, and the only place it happens. The position is the row's
+     * newest fix; its distance from the post is the row's; whether that is
+     * inside is asked of the ring now.
      *
-     * @param int|null $stampInterval the area's ping interval, stamped onto every
-     *                                position so a reading ACROSS areas can judge
-     *                                each one's silence by its own clock. Null for
-     *                                a single-area read, where the set states it
-     *                                once and every position shares it
+     * @param list<CheckIn> $open          the open watches to read — the area's, or one person's
+     * @param int|null      $stampInterval the area's ping interval, stamped onto every
+     *                                     position so a reading ACROSS areas can judge
+     *                                     each one's silence by its own clock. Null for
+     *                                     a single-area read, where the set states it
+     *                                     once and every position shares it
      *
      * @return list<LivePosition>
      */
-    private function positionsIn(AreaOfInterest $area, \DateTimeImmutable $asOf, ?int $stampInterval = null): array
+    private function positionsIn(AreaOfInterest $area, array $open, \DateTimeImmutable $asOf, ?int $stampInterval = null): array
     {
         $areaUuid = (string) $area->getUuidString();
+        $facts = $this->checkIns->findFactsFor($open);
 
         $positions = [];
-        foreach ($this->checkIns->findOpenIn($area) as $checkIn) {
+        foreach ($open as $checkIn) {
             $person = $checkIn->getPerson();
             $uuid = $person?->getUuidString();
-            $fix = $this->positions->latestFor($checkIn);
-            if (null === $uuid || null === $fix) {
+            $fix = $facts[(int) $checkIn->getId()] ?? new WatchFacts();
+            if (null === $uuid || null === $fix->latitude || null === $fix->longitude || null === $fix->lastFixAt) {
                 continue;
             }
 
@@ -236,7 +291,7 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
             // what `watch()` needs to ask the roster whether the watch
             // should already have closed.
             $localDate = $checkIn->getLocalDate()?->format('Y-m-d') ?? $asOf->format('Y-m-d');
-            $watch = $this->watch($checkIn, $areaUuid, $localDate, $asOf);
+            $watch = $this->watch($checkIn, $fix, $areaUuid, $localDate, $asOf);
 
             // A WATCH THE ROSTER HAS ALREADY ENDED IS NOT LIVE. Nobody
             // checked out, but the rostered end passed — its last ping is
@@ -247,19 +302,18 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
             }
 
             $station = $checkIn->stateAt($asOf)['station'];
-            $point = $station?->getPoint();
             $catchment = $station?->getCatchmentM();
-            $distance = null === $point ? null : $this->positions->metresBetween($fix['lat'], $fix['lon'], $point);
+            $distance = null === $station ? null : $fix->lastFixM;
 
             $positions[] = new LivePosition(
                 personUuid: $uuid,
                 personName: $person->getFullName(),
                 clientRef: $checkIn->getClientRef(),
                 state: $watch->state,
-                latitude: $fix['lat'],
-                longitude: $fix['lon'],
-                recordedAt: $fix['at'],
-                accuracyM: $fix['accuracy'] ?? 0.0,
+                latitude: $fix->latitude,
+                longitude: $fix->longitude,
+                recordedAt: $fix->lastFixAt,
+                accuracyM: $fix->lastFixAccuracyM ?? 0.0,
                 stationUuid: $station?->getUuidString(),
                 stationName: $station?->getName(),
                 // NULL WHERE THERE IS NO INSIDE TO BE IN — no post, no
@@ -267,7 +321,7 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
                 // read as "outside".
                 insideCatchment: null === $distance || null === $catchment ? null : $distance <= $catchment,
                 distanceM: $distance,
-                batteryPct: $fix['battery'],
+                batteryPct: $fix->lastFixBatteryPct,
                 pingIntervalMinutes: $stampInterval,
             );
         }
@@ -320,15 +374,21 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
         );
     }
 
+    /**
+     * ONE PERSON'S DAY, read from that person's rows alone — the same fold
+     * and the same judgement {@see dayIn()} makes for the whole board, so the
+     * person's calendar and the board cannot disagree about a day.
+     */
     public function dayFor(string $areaUuid, string $personUuid, string $localDate): ?PersonDay
     {
-        foreach ($this->dayIn($areaUuid, $localDate) as $person) {
-            if ($person->personUuid === $personUuid) {
-                return $person;
-            }
+        $area = $this->areas->findOneBy(['uuid' => $areaUuid]);
+        if (null === $area) {
+            return null;
         }
 
-        return null;
+        $checkIns = $this->checkIns->findForPersonDay($area, $personUuid, new \DateTimeImmutable($localDate));
+
+        return $this->daysOf($checkIns, $areaUuid, $localDate, $this->clock->now())[0] ?? null;
     }
 
     /**
@@ -339,7 +399,7 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
      * the SAME instant: a board whose rows each asked the clock separately
      * could close one watch and leave the next open on the same second.
      */
-    private function watch(CheckIn $checkIn, string $areaUuid, string $localDate, \DateTimeImmutable $asOf): PersonWatch
+    private function watch(CheckIn $checkIn, WatchFacts $facts, string $areaUuid, string $localDate, \DateTimeImmutable $asOf): PersonWatch
     {
         // WHAT THE DAY ENDED AS. A correction is a second claim from its
         // own moment, and the day's reading is the last of them.
@@ -360,9 +420,10 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
         };
 
         if (CheckInStatusKind::AtPost === $kind) {
-            $point = $station?->getPoint();
+            // THE NEAREST ANY FIX CAME TO THE POST, from the row; the ring
+            // it is held against is the post's as it stands now.
             $catchment = $station?->getCatchmentM();
-            $nearest = null === $point ? null : $this->positions->nearestTo($checkIn, $point);
+            $nearest = null === $station ? null : $facts->closestM;
 
             if (null === $nearest) {
                 // NO POSITION AT ALL — the never-block rule's own state:
@@ -371,18 +432,16 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
             } elseif (null === $catchment) {
                 // A POST WITH NO RING HAS NO INSIDE. Not the ranger's doing
                 // and never drawn as such.
-                $distance = $nearest['metres'];
+                $distance = $nearest;
                 $reason = UnverifiedReason::NoRing;
-            } elseif ($nearest['metres'] <= $catchment) {
-                $distance = $nearest['metres'];
+            } elseif ($nearest <= $catchment) {
+                $distance = $nearest;
                 $day = DayState::AtPostVerified;
             } else {
-                $distance = $nearest['metres'];
+                $distance = $nearest;
                 $reason = UnverifiedReason::OutsideRing;
             }
         }
-
-        $tally = $this->positions->tallyFor($checkIn);
 
         return new PersonWatch(
             clientRef: $checkIn->getClientRef(),
@@ -396,8 +455,8 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
             occurredAt: $checkIn->getOccurredAt(),
             endedAt: $checkIn->getEndedAt(),
             notCheckedOut: $this->notCheckedOut($checkIn, $areaUuid, $localDate, $asOf),
-            lastPingAt: $tally['last'],
-            pings: $tally['pings'],
+            lastPingAt: $facts->lastPingAt,
+            pings: $facts->pings,
             handoverNote: $checkIn->getHandoverNote(),
             note: $state['note'],
         );

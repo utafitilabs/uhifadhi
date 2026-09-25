@@ -272,6 +272,8 @@ class Kernel extends BaseKernel
             ->alias('test_public.area.stations', 'area.stations')
             ->public()
             ->alias('test_public.area.checkin_statuses', 'area.checkin_statuses')
+            ->public()
+            ->alias('test_public.area.checkins', 'area.checkins')
             ->public();
 
         // The credential a field client carries. The field-API specifications

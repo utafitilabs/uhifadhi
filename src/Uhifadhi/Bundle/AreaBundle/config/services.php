@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Symfony\Component\Console\Application;
 use Uhifadhi\Bundle\AreaBundle\Access\AreaConcerns;
+use Uhifadhi\Bundle\AreaBundle\Command\PresenceRebuildCommand;
 use Uhifadhi\Bundle\AreaBundle\Devkit\AreaContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\StationContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\ZoneContentProvider;
@@ -46,9 +48,11 @@ use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
 use Uhifadhi\Bundle\AreaBundle\Service\ModuleSettingsDoors;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonDirectoryService;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonFacetService;
+use Uhifadhi\Bundle\AreaBundle\Service\PersonLivePositionsInterface;
 use Uhifadhi\Bundle\AreaBundle\Service\PingInterval;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingBoardService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
+use Uhifadhi\Bundle\AreaBundle\Service\PresenceFactsService;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationFigureService;
@@ -483,7 +487,6 @@ return static function (ContainerConfigurator $container): void {
             service('clock'),
             service(AreaOfInterestRepository::class),
             service(CheckInRepository::class),
-            service(PersonPositionRepository::class),
             service('area.ping_interval'),
             // WHO IS ROSTERED WHEN is the roster's, a module this platform
             // has not written yet; an installation without one answers
@@ -501,6 +504,42 @@ return static function (ContainerConfigurator $container): void {
      * instant never is.
      */
     $services->alias(LivePositionsInterface::class, 'area.presence');
+    /*
+     * AND ONE PERSON OF IT — the frame a ping publishes reads the one
+     * ranger's row through this, never the whole area.
+     */
+    $services->alias(PersonLivePositionsInterface::class, 'area.presence');
+
+    /*
+     * THE FACTS EACH CHECK-IN ROW CARRIES, kept in step with the pings by the
+     * writes that store them and recomputed from them by the command below.
+     */
+    $services->set('area.presence_facts', PresenceFactsService::class)
+        ->args([service(CheckInRepository::class)]);
+    $services->alias(PresenceFactsService::class, 'area.presence_facts');
+
+    /*
+     * THE RECOMPUTE — a command a production installation runs, after a
+     * station's point moves or a zone set is replaced, so it ships here and
+     * not in devkit.
+     *
+     *   "If you can't use PHP attributes, register the command as a service and
+     *    tag it with the console.command tag."
+     *   — https://symfony.com/doc/current/console.html#registering-the-command
+     *
+     * GUARDED ON THE COMPONENT, as the team bundle guards its commands and as
+     * FrameworkBundle guards console.php: a container compiled where there is
+     * no console must not carry a service whose class it cannot load.
+     * @see vendor/symfony/framework-bundle/DependencyInjection/FrameworkExtension.php
+     */
+    if (class_exists(Application::class)) {
+        $services->set('area.command.presence_rebuild', PresenceRebuildCommand::class)
+            ->args([
+                service(AreaOfInterestRepository::class),
+                service('area.presence_facts'),
+            ])
+            ->tag('console.command');
+    }
 
     /*
      * WHAT THE GROUND SAYS THERE IS TO HAVE A PERMISSION ABOUT — areas,

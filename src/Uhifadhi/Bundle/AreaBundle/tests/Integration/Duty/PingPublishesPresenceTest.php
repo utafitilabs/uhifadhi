@@ -30,6 +30,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\PersonPositionRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInService;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
+use Uhifadhi\Bundle\AreaBundle\Service\PresenceFactsService;
 use Uhifadhi\Bundle\AreaBundle\Service\PresencePublisher;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
@@ -147,6 +148,8 @@ final class PingPublishesPresenceTest extends IntegrationTestCase
         $statuses = static::getContainer()->get('test_public.area.checkin_statuses');
         /** @var PresenceService $presence */
         $presence = static::getContainer()->get('test_public.area.presence');
+        /** @var PresenceFactsService $facts */
+        $facts = static::getContainer()->get('test_public.area.presence_facts');
 
         $hub = new MockHub(
             'https://hub.example.test/.well-known/mercure',
@@ -168,6 +171,7 @@ final class PingPublishesPresenceTest extends IntegrationTestCase
             $positions,
             $stations,
             $statuses,
+            $facts,
             new PresencePublisher($hub, $presence, new MockClock(self::NOW), new NullLogger()),
         );
     }

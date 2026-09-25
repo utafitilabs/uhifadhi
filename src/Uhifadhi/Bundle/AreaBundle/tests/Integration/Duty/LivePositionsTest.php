@@ -154,6 +154,7 @@ final class LivePositionsTest extends IntegrationTestCase
             ->setPositionAt(new \DateTimeImmutable('2026-09-19T06:58:00+03:00'))
             ->setAccuracyM(12.0);
         $this->em->flush();
+        $this->foldClaimFix($checkIn);
 
         $position = $this->live($area)->positions[0];
 
@@ -260,6 +261,7 @@ final class LivePositionsTest extends IntegrationTestCase
 
         $this->em->persist($ping);
         $this->em->flush();
+        $this->foldPings($ping);
     }
 
     private function presence(): PresenceService

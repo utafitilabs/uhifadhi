@@ -148,6 +148,7 @@ final class WatchEndIsReadAtTheAskedMomentTest extends IntegrationTestCase
             ->setSource(PositionSourceEnum::Gps);
         $this->em->persist($ping);
         $this->em->flush();
+        $this->foldPings($ping);
 
         // THE ROSTER SAYS WHEN IT ENDS, and without one this branch is
         // unreachable: an installation with no roster has no rostered end.

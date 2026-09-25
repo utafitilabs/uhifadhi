@@ -471,7 +471,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         self::assertStringContainsString('Ecology', $sub);
 
         $band = $crawler->filter('.factband .f .k')->each(static fn (Crawler $k): string => trim($k->text()));
-        self::assertSame(['Reads', 'Records', 'Manages', 'Exports'], $band);
+        self::assertSame(['Rank', 'Reads', 'Records', 'Manages', 'Exports'], $band, 'the rank, while the organization uses ranks, then what the position grants by verb');
         self::assertStringContainsString('What Sergeant grants', $crawler->filter('.factband a.more')->text());
 
         $position = $crawler->filter('#position');

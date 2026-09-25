@@ -14,9 +14,11 @@
    | crumb uhifadhi / team / name              | chrome  | routes                          | done   |
    | .dpthead mark + h1 + facts subline        | data    | member, card, placement, posting| done   |
    | pgact: Back to the team · Configure       | control | routes, door                    | done   |
+   | .factband Rank (while ranks are used)      | data    | rankNow                         | done   |
    | .factband Reads/Records/Manages/Exports   | data    | figures()                       | done   |
    | band door: What <position> grants →       | control | position record                 | done   |
    | Position card: seat, where, departments   | data    | card, placement                 | done   |
+   | Position card: rank line + rank history    | data    | rankNow, ranks                  | done   |
    | Position card foot: reach · departments   | data    | reach, placement                | done   |
    | empty state (.pmx-zero) + Give a position | state   | card is null                    | done   |
    | ledger card: folds, verbs, where, through | data    | card.groups, placement          | done   |
@@ -69,6 +71,12 @@
 {# THE BAND: what the position lets this person do, by verb. Read is granted,
    never assumed — a person with no position reads a dash on every figure. #}
 <div class="factband">
+    {% if usesRanks %}
+        <span class="f"><span class="k">Rank</span><span class="v">
+            {%- if rankNow %}{{ rankNow.rank.shortCode }}<em>{{ rankNow.rank.name }} &middot; since <time datetime="{{ rankNow.since|date('Y-m-d') }}" data-localtime-format="day">{{ rankNow.since|date('j M Y') }}</time></em>
+            {%- else %}&mdash;<em>no rank</em>{% endif -%}
+        </span></span>
+    {% endif %}
     {% for verb, figure in figures %}
         <span class="f"><span class="k">{{ {read: 'Reads', record: 'Records', manage: 'Manages', export: 'Exports'}[verb] }}</span><span class="v">
             {%- if byTier %}{{ figure.n }}<em>by tier</em>
@@ -88,7 +96,7 @@
     <div class="col">
         {# THE POSITION CARD — one column, one line per thing. #}
         <div class="c" id="position">
-            <span class="tab">Position<span class="src">&middot; where it applies</span></span>
+            <span class="tab">Position{% if usesRanks %} and rank{% endif %}<span class="src">&middot; where it applies</span></span>
             {% if card %}
                 <div class="pcard">
                     <span class="pcol-k">Assigned position</span>
@@ -96,6 +104,7 @@
                         {%- if card.seats is null %}{{ card.seatsFilled }} held &middot; unlimited seats
                         {%- else %}{{ card.seatsFilled }} of {{ card.seats }} seats &middot; {{ card.seatsFree }} free{% endif -%}
                     </span></span></div>
+                    {% if usesRanks %}{{ _self.rank_line(rankNow) }}{% endif %}
                     <span class="pcol-k">Where</span>
                     <div class="pmx-sc">
                         {%- if placement is null %}<span class="pmx-sk none">&mdash;</span><span class="zfrag">placed nowhere yet</span>
@@ -109,10 +118,12 @@
                         {%- else %}{% for department in placement.departments %}<span class="pmx-sk on">{{ department.name }}</span>{% endfor %}<span class="zfrag">{{ placement.departments|length }} of {{ departmentsTotal }}</span>{% endif -%}
                     </div>
                 </div>
-                <div class="pcard-foot">reaches <b>{{ reach }}</b> {{ reach == 1 ? 'person' : 'people' }}<span>&middot;</span><b>{{ placement and not placement.allDepartments ? placement.departments|length : departmentsTotal }}</b> of {{ departmentsTotal }} departments<span class="sp"></span>{% if door('directory.manage') %}<a class="ov-open" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}">Change the position {{ ux_icon('shell:chevron-right') }}</a>{% endif %}</div>
+                {% if usesRanks and ranks is not empty %}{{ _self.rank_history(ranks) }}{% endif %}
+                <div class="pcard-foot">reaches <b>{{ reach }}</b> {{ reach == 1 ? 'person' : 'people' }}<span>&middot;</span><b>{{ placement and not placement.allDepartments ? placement.departments|length : departmentsTotal }}</b> of {{ departmentsTotal }} departments<span class="sp"></span>{% if door('directory.manage') %}<a class="ov-open" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}">Change the position{% if usesRanks %} or rank{% endif %} {{ ux_icon('shell:chevron-right') }}</a>{% endif %}</div>
             {% else %}
-                <div class="pcard"><div class="pmx-zero"><span><b>Holds no position.</b> Sign-in only &middot; nothing granted, read included</span></div></div>
-                <div class="pcard-foot">no seat, no area, no department<span class="sp"></span>{% if door('directory.manage') %}<a class="ov-open" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}">Give a position {{ ux_icon('shell:chevron-right') }}</a>{% endif %}</div>
+                <div class="pcard"><div class="pmx-zero"><span><b>Holds no position.</b> Sign-in only &middot; nothing granted, read included</span></div>{% if usesRanks %}{{ _self.rank_line(rankNow) }}{% endif %}</div>
+                {% if usesRanks and ranks is not empty %}{{ _self.rank_history(ranks) }}{% endif %}
+                <div class="pcard-foot">no seat, no area, no department<span class="sp"></span>{% if door('directory.manage') %}<a class="ov-open" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}">Give a position{% if usesRanks %} or rank{% endif %} {{ ux_icon('shell:chevron-right') }}</a>{% endif %}</div>
             {% endif %}
         </div>
 
@@ -177,3 +188,31 @@
     </div>
 </div>
 {% endblock %}
+
+{# THE RANK LINE — under the assigned position, the code over its name and
+   the day it was given. A person holding no rank reads a dash. #}
+{% macro rank_line(rankNow) %}
+    <span class="pcol-k">Rank</span>
+    <div class="psid-f"><span class="v">
+        {%- if rankNow %}<b>{{ rankNow.rank.shortCode }}</b><span class="zfrag">{{ rankNow.rank.name }} &middot; since <time datetime="{{ rankNow.since|date('Y-m-d') }}" data-localtime-format="day">{{ rankNow.since|date('j M Y') }}</time></span>
+        {%- else %}<b>&mdash;</b><span class="zfrag">no rank</span>{% endif -%}
+    </span></div>
+{% endmacro %}
+
+{# THE RANK HISTORY — from · to · rank · by, inside the Position card, the
+   rank held now first and lit. A promotion is a dated fact. #}
+{% macro rank_history(ranks) %}
+    <span class="pcol-k" style="margin-top:16px">Rank history</span>
+    <div class="rkh">
+        <div class="rkh-hd"><span>from</span><span>to</span><span>rank</span><span>by</span></div>
+        {% for holding in ranks %}
+            {% set by = holding.recordedBy %}
+            <div class="rkh-row{{ holding.until is null ? ' now' }}">
+                <span class="w"><time datetime="{{ holding.since|date('Y-m-d') }}" data-localtime-format="day">{{ holding.since|date('j M Y') }}</time></span>
+                <span class="w to">{% if holding.until is null %}now{% else %}<time datetime="{{ holding.until|date('Y-m-d') }}" data-localtime-format="day">{{ holding.until|date('j M Y') }}</time>{% endif %}</span>
+                <span class="r"><b>{{ holding.rank.shortCode }}</b><em>{{ holding.rank.name }}</em></span>
+                <span class="by">{{ by ? (by.firstName|slice(0, 1) ~ '. ' ~ by.lastName) : '—' }}</span>
+            </div>
+        {% endfor %}
+    </div>
+{% endmacro %}

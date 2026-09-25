@@ -43,7 +43,7 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
     }
 
     /** THE PAGE IS THE RECORD MIRRORED: the same head, three writing cards, the side column. */
-    public function testTheConfigurePageCarriesTheThreeWritingCardsAndTheSideColumn(): void
+    public function testTheConfigurePageCarriesTheWritingCardsAndTheSideColumn(): void
     {
         $this->signedInAdministrator();
         $grace = $this->person('Grace', 'Ndosi');
@@ -57,19 +57,19 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
         self::assertCount(0, $crawler->filter('.atabs'), 'A record\'s configure page has no tabs.');
 
         $tabs = $crawler->filter('.recgrid .col')->first()->filter('.c > .tab')->each(static fn (Crawler $t): string => trim(explode('·', $t->text())[0]));
-        self::assertSame(['Details', 'Sign-in', 'Position'], $tabs);
+        self::assertSame(['Details', 'Sign-in', 'Position', 'Rank'], $tabs);
 
         $side = $crawler->filter('.recgrid .col')->eq(1)->filter('.c > .tab')->each(static fn (Crawler $t): string => trim(explode('·', $t->text())[0]));
         self::assertSame(['Stationed at', 'Account', 'History'], $side);
 
         // ONE SAVE BAR PER CARD, each with Discard beside its save.
         $bars = $crawler->filter('.recgrid .col')->first()->filter('.staddrow');
-        self::assertCount(3, $bars);
+        self::assertCount(4, $bars);
         self::assertSame(
-            ['Save the details', 'Save the sign-in', 'Save the position'],
+            ['Save the details', 'Save the sign-in', 'Save the position', 'Save the rank'],
             $bars->each(static fn (Crawler $b): string => trim($b->filter('button.cta')->text())),
         );
-        self::assertCount(3, $bars->filter('button.btn:contains("Discard")'));
+        self::assertCount(4, $bars->filter('button.btn:contains("Discard")'));
 
         self::assertStringContainsString('The record', $crawler->filter('.pgact')->text());
     }

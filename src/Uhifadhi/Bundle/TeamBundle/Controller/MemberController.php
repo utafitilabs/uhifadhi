@@ -45,6 +45,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
+use Uhifadhi\Bundle\TeamBundle\Service\PersonRankService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\PostingDoorService;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
@@ -152,6 +153,8 @@ final readonly class MemberController
         private PositionBoard $board,
         private DepartmentRepository $departments,
         private EntityManagerInterface $entityManager,
+        /** THIS PERSON'S RANK — held now, held before, and the ranks that may be given. */
+        private PersonRankService $personRank,
         /**
          * A MODULE'S CARD ON THIS PERSON'S RECORD, from whoever holds a fact
          * about them. Drawn last in the main column, after the ledger; a
@@ -175,11 +178,15 @@ final readonly class MemberController
     {
         $member = $this->member($uuid);
         $postings = $this->postingsFor($member);
-        $history = $this->history->of($member, $postings);
+        $ranks = $this->personRank->historyOf($member);
+        $history = $this->history->of($member, $postings, $ranks);
         $position = $member->getPosition();
         $card = null === $position ? null : $this->board->card($position);
 
         return new Response($this->twig->render('@Team/team/member.html.twig', [
+            'usesRanks' => $this->personRank->usesRanks(),
+            'ranks' => $ranks,
+            'rankNow' => null !== ($ranks[0] ?? null) && null === $ranks[0]->getUntil() ? $ranks[0] : null,
             'member' => $member,
             'card' => $card,
             'placement' => $member->getPlacement(),
@@ -208,11 +215,16 @@ final readonly class MemberController
     {
         $member = $this->member($uuid);
         $postings = $this->postingsFor($member);
-        $history = $this->history->of($member, $postings);
+        $ranks = $this->personRank->historyOf($member);
+        $history = $this->history->of($member, $postings, $ranks);
         $position = $member->getPosition();
         $card = null === $position ? null : $this->board->card($position);
 
         return new Response($this->twig->render('@Team/team/member_configure.html.twig', [
+            'usesRanks' => $this->personRank->usesRanks(),
+            'rankNow' => null !== ($ranks[0] ?? null) && null === $ranks[0]->getUntil() ? $ranks[0] : null,
+            'rankChoices' => $this->personRank->usesRanks() ? $this->personRank->choices() : [],
+            'today' => (new \DateTimeImmutable('today'))->format('Y-m-d'),
             'member' => $member,
             'card' => $card,
             'placement' => $member->getPlacement(),
@@ -346,6 +358,45 @@ final readonly class MemberController
         }
 
         return $this->back($request, $member, \sprintf('%s is now %s.', $member->getFullName(), $tier->label()));
+    }
+
+    /**
+     * THE RANK THIS PERSON HOLDS FROM A DAY ON — a promotion is a dated fact.
+     * The rank held until then closes on that day and stays in the history;
+     * "no rank" closes it and opens nothing. Ranks grant nothing, so this
+     * touches no permission.
+     */
+    #[Route('/team/{uuid}/rank', name: 'team_member_rank', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted('directory.manage')]
+    public function rank(Request $request, string $uuid): Response
+    {
+        $member = $this->member($uuid);
+        $this->assertCsrf($request);
+
+        if (!$this->personRank->usesRanks()) {
+            throw new NotFoundHttpException('This organization does not use ranks.');
+        }
+
+        $chosen = trim((string) $request->request->get('rank'));
+        $rank = '' === $chosen ? null : $this->personRank->rankFor($chosen);
+        if ('' !== $chosen && null === $rank) {
+            return $this->back($request, $member, 'That rank is retired or no longer exists.', 'error');
+        }
+
+        $since = \DateTimeImmutable::createFromFormat('!Y-m-d', (string) $request->request->get('since'));
+        if (false === $since) {
+            return $this->back($request, $member, 'A rank is held from a day: give the date.', 'error');
+        }
+
+        try {
+            $this->personRank->assign($member, $rank, $since, $this->signedIn());
+        } catch (\InvalidArgumentException $refusal) {
+            return $this->back($request, $member, $refusal->getMessage(), 'error');
+        }
+
+        return $this->back($request, $member, null === $rank
+            ? \sprintf('%s holds no rank from %s.', $member->getFullName(), $since->format('j M Y'))
+            : \sprintf('%s holds %s from %s.', $member->getFullName(), $rank->getName(), $since->format('j M Y')));
     }
 
     #[Route('/team/{uuid}/position', name: 'team_member_position', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]

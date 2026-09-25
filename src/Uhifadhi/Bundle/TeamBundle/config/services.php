@@ -91,6 +91,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
+use Uhifadhi\Bundle\TeamBundle\Service\PersonRankService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
@@ -1063,6 +1064,15 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.member_history', MemberHistory::class);
     $services->alias(MemberHistory::class, 'team.member_history');
 
+    $services->set('team.person_rank', PersonRankService::class)
+        ->args([
+            service('team.settings'),
+            service('team.ranks'),
+            service(RankScaleRepository::class),
+            service(RankRepository::class),
+            service(RankHoldingRepository::class),
+        ]);
+
     $services->set('team.controller.member', MemberController::class)
         ->args([
             service('twig'),
@@ -1085,6 +1095,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.position_board'),
             service(DepartmentRepository::class),
             service('doctrine.orm.entity_manager'),
+            service('team.person_rank'),
             // A MODULE'S CARD ON A PERSON'S RECORD, from whoever tags the seam.
             tagged_iterator(PersonRecordCellProviderInterface::TAG),
         ])

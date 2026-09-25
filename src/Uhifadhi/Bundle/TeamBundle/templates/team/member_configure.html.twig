@@ -195,6 +195,43 @@
                 </div>
             </form>
         </div>
+
+        {# THE RANK — given from a day, a dated fact; the rank held until then
+           closes on that day and stays in the history. Ranks grant nothing. #}
+        {% if usesRanks %}
+            <div class="c">
+                <span class="tab">Rank<span class="src">&middot; held from a day &middot; grants nothing</span></span>
+                <form id="rank" method="post" action="{{ path('team_member_rank', {uuid: member.uuidString}) }}">
+                    <input type="hidden" name="_token" value="{{ csrfToken }}">
+                    <input type="hidden" name="return" value="configure">
+                    <div class="crgrid">
+                        <div class="crfield grow">
+                            <span class="crlab">Rank</span>
+                            <span class="fsel"><select class="fld" name="rank" aria-label="Rank">
+                                <option value="">&mdash; no rank &mdash;</option>
+                                {% for run in rankChoices %}
+                                    {% if run.head %}<optgroup label="{{ run.head }}">{% endif %}
+                                    {% for rank in run.ranks %}
+                                        <option value="{{ rank.uuidString }}"{{ rankNow and rankNow.rank.id == rank.id ? ' selected' }}>{{ rank.shortCode }} &middot; {{ rank.name }}</option>
+                                    {% endfor %}
+                                    {% if run.head %}</optgroup>{% endif %}
+                                {% endfor %}
+                            </select></span>
+                        </div>
+                        <div class="crfield">
+                            <span class="crlab">From</span>
+                            <input type="date" class="fld" name="since" value="{{ today }}" required aria-label="Held from">
+                        </div>
+                    </div>
+                    <div class="staddrow">
+                        <span class="chg"><b>no changes</b><span class="to">{% if rankNow %}holds <b>{{ rankNow.rank.shortCode }}</b> since <time datetime="{{ rankNow.since|date('Y-m-d') }}" data-localtime-format="day">{{ rankNow.since|date('j M Y') }}</time>{% else %}holds no rank{% endif %}</span></span>
+                        <span class="sp"></span>
+                        <button type="reset" class="btn">Discard</button>
+                        <button type="submit" class="cta">Save the rank</button>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
     </div>
 
     <div class="col">

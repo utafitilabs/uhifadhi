@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Service;
 
+use Uhifadhi\Bundle\TeamBundle\Entity\RankHolding;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Model\MemberEvent;
 use Uhifadhi\Contracts\People\PersonPosting;
@@ -40,12 +41,31 @@ final readonly class MemberHistory
      * EVERY LINE THE MODEL CAN DATE, newest first.
      *
      * @param list<PersonPosting> $postings where this person works, from the seam
+     * @param list<RankHolding>   $ranks    the ranks held, the one held now first
      *
      * @return list<MemberEvent>
      */
-    public function of(User $person, array $postings = []): array
+    public function of(User $person, array $postings = [], array $ranks = []): array
     {
         $events = [];
+
+        // A PROMOTION IS A DATED FACT. The first rank is set; a later one on
+        // the same scale and higher is a promotion; anything else a change.
+        $held = array_reverse($ranks);
+        foreach ($held as $i => $holding) {
+            $rank = $holding->getRank();
+            $before = $held[$i - 1] ?? null;
+            $verb = match (true) {
+                null === $before => 'Rank set to',
+                $before->getRank()->getScale() === $rank->getScale() && $rank->getSeniority() > $before->getRank()->getSeniority() => 'Promoted to',
+                default => 'Rank changed to',
+            };
+            $events[] = new MemberEvent(
+                title: \sprintf('%s %s (%s)', $verb, $rank->getName(), $rank->getShortCode()),
+                note: null === $holding->getRecordedBy() ? '' : self::shortName($holding->getRecordedBy()),
+                when: $holding->getSince(),
+            );
+        }
 
         foreach ($postings as $posting) {
             $events[] = new MemberEvent(
@@ -89,5 +109,11 @@ final readonly class MemberHistory
         usort($events, static fn (MemberEvent $a, MemberEvent $b): int => $b->when <=> $a->when);
 
         return $events;
+    }
+
+    /** "N. Kileo" — the by-line a dated row carries. */
+    private static function shortName(User $person): string
+    {
+        return trim(mb_substr((string) $person->getFirstName(), 0, 1).'. '.$person->getLastName());
     }
 }

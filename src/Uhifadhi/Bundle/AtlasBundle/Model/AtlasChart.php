@@ -57,6 +57,10 @@ final readonly class AtlasChart
         /** The figure at the end of every bar; null draws none and a hover answers instead. */
         public ?ChartFigures $figures = null,
         public ChartLegend $legend = ChartLegend::Canvas,
+        /** How a nought is drawn on a bar chart: no bar, or a faded hairline on the axis. */
+        public ChartNoughts $noughts = ChartNoughts::Blank,
+        /** The widest a bar may be drawn, in pixels, where the design states one; null leaves it to the library. */
+        public ?float $barWidth = null,
     ) {
     }
 
@@ -66,7 +70,9 @@ final readonly class AtlasChart
      * the palette — and the target last, with no category, because a dashed
      * grey line is not one.
      *
-     * @return list<array{label: string, cat: int|null, swatch: string|null}>
+     * AN ACCENT SERIES IS NO CATEGORY and its pill is the accent pill.
+     *
+     * @return list<array{label: string, cat: int|null, swatch: string|null, accent: bool}>
      */
     public function legendRows(): array
     {
@@ -74,13 +80,14 @@ final readonly class AtlasChart
         foreach ($this->series as $position => $series) {
             $rows[] = [
                 'label' => $series->label,
-                'cat' => null !== $series->swatch ? null : $series->cat ?? ($position % PlatePalette::CATEGORIES) + 1,
+                'cat' => null !== $series->swatch || $series->accent ? null : $series->cat ?? ($position % PlatePalette::CATEGORIES) + 1,
                 'swatch' => $series->swatch,
+                'accent' => $series->accent,
             ];
         }
 
         if (null !== $this->target) {
-            $rows[] = ['label' => $this->targetLabel, 'cat' => null, 'swatch' => null];
+            $rows[] = ['label' => $this->targetLabel, 'cat' => null, 'swatch' => null, 'accent' => false];
         }
 
         return $rows;

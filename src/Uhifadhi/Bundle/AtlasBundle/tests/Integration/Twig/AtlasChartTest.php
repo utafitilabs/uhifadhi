@@ -21,6 +21,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\AxisScale;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartFigures;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartNoughts;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
 use Uhifadhi\Bundle\AtlasBundle\Tests\Integration\TestKernel;
 use Uhifadhi\Bundle\AtlasBundle\Twig\ChartRuntime;
@@ -136,6 +137,33 @@ final class AtlasChartTest extends TestCase
         self::assertFalse(self::at(self::view($html), 'options', 'plugins', 'legend', 'display'));
         // The legend follows the box and precedes the caption.
         self::assertLessThan(strpos($html, 'chart-legend'), strpos($html, 'chart-box'));
+    }
+
+    /**
+     * AN ACCENT SERIES WITH ITS NOUGHTS AS HAIRLINES, all the way to the
+     * served view: the accent token, the two-pixel minimum, the fade the
+     * plate reads, the column width — and its chip is the accent pill.
+     */
+    public function testAnAccentSeriesWithHairlineNoughtsCarriesAllOfItIntoTheServedView(): void
+    {
+        $html = self::render(new AtlasChart(
+            ChartKind::Bar,
+            ['north', 'south'],
+            [new ChartSeries('Assignments', [31.0, 0.0], accent: true)],
+            axis: new AxisScale(32.0, 16.0),
+            legend: ChartLegend::Chips,
+            noughts: ChartNoughts::Hairline,
+            barWidth: 40.0,
+        ));
+
+        $view = self::view($html);
+        $dataset = self::at($view, 'data', 'datasets', '0');
+        self::assertIsArray($dataset);
+        self::assertSame('var(--acc)', $dataset['backgroundColor'] ?? null);
+        self::assertSame(2, $dataset['minBarLength'] ?? null);
+        self::assertSame(40, $dataset['maxBarThickness'] ?? null);
+        self::assertSame(['opacity' => 0.28], self::at($view, 'options', 'plugins', 'noughts'));
+        self::assertStringContainsString('<span class="chip acc">Assignments</span>', $html);
     }
 
     /**

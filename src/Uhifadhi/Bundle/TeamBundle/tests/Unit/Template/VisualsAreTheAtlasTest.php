@@ -34,6 +34,7 @@ final class VisualsAreTheAtlasTest extends TestCase
     /** What each drawing mark is, and the atlas call that draws it instead. */
     private const array FORBIDDEN = [
         'a sparkline polyline — write atlas_sparkline()' => '/<polyline\b/',
+        'a plotted chart — write atlas_chart()' => '/<svg\b[^>]*\bclass="ch\b/',
     ];
 
     /** @return iterable<string, array{string}> */

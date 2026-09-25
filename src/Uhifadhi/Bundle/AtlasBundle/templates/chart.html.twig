@@ -30,13 +30,16 @@
 
     {# THE CHIP LEGEND: the house pill, one per series, wearing its category
        through the shell's `data-cat` door; a series that still states its
-       own swatch hands it to the same `--cat` the door would set; the target
+       own swatch hands it to the same `--cat` the door would set; an accent
+       series is the accent pill, because it is no category; the target
        is the idle pill, because a dashed grey line is not a category. #}
     {% if legend %}
         <div class="chart-legend">
             {%- for row in legend -%}
                 {%- if row.cat is not null -%}
                     <span class="chip" data-cat="{{ row.cat }}">{{ row.label }}</span>
+                {%- elseif row.accent -%}
+                    <span class="chip acc">{{ row.label }}</span>
                 {%- elseif row.swatch is not null -%}
                     <span class="chip" style="--cat:{{ row.swatch }}">{{ row.label }}</span>
                 {%- else -%}

@@ -15,10 +15,14 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
 use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
+use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamFigures;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeStationDirectory;
+use Uhifadhi\Contracts\Area\DirectoryArea;
+use Uhifadhi\Contracts\Area\PostedStation;
+use Uhifadhi\Contracts\Area\StationPost;
 
 /**
  * THE TEAM SECTION'S OWN SCREENS — the overview it opens on, and the two
@@ -128,6 +132,50 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
         self::assertContains('No department', $labels);
     }
 
+    /**
+     * ASSIGNMENTS BY AREA IS THE ATLAS'S COLUMN CHART: one accent series,
+     * the area names under the columns, the axis a round number above the
+     * tallest with its half, and an area with none keeping its column as a
+     * faded hairline — drawn by `atlas_chart()`, not by the template.
+     */
+    public function testAssignmentsByAreaIsTheAtlasColumnChart(): void
+    {
+        $this->installation();
+        $frank = $this->em->getRepository(User::class)->findOneBy(['firstName' => 'Frank']);
+        $ibrahim = $this->em->getRepository(User::class)->findOneBy(['firstName' => 'Ibrahim']);
+        self::assertNotNull($frank);
+        self::assertNotNull($ibrahim);
+        FakeStationDirectory::$areas = [new DirectoryArea('area-north', 'Northern Reserve'), new DirectoryArea('area-south', 'Southern Plains')];
+        FakeStationDirectory::$stations = [
+            new PostedStation(uuid: 'st-01', name: 'Eastgate Post', code: 'ST-01', areaUuid: 'area-north', areaName: 'Northern Reserve', zoneName: 'Crater', posts: [
+                new StationPost((string) $frank->getUuidString(), new \DateTimeImmutable('2026-01-04'), true),
+                new StationPost((string) $ibrahim->getUuidString(), new \DateTimeImmutable('2026-02-11')),
+            ]),
+            new PostedStation(uuid: 'st-02', name: 'Ridge Outpost', code: 'ST-02', areaUuid: 'area-south', areaName: 'Southern Plains', zoneName: 'Ridge'),
+        ];
+
+        $card = $this->visit('/team/overview')->filter('.c')->reduce(
+            static fn (Crawler $c): bool => str_starts_with($c->filter('.tab')->count() > 0 ? $c->filter('.tab')->first()->text() : '', 'Assignments by area'),
+        );
+
+        self::assertCount(1, $card);
+        self::assertCount(0, $card->filter('svg'), 'The template draws no chart of its own.');
+        self::assertCount(1, $card->filter('.chart-plate canvas[data-controller="symfony--ux-chartjs--chart"]'));
+        self::assertSame('Assignments by area', $card->filter('canvas')->attr('aria-label'));
+
+        $view = json_decode((string) $card->filter('canvas')->attr('data-symfony--ux-chartjs--chart-view-value'), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertIsArray($view);
+        self::assertSame('bar', self::at($view, 'type'));
+        self::assertSame(['northern reserve', 'southern plains'], self::at($view, 'data', 'labels'));
+        self::assertSame([2, 0], self::at($view, 'data', 'datasets', '0', 'data'));
+        self::assertSame('var(--acc)', self::at($view, 'data', 'datasets', '0', 'backgroundColor'));
+        self::assertSame(2, self::at($view, 'data', 'datasets', '0', 'minBarLength'));
+        self::assertSame(40, self::at($view, 'data', 'datasets', '0', 'maxBarThickness'));
+        self::assertSame(8, self::at($view, 'options', 'scales', 'y', 'max'));
+        self::assertSame(4, self::at($view, 'options', 'scales', 'y', 'ticks', 'stepSize'));
+        self::assertFalse(self::at($view, 'options', 'plugins', 'legend', 'display'));
+    }
+
     /** The attention cards name the people they are about, and link to them. */
     public function testTheAttentionCardsNameThePeopleAndLinkToThem(): void
     {
@@ -176,6 +224,24 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
         $this->person('Frank', 'Massawe');
         $this->person('Ibrahim', 'Mrema')->setVerified(false);
         $this->administrator();
+    }
+
+    /**
+     * A value down a path of keys in the chart's served view, each block
+     * asserted to exist rather than cast.
+     *
+     * @param array<array-key, mixed> $payload
+     */
+    private static function at(array $payload, string ...$path): mixed
+    {
+        $value = $payload;
+        foreach ($path as $key) {
+            self::assertIsArray($value);
+            self::assertArrayHasKey($key, $value);
+            $value = $value[$key];
+        }
+
+        return $value;
     }
 
     private function visit(string $path): Crawler

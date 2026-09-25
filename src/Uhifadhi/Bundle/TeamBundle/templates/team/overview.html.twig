@@ -99,25 +99,13 @@
         <div class="c">
             <span class="tab">Assignments by area<span class="src">&middot; {{ postings }} &middot; made in the area, read here</span></span>
             {# A POSTING IS THE AREA'S, NOT TEAM'S: made on a station, read here
-               across every area at once. An area with no station has none, and
-               keeps its column — the nought is the reading. #}
-            <svg class="ch" viewBox="0 0 640 140" width="640" height="140" role="img" aria-label="Assignments by area">
-                {% for tick in postingsAxis %}
-                    {% set y = 10 + loop.index0 * 56 %}
-                    <line class="grid" x1="30" y1="{{ y }}" x2="636" y2="{{ y }}"/>
-                    <text x="25" y="{{ y + 2.6 }}" text-anchor="end">{{ tick }}</text>
-                {% endfor %}
-                <line class="ax" x1="30" y1="122" x2="636" y2="122"/>
-                {% for column in postingsByArea %}
-                    {% set slot = 606 / (postingsByArea|length) %}
-                    {% set x = 30 + slot * loop.index0 + slot / 2 - 20 %}
-                    {% set h = (column.height / 100 * 108.5)|round(1) %}
-                    <rect x="{{ x|round(1) }}" y="{{ (122 - (h < 2 ? 2 : h))|round(1) }}" width="40" height="{{ h < 2 ? 2 : h }}" rx="1.5"
-                          fill="var(--acc)"{% if column.postings == 0 %} opacity=".28"{% endif %}/>
-                    <text x="{{ (x + 20)|round(1) }}" y="135" text-anchor="middle">{{ column.name|lower }}</text>
-                {% endfor %}
-            </svg>
-            {% if postingsByArea is empty %}<p class="use">No area has a station yet.</p>{% endif %}
+               across every area at once. An area whose stations nobody is
+               stationed at keeps its column — the nought is the reading. #}
+            {% if postingsChart %}
+                {{ atlas_chart(postingsChart, '', '', {'--chart-height': '140px', 'role': 'img', 'aria-label': 'Assignments by area'}) }}
+            {% else %}
+                <p class="use">No area has a station yet.</p>
+            {% endif %}
         </div>
 
         <div class="c">

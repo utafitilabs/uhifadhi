@@ -46,12 +46,39 @@ const FIGURE_GAP = 6;
 /** The properties a colour can reach a dataset or a scale through. */
 const PAINTED = ['backgroundColor', 'borderColor', 'color', 'pointBackgroundColor', 'pointBorderColor'];
 
+/* Where the builder states how faded a nought's hairline is drawn — the same
+   id ChartBuilder::NOUGHTS writes it under. */
+const NOUGHTS = 'noughts';
+
+/*
+ * THE SAME COLOR AT AN OPACITY. A token resolves to one of two shapes: the
+ * palette's six-digit hex or a channel color (`rgb(62 217 168)`), and each
+ * carries an alpha the way Chart.js's own color parser and the canvas both
+ * read it — an eighth and ninth hex digit, or `/ alpha` inside rgb(). Any
+ * other shape is returned as it came: an unfaded stub beats no stub.
+ */
+function fade(color, opacity) {
+    if ('string' !== typeof color) {
+        return color;
+    }
+    if (/^#[0-9a-fA-F]{6}$/.test(color)) {
+        return color + Math.round(opacity * 255).toString(16).padStart(2, '0');
+    }
+    const rgb = /^rgb\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*\)$/.exec(color);
+    if (rgb) {
+        return `rgb(${rgb[1]} ${rgb[2]} ${rgb[3]} / ${opacity})`;
+    }
+
+    return color;
+}
+
 export default class extends Controller {
     connect() {
         this.swatches = new Map();
 
         this.onPreConnect = (event) => {
             this.paint(event.detail.config);
+            this.hairline(event.detail.config);
             this.figure(event.detail.config);
         };
         this.element.addEventListener('chartjs:pre-connect', this.onPreConnect);
@@ -90,6 +117,32 @@ export default class extends Controller {
      * so it is this chart's and no other's; identified, so its options are
      * the block the builder wrote under the same id.
      */
+    /*
+     * A NOUGHT'S HAIRLINE, FADED. The builder already asked for a two-pixel
+     * stub; here, once the series' token is a color, each bar series' fill
+     * and stroke become one color per bar, and a nought's is the faded one —
+     * so the stub reads as "none here" rather than as a short bar.
+     */
+    hairline(config) {
+        const noughts = config.options?.plugins?.[NOUGHTS];
+        if (!noughts) {
+            return;
+        }
+
+        const opacity = noughts.opacity;
+        for (const dataset of config?.data?.datasets ?? []) {
+            if ('line' === (dataset.type ?? config.type)) {
+                continue;
+            }
+            for (const property of ['backgroundColor', 'borderColor']) {
+                const color = dataset[property];
+                if ('string' === typeof color) {
+                    dataset[property] = dataset.data.map((value) => (0 === value ? fade(color, opacity) : color));
+                }
+            }
+        }
+    }
+
     figure(config) {
         if (!config.options?.plugins?.[FIGURES]) {
             return;

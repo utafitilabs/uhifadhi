@@ -43,13 +43,19 @@ final readonly class ChartSeries
      * @param string|null      $swatch @deprecated a colour a module picked — state `cat` instead
      * @param int|null         $cat    the category this series wears, 1 to 18 — its
      *                                 position in the palette, resolved where it is drawn
+     * @param bool             $accent the series wears the house accent: the one quantity a
+     *                                 card measures where it is no category at all
      */
     public function __construct(
         public string $label,
         public array $points,
         public ?string $swatch = null,
         public ?int $cat = null,
+        public bool $accent = false,
     ) {
+        if ($accent && (null !== $cat || null !== $swatch)) {
+            throw new \InvalidArgumentException(\sprintf('A series wears a category or the accent, never both; "%s" states both.', $label));
+        }
         if (null !== $cat && ($cat < 1 || $cat > PlatePalette::CATEGORIES)) {
             throw new \InvalidArgumentException(\sprintf('A category is its position in a declared order, 1 to %d; "%d" is not one.', PlatePalette::CATEGORIES, $cat));
         }

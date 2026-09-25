@@ -18,6 +18,7 @@ use Symfony\UX\Chartjs\Model\Chart;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartNoughts;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
 use Uhifadhi\Contracts\Atlas\PlatePalette;
 
@@ -43,6 +44,8 @@ use Uhifadhi\Contracts\Atlas\PlatePalette;
  * @see https://www.chartjs.org/docs/latest/configuration/legend.html — `plugins.legend.display`
  * @see https://www.chartjs.org/docs/latest/developers/plugins.html — "Plugin options are located under the options.plugins config and are scoped by the plugin ID"
  * @see https://www.chartjs.org/docs/latest/configuration/layout.html — `layout.padding`, "The padding to add inside the chart"
+ * @see https://www.chartjs.org/docs/latest/charts/bar.html#dataset-properties — `minBarLength`, "Set this to ensure that bars have a minimum length in pixels"; `maxBarThickness`, "Set this to ensure that bars are not sized thicker than this"
+ * @see chart.js 4.5.1 dist/chart.js, BarController::_calculateBarValuePixels — a bar shorter than `minBarLength` becomes that length; one whose value is the base moves half of it and is clamped inside the scale, so a nought's stub stands on the axis
  */
 final readonly class ChartBuilder
 {
@@ -67,6 +70,16 @@ final readonly class ChartBuilder
      */
     public const string FIGURES_PLUGIN = 'figures';
 
+    /** Where the plate reads how faded a nought's hairline is drawn. */
+    public const string NOUGHTS = 'noughts';
+
+    /** A nought's stub, in pixels, and how far it is faded — the design's two-pixel column at .28. */
+    private const int HAIRLINE = 2;
+    private const float HAIRLINE_OPACITY = 0.28;
+
+    /** The house accent, resolved by the plate like any category token. */
+    private const string ACCENT = 'var(--acc)';
+
     /** THE ROOM A FIGURE NEEDS past the longest bar, in canvas pixels: "128 h" in the mono face at 10px. */
     private const int FIGURE_ROOM_BESIDE = 36;
     private const int FIGURE_ROOM_ABOVE = 16;
@@ -81,7 +94,7 @@ final readonly class ChartBuilder
 
         $datasets = [];
         foreach ($chart->series as $position => $series) {
-            $datasets[] = self::dataset($series, $position, $chart->kind);
+            $datasets[] = self::dataset($series, $position, $chart);
         }
 
         if (null !== $chart->target) {
@@ -107,8 +120,9 @@ final readonly class ChartBuilder
     }
 
     /** @return array<string, mixed> */
-    private static function dataset(ChartSeries $series, int $position, ChartKind $kind): array
+    private static function dataset(ChartSeries $series, int $position, AtlasChart $chart): array
     {
+        $kind = $chart->kind;
         /*
          * THE TOKEN, NOT THE VALUE. Chart.js is handed `var(--cat-3)` and
          * the chart's own controller resolves it against the element it is
@@ -120,7 +134,7 @@ final readonly class ChartBuilder
          * A `swatch` still wins where a module states one, which is the
          * deprecated door and is honoured for one release.
          */
-        $colour = $series->swatch ?? \sprintf('var(--cat-%d)', $series->cat ?? ($position % self::CATEGORIES) + 1);
+        $colour = $series->accent ? self::ACCENT : $series->swatch ?? \sprintf('var(--cat-%d)', $series->cat ?? ($position % self::CATEGORIES) + 1);
 
         $dataset = [
             'label' => $series->label,
@@ -141,6 +155,20 @@ final readonly class ChartBuilder
 
         if (ChartKind::Stacked === $kind) {
             $dataset['stack'] = 'one';
+        }
+
+        if (ChartKind::Line !== $kind) {
+            if (ChartNoughts::Hairline === $chart->noughts) {
+                // "Set this to ensure that bars have a minimum length in
+                // pixels" — and a nought, whose value is the base, is moved
+                // half that length and clamped inside the scale, so the stub
+                // stands on the axis (Chart.js BarController::_calculateBarValuePixels).
+                $dataset['minBarLength'] = self::HAIRLINE;
+            }
+            if (null !== $chart->barWidth) {
+                // "Set this to ensure that bars are not sized thicker than this."
+                $dataset['maxBarThickness'] = $chart->barWidth;
+            }
         }
 
         return $dataset;
@@ -196,6 +224,13 @@ final readonly class ChartBuilder
 
         if (self::ranked($chart)) {
             $options['indexAxis'] = 'y';
+        }
+
+        if (ChartNoughts::Hairline === $chart->noughts && ChartKind::Line !== $chart->kind) {
+            // THE FADE IS THE PLATE'S, configured where the figures are: the
+            // plate turns a nought's color into the same color at this
+            // opacity when it resolves the series' tokens.
+            $plugins[self::NOUGHTS] = ['opacity' => self::HAIRLINE_OPACITY];
         }
 
         if (null !== $chart->figures) {

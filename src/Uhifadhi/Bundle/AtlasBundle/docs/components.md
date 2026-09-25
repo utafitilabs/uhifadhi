@@ -33,6 +33,7 @@ their API once it settles.
   - [The figure on the bar](#the-figure-on-the-bar)
   - [A stated axis](#a-stated-axis)
   - [The chip legend](#the-chip-legend)
+  - [The accent, the nought and the column width](#the-accent-the-nought-and-the-column-width)
   - [How tall a chart is](#how-tall-a-chart-is)
   - [What each statement becomes in Chart.js](#what-each-statement-becomes-in-chartjs)
 - [The sparkline](#the-sparkline)
@@ -625,6 +626,38 @@ title needs no key.
 The plate's sheet writes the row and the ink (`.chart-plate > .chart-legend > .chip[data-cat]`);
 the pill's shape stays the shell's and is not restated.
 
+### The accent, the nought and the column width
+
+Three statements for a column chart that measures ONE thing across things that are not
+categories — assignments across areas, say:
+
+```php
+new AtlasChart(
+    ChartKind::Bar,
+    ['north', 'south'],
+    [new ChartSeries('Assignments', [31.0, 0.0], accent: true)],
+    axis: new AxisScale(32.0, 16.0),
+    legend: ChartLegend::None,
+    noughts: ChartNoughts::Hairline,
+    barWidth: 40.0,
+);
+```
+
+- **`ChartSeries(accent: true)`** — the series wears the house accent (`var(--acc)`) rather than a
+  category; its chip, where chips are drawn, is the accent pill. A series is a category or the
+  accent, never both.
+- **`noughts: ChartNoughts::Hairline`** — a nought keeps its column as a two-pixel stub on the axis,
+  faded to .28, so a thing with none reads as "none here" and not as missing. Chart.js:
+  `minBarLength`, "Set this to ensure that bars have a minimum length in pixels"
+  ([charts/bar](https://www.chartjs.org/docs/latest/charts/bar.html#dataset-properties)); a bar whose
+  value is the base is moved half that length and clamped inside the scale, so the stub stands on
+  the axis (`BarController::_calculateBarValuePixels`, chart.js 4.5.1). The fade is the plate's: it
+  reads `options.plugins.noughts.opacity` and turns each bar series' fill and stroke into one color
+  per bar — Chart.js "indexable options"
+  ([general/options](https://www.chartjs.org/docs/latest/general/options.html#indexable-options)).
+- **`barWidth: 40.0`** — no column is drawn wider than that. Chart.js: `maxBarThickness`, "Set this
+  to ensure that bars are not sized thicker than this".
+
 ### How tall a chart is
 
 The box is 196px, the platform's, and a caller changes it only through the same custom-property
@@ -641,6 +674,9 @@ design rules one number for every chart.
 | `ChartKind::Ranked` | `options.indexAxis: 'y'`; value scale `x`, index scale `y` | [charts/bar](https://www.chartjs.org/docs/latest/charts/bar.html#horizontal-bar-chart) |
 | `AxisScale(max, step)` | `options.scales.<value>.max`, `options.scales.<value>.ticks.stepSize` | [axes/cartesian/linear](https://www.chartjs.org/docs/latest/axes/cartesian/linear.html) |
 | `ChartFigures(unit, precision)` | `options.plugins.figures = {unit, precision}`, `options.layout.padding`, and the plate's inline plugin `{id: 'figures', afterDatasetsDraw}` | [developers/plugins](https://www.chartjs.org/docs/latest/developers/plugins.html), [configuration/layout](https://www.chartjs.org/docs/latest/configuration/layout.html) |
+| `ChartSeries(accent: true)` | `backgroundColor`/`borderColor` as `var(--acc)`, resolved by the plate like a category | [ux-chartjs `chartjs:pre-connect`](https://symfony.com/bundles/ux-chartjs/current/index.html) |
+| `ChartNoughts::Hairline` | `datasets[].minBarLength: 2`, `options.plugins.noughts = {opacity: 0.28}`, and the plate's per-bar colors | [charts/bar](https://www.chartjs.org/docs/latest/charts/bar.html#dataset-properties), [general/options](https://www.chartjs.org/docs/latest/general/options.html#indexable-options) |
+| `AtlasChart::$barWidth` | `datasets[].maxBarThickness` | [charts/bar](https://www.chartjs.org/docs/latest/charts/bar.html#dataset-properties) |
 | `ChartLegend::Chips` / `None` | `options.plugins.legend.display: false`, plus the plate's own `.chart-legend` markup | [configuration/legend](https://www.chartjs.org/docs/latest/configuration/legend.html) |
 | `ChartSeries::$cat` | `backgroundColor`/`borderColor` as `var(--cat-n)`, resolved by the plate at mount and on theme flip | [ux-chartjs `chartjs:pre-connect`](https://symfony.com/bundles/ux-chartjs/current/index.html) |
 

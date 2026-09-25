@@ -13,6 +13,12 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Service;
 
+use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
+use Uhifadhi\Bundle\AtlasBundle\Model\AxisScale;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartNoughts;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
@@ -57,6 +63,9 @@ final readonly class TeamSectionOverview
 
     /** The chart's axis climbs in eights, so its half is a whole number too. */
     private const int AXIS_STEP = 8;
+
+    /** The width the design draws an area's column at, in pixels. */
+    private const float COLUMN_WIDTH = 40.0;
 
     public function __construct(
         private UserRepository $users,
@@ -105,8 +114,7 @@ final readonly class TeamSectionOverview
      *     people: int,
      *     seats: list<SectionBar>,
      *     departments: int,
-     *     postingsByArea: list<array{name: string, postings: int, height: float}>,
-     *     postingsAxis: list<int>,
+     *     postingsChart: AtlasChart|null,
      *     postings: int,
      *     emptyStations: list<SectionLine>,
      *     emptyStationsTotal: int,
@@ -156,8 +164,7 @@ final readonly class TeamSectionOverview
             'people' => \count($people),
             'seats' => $seats,
             'departments' => $departments,
-            'postingsByArea' => self::postingsByArea($areas),
-            'postingsAxis' => self::axisFor($areas),
+            'postingsChart' => self::postingsChart($areas),
             'postings' => $postings,
             'emptyStations' => \array_slice($emptyStations, 0, self::BOUND),
             'emptyStationsTotal' => \count($emptyStations),
@@ -458,60 +465,39 @@ final readonly class TeamSectionOverview
     }
 
     /**
-     * POSTINGS BY AREA, as the heights a bar chart draws. The scale is worked
-     * out here and not in the template: a percentage computed in Twig is a
-     * percentage nothing can test.
+     * ASSIGNMENTS BY AREA, as the chart the atlas draws: one column an area,
+     * in the house accent because the card measures one thing and it is no
+     * category. Null where no area has a station, which the card says in
+     * words instead.
      *
-     * AN AREA WITH NONE KEEPS ITS COLUMN, drawn as the hairline a nought is —
-     * three areas with no station yet is the reading the card exists for.
+     * AN AREA WITH NONE KEEPS ITS COLUMN, drawn as the faded hairline a
+     * nought is: an area whose stations nobody is stationed at is the reading
+     * the card exists for.
+     *
+     * THE TOP OF THE AXIS IS A ROUND NUMBER ABOVE THE TALLEST COLUMN, with its
+     * half between: an axis whose top is 31 tells a reader to do arithmetic,
+     * and a column drawn to the very top of its frame reads as clipped.
      *
      * @param array<string, int> $areas
-     *
-     * @return list<array{name: string, postings: int, height: float}>
      */
-    private static function postingsByArea(array $areas): array
+    private static function postingsChart(array $areas): ?AtlasChart
     {
+        if ([] === $areas) {
+            return null;
+        }
+
         ksort($areas);
-        $top = self::axisFor($areas)[0];
+        $top = (float) (max(1, (int) ceil(max($areas) / self::AXIS_STEP)) * self::AXIS_STEP);
 
-        $columns = [];
-        foreach ($areas as $name => $postings) {
-            $columns[] = [
-                'name' => $name,
-                'postings' => $postings,
-                'height' => $top > 0 ? round($postings / $top * 100, 1) : 0.0,
-            ];
-        }
-
-        return $columns;
-    }
-
-    /**
-     * THE CHART'S THREE TICKS — the top, its half and nought.
-     *
-     * THE TOP IS A ROUND NUMBER ABOVE THE TALLEST BAR, not the tallest bar
-     * itself: an axis whose top is 31 tells a reader to do arithmetic, and a
-     * bar drawn to the very top of its own frame reads as clipped.
-     *
-     * @param array<string, int> $areas
-     *
-     * @return list<int>
-     */
-    private static function axisFor(array $areas): array
-    {
-        $largest = 0;
-        foreach ($areas as $postings) {
-            $largest = max($largest, $postings);
-        }
-
-        if (0 === $largest) {
-            return [0, 0, 0];
-        }
-
-        $step = self::AXIS_STEP;
-        $top = (int) (ceil($largest / $step) * $step);
-
-        return [$top, intdiv($top, 2), 0];
+        return new AtlasChart(
+            ChartKind::Bar,
+            array_map(static fn (string|int $name): string => mb_strtolower((string) $name), array_keys($areas)),
+            [new ChartSeries('Assignments', array_map(static fn (int $postings): float => (float) $postings, array_values($areas)), accent: true)],
+            axis: new AxisScale($top, $top / 2),
+            legend: ChartLegend::None,
+            noughts: ChartNoughts::Hairline,
+            barWidth: self::COLUMN_WIDTH,
+        );
     }
 
     /**

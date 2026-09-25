@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * A COLUMN CHART CAN MEASURE ONE THING THAT IS NO CATEGORY: `ChartSeries(accent: true)`
+   wears the house accent and its chip is the accent pill; `ChartNoughts::Hairline` keeps a
+   nought's column as a two-pixel stub on the axis (`minBarLength`) that the plate fades to .28
+   per bar; `AtlasChart::$barWidth` caps a column's width (`maxBarThickness`). Documented in
+   docs/components.md, "The accent, the nought and the column width"
+
  * A FIGURE'S HISTORY IS AN ATLAS COMPONENT: `atlas_sparkline(Sparkline)`
    draws the line under a KPI or topic card's figure (`SparkSize::Card`,
    100×26) and beside a matrix cell's movement (`SparkSize::Cell`, 70×18) —

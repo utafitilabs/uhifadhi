@@ -22,6 +22,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\AxisScale;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartFigures;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartNoughts;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
 
 /**
@@ -212,10 +213,10 @@ final class AtlasChartTest extends TestCase
         );
 
         self::assertSame([
-            ['label' => 'foot', 'cat' => 7, 'swatch' => null],
-            ['label' => 'vehicle', 'cat' => 2, 'swatch' => null],
-            ['label' => 'drone', 'cat' => null, 'swatch' => '#E05B41'],
-            ['label' => 'Target', 'cat' => null, 'swatch' => null],
+            ['label' => 'foot', 'cat' => 7, 'swatch' => null, 'accent' => false],
+            ['label' => 'vehicle', 'cat' => 2, 'swatch' => null, 'accent' => false],
+            ['label' => 'drone', 'cat' => null, 'swatch' => '#E05B41', 'accent' => false],
+            ['label' => 'Target', 'cat' => null, 'swatch' => null, 'accent' => false],
         ], $chart->legendRows());
     }
 
@@ -335,6 +336,68 @@ final class AtlasChartTest extends TestCase
         ));
 
         self::assertSame('#E05B41', self::at(self::dataset($chart, 0), 'backgroundColor'));
+    }
+
+    /**
+     * THE ACCENT IS A SERIES' HUE WHERE THE CARD MEASURES ONE THING that is
+     * no category — assignments across areas — and the design draws it in
+     * the house accent rather than in the first category's colour.
+     */
+    public function testAnAccentSeriesWearsTheHouseAccentAndItsChipIsTheAccentPill(): void
+    {
+        $chart = new AtlasChart(ChartKind::Bar, ['a', 'b'], [new ChartSeries('Assignments', [3.0, 0.0], accent: true)]);
+
+        $dataset = self::dataset(self::builder()->chart($chart), 0);
+        self::assertSame('var(--acc)', $dataset['backgroundColor']);
+        self::assertSame('var(--acc)', $dataset['borderColor']);
+        self::assertSame([['label' => 'Assignments', 'cat' => null, 'swatch' => null, 'accent' => true]], $chart->legendRows());
+    }
+
+    /** A series is a category or the accent, never both. */
+    public function testASeriesThatIsBothACategoryAndTheAccentIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new ChartSeries('X', [1.0], cat: 2, accent: true);
+    }
+
+    /**
+     * A NOUGHT IS DRAWN AS A HAIRLINE where the chart says the nought is the
+     * reading: a two-pixel stub the plate fades, so a category with none
+     * keeps a visible column instead of a gap that reads as missing data.
+     *
+     * Chart.js: `minBarLength` — "Set this to ensure that bars have a minimum
+     * length in pixels" (charts/bar, dataset properties). The fade is the
+     * plate's, read from `options.plugins.noughts`.
+     */
+    public function testAHairlineNoughtIsAMinimumBarLengthAndTheFadeThePlateApplies(): void
+    {
+        $chart = new AtlasChart(ChartKind::Bar, ['a', 'b'], [new ChartSeries('X', [3.0, 0.0])], noughts: ChartNoughts::Hairline);
+        $built = self::builder()->chart($chart);
+
+        self::assertSame(2, self::dataset($built, 0)['minBarLength']);
+        self::assertSame(['opacity' => 0.28], self::under(self::under($built->getOptions(), 'plugins'), 'noughts'));
+    }
+
+    /** Left unstated, a nought is no bar and the plate is told nothing. */
+    public function testABlankNoughtDrawsNoBarAndConfiguresNoFade(): void
+    {
+        $built = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['a'], [new ChartSeries('X', [0.0])]));
+
+        self::assertArrayNotHasKey('minBarLength', self::dataset($built, 0));
+        self::assertArrayNotHasKey('noughts', self::under($built->getOptions(), 'plugins'));
+    }
+
+    /**
+     * A COLUMN'S WIDTH, where the design draws one: Chart.js `maxBarThickness`
+     * — "Set this to ensure that bars are not sized thicker than this"
+     * (charts/bar, dataset properties).
+     */
+    public function testAStatedBarWidthCapsEveryBarsThickness(): void
+    {
+        $built = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['a'], [new ChartSeries('X', [1.0])], barWidth: 40.0));
+
+        self::assertSame(40.0, self::dataset($built, 0)['maxBarThickness']);
     }
 
     /** A chart nobody published a point in is not drawn at all. */

@@ -1842,6 +1842,132 @@ headline plate and goal is scored from. A surface handed several sets for one ca
 the area it carries rather than stacking them — but that is a page being defensive, not a licence to
 skip the rule.
 
+### Facts a module computes on a schedule
+
+**A request never computes over a set that grows with time or headcount.** Every page read is
+bounded: one index lookup, the latest N, one record, or a window whose size the design fixes. A
+figure over a growing set — coverage of a zone this month, metres walked this quarter, anything that
+reads every track or every record of a period — is computed by the queue worker on a schedule,
+filed on the **facts ledger** in the core, and read by the page as a stored number with the time it
+was computed. When the worker lags, the page shows the last figure and its time; it never falls back
+to computing, and it never fails.
+
+A figure that costs O(1) to keep (a tally, a latest fix, a stamp) is not a fact for this seam: it is
+written in the same transaction as the event that changes it, in your own table.
+
+**The ledger.** One row per subject, figure and period — `figure_fact(subject_kind, subject_uuid,
+figure_key, period_key, value, computed_at)` — owned by the registry bundle. Periods are calendar
+months, quarters and years, keyed `2026-09`, `2026-Q3`, `2026` by `Uhifadhi\Contracts\Facts\FactPeriod`.
+The value is a number or null; null is **unknown** and is drawn as unknown, never as a nought.
+Anything structured — a covered geometry, a list — stays in a table of your own.
+
+**Additive or not.** A figure whose quarter is its three months added up (patrols logged, metres
+walked) is **additive**: the ledger stores months only and reads a quarter or a year as the sum of
+at most twelve month rows. A share, an average, a distinct count or a covered area is **not**:
+coverage of a quarter is not the sum of three months of coverage, so the core asks your provider for
+the quarter and the year as periods of their own and files those rows too. Make that computation
+bounded as well — a year of coverage should be composed from your own stored month geometry, not
+by reading a year of tracks.
+
+**The recipe.**
+
+1. Implement `Uhifadhi\Contracts\Facts\FactProviderInterface`: `moduleSlug()`, `figures()`
+   declaring each figure once as a `FigureDefinition(key, subjectKind, additive)`, and
+   `compute(FactRequest)` returning `FactValue`s for the period and figures asked.
+2. Name each figure `<module>.<figure>`, lower case. A figure a department plate reads is filed
+   under `FactSubject::DEPARTMENT` with the key the performance history already uses for it —
+   `<module>.<kpi key>` — so the plate reads it without a line of code on the page; a zone's under
+   `FactSubject::ZONE`, and so on.
+3. Tag the service by hand with `FactProviderInterface::TAG` (`uhifadhi.facts`).
+4. Read the figures back through `Uhifadhi\Contracts\Facts\FactReaderInterface` (the registry's
+   `registry.facts.reader`, aliased from the interface): `latest()` for one, `batch()` for a page's
+   figures in one read. Print the time beside a figure with `shell_as_of()`.
+5. After the deploy that brings the provider, fill the past once:
+   `php bin/console uhifadhi:facts:rebuild --module=<slug> --from=<first month>`.
+
+```php
+// src/Facts/SightingFactProvider.php
+final readonly class SightingFactProvider implements FactProviderInterface
+{
+    public function __construct(private SightingRepository $sightings) {}
+
+    public function moduleSlug(): string
+    {
+        return 'sightings';
+    }
+
+    public function figures(): array
+    {
+        return [
+            new FigureDefinition('sightings.logged', FactSubject::ZONE, additive: true),
+            new FigureDefinition('sightings.species', FactSubject::ZONE, additive: false),
+        ];
+    }
+
+    public function compute(FactRequest $request): iterable
+    {
+        // ONE QUERY FOR THE PERIOD, grouped by zone — never a query per zone.
+        foreach ($this->sightings->figuresByZone($request->period->from, $request->period->until) as $zone => $row) {
+            if (!$request->covers($zone)) {
+                continue;
+            }
+            if ($request->asks('sightings.logged')) {
+                yield new FactValue(FactSubject::ZONE, $zone, 'sightings.logged', (float) $row['logged']);
+            }
+            if ($request->asks('sightings.species')) {
+                yield new FactValue(FactSubject::ZONE, $zone, 'sightings.species', (float) $row['species']);
+            }
+        }
+    }
+}
+```
+
+```php
+// config/services.php
+$services->set('sightings.facts', SightingFactProvider::class)
+    ->args([service(SightingRepository::class)])
+    ->tag(FactProviderInterface::TAG);
+```
+
+```twig
+{# templates/zone/_figures.html.twig #}
+{% set logged = facts[zone.uuid]['sightings.logged'] ?? null %}
+<b class="mono">{{ logged ? logged.value|number_format : '—' }}</b> {{ shell_as_of(logged) }}
+```
+
+**What the core does with it.** You write nothing to the ledger and you schedule nothing:
+
+| Who | Asks for | When |
+|---|---|---|
+| the schedule | the month, quarter and year open now, for every provider | hourly 06:00–20:00 and at 02:00, installation time (`registry.facts.schedule`) |
+| the schedule's closing pass | a period that has just ended, once more, so its evening is in its final figure | the first run after it ends |
+| `uhifadhi:facts:rebuild` | every month of `--from`…`--until`, and the quarters and years they touch | when an operator runs it |
+
+A closed period is never recomputed by the schedule: records are edited and people move, and a
+figure recomputed in November is not what August was. After a rule your figures depend on changes —
+a zone redrawn, a buffer width changed — the operator runs the rebuild for the months it should apply
+to. Each figure is filed with `INSERT … ON CONFLICT DO UPDATE`, so every run is idempotent.
+
+`compute()` runs in the worker, not in a request: it may take minutes. It should still read the
+period asked and nothing wider.
+
+**Moving a department figure onto the ledger.** A department plate reads the ledger first: where the
+worker has filed `<module>.<key>` for the department in the month the page is about, that value (and
+its time, `DepartmentKpi::$asOf`) replaces your live answer, and the month before's fact becomes the
+comparison. Where nothing is filed, your `kpisFor()` answer stands. So the move is one figure at a
+time: declare it through your fact provider, run the rebuild, and then stop computing it in
+`kpisFor()` — answer it with `value: null` and the ledger fills it. The performance history reads
+the ledger the same way for the open period it never writes.
+
+**Work you queue.** A message whose handler grows with the data — a backfill, a thumbnail, an
+outbound call — implements `Uhifadhi\Contracts\Queue\AsyncMessageInterface`. The installation routes
+that one interface to its `async` transport, so your message needs no routing line of its own:
+
+> "route all messages that extend this example base class or interface"
+> — https://symfony.com/doc/current/messenger.html#routing-messages-to-a-transport
+
+Tag its handler by hand with `messenger.message_handler` and `handles`.
+
 ---
 
 ## 8. The module frame: tabs and the configure page

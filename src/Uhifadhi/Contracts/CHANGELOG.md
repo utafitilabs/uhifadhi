@@ -8,6 +8,20 @@
 
 Not released yet.
 
+ * `Facts\FactProviderInterface` (tag `uhifadhi.facts`) — a module declares the
+   figures it computes over growing sets (`FigureDefinition`: key, subject
+   kind, additive) and computes them for one period (`FactRequest` in,
+   `FactValue`s out); the core's schedule and `uhifadhi:facts:rebuild` call it
+   and file the answers. `Facts\FactReaderInterface` reads them back — one
+   figure (`latest()`) or a page's (`batch()`) — as `Fact`s carrying the
+   value and the instant it is true as of. `FactPeriod` mints the period keys
+   (`2026-09`, `2026-Q3`, `2026`) the ledger and the performance history share;
+   `FactSubject` names the subject kinds the core's pages read
+ * `Queue\AsyncMessageInterface` — the marker an installation routes to its
+   `async` transport; a message that implements it is handled by the worker
+ * `Kpi\DepartmentKpi::$asOf` — when a figure read from the facts ledger is
+   true as of; null for a figure computed live, the default
+
  * `People\PeopleFacetProviderInterface` — one dropdown a module puts on the
    People register, tagged `uhifadhi.people_facets`. Its `PeopleFacet` carries
    the query key, the menu's word and option runs (`PeopleFacetGroup`) whose

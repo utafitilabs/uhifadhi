@@ -12,6 +12,12 @@ Not released yet.
    180 ms on the settle's curve, the moved row lifted (`.reorder-stepping`, `.reorder-passing`);
    where motion is refused they swap in place.
 
+ * `shell_as_of(fact)` prints when a figure read from the facts ledger is true
+   as of — "as of 13:00" as the shell's `<time data-localtime-format="clock">`,
+   with its day (`stamp`) once it is a day old — "not computed yet" for no
+   figure, and nothing for a closed period's final figure. Requires
+   `symfony/clock`
+
  * ONE CONTROL MOVES A ROW WITHIN AN ORDERED LIST: the `reorder` Stimulus controller
    (`uhifadhi--shell-bundle--reorder`, eager). A pointer drag on the grip — mouse, pen or
    touch — lifts the row on the `--lift` shadow and opens a dashed slot of its height where it

@@ -23,6 +23,9 @@ announces itself to a host as a module — the catalogue metadata and the route 
 accounts, and `Entity\AreaInterface` is how they point at an area without depending on whoever owns
 areas. The `Devkit\` interfaces are how a module contributes dev-only demo content and maintenance
 commands that a `require-dev` collector materialises in a dev install and never in production.
+The `Facts\` interfaces are how a module files a figure over a growing set on the core's facts
+ledger — computed by the worker on a schedule, read by a page as a stored number with its time —
+and `Queue\AsyncMessageInterface` is the one marker an installation routes to its queue.
 
 MIT — public on purpose, and deliberately a different licence from the rest of the core: an
 interface anybody may implement should cost nobody anything, while the runtime that implements
@@ -75,6 +78,12 @@ private ?UserInterface $recordedBy = null;
 
 TeamBundle prepends the `resolve_target_entities` line that points it at a real class, so an
 installation writes no doctrine configuration of its own.
+
+A figure that reads every record of a period — coverage this month, metres this quarter — is never
+computed by a page. Implement `Facts\FactProviderInterface`, tag it `uhifadhi.facts`, and read the
+figure back through `Facts\FactReaderInterface`; the core's schedule computes the open periods and
+`uhifadhi:facts:rebuild` the closed ones. The recipe is
+[Facts a module computes on a schedule](docs/module-development.md#facts-a-module-computes-on-a-schedule).
 
 ## Development
 

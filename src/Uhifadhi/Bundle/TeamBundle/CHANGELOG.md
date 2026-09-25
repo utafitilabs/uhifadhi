@@ -8,6 +8,17 @@
 
 Not released yet.
 
+ * A DEPARTMENT FIGURE THE WORKER FILED ON THE FACTS LEDGER IS READ FROM THERE:
+   for the month a page is about, `<module>.<key>` under the department
+   replaces the module's live answer (value, `asOf`, and the month before's
+   fact as the comparison); without one the live answer stands.
+   `PerformanceHistory` reads the ledger the same way for a period nobody
+   wrote down, and mints its period keys through `FactPeriod`
+ * INSTALLING A MODULE QUEUES ITS HISTORY BACKFILL: the listener dispatches
+   `BackfillModuleHistory` (the core's queue marker) and
+   `BackfillModuleHistoryHandler` asks the module about the six closed
+   months in the worker. Requires `symfony/messenger`
+
  * THE RANKS LADDER MOVES BY THE SHELL'S REORDER CONTROL: every row of Team › Configure ›
    Ranks carries up and down carets beside its grip (the first row's up and the last row's down
    disabled), a drag shows a dashed slot where the row will land, and a polite live line

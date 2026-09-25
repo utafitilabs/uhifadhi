@@ -18,16 +18,27 @@ not ship for migrations.
 registry:
     default_category: operations   # where an unplaced module is filed
     dev_tools: false               # dev-only tooling; enable via when@dev / when@test
+    facts:
+        schedule: ['0 6-20 * * *', '0 2 * * *']   # when the open periods are recomputed
+        timezone: ~                # the zone those hours are in; ~ is PHP's default
 ```
 
-Both keys have defaults; the tree is closed, so an unknown key fails loudly
+`facts.schedule` is a list of cron expressions, at least one; each becomes a
+`scheduler.task` on the `default` schedule — the tag `#[AsCronTask]` writes —
+so it joins the installation's own `default` schedule where there is one
+(<https://symfony.com/doc/current/scheduler.html>). The default is every hour of
+the working day and once at night: nobody watches a coverage figure tick, and
+"as of 13:00" is as true as a reader needs. `facts.timezone` names the zone the
+hours are in; left out, they are PHP's default zone, the installation's.
+
+Every key has a default; the tree is closed, so an unknown key fails loudly
 rather than being ignored. There is deliberately **no key listing modules** —
 installing a module is the declaration, and a second place to enable one is
 a second place for the two to disagree.
 
 ## An area is required, and a bundle answers it
 
-The registry owns two tables and the per-area one has a `NOT NULL` foreign key to an
+The registry owns three tables and the per-area one has a `NOT NULL` foreign key to an
 area, so until `AreaInterface` resolves to a class there is no schema to create —
 every tool that walks the association stops:
 

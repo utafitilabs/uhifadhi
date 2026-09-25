@@ -1,5 +1,84 @@
 # UPGRADE FROM 0.x to 1.0
 
+## Figures over growing sets are facts the worker computes
+
+**What changed** (ruled 2026-09-25). A request never computes over a set that grows with time or
+headcount. A figure like "how much of each zone this month's patrols covered" is computed by the
+queue worker on a schedule, filed on the core's **facts ledger** (`figure_fact`, the registry's),
+and read by the page as a stored number with the time it is true as of. When the worker lags, the
+page shows the last figure and its time; it never computes and it never fails.
+
+| What | Now |
+| --- | --- |
+| new requirements of `uhifadhi/uhifadhi` | `symfony/messenger`, `symfony/scheduler`, `symfony/clock`, `dragonmantank/cron-expression` |
+| new table | `figure_fact`, shipped by the registry's `Version20260925180000` |
+| the queue marker | `Uhifadhi\Contracts\Queue\AsyncMessageInterface` — every core and module message that must run in the worker implements it |
+| the schedule | a task on the `default` schedule: hourly 06:00–20:00 and at 02:00, installation time (`registry.facts.schedule`, `registry.facts.timezone`) |
+| the operator's command | `uhifadhi:facts:rebuild [--module=] [--subject=] [--from=] [--until=]` |
+| installing a module | queues its six-month history backfill (`BackfillModuleHistory`) instead of computing it in the click |
+| a new Twig function | `shell_as_of(fact)` — "as of 13:00" beside a stored figure |
+
+**What an installation does.**
+
+1. **Route the marker to the queue.** In `config/packages/messenger.yaml`, one line under
+   `routing` — Messenger routes by interface:
+
+   ```yaml
+   # config/packages/messenger.yaml (your application)
+   framework:
+       messenger:
+           failure_transport: failed
+           transports:
+               async:
+                   dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                   options: { queue_name: async }
+               failed:
+                   dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                   options: { queue_name: failed }
+           routing:
+               'Uhifadhi\Contracts\Queue\AsyncMessageInterface': async
+   ```
+
+   ("route all messages that extend this example base class or interface" —
+   <https://symfony.com/doc/current/messenger.html#routing-messages-to-a-transport>). Without the
+   line every such message is handled in the request that sent it: correct, and slow — the install
+   click waits for the backfill again.
+
+2. **Run the worker.** One process consumes the queue and the schedule:
+
+   ```console
+   $ php bin/console messenger:consume async scheduler_default --time-limit=3600 --memory-limit=256M
+   ```
+
+   The core's task joins the installation's own `default` schedule when it has one, and creates it
+   when it has not. `php bin/console debug:scheduler` lists it.
+
+3. **Migrate, then fill the ledger once** — after `doctrine:migrations:migrate`, for the months
+   the pages should have figures for:
+
+   ```console
+   $ php bin/console uhifadhi:facts:rebuild --from=2026-01
+   ```
+
+   Run it again after a rule the figures depend on changes (a zone redrawn, a width changed), for
+   the months it should apply to. It is idempotent. The schedule never recomputes a closed period.
+
+4. **Optionally, set the cadence** in `config/packages/registry.yaml`:
+
+   ```yaml
+   registry:
+       facts:
+           schedule: ['0 6-20 * * *', '0 2 * * *']
+           timezone: Etc/GMT-3
+   ```
+
+**What a module does.** Nothing, until it moves a figure: the transition is one figure at a time.
+The contracts' docs/module-development.md, "Facts a module computes on a schedule", has the
+recipe — implement `FactProviderInterface`, tag it `uhifadhi.facts`, read through
+`FactReaderInterface`. A department KPI filed under the department as `<module>.<key>` is read
+from the ledger by the performance pages without a change on the page; where nothing is filed, the
+module's live `kpisFor()` answer stands.
+
 ## A watch's facts are on its check-in row, and a presence read costs the rows
 
 **What changed.** A ping writes its ranger's own row. `duty_checkin` gains the
@@ -21,8 +100,8 @@ altered or dropped; it runs inside the usual `doctrine:migrations:migrate`.
 **The command.** `area:presence:rebuild [--area=<uuid>] [--from=YYYY-MM-DD]
 [--until=YYYY-MM-DD]` recomputes the facts from the kept pings, idempotently.
 Run it after moving a station's point or replacing an area's zones; a changed
-ring or ping interval needs nothing. The core's console surface is now four
-commands.
+ring or ping interval needs nothing. The core's console surface is five
+commands with `uhifadhi:facts:rebuild`.
 
 **The query-count guarantee** (`AreaBundle` `PresenceQueryCountTest`, counted
 on the DBAL debug middleware):

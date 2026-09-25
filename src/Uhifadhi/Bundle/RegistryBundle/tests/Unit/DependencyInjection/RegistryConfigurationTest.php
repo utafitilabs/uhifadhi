@@ -93,9 +93,9 @@ final class RegistryConfigurationTest extends TestCase
 
     public function testAnInstallationMaySetItsOwnCadence(): void
     {
-        $config = $this->process(['facts' => ['schedule' => ['*/30 * * * *'], 'timezone' => 'Africa/Dar_es_Salaam']]);
+        $config = $this->process(['facts' => ['schedule' => ['*/30 * * * *'], 'timezone' => 'Etc/GMT-3']]);
 
-        self::assertSame(['schedule' => ['*/30 * * * *'], 'timezone' => 'Africa/Dar_es_Salaam'], $config['facts']);
+        self::assertSame(['schedule' => ['*/30 * * * *'], 'timezone' => 'Etc/GMT-3'], $config['facts']);
     }
 
     /** No cadence at all would leave the ledger to go stale in silence. */

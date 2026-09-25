@@ -2,8 +2,9 @@
 
 The **registry**: the runtime every uhifadhi module registers with. It carries
 the module catalogue, the per-area record of what is switched on, the
-permissions modules declare, and the automatic sync that keeps the catalogue in
-step with what is installed. It renders nothing.
+permissions modules declare, the automatic sync that keeps the catalogue in
+step with what is installed, and the facts ledger the worker files figures
+over growing sets on. It renders nothing.
 
 One of the bundles of the uhifadhi core, `uhifadhi/uhifadhi`. It can be
 installed on its own as `uhifadhi/registry-bundle`.
@@ -13,6 +14,7 @@ installed on its own as `uhifadhi/registry-bundle`.
 - [What it is](#what-it-is)
 - [Installation](#installation)
 - [Parking a module closes its routes](#parking-a-module-closes-its-routes)
+- [The facts ledger](#the-facts-ledger)
 - [Configuration](#configuration)
 - [Learn more](#learn-more)
 - [License](#license)
@@ -62,8 +64,8 @@ bin/console registry:sync
 bin/console cache:warmup
 ```
 
-Two tables, `module` and `area_module`, and the registry ships the version that
-creates them — `migrations/`, namespace
+Three tables, `module`, `area_module` and `figure_fact`, and the registry ships
+the versions that create them — `migrations/`, namespace
 `Uhifadhi\Bundle\RegistryBundle\Migrations`, registered from the bundle's own
 `prependExtension()`, so an installation configures nothing.
 `doctrine:migrations:diff` stays what an installation runs for the entities IT
@@ -106,6 +108,33 @@ final class YourModuleController { /* every route below is yours */ }
 module. See [docs/guarantees.md](docs/guarantees.md) for the recognition rules,
 the cost, and what the gate deliberately does not do.
 
+## The facts ledger
+
+**A request never computes over a set that grows with time or headcount.** A
+figure like "coverage of each zone this month" is computed by the queue worker
+on a schedule, filed in `figure_fact` — one row per subject, figure and period,
+replaced by the next run (`INSERT … ON CONFLICT DO UPDATE`) — and read by the
+page as a number with the time it is true as of. When the worker lags, the page
+shows the last figure and its time; it never computes and it never fails.
+
+- **Modules compute, the registry files.** A module tags a
+  `Uhifadhi\Contracts\Facts\FactProviderInterface` with `uhifadhi.facts`; a
+  page reads through `FactReaderInterface` (`registry.facts.reader`). A quarter
+  or year of an additive figure is the sum of its month rows, at most twelve.
+- **The schedule.** A task on the `default` schedule, hourly 06:00–20:00 and
+  at 02:00 in the installation's zone, queues `RecomputeOpenFacts`; the worker
+  recomputes the month, quarter and year open now, and once more a period
+  that has just ended. A closed period is otherwise never recomputed.
+- **The operator.** `bin/console uhifadhi:facts:rebuild [--module=] [--subject=]
+  [--from=2026-01] [--until=2026-09]`, after the deploy that brings a module's
+  facts and after a rule they depend on changes. Idempotent.
+- **The worker.** `bin/console messenger:consume async scheduler_default`; the
+  installation routes `Uhifadhi\Contracts\Queue\AsyncMessageInterface` to
+  `async`. See the core's UPGRADE-1.0.md.
+
+The recipe for a module is in the contracts' module guide, "Facts a module
+computes on a schedule".
+
 ## Configuration
 
 ```yaml
@@ -113,9 +142,12 @@ the cost, and what the gate deliberately does not do.
 registry:
     default_category: operations   # where an unplaced module is filed
     dev_tools: false               # dev-only tooling; enable via when@dev / when@test
+    facts:
+        schedule: ['0 6-20 * * *', '0 2 * * *']   # when the open periods are recomputed
+        timezone: ~                # the zone those hours are in; ~ is PHP's default
 ```
 
-Both keys have defaults and the tree is closed. There is deliberately no key
+Every key has a default and the tree is closed. There is deliberately no key
 listing modules — see [docs/configuration.md](docs/configuration.md).
 
 ## Learn more

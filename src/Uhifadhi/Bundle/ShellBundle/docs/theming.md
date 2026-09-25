@@ -398,6 +398,30 @@ Three things a caller must hold to.
   the 18th. The frame skips any value with no time part in it, whatever shape the
   element asks for.
 
+### A stored figure says how old it is
+
+A figure read from the facts ledger was computed by the worker, not for the request that shows it,
+and when the worker lags the page shows the last one it filed rather than computing its own. The
+page says when, beside the figure, with `shell_as_of()`:
+
+```twig
+<b class="mono">{{ coverage.value|number_format(0) }}%</b> {{ shell_as_of(coverage) }}
+```
+
+It takes a `Uhifadhi\Contracts\Facts\Fact` (or a bare instant, or null) and renders
+`@Shell/_as_of.html.twig`, which is this section's idiom and nothing else:
+
+| The figure | Renders |
+|---|---|
+| computed within the last day | `as of <time datetime="…" data-localtime-format="clock">13:00</time>` |
+| older than that | `as of <time … data-localtime-format="stamp">23 sep · 20:00</time>` — a bare clock would read as today's |
+| final: its period closed and it was computed after | nothing — it is the period's figure |
+| null: nobody has computed it yet | `not computed yet`, and the page prints no number |
+
+The fragment is `.muted` text and defines no class of its own. It belongs to the shell rather than
+the atlas because it is a caption on any figure on any page and it prints an instant, which only the
+shell does.
+
 ### The conformance test
 
 Nothing about this fails loudly. A date printed server-side renders a 200 with a

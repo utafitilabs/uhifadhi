@@ -231,7 +231,9 @@ final class RankServiceTest extends IntegrationTestCase
         self::assertInstanceOf(Rank::class, $moved);
         self::assertSame('Civil', $moved->getScale()->getName());
         self::assertSame(2, $moved->getSeniority(), 'it lands at the junior end of the target');
-        self::assertSame([], array_map(static fn (Rank $r): string => $r->getShortCode(), $this->repository()->findActiveByScale($this->em->find(RankScale::class, $uniformed->getId()))));
+        $from = $this->em->getRepository(RankScale::class)->findOneBy(['name' => 'Uniformed']);
+        self::assertInstanceOf(RankScale::class, $from);
+        self::assertSame([], $this->repository()->findActiveByScale($from), 'nothing live is left where it was');
         self::assertCount(1, $this->em->getRepository(RankHolding::class)->findBy(['rank' => $moved]), 'the holder comes along');
     }
 

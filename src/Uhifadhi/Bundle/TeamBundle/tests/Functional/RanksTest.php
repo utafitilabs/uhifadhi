@@ -320,7 +320,6 @@ final class RanksTest extends WebTestCaseWithSchema
         self::assertResponseStatusCodeSame(403);
     }
 
-    /** @return list<Rank> */
     public function testWithSeveralScalesEveryRowCarriesAMoveArrowThatMovesTheRank(): void
     {
         $this->administrator();
@@ -425,6 +424,7 @@ final class RanksTest extends WebTestCaseWithSchema
         self::assertSame('RR', $this->client->request('GET', '/team/configure/ranks')->filter('.rkl-row input.fld.code')->last()->attr('value'), 'a new rank joins at the junior end');
     }
 
+    /** @return list<Rank> */
     private function ladder(): array
     {
         $scale = $this->ranks()->defaultScale();

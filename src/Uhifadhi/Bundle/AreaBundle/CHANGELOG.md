@@ -8,6 +8,26 @@
 
 Not released yet.
 
+ * A PING WRITES ITS RANGER'S OWN ROW: `duty_checkin` carries the watch's facts — `ping_count`,
+   `first_ping_at`, `last_ping_at`, the newest fix (`last_fix`, `last_fix_at`,
+   `last_fix_accuracy_m`, `last_fix_battery_pct`), `last_fix_m` to the watch's post, `closest_m`
+   (the nearest any fix came to it), `last_fix_zone_id` and `nearest_station_id` — folded in by
+   `Service\PresenceFactsService` in the same transaction as the pings, the claim or the
+   correction that moved them (`Service\CheckInService`). Migration `Version20260925200000` adds
+   them, backfills them from the stored pings and adds the partial index `idx_duty_checkin_open`
+   on open watches
+ * JUDGEMENTS STAY ON READ, FROM THE ROWS: `PresenceService::dayIn()`, `dayFor()`, `liveIn()` and
+   `forScope()` judge verified, unverified and on-watch from the row facts against the ring and
+   the ping interval as they stand; each reads a fixed number of statements whatever the
+   headcount and the pings (`PresenceQueryCountTest`). `dayFor()` reads the one person's rows.
+   `PersonPositionRepository::latestFor()`, `nearestTo()`, `metresBetween()` and `tallyFor()` are
+   gone: nothing reads the pings to draw a page
+ * THE FRAME A PING PUBLISHES READS ONE ROW: `PresencePublisher` takes
+   `Service\PersonLivePositionsInterface` (implemented by `PresenceService::liveOf()`) and builds
+   the person's mark from their own open watches
+ * `area:presence:rebuild [--area=] [--from=] [--until=]` recomputes the row facts from the kept
+   pings, idempotently — the one command this bundle ships
+
  * AN AREA'S RUNNING MODULES MOVE BY THE SHELL'S REORDER CONTROL: on Configure › Modules the
    grip is a button with its label, up and down carets sit beside it (the first running row's up
    and the last one's down disabled), a drag shows a dashed slot where the row will land, and a

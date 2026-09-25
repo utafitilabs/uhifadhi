@@ -1,5 +1,60 @@
 # UPGRADE FROM 0.x to 1.0
 
+## A watch's facts are on its check-in row, and a presence read costs the rows
+
+**What changed.** A ping writes its ranger's own row. `duty_checkin` gains the
+facts of its watch — `ping_count`, `first_ping_at`, `last_ping_at`, the newest
+fix (`last_fix`, `last_fix_at`, `last_fix_accuracy_m`, `last_fix_battery_pct`),
+`last_fix_m` (metres to the watch's post), `closest_m` (the nearest any fix came
+to it), `last_fix_zone_id` and `nearest_station_id` — written by
+`Service\PresenceFactsService` in the same transaction as the pings, the claim or
+the correction that moved them. Verified, unverified and on-watch are judged
+when a page reads, from those facts and the ring and ping interval as they
+stand then: a widened ring re-judges every recorded day, as before.
+
+**The migration** (`AreaBundle\Migrations\Version20260925200000`) adds the
+columns, backfills them from the pings already stored — the same statement the
+command below runs — and adds the partial index `idx_duty_checkin_open ON
+duty_checkin (area_id, occurred_at) WHERE (ended_at IS NULL)`. Nothing is
+altered or dropped; it runs inside the usual `doctrine:migrations:migrate`.
+
+**The command.** `area:presence:rebuild [--area=<uuid>] [--from=YYYY-MM-DD]
+[--until=YYYY-MM-DD]` recomputes the facts from the kept pings, idempotently.
+Run it after moving a station's point or replacing an area's zones; a changed
+ring or ping interval needs nothing. The core's console surface is now four
+commands.
+
+**The query-count guarantee** (`AreaBundle` `PresenceQueryCountTest`, counted
+on the DBAL debug middleware):
+
+| Read | Before, 3 / 12 / 30 people on watch | Now, any headcount |
+|---|---|---|
+| `liveIn()` one area (also the frame before this release) | 17 / 62 / 152 | 3 |
+| the frame a ping publishes (`liveOf()`) | 17 / 62 / 152 | 3 |
+| `dayIn()` one area's day | 8 / 26 / 62 | 3 |
+| `dayFor()` one person's day | 8 / 26 / 62 | 3 |
+| People register Status facet, one area | 10 / 28 / 64 | 5 |
+| a batch of one ping, store + fold + frame | 17 / 53 / 125 | 8 |
+
+Before, every read ran about five statements per open watch and read every
+ping of it; now each reads the rows once. The one question still asked per open
+watch is the roster's (`WatchProviderInterface::watchesFor()`), whether the
+rostered end has passed — an installation with the roster module adds it.
+
+**What to change.**
+
+- **An installation**: migrate. Nothing else; the backfill fills the rows.
+- **Code that constructs `CheckInService` or `PresencePublisher` by hand**
+  (tests do): `CheckInService` takes `PresenceFactsService` before the
+  publisher; `PresencePublisher` takes `Service\PersonLivePositionsInterface`
+  (`PresenceService` implements it) in place of `LivePositionsInterface`.
+- **A fixture that writes `CheckIn` or `PersonPosition` rows straight through
+  the entity manager** folds them in: `PresenceFactsService::recordPings()`,
+  `recordClaimFix()`, `remeasure()` — or runs the command once.
+- `PersonPositionRepository::latestFor()`, `nearestTo()`, `metresBetween()`
+  and `tallyFor()` are removed: nothing reads the pings to draw a page.
+- The contracts (`Contracts\Area\*`) are unchanged.
+
 ## Rows move by the shell's reorder control
 
 **What changed** (ruled 2026-09-25). One Stimulus controller moves a row within an ordered

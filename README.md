@@ -93,10 +93,10 @@ passphrase is never echoed. [`TeamBundle`'s
 README](src/Uhifadhi/Bundle/TeamBundle/README.md#then-the-first-administrator)
 documents the scripted and piped forms.
 
-**The core's console surface is three commands**, each something a production
+**The core's console surface is four commands**, each something a production
 installation must run without development packages: `registry:sync`,
-`team:user:create` and `team:performance:snapshot`. Devkit, a development-only
-package, owns every other command the platform has.
+`team:user:create`, `team:performance:snapshot` and `area:presence:rebuild`.
+Devkit, a development-only package, owns every other command the platform has.
 
 ### The order versions run in
 

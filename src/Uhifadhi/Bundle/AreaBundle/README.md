@@ -18,6 +18,7 @@ installed on its own as `uhifadhi/area-bundle`.
 - [What a module contributes to an area](#what-a-module-contributes-to-an-area)
 - [What a field client caches](#what-a-field-client-caches)
 - [Where everybody is, live](#where-everybody-is-live)
+  - [Facts on the row, judgements on read](#facts-on-the-row-judgements-on-read)
 - [The screens](#the-screens)
 - [Where you are, and what is in the sidebar](#where-you-are-and-what-is-in-the-sidebar)
 - [An area is not a module of itself](#an-area-is-not-a-module-of-itself)
@@ -367,7 +368,8 @@ the subscriber cookie for it receives a frame.
 
 **The publisher.** After every write `Service\CheckInService` stores — a claim, a
 check-out or correction, a batch of pings — `PresencePublisher::publish()` puts
-ONE private `Update` on the area's topic. Its data is the person's mark exactly
+ONE private `Update` on the area's topic, built from that one person's row
+(`Service\PersonLivePositionsInterface::liveOf()`), never from the area's. Its data is the person's mark exactly
 as `AtlasBundle\Model\LiveMarks::frame()` draws it at page load, and nothing more:
 
 ```jsonc
@@ -415,6 +417,53 @@ reaches it), `MERCURE_PUBLIC_URL` (the hub as the browser reaches it) and
 drawn once per page; so is an installation without the bundle.
 
 The hub has to be at the page's own origin, the way every deployment carries it inside the app's server. A hub address on another origin — the Mercure recipe's placeholder, for one — is read as no hub: the page draws as before, sets no cookie and streams nothing.
+
+### Facts on the row, judgements on read
+
+**A ping writes its ranger's own row.** Each check-in (`duty_checkin`, one per
+person per watch) carries what its watch reported, folded in by
+`Service\PresenceFactsService` in the same transaction as the pings or the
+claim that moved it:
+
+| Column | What it holds |
+|---|---|
+| `ping_count`, `first_ping_at`, `last_ping_at` | the pings, counted; the check-in's own position is a fix, not a ping |
+| `last_fix`, `last_fix_at`, `last_fix_accuracy_m`, `last_fix_battery_pct` | the newest fix, the check-in's own position included |
+| `last_fix_m` | metres from the newest fix to the watch's post |
+| `closest_m` | the nearest any fix of the watch came to its post |
+| `last_fix_zone_id` | the zone the newest fix falls in, asked the way a station's zone is |
+| `nearest_station_id` | the working post nearest the newest fix: one `<->` nearest-neighbour lookup on the stations' point index |
+
+A fold reads the batch and the row, never the pings before them, so a ping costs
+the same at 18:00 as at 07:00. A batch drained late counts, but never moves the
+newest fix backwards. A correction that names another post re-measures its one
+watch from that watch's pings.
+
+**Judgements are made when a page reads.** Verified or unverified and why, late,
+silent, still on watch: `Service\PresenceService` judges them from the row's facts
+against the ring and the ping interval as they stand at that moment. Widen a
+post's ring and every day already recorded reads again against the new one;
+nothing stored says otherwise. The watch still closes itself on read, at its
+rostered end.
+
+**A read costs the rows.** The day board, the live plate, the organization's
+map, the People register's Status dropdown and one person's day each read a
+fixed number of statements — the day's or the open check-in rows, bounded by
+the headcount — however many pings a watch sent. The open watches have their
+own partial index, `idx_duty_checkin_open` (`WHERE ended_at IS NULL`). The one
+question asked per open watch is the roster's: whether its rostered end has
+passed.
+
+**The pings are kept, and the facts can be recomputed from them:**
+
+```bash
+php bin/console area:presence:rebuild
+php bin/console area:presence:rebuild --area=<uuid> --from=2026-09-01 --until=2026-09-30
+```
+
+Run it after a station's point is moved or an area's zones are replaced — the
+distances and the zone are measured against both. It is idempotent. A changed
+ring or ping interval needs no run.
 
 ## The screens
 

@@ -88,6 +88,13 @@ final readonly class TeamSettingsService
     }
 
     /** The one row, made the first time anything is written to it. */
+    /** Whether the organization uses ranks — one switch for the whole organization. */
+    public function setUsesRanks(bool $usesRanks): void
+    {
+        $this->row()->setUsesRanks($usesRanks);
+        $this->entityManager->flush();
+    }
+
     private function row(): TeamSettings
     {
         $row = $this->settings->findOne();

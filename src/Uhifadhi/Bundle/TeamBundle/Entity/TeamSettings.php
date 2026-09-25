@@ -68,6 +68,14 @@ class TeamSettings
     #[ORM\Column]
     private bool $emptyStationAllowed = true;
 
+    /**
+     * THIS ORGANIZATION USES RANKS — on by default, set once for the whole
+     * organization and never per area or department. Off hides the Rank
+     * column, the Rank filter, the rank on a person and the Ranks page.
+     */
+    #[ORM\Column(options: ['default' => true])]
+    private bool $usesRanks = true;
+
     public function getId(): int
     {
         return $this->id;
@@ -158,6 +166,18 @@ class TeamSettings
     }
 
     /** When a link sent at $since stops opening. */
+    public function usesRanks(): bool
+    {
+        return $this->usesRanks;
+    }
+
+    public function setUsesRanks(bool $usesRanks): static
+    {
+        $this->usesRanks = $usesRanks;
+
+        return $this;
+    }
+
     public function invitationExpiry(\DateTimeImmutable $since): \DateTimeImmutable
     {
         return $since->add($this->invitationValidUnit->interval($this->invitationValidAmount));

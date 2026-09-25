@@ -65,6 +65,9 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\InstallationPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\RankHoldingRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\RankRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\RankScaleRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\TeamSettingsRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\ActiveUserChecker;
@@ -91,6 +94,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy;
 use Uhifadhi\Bundle\TeamBundle\Service\PostingBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\PostingDoorService;
+use Uhifadhi\Bundle\TeamBundle\Service\RankService;
 use Uhifadhi\Bundle\TeamBundle\Service\RolesBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
@@ -290,6 +294,33 @@ return static function (ContainerConfigurator $container): void {
     $services->set(TeamSettingsRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
+
+    $services->set(RankScaleRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    $services->set(RankRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    $services->set(RankHoldingRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    /*
+     * THE ORGANIZATION'S RANKS — the scales, the ranks on each, and the rank
+     * each person holds. Read by the Ranks register, the People register and
+     * the person's record; written by Team configure › Ranks and the person's
+     * configure page.
+     */
+    $services->set('team.ranks', RankService::class)
+        ->args([
+            service(RankScaleRepository::class),
+            service(RankRepository::class),
+            service(RankHoldingRepository::class),
+            service('doctrine.orm.entity_manager'),
+        ]);
+    $services->alias(RankService::class, 'team.ranks');
 
     /*
      * THE RULES THE WHOLE TEAM IS RUN UNDER — one row, read by the screens

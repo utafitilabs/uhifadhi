@@ -109,6 +109,19 @@ final class TeamSettingsServiceTest extends IntegrationTestCase
         return $this->service(TeamSettingsService::class);
     }
 
+    /** The organization uses ranks until somebody says it does not. */
+    public function testTheOrganizationUsesRanksByDefaultAndTheSwitchIsStored(): void
+    {
+        self::assertTrue($this->settings()->current()->usesRanks());
+
+        $this->settings()->setUsesRanks(false);
+
+        $row = $this->stored()->find(TeamSettings::ONE);
+        self::assertInstanceOf(TeamSettings::class, $row);
+        self::assertFalse($row->usesRanks());
+        self::assertSame(7, $row->getInvitationValidAmount(), 'the other rules are untouched');
+    }
+
     private function stored(): TeamSettingsRepository
     {
         $this->em->clear();

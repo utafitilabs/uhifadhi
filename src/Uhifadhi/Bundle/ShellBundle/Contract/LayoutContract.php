@@ -273,7 +273,8 @@ final class LayoutContract
      * entry is not a thing a module can write.
      *
      * Note what is NOT on the list, and why: `.pgbody`, `.pghead`, `.crumb`,
-     * `.atabs`, `.side`, `.topbar` and the rest of the furniture. The shell
+     * `.atabs`, `.side`, `.topbar`, the phone drawer's `.side-open`,
+     * `.side-close` and `.side-scrim`, and the rest of the furniture. The shell
      * writes those itself, from its own templates; a module that typed one
      * would be drawing the frame instead of filling it.
      *

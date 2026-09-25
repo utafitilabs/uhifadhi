@@ -9,6 +9,7 @@ the browser tab draws.
 - [The box model](#the-box-model)
 - [The theme](#the-theme)
 - [The furniture moves](#the-furniture-moves)
+- [The frame on a phone](#the-frame-on-a-phone)
 - [A time reads in the reader's zone](#a-time-reads-in-the-readers-zone)
 - [The tab icon](#the-tab-icon)
 
@@ -130,7 +131,9 @@ an application.
 | Control | Controller | What it does |
 |---|---|---|
 | the top bar's sun | `theme` | writes the choice; the head's pre-paint script still applies it |
-| the sidebar's chevrons | `sidebar` | collapses to the icon rail, and remembers |
+| the sidebar's chevrons | `sidebar` | collapses to the icon rail, and remembers — desktop widths only |
+| the top bar's menu mark | `sidebar` | opens the sidebar as a drawer below 900px; never remembered |
+| the drawer's close mark, its scrim, Escape | `sidebar` | close the drawer and hand focus back to the menu mark |
 | a tree caret | `sidebar-tree` | folds one branch; never navigates, never persisted |
 | a destructive submit | `confirm-modal` | asks the question, then submits the form it interrupted |
 
@@ -152,8 +155,45 @@ Three consequences worth naming:
 **What is remembered is applied before the first paint.** The theme already was;
 the sidebar's width now is too, through a `shell-rail` class the head's inline
 script puts on `<html>` and the stylesheet draws the rail from — otherwise a
-remembered rail arrives when the controller connects and a 236px sidebar visibly
+remembered rail arrives when the controller connects and a 264px sidebar visibly
 jumps to 66px on every load.
+
+## The frame on a phone
+
+**Below 900px the sidebar is a drawer.** It is off the screen on every load; the
+menu mark at the top bar's left brings it in from the left over a scrim, with
+the full tree — never the rail — scrolling inside it and the brand and a close
+mark at its head. The sidebar's collapse button is not drawn at that width,
+because a drawer has no rail to collapse to; above it the rail is untouched and
+still remembered. Every rule that draws the rail sits in a
+`(min-width: 901px)` query in `public/shell.css`, so a remembered rail never
+reaches the drawer.
+
+| State | Width | Drawn by | Remembered |
+|---|---|---|---|
+| full sidebar or rail | above 900px | `.side`, `.side.rail` / `html.shell-rail` | the rail, in `shell-sidebar` |
+| drawer closed / open | 900px and below | `.side`, `.shell.drawer-open`, `.side-scrim` | never — derived per tap |
+
+The drawer closes on the scrim, the close mark, Escape, and a followed link.
+While it is out it is a modal dialog in the sense of the
+[WAI-ARIA dialog pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/):
+the aside takes `role="dialog"` and `aria-modal="true"` for as long as it is
+open and gives them back after, the menu mark's `aria-expanded` follows it,
+focus moves to the close mark on open and back to the menu mark on close, and
+the main column is `inert` behind it. `prefers-reduced-motion` drops the slide
+and the fade, not the drawer.
+
+Its motion is the incidents slide-over's, the one drawer the designs already
+had: the `--scrim` token with a 2px blur fading in over `.28s ease`, the panel
+sliding over `.3s cubic-bezier(.32, .72, 0, 1)`, an `--c-ln2` edge, the
+`--p1` → `--p2` ground and the `--lift` shadow.
+
+The furniture is the frame's and not vocabulary: `.side-open` (the menu mark),
+`.side-close` and `.side-scrim` are written by `shell.html.twig` on every page
+and a module writes none of them. The `sidebar` controller sits on `.shell` so
+that one controller reaches the top bar, the aside and the scrim; the aside,
+the menu mark, the close mark and `main` are its targets, and a host that
+replaces `shell_sidebar` or `shell_main` loses only the targets it dropped.
 
 ## One question before something is destroyed
 

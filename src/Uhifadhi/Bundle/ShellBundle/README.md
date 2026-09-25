@@ -22,7 +22,9 @@ installed on its own as `uhifadhi/shell-bundle`.
 
 - **The frames** — the document, the shell (sidebar + top bar) and the page
   frame (breadcrumbs, page head, actions, tabs, flashes, body). Three rungs of
-  one ladder; a page steps onto whichever it needs.
+  one ladder; a page steps onto whichever it needs. Below 900px the sidebar is
+  a drawer the top bar's menu mark opens
+  ([the frame on a phone](docs/theming.md#the-frame-on-a-phone)).
 - **The contracts** — how a nav row and an area's tab strip get their content
   from outside, without the shell knowing what an area or a module is.
 - **The theme** — one token set, two complete palettes, both first-class.

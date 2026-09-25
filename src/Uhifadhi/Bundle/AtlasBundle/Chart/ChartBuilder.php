@@ -39,6 +39,16 @@ use Uhifadhi\Contracts\Atlas\PlatePalette;
  * NULLS SURVIVE. Chart.js draws a gap where a point is null, which is
  * the truthful reading of a period nobody reported.
  *
+ * THE TICKS, THE GRID AND THE AXIS LINE ARE THE HOUSE'S, on every chart.
+ * The design's charts write their text in the mono face in `--fog`, their
+ * grid in the fog at 22% and .6 wide, and their axis line in the fog at 55%
+ * and .8 wide (team/overview.html, `.ch text`, `.ch line.grid`,
+ * `.ch line.ax`). They cross as TOKENS — a faded line written as the design
+ * writes it, `color-mix()` over the token — and chart_plate_controller.js
+ * resolves each one where the chart is drawn, at mount and on a theme flip,
+ * exactly as it resolves a series' category. No tooltips: the design draws
+ * none.
+ *
  * @see https://www.chartjs.org/docs/latest/charts/bar.html#horizontal-bar-chart — a ranking is `indexAxis: 'y'`; "any options specified on the x-axis in a bar chart, are applied to the y-axis in a horizontal bar chart"
  * @see https://www.chartjs.org/docs/latest/axes/cartesian/linear.html — `max` and `ticks.stepSize` on the value scale
  * @see https://www.chartjs.org/docs/latest/configuration/legend.html — `plugins.legend.display`
@@ -46,6 +56,14 @@ use Uhifadhi\Contracts\Atlas\PlatePalette;
  * @see https://www.chartjs.org/docs/latest/configuration/layout.html — `layout.padding`, "The padding to add inside the chart"
  * @see https://www.chartjs.org/docs/latest/charts/bar.html#dataset-properties — `minBarLength`, "Set this to ensure that bars have a minimum length in pixels"; `maxBarThickness`, "Set this to ensure that bars are not sized thicker than this"
  * @see chart.js 4.5.1 dist/chart.js, BarController::_calculateBarValuePixels — a bar shorter than `minBarLength` becomes that length; one whose value is the base moves half of it and is clamped inside the scale, so a nought's stub stands on the axis
+ * @see https://www.chartjs.org/docs/latest/axes/styling.html#tick-configuration — `ticks.color`, "Color of ticks"; `ticks.font`; `ticks.padding`, "Sets the offset of the tick labels from the axis"
+ * @see https://www.chartjs.org/docs/latest/axes/styling.html#grid-line-configuration — `grid.color`, `grid.lineWidth`, `grid.drawTicks`, "If true, draw lines beside the ticks in the axis area beside the chart"
+ * @see https://www.chartjs.org/docs/latest/axes/styling.html#border-configuration — "options for the border that run perpendicular to the axis": `display`, `color`, `width`
+ * @see https://www.chartjs.org/docs/latest/migration/v4-migration.html — "`scales[id].grid.drawBorder` has been renamed to `scales[id].border.display`"
+ * @see https://www.chartjs.org/docs/latest/general/fonts.html — the font object's `family` and `size`
+ * @see https://www.chartjs.org/docs/latest/configuration/tooltip.html — `options.plugins.tooltip.enabled`, "Are on-canvas tooltips enabled?"
+ * @see https://www.chartjs.org/docs/latest/charts/bar.html#borderradius — "applied to all corners of the rectangle … except corners touching the borderSkipped"
+ * @see chart.js 4.5.1 dist/chart.js, applyScaleDefaults() — the `scale` defaults the options above override: `grid.drawTicks`, `border.display`, `ticks.padding: 3`; Scale::drawBorder() draws `border` whatever `grid.display` says, so the index axis keeps its line with no grid
  */
 final readonly class ChartBuilder
 {
@@ -79,6 +97,28 @@ final readonly class ChartBuilder
 
     /** The house accent, resolved by the plate like any category token. */
     private const string ACCENT = 'var(--acc)';
+
+    /**
+     * THE TICK FACE: the mono token at the size the design's chart text is
+     * rendered at — 7.5 in a 640-wide viewBox drawn in the 574px card, 6.7px.
+     * A canvas does not scale its text with its width the way an SVG does, so
+     * the rendered size is the one carried over.
+     */
+    private const string TICK_FAMILY = 'var(--font-mono)';
+    private const float TICK_SIZE = 6.7;
+    private const string TICK_INK = 'var(--fog)';
+
+    /** The gap between a tick and the axis, in pixels: the design's five. */
+    private const int TICK_GAP = 5;
+
+    /** The grid and the axis line, as the design writes them. */
+    private const string GRID_INK = 'color-mix(in srgb, var(--fog) 22%, transparent)';
+    private const float GRID_WIDTH = 0.6;
+    private const string AXIS_INK = 'color-mix(in srgb, var(--fog) 55%, transparent)';
+    private const float AXIS_WIDTH = 0.8;
+
+    /** A nought's stub is rounded at one pixel whatever the bars are — the design's `rx="1"`. */
+    private const float HAIRLINE_RADIUS = 1.0;
 
     /** THE ROOM A FIGURE NEEDS past the longest bar, in canvas pixels: "128 h" in the mono face at 10px. */
     private const int FIGURE_ROOM_BESIDE = 36;
@@ -169,6 +209,16 @@ final readonly class ChartBuilder
                 // "Set this to ensure that bars are not sized thicker than this."
                 $dataset['maxBarThickness'] = $chart->barWidth;
             }
+            if (null !== $chart->barRadius || ChartNoughts::Hairline === $chart->noughts) {
+                // ONE RADIUS PER BAR (an indexable option): the chart's own,
+                // and the stub's where the bar is a nought. `borderSkipped:
+                // false` rounds the corners on the axis too, as an SVG `rx` does.
+                $dataset['borderRadius'] = array_map(
+                    static fn (?float $point): float => ChartNoughts::Hairline === $chart->noughts && 0.0 === $point ? self::HAIRLINE_RADIUS : $chart->barRadius ?? 0.0,
+                    $series->points,
+                );
+                $dataset['borderSkipped'] = false;
+            }
         }
 
         return $dataset;
@@ -189,12 +239,23 @@ final readonly class ChartBuilder
          * the one thing a ranking changes: `indexAxis: 'y'` turns the
          * bars sideways and the value scale becomes `x`.
          */
-        $index = ['grid' => ['display' => false], 'ticks' => ['maxRotation' => 0]];
-        $value = ['beginAtZero' => ChartKind::Diverging !== $chart->kind, 'grid' => ['drawBorder' => false]];
+        $ticks = ['color' => self::TICK_INK, 'font' => ['family' => self::TICK_FAMILY, 'size' => self::TICK_SIZE], 'padding' => self::TICK_GAP];
+        $index = [
+            'grid' => ['display' => false],
+            // THE AXIS LINE IS THE INDEX AXIS'S BORDER, the one line the bars stand on.
+            'border' => ['display' => true, 'color' => self::AXIS_INK, 'width' => self::AXIS_WIDTH],
+            'ticks' => ['maxRotation' => 0] + $ticks,
+        ];
+        $value = [
+            'beginAtZero' => ChartKind::Diverging !== $chart->kind,
+            'grid' => ['color' => self::GRID_INK, 'lineWidth' => self::GRID_WIDTH, 'drawTicks' => false],
+            'border' => ['display' => false],
+            'ticks' => $ticks,
+        ];
 
         if (null !== $chart->axis) {
             $value['max'] = $chart->axis->max;
-            $value['ticks'] = ['stepSize' => $chart->axis->step];
+            $value['ticks']['stepSize'] = $chart->axis->step;
         }
 
         if (ChartKind::Stacked === $chart->kind) {
@@ -212,6 +273,8 @@ final readonly class ChartBuilder
                 'display' => ChartLegend::Canvas === $chart->legend && (\count($chart->series) > 1 || null !== $chart->target),
                 'position' => 'bottom',
             ],
+            // NO TOOLTIPS: the design draws none.
+            'tooltip' => ['enabled' => false],
         ];
 
         $options = [

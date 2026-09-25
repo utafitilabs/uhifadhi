@@ -103,13 +103,13 @@ final class AtlasChartTest extends TestCase
         self::assertArrayNotHasKey('max', self::scale($ranked, 'y'));
     }
 
-    /** An axis nobody stated leaves the scale to the library's own ticks. */
+    /** An axis nobody stated leaves the top and the step of the scale to the library; the ticks keep only their look. */
     public function testAnUnstatedAxisLeavesTheScaleToTheLibrary(): void
     {
         $chart = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['a'], [new ChartSeries('S', [1.0])]));
 
         self::assertArrayNotHasKey('max', self::scale($chart, 'y'));
-        self::assertArrayNotHasKey('ticks', self::scale($chart, 'y'));
+        self::assertArrayNotHasKey('stepSize', self::under(self::scale($chart, 'y'), 'ticks'));
     }
 
     /**
@@ -398,6 +398,99 @@ final class AtlasChartTest extends TestCase
         $built = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['a'], [new ChartSeries('X', [1.0])], barWidth: 40.0));
 
         self::assertSame(40.0, self::dataset($built, 0)['maxBarThickness']);
+    }
+
+    /**
+     * EVERY AXIS WEARS THE HOUSE'S TICKS: the mono face at the size the
+     * design renders its chart text at, in `--fog`, handed over as TOKENS
+     * the plate resolves — so a tick turns over with the theme like a series.
+     *
+     * @see https://www.chartjs.org/docs/latest/axes/styling.html#tick-configuration — `ticks.color`, "Color of ticks"; `ticks.font`
+     * @see https://www.chartjs.org/docs/latest/general/fonts.html — `family`, `size`
+     */
+    public function testEveryAxisWearsTheThemedTicksAsTokens(): void
+    {
+        foreach ([ChartKind::Bar, ChartKind::Ranked, ChartKind::Line] as $kind) {
+            $built = self::builder()->chart(new AtlasChart($kind, ['a'], [new ChartSeries('X', [1.0])]));
+            foreach (['x', 'y'] as $axis) {
+                $ticks = self::under(self::scale($built, $axis), 'ticks');
+                self::assertSame('var(--fog)', $ticks['color'] ?? null, $kind->name.' '.$axis);
+                self::assertSame(['family' => 'var(--font-mono)', 'size' => 6.7], $ticks['font'] ?? null, $kind->name.' '.$axis);
+            }
+        }
+    }
+
+    /**
+     * THE GRID IS THE FOG AT 22% AND .6 WIDE; THE AXIS LINE IS THE FOG AT
+     * 55% AND .8 WIDE, on the index axis only. Written the way the design
+     * writes them, as `color-mix()` over the token, which the plate turns
+     * into the resolved colour at that alpha. Chart.js 4 draws the axis line
+     * as the scale's `border` — `grid.drawBorder` is not an option any more.
+     *
+     * @see https://www.chartjs.org/docs/latest/axes/styling.html#grid-line-configuration — `grid.color`, `grid.lineWidth`, `grid.drawTicks`
+     * @see https://www.chartjs.org/docs/latest/axes/styling.html#border-configuration — "options for the border that run perpendicular to the axis"
+     * @see https://www.chartjs.org/docs/latest/migration/v4-migration.html — "`scales[id].grid.drawBorder` has been renamed to `scales[id].border.display`"
+     */
+    public function testTheGridAndTheAxisLineAreTheFogAtTheirOpacities(): void
+    {
+        $built = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['a'], [new ChartSeries('X', [1.0])]));
+
+        $value = self::scale($built, 'y');
+        self::assertSame(['color' => 'color-mix(in srgb, var(--fog) 22%, transparent)', 'lineWidth' => 0.6, 'drawTicks' => false], self::under($value, 'grid'));
+        self::assertSame(['display' => false], self::under($value, 'border'));
+
+        $index = self::scale($built, 'x');
+        self::assertSame(['display' => false], self::under($index, 'grid'));
+        self::assertSame(['display' => true, 'color' => 'color-mix(in srgb, var(--fog) 55%, transparent)', 'width' => 0.8], self::under($index, 'border'));
+
+        // Sideways, the letters swap and the rule does not.
+        $ranked = self::builder()->chart(new AtlasChart(ChartKind::Ranked, ['a'], [new ChartSeries('X', [1.0])]));
+        self::assertFalse(self::under(self::scale($ranked, 'x'), 'border')['display'] ?? null);
+        self::assertTrue(self::under(self::scale($ranked, 'y'), 'border')['display'] ?? null);
+
+        self::assertStringNotContainsString('drawBorder', (string) json_encode($built->getOptions()));
+    }
+
+    /**
+     * NO TOOLTIPS. The design draws none; a figure that matters is written
+     * on the bar, or read off the axis.
+     *
+     * @see https://www.chartjs.org/docs/latest/configuration/tooltip.html — namespace `options.plugins.tooltip`; `enabled`, "Are on-canvas tooltips enabled?"
+     */
+    public function testTooltipsAreOff(): void
+    {
+        $built = self::builder()->chart(new AtlasChart(ChartKind::Line, ['a'], [new ChartSeries('X', [1.0])]));
+
+        self::assertSame(['enabled' => false], self::under(self::under($built->getOptions(), 'plugins'), 'tooltip'));
+    }
+
+    /**
+     * A BAR'S CORNER RADIUS IS STATED PER CHART — the designs draw 0.8, 1.2,
+     * 1.5, 2.5 and 3 — and rounds all four corners, as an SVG `rx` does; a
+     * nought's stub is rounded at 1 whatever the bars are.
+     *
+     * @see https://www.chartjs.org/docs/latest/charts/bar.html#borderradius — "applied to all corners of the rectangle … except corners touching the borderSkipped"; `borderSkipped: false` skips none
+     * @see https://www.chartjs.org/docs/latest/general/options.html#indexable-options — one value per bar
+     */
+    public function testAStatedRadiusRoundsEveryBarAndANoughtsStubIsRoundedAtOne(): void
+    {
+        $built = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['a', 'b'], [new ChartSeries('X', [3.0, 0.0])], noughts: ChartNoughts::Hairline, barRadius: 1.5));
+
+        self::assertSame([1.5, 1.0], self::dataset($built, 0)['borderRadius']);
+        self::assertFalse(self::dataset($built, 0)['borderSkipped']);
+
+        $plain = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['a'], [new ChartSeries('X', [3.0])], barRadius: 2.5));
+        self::assertSame([2.5], self::dataset($plain, 0)['borderRadius']);
+    }
+
+    /** Unstated, a bar is square and a line is never given a radius. */
+    public function testNoRadiusLeavesBarsSquare(): void
+    {
+        $square = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['a'], [new ChartSeries('X', [3.0])]));
+        self::assertArrayNotHasKey('borderRadius', self::dataset($square, 0));
+
+        $line = self::builder()->chart(new AtlasChart(ChartKind::Line, ['a'], [new ChartSeries('X', [3.0])], barRadius: 2.0));
+        self::assertArrayNotHasKey('borderRadius', self::dataset($line, 0));
     }
 
     /** A chart nobody published a point in is not drawn at all. */

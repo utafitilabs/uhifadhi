@@ -8,6 +8,14 @@
 
 Not released yet.
 
+ * EVERY CHART WEARS THE HOUSE'S TICKS: tick labels in the mono face at 6.7px in `--fog`, the
+   value axis's grid in the fog at 22% and 0.6px, the index axis's line in the fog at 55% and
+   0.8px, and no tooltips — stated by `ChartBuilder` as tokens and resolved by the chart plate
+   at mount and on a theme flip, which now re-reads the tokens from a copy of the stated
+   configuration. `AtlasChart::$barRadius` rounds every bar (`borderRadius`, `borderSkipped:
+   false`), and a nought's stub is rounded at 1. Documented in docs/components.md, "The bar
+   radius" and "Ticks, grid and axis line"
+
  * AN AREA'S FACE IS AN ATLAS COMPONENT: `atlas_thumbnail(Thumbnail)` draws the satellite
    snippet for the boundary's box and the boundary outline over it, filling the caller's
    frame; `Model\Thumbnail` projects the outline and builds the image address, and `.ax-sat`

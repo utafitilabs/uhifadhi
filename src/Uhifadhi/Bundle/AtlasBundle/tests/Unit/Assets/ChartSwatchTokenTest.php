@@ -37,7 +37,7 @@ final class ChartSwatchTokenTest extends TestCase
         $js = self::controllerJs();
 
         self::assertStringContainsString("addEventListener('chartjs:pre-connect'", $js);
-        self::assertStringContainsString('getComputedStyle(this.element).getPropertyValue(token[1])', $js);
+        self::assertStringContainsString('getComputedStyle(this.element).getPropertyValue(name)', $js);
         self::assertStringContainsString('const TOKEN = /^var\\(\\s*(--[a-zA-Z0-9-]+)\\s*\\)$/;', $js);
     }
 

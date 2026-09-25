@@ -61,6 +61,12 @@ final readonly class AtlasChart
         public ChartNoughts $noughts = ChartNoughts::Blank,
         /** The widest a bar may be drawn, in pixels, where the design states one; null leaves it to the library. */
         public ?float $barWidth = null,
+        /**
+         * The corner radius of every bar, in pixels, where the design states
+         * one — the designs draw 0.8, 1.2, 1.5, 2.5 and 3, so it is the
+         * chart's to say; null leaves the bars square.
+         */
+        public ?float $barRadius = null,
     ) {
     }
 

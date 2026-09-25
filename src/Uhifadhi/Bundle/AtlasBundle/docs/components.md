@@ -36,6 +36,8 @@ their API once it settles.
   - [A stated axis](#a-stated-axis)
   - [The chip legend](#the-chip-legend)
   - [The accent, the nought and the column width](#the-accent-the-nought-and-the-column-width)
+  - [The bar radius](#the-bar-radius)
+  - [Ticks, grid and axis line](#ticks-grid-and-axis-line)
   - [How tall a chart is](#how-tall-a-chart-is)
   - [What each statement becomes in Chart.js](#what-each-statement-becomes-in-chartjs)
 - [The sparkline](#the-sparkline)
@@ -733,6 +735,39 @@ new AtlasChart(
 - **`barWidth: 40.0`** — no column is drawn wider than that. Chart.js: `maxBarThickness`, "Set this
   to ensure that bars are not sized thicker than this".
 
+### The bar radius
+
+`barRadius: 1.5` rounds every bar's four corners by that many pixels, as an SVG `rx` does; the
+designs draw 0.8, 1.2, 1.5, 2.5 and 3, so the number is the chart's to state. Unstated, bars are
+square. A nought's hairline stub is rounded at 1 whatever the bars are. Chart.js: `borderRadius`
+per bar (an indexable option) with `borderSkipped: false`, since a numeric radius is "applied to
+all corners of the rectangle … except corners touching the borderSkipped"
+([charts/bar](https://www.chartjs.org/docs/latest/charts/bar.html#borderradius)).
+
+### Ticks, grid and axis line
+
+Every chart wears the same ticks, grid and axis line, and a module states none of them:
+
+| Part | Look | Chart.js option |
+|---|---|---|
+| Tick labels, both axes | the mono face (`--font-mono`) at 6.7px in `--fog`, 5px from the axis | `scales.<axis>.ticks.font`, `.color`, `.padding` |
+| Grid, value axis only | `--fog` at 22%, 0.6px, no tick marks | `scales.<value>.grid.color`, `.lineWidth`, `.drawTicks: false` |
+| Axis line, index axis only | `--fog` at 55%, 0.8px | `scales.<index>.border` (`display`, `color`, `width`) |
+| Tooltips | none | `plugins.tooltip.enabled: false` |
+
+The design's chart text is 7.5 units of a 640-wide viewBox drawn in a 574px card, 6.7px on
+screen; a canvas does not scale text with its width, so the rendered size is the one carried.
+The colours cross as tokens — `var(--fog)`, and a faded line as the design writes it,
+`color-mix(in srgb, var(--fog) 22%, transparent)` — and the plate resolves each against the
+element it is mounted on, at mount and again when the theme flips, exactly as it resolves a
+series' category. A flip starts from a copy of the configuration taken before anything was
+resolved, because Chart.js keeps and mutates the object it was handed.
+
+Styling reference: [axes/styling](https://www.chartjs.org/docs/latest/axes/styling.html);
+`grid.drawBorder` is not a Chart.js 4 option ("`scales[id].grid.drawBorder` has been renamed to
+`scales[id].border.display`",
+[v4 migration](https://www.chartjs.org/docs/latest/migration/v4-migration.html)).
+
 ### How tall a chart is
 
 The box is 196px, the platform's, and a caller changes it only through the same custom-property
@@ -752,6 +787,8 @@ design rules one number for every chart.
 | `ChartSeries(accent: true)` | `backgroundColor`/`borderColor` as `var(--acc)`, resolved by the plate like a category | [ux-chartjs `chartjs:pre-connect`](https://symfony.com/bundles/ux-chartjs/current/index.html) |
 | `ChartNoughts::Hairline` | `datasets[].minBarLength: 2`, `options.plugins.noughts = {opacity: 0.28}`, and the plate's per-bar colors | [charts/bar](https://www.chartjs.org/docs/latest/charts/bar.html#dataset-properties), [general/options](https://www.chartjs.org/docs/latest/general/options.html#indexable-options) |
 | `AtlasChart::$barWidth` | `datasets[].maxBarThickness` | [charts/bar](https://www.chartjs.org/docs/latest/charts/bar.html#dataset-properties) |
+| `AtlasChart::$barRadius` | `datasets[].borderRadius` (one per bar, a nought's stub at 1), `datasets[].borderSkipped: false` | [charts/bar](https://www.chartjs.org/docs/latest/charts/bar.html#borderradius) |
+| (every chart) | `scales.*.ticks.{color, font, padding}`, `scales.<value>.grid`, `scales.*.border`, `plugins.tooltip.enabled: false` | [axes/styling](https://www.chartjs.org/docs/latest/axes/styling.html), [configuration/tooltip](https://www.chartjs.org/docs/latest/configuration/tooltip.html) |
 | `ChartLegend::Chips` / `None` | `options.plugins.legend.display: false`, plus the plate's own `.chart-legend` markup | [configuration/legend](https://www.chartjs.org/docs/latest/configuration/legend.html) |
 | `ChartSeries::$cat` | `backgroundColor`/`borderColor` as `var(--cat-n)`, resolved by the plate at mount and on theme flip | [ux-chartjs `chartjs:pre-connect`](https://symfony.com/bundles/ux-chartjs/current/index.html) |
 

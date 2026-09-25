@@ -34,8 +34,30 @@ import { Controller } from '@hotwired/stimulus';
  * @see https://www.chartjs.org/docs/latest/developers/plugins.html — inline plugins: `new Chart(ctx, { plugins: [{ ... }] })`; "Plugins must define a unique id in order to be configurable"; options under `options.plugins.{plugin-id}`
  * @see https://www.chartjs.org/docs/latest/api/interfaces/Plugin.html — `afterDatasetsDraw(chart, args, options)`
  * @see https://www.chartjs.org/docs/latest/developers/api.html — `getDatasetMeta(index).data`, `isDatasetVisible(index)`
+ *
+ * THE TICKS, THE GRID AND THE AXIS LINE GO THROUGH THE SAME DOOR. The builder
+ * states every scale's tick colour and face, its grid colour and its border
+ * colour as tokens; a faded line is written as the design writes it,
+ * `color-mix(in srgb, var(--fog) 22%, transparent)`, and becomes the resolved
+ * colour at that alpha — the canvas cannot be trusted to parse `color-mix()`,
+ * and Chart.js's own colour helper does not.
+ *
+ * A FLIP RE-READS THE TOKENS, NOT THE COLOURS. Chart.js keeps the very object
+ * the bridge hands it — `initConfig()` mutates it in place and `Config` holds
+ * it as `_config` — so once it has been painted there is no token left in it.
+ * The stated configuration is copied before anything is resolved, and a flip
+ * derives the drawn one from that copy again and hands Chart.js the new
+ * options, which the docs support: "mutating the options property in place or
+ * passing in a new options object are supported".
+ *
+ * @see https://www.chartjs.org/docs/latest/axes/styling.html — `ticks.color`, `ticks.font`, `grid.color`, `border.color`
+ * @see https://www.chartjs.org/docs/latest/developers/updates.html — updating options; `update('none')`
+ * @see chart.js 4.5.1 dist/chart.js, initConfig() and class Config — the config object is kept, not copied; Chart#set options() writes `config.options` and the next update() resolves it
  */
 const TOKEN = /^var\(\s*(--[a-zA-Z0-9-]+)\s*\)$/;
+
+/** A token at an alpha, as the design writes a faded line. */
+const MIX = /^color-mix\(\s*in srgb\s*,\s*var\(\s*(--[a-zA-Z0-9-]+)\s*\)\s+([\d.]+)%\s*,\s*transparent\s*\)$/;
 
 /** The id the builder writes the figures' options under: ChartBuilder::FIGURES_PLUGIN. */
 const FIGURES = 'figures';
@@ -77,6 +99,9 @@ export default class extends Controller {
         this.swatches = new Map();
 
         this.onPreConnect = (event) => {
+            /* The configuration as stated, tokens and all, before any of it
+               is resolved: what a theme flip starts from. */
+            this.stated = structuredClone(event.detail.config);
             this.paint(event.detail.config);
             this.hairline(event.detail.config);
             this.figure(event.detail.config);
@@ -101,7 +126,7 @@ export default class extends Controller {
         this.themeWatch = null;
     }
 
-    /** Every painted property of every dataset, resolved in place. */
+    /** Every painted property of every dataset, and every scale's ink and face, resolved in place. */
     paint(config) {
         for (const dataset of config?.data?.datasets ?? []) {
             for (const property of PAINTED) {
@@ -110,13 +135,16 @@ export default class extends Controller {
                 }
             }
         }
+
+        for (const scale of Object.values(config?.options?.scales ?? {})) {
+            for (const [block, property] of [[scale.ticks, 'color'], [scale.ticks?.font, 'family'], [scale.grid, 'color'], [scale.border, 'color']]) {
+                if (block && property in block) {
+                    block[property] = this.resolve(block[property]);
+                }
+            }
+        }
     }
 
-    /**
-     * THE FIGURES PLUGIN, put on a chart whose options ask for one. Inline,
-     * so it is this chart's and no other's; identified, so its options are
-     * the block the builder wrote under the same id.
-     */
     /*
      * A NOUGHT'S HAIRLINE, FADED. The builder already asked for a two-pixel
      * stub; here, once the series' token is a color, each bar series' fill
@@ -143,6 +171,11 @@ export default class extends Controller {
         }
     }
 
+    /**
+     * THE FIGURES PLUGIN, put on a chart whose options ask for one. Inline,
+     * so it is this chart's and no other's; identified, so its options are
+     * the block the builder wrote under the same id.
+     */
     figure(config) {
         if (!config.options?.plugins?.[FIGURES]) {
             return;
@@ -193,26 +226,36 @@ export default class extends Controller {
 
     /**
      * THE SAME CHART, IN THE PALETTE THAT IS ON NOW. The tokens are gone from
-     * the built configuration by the time this runs — they were resolved at
-     * mount — so the source of truth is the ORIGINAL config Chart.js keeps,
-     * and what is re-read is the token cache, cleared so every value is asked
-     * for again.
+     * the configuration Chart.js holds — they were resolved at mount — so the
+     * drawn one is derived again from the copy taken before that, with the
+     * token cache cleared so every value is asked for again: each dataset's
+     * painted properties are handed over, and the options as a whole.
      */
     repaint() {
-        if (!this.chart) {
+        if (!this.chart || !this.stated) {
             return;
         }
 
         this.swatches.clear();
-        this.paint(this.chart.config._config ?? this.chart.config);
+        const fresh = structuredClone(this.stated);
+        this.paint(fresh);
+        this.hairline(fresh);
+
+        this.chart.data.datasets.forEach((dataset, index) => {
+            const painted = fresh.data?.datasets?.[index] ?? {};
+            for (const property of PAINTED) {
+                if (property in painted) {
+                    dataset[property] = painted[property];
+                }
+            }
+        });
+        this.chart.options = fresh.options;
         this.chart.update('none');
     }
 
     /**
-     * A token's value, or whatever was handed over where it is not one.
-     *
-     * Cached per element: a stacked chart asks for the same six tokens once a
-     * dataset, and `getComputedStyle` is a layout read.
+     * A token's value, a faded token's colour, or whatever was handed over
+     * where it is neither.
      */
     resolve(value) {
         if ('string' !== typeof value) {
@@ -220,14 +263,29 @@ export default class extends Controller {
         }
 
         const token = TOKEN.exec(value);
-        if (!token) {
-            return value;
+        if (token) {
+            return this.token(token[1], value);
         }
 
-        if (!this.swatches.has(token[1])) {
-            this.swatches.set(token[1], getComputedStyle(this.element).getPropertyValue(token[1]).trim() || value);
+        const mix = MIX.exec(value);
+        if (mix) {
+            return fade(this.token(mix[1], value), Number(mix[2]) / 100);
         }
 
-        return this.swatches.get(token[1]);
+        return value;
+    }
+
+    /**
+     * What a custom property means on this element right now.
+     *
+     * Cached per element: a stacked chart asks for the same six tokens once a
+     * dataset, and `getComputedStyle` is a layout read.
+     */
+    token(name, fallback) {
+        if (!this.swatches.has(name)) {
+            this.swatches.set(name, getComputedStyle(this.element).getPropertyValue(name).trim() || fallback);
+        }
+
+        return this.swatches.get(name);
     }
 }

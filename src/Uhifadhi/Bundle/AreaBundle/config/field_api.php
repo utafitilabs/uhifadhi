@@ -187,6 +187,7 @@ return static function (ContainerConfigurator $container): void {
     $services->set('area.duty_roster', DutyRosterService::class)
         ->args([
             service(CheckInStatusService::class),
+            service('area.ping_interval'),
             tagged_iterator(WatchProviderInterface::TAG),
         ]);
     $services->alias(DutyRosterService::class, 'area.duty_roster');

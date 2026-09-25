@@ -46,6 +46,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
 use Uhifadhi\Bundle\AreaBundle\Service\ModuleSettingsDoors;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonDirectoryService;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonFacetService;
+use Uhifadhi\Bundle\AreaBundle\Service\PingInterval;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingBoardService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceService;
@@ -458,6 +459,17 @@ return static function (ContainerConfigurator $container): void {
      * Whoever enforces a permission is who declares it.
      */
     /*
+     * HOW OFTEN AN AREA'S HANDSETS REPORT — the area's number or the default,
+     * read in one place by the handset's roster read, the live reading and any
+     * module that counts from it (the roster's "2 × interval"). Stateless, and
+     * aliased by its class name so a module names it; defined explicitly, as a
+     * reusable bundle's services are:
+     * https://symfony.com/doc/current/bundles/best_practices.html#services
+     */
+    $services->set('area.ping_interval', PingInterval::class);
+    $services->alias(PingInterval::class, 'area.ping_interval');
+
+    /*
      * HOW A DAY READS — the one derivation, published so the roster
      * module, the overview and a department's page cannot each compute
      * "at post, verified" differently.
@@ -472,6 +484,7 @@ return static function (ContainerConfigurator $container): void {
             service(AreaOfInterestRepository::class),
             service(CheckInRepository::class),
             service(PersonPositionRepository::class),
+            service('area.ping_interval'),
             // WHO IS ROSTERED WHEN is the roster's, a module this platform
             // has not written yet; an installation without one answers
             // nothing, and a day with no watch is a rest day.

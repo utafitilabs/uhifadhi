@@ -45,20 +45,14 @@ use Uhifadhi\Contracts\Roster\WatchProviderInterface;
  */
 final readonly class DutyRosterService
 {
-    /**
-     * HALF AN HOUR, UNTIL AN AREA SAYS OTHERWISE.
-     *
-     * Not a number with a reason of its own so much as the one the
-     * design was drawn against: often enough that a watch has a track
-     * rather than two points, rare enough that a day's duty is not what
-     * flattens the phone. An area that works differently changes it
-     * without waiting for a release.
-     */
-    public const int DEFAULT_PING_INTERVAL_MINUTES = 30;
+    /** The product's interval where an area sets none — {@see PingInterval::DEFAULT_MINUTES}. */
+    public const int DEFAULT_PING_INTERVAL_MINUTES = PingInterval::DEFAULT_MINUTES;
 
     /** @param iterable<WatchProviderInterface> $rosters */
     public function __construct(
         private CheckInStatusService $statuses,
+        // THE AREA'S NUMBER, read where the presence derivation reads it.
+        private PingInterval $pingInterval,
         private iterable $rosters = [],
     ) {
     }
@@ -128,12 +122,7 @@ final readonly class DutyRosterService
     /** What this area set, or the product's default where it set nothing. */
     public function pingIntervalFor(AreaOfInterest $area): int
     {
-        $set = $area->getPingIntervalMinutes();
-
-        // ZERO AND BELOW ARE NOT AN INTERVAL. A phone given one would
-        // either never ping or ping continuously, and both are worse than
-        // the default it would otherwise have kept.
-        return null === $set || $set < 1 ? self::DEFAULT_PING_INTERVAL_MINUTES : $set;
+        return $this->pingInterval->for($area);
     }
 
     /**

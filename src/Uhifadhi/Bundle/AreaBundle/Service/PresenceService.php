@@ -81,6 +81,8 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
         private AreaOfInterestRepository $areas,
         private CheckInRepository $checkIns,
         private PersonPositionRepository $positions,
+        // HOW OFTEN THIS AREA'S HANDSETS REPORT — the one reading of it.
+        private PingInterval $pingInterval,
         /** @var iterable<WatchProviderInterface> */
         private iterable $rosters = [],
     ) {
@@ -151,7 +153,7 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
     {
         $area = $this->areas->findOneBy(['uuid' => $areaUuid]);
         if (null === $area) {
-            return new LivePresence([], DutyRosterService::DEFAULT_PING_INTERVAL_MINUTES, $asOf);
+            return new LivePresence([], PingInterval::DEFAULT_MINUTES, $asOf);
         }
 
         return new LivePresence($this->positionsIn($area, $asOf), $this->intervalOf($area), $asOf);
@@ -196,15 +198,13 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
             static fn (LivePosition $a, LivePosition $b): int => $b->recordedAt <=> $a->recordedAt,
         );
 
-        return new LivePresence($positions, DutyRosterService::DEFAULT_PING_INTERVAL_MINUTES, $asOf);
+        return new LivePresence($positions, PingInterval::DEFAULT_MINUTES, $asOf);
     }
 
     /** How often this area tells its handsets to report, defaulted and floored. */
     private function intervalOf(AreaOfInterest $area): int
     {
-        $interval = $area->getPingIntervalMinutes();
-
-        return null === $interval || $interval < 1 ? DutyRosterService::DEFAULT_PING_INTERVAL_MINUTES : $interval;
+        return $this->pingInterval->for($area);
     }
 
     /**

@@ -71,6 +71,16 @@ class Kernel extends BaseKernel
         return $this->checkoutTempDir('application/cache/'.$this->environment);
     }
 
+    /**
+     * Whether this installation configures the recipe's Doctrine transports.
+     * {@see NoQueueKernel} is one that does not — a module's test kernel is
+     * that shape — and the core's tables still have to be the schema's.
+     */
+    protected function configuresTheQueue(): bool
+    {
+        return true;
+    }
+
     public function getLogDir(): string
     {
         return $this->checkoutTempDir('application/log');
@@ -113,25 +123,27 @@ class Kernel extends BaseKernel
             // installation.
             'assets' => [],
             'asset_mapper' => ['paths' => [__DIR__.'/assets' => '']],
-            // THE QUEUE THE CORE'S RECIPE CONFIGURES — the transports in its
-            // `config/packages/registry.yaml`: the Doctrine
-            // transport on the installation's own connection. It is here
-            // because the transport's table is the registry's to create, and
-            // the drift lock can only see that table where a Doctrine transport
-            // adds it to the schema. The recipe's routing line is left out:
-            // the specifications here handle what they send in the request
-            // that sent it.
-            //
-            // @see https://symfony.com/doc/current/messenger.html#doctrine-transport
-            // @see vendor/symfony/doctrine-bridge/SchemaListener/MessengerTransportDoctrineSchemaListener.php
-            'messenger' => [
-                'failure_transport' => 'failed',
-                'transports' => [
-                    'async' => ['dsn' => 'doctrine://default?auto_setup=0', 'options' => ['queue_name' => 'async']],
-                    'failed' => ['dsn' => 'doctrine://default?auto_setup=0', 'options' => ['queue_name' => 'failed']],
-                ],
-            ],
         ]);
+
+        // THE QUEUE THE CORE'S RECIPE CONFIGURES — the transports in its
+        // `config/packages/registry.yaml`: the Doctrine transport on the
+        // installation's own connection. The recipe's routing line is left
+        // out: the specifications here handle what they send in the request
+        // that sent it. The transport's table is the registry's either way —
+        // its migration creates it and its schema listener declares it.
+        //
+        // @see https://symfony.com/doc/current/messenger.html#doctrine-transport
+        if ($this->configuresTheQueue()) {
+            $container->extension('framework', [
+                'messenger' => [
+                    'failure_transport' => 'failed',
+                    'transports' => [
+                        'async' => ['dsn' => 'doctrine://default?auto_setup=0', 'options' => ['queue_name' => 'async']],
+                        'failed' => ['dsn' => 'doctrine://default?auto_setup=0', 'options' => ['queue_name' => 'failed']],
+                    ],
+                ],
+            ]);
+        }
 
         // WHAT A DEPLOYMENT SETS, AND WHY IT IS HERE. With on-demand fetching
         // on, a name no file answers to is fetched from a remote API and

@@ -20,6 +20,7 @@ use Uhifadhi\Bundle\RegistryBundle\Access\RegistryConcerns;
 use Uhifadhi\Bundle\RegistryBundle\Command\FactsRebuildCommand;
 use Uhifadhi\Bundle\RegistryBundle\Command\RegistrySyncCommand;
 use Uhifadhi\Bundle\RegistryBundle\EventListener\ParkedModuleListener;
+use Uhifadhi\Bundle\RegistryBundle\EventListener\QueueTableSchemaListener;
 use Uhifadhi\Bundle\RegistryBundle\Facts\FactProviders;
 use Uhifadhi\Bundle\RegistryBundle\Facts\FactReader;
 use Uhifadhi\Bundle\RegistryBundle\Message\RecomputeOpenFacts;
@@ -312,4 +313,13 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set('registry.schedule.lock_factory', LockFactory::class)
         ->args([service('registry.schedule.lock_store')]);
+    /*
+     * THE QUEUE'S TABLE, DECLARED TO THE SCHEMA TOOL whether or not the
+     * installation configures a Doctrine transport — the registry's migration
+     * creates it, so the registry says it is there.
+     * @see EventListener/QueueTableSchemaListener.php
+     */
+    $services->set('registry.queue_table_schema_listener', QueueTableSchemaListener::class)
+        ->args([service('doctrine.dbal.default_connection')])
+        ->tag('doctrine.event_listener', ['event' => 'postGenerateSchema']);
 };

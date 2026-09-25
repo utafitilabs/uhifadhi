@@ -32,6 +32,10 @@ Not released yet.
  * `messenger_messages`, the Doctrine transport's table, created by
    `Version20260925210000` (`IF NOT EXISTS`); requires
    `symfony/doctrine-messenger`
+ * `messenger_messages` is in the schema the ORM generates whatever the
+   installation configures: `QueueTableSchemaListener` (`postGenerateSchema`)
+   adds it with the Doctrine transport's own `configureSchema()` where no
+   transport has; requires `symfony/doctrine-bridge`
  * the `default` schedule needs no class of the installation's: the Scheduler
    builds it, and its `scheduler_default` transport, from the core's tasks;
    it runs only the last missed run — a recompute missed while the worker was

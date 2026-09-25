@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Facts;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use Symfony\Component\Scheduler\RecurringMessage;
+use Symfony\Component\Scheduler\ScheduleProviderInterface;
 use Uhifadhi\Bundle\RegistryBundle\Scheduler\RecomputeOpenFactsTask;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures\FactsHostKernel;
 
@@ -47,6 +49,33 @@ final class FactsScheduleTest extends FactsTestCase
         self::assertStringContainsString('0 2 * * *', $output);
         self::assertStringContainsString('Fri, 25 Sep 2026 14:00:00', $output, 'the next working hour');
         self::assertStringContainsString('Sat, 26 Sep 2026 02:00:00', $output, 'the night run');
+    }
+
+    /**
+     * THE CORE ALONE MAKES THE `default` SCHEDULE: one provider, carrying the
+     * facts cadence, and the `scheduler_default` transport the worker's
+     * `messenger:consume async scheduler_default` names — with no schedule
+     * class written by the installation.
+     *
+     *   "The transport name follows the syntax: scheduler_nameofyourschedule"
+     *   — https://symfony.com/doc/current/scheduler.html#consuming-messages
+     */
+    public function testTheCoreAloneMakesTheOneDefaultScheduleAndItsTransport(): void
+    {
+        $container = self::getContainer();
+
+        self::assertTrue($container->has('messenger.transport.scheduler_default'), 'the worker consumes scheduler_default');
+
+        $provider = $container->get('scheduler.provider.default');
+        self::assertInstanceOf(ScheduleProviderInterface::class, $provider);
+
+        $triggers = array_map(
+            static fn (RecurringMessage $message): string => (string) $message->getTrigger(),
+            $provider->getSchedule()->getRecurringMessages(),
+        );
+        sort($triggers);
+
+        self::assertSame(['0 2 * * *', '0 6-20 * * *'], $triggers);
     }
 
     public function testAnInstallationSetsItsOwnCadence(): void

@@ -17,10 +17,11 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Uhifadhi\Contracts\Queue\AsyncMessageInterface;
 
 /**
- * AN INSTALLATION AS THE STARTER MAKES IT: a queue, a failure transport, the
- * core's marker routed to the queue, and a `default` schedule of its own.
+ * AN INSTALLATION AS THE CORE'S RECIPE CONFIGURES IT: a queue, a failure
+ * transport, the core's marker routed to the queue — and a `default` schedule
+ * of its own.
  *
- * THE MESSENGER BLOCK IS THE STARTER'S `config/packages/messenger.yaml`,
+ * THE MESSENGER BLOCK IS THE RECIPE'S `config/packages/uhifadhi_messenger.yaml`,
  * written in PHP, with its `when@test` transports — `in-memory://`, so a
  * specification can see what was queued:
  *
@@ -28,13 +29,12 @@ use Uhifadhi\Contracts\Queue\AsyncMessageInterface;
  *    to transports"
  *   — https://symfony.com/doc/current/messenger.html#in-memory-transport
  *
- * and the routing line the upgrade guide tells an installation to write:
+ * and the recipe's routing line:
  *
  *   'Uhifadhi\Contracts\Queue\AsyncMessageInterface': async
  *
- * THE SCHEDULE is the starter's `App\Schedule` stand-in: an installation's
- * own provider for `default`, which the core's task must join rather than
- * collide with.
+ * THE SCHEDULE is an installation's own provider for `default`, which the
+ * core's task must join rather than collide with.
  */
 final class QueuedHostKernel extends FactsHostKernel
 {

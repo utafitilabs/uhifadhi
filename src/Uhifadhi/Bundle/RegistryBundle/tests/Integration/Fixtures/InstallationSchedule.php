@@ -18,8 +18,9 @@ use Symfony\Component\Scheduler\Schedule;
 use Symfony\Component\Scheduler\ScheduleProviderInterface;
 
 /**
- * THE INSTALLATION'S OWN `default` SCHEDULE, with one task of its own —
- * what the starter's `App\Schedule` becomes once an installation adds to it.
+ * THE INSTALLATION'S OWN `default` SCHEDULE, with one task of its own — an
+ * `#[AsSchedule]` provider an installation may write, which the core's tasks
+ * join rather than collide with.
  */
 final class InstallationSchedule implements ScheduleProviderInterface
 {

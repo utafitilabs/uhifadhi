@@ -23,8 +23,9 @@ use Uhifadhi\Bundle\RegistryBundle\Message\RecomputeOpenFacts;
  * `registry.facts.schedule`. The bundle tags this service `scheduler.task`
  * by hand — the tag `#[AsCronTask]` writes for an autoconfigured service —
  * so the framework adds the task to the installation's own `default`
- * schedule when it has one (the starter's `App\Schedule`), and creates the
- * schedule when it has not:
+ * schedule when it has one (an `#[AsSchedule]` provider of its own), and
+ * otherwise builds the `default` schedule from the core's tasks alone — the one
+ * provider, and the `scheduler_default` transport the worker consumes:
  *
  *   "#[AsCronTask] … schedule: 'default'"
  *   — https://symfony.com/doc/current/scheduler.html#attaching-recurring-messages-to-a-schedule

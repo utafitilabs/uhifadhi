@@ -24,10 +24,10 @@ use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures\QueuedHostKernel;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures\SurveyFactProvider;
 
 /**
- * IN AN INSTALLATION AS THE STARTER MAKES IT — the starter's messenger
- * configuration, the core's marker routed to `async`, and a `default`
- * schedule of the installation's own — the recompute joins that schedule and
- * what it sends is queued.
+ * IN AN INSTALLATION AS THE CORE'S RECIPE CONFIGURES IT — the recipe's
+ * messenger configuration, the core's marker routed to `async` — with a
+ * `default` schedule of the installation's own, the recompute joins that
+ * schedule and what it sends is queued.
  */
 #[CoversClass(RecomputeOpenFactsTask::class)]
 final class QueuedFactsTest extends FactsTestCase

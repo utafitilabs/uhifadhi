@@ -541,6 +541,7 @@ return static function (ContainerConfigurator $container): void {
                 service('area.register'),
                 service(ZoneRepository::class),
                 service('security.authorization_checker'),
+                service('area.ping_interval'),
                 tagged_iterator('uhifadhi.area_sections'),
             ])
             ->tag('uhifadhi.configuration_sections');

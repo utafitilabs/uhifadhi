@@ -867,6 +867,31 @@ its plate (`$map->liveStream($subscription->stream)`) and set
 `PresenceStreamService::forArea()`; the marks then move on its page too.
 
 The hub must sit at the application's own origin. An installation whose `.env` still carries the Mercure recipe's placeholder (`https://example.com/.well-known/mercure`) gets no stream and no cookie, and every page keeps answering; set `MERCURE_URL` and `MERCURE_PUBLIC_URL` to the hub the deployment serves, or to nothing.
+## Ping every is set on the area, and read through `PingInterval`
+
+**What changed.** The area's edit screen (`POST /areas/{uuid}/edit`, the
+settings section's one write) takes `pingEvery` and `pingEveryUnit`
+(`minutes`, `hours` or `days`) and saves them as
+`AreaOfInterest::$pingIntervalMinutes`. Blank is "not set" and reads as 30
+minutes; below one minute is refused with a 422 and the area is unchanged. The
+settings section's record prints it. `AreaIdentity::update()` takes it as a
+sixth, optional argument.
+
+`Uhifadhi\Bundle\AreaBundle\Service\PingInterval` (service
+`area.ping_interval`) answers an area's interval, the default and the floor
+included. `DutyRosterService`, `PresenceService` and
+`AreaConfigurationSections` take it in their constructors, before their tagged
+iterables.
+
+**What to change in a module.** A module that counts from the interval — a
+late threshold of "twice the interval", say — reads it from the area:
+
+```php
+$minutes = $pingInterval->for($area); // Uhifadhi\Bundle\AreaBundle\Service\PingInterval
+```
+
+and keeps no copy of its own. An installation that builds any of those
+services by hand passes `service('area.ping_interval')`.
 
 ## `/favicon.ico` is answered, where the application asks for it
 

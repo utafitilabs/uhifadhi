@@ -400,6 +400,13 @@
 .ed-cardhd svg { width: 15px; height: 15px; flex: none; color: rgb(var(--c-acc)); margin-top: 2px; }
 .ed-cardhd b { color: rgb(var(--c-tx)); }
 
+/* A NUMBER AND ITS UNIT ON ONE LINE, then the fragment that says what it is
+   for — the edit screen's Ping every. Values from designs/…/kilimani/edit.html. */
+.ed-pair { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ed-pair input.fld { width: 6.5em; }
+.ed-pair select.fld { width: auto; }
+.ed-pairnote { font-size: 11.5px; color: rgb(var(--c-dim)); line-height: 1.5; flex: 1; min-width: 180px; }
+
 /* THE BOUNDARY CHOICE — add it now, or add it later. Both options keep the same
    shape whether picked or not; only the accent border and the dot fill change. */
 .bchoice { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }

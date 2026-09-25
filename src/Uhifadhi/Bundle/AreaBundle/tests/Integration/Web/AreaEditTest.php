@@ -212,6 +212,89 @@ final class AreaEditTest extends WebTestCase
         self::assertNull($fresh->getZoneOverlapTolerancePct());
     }
 
+    /**
+     * PING EVERY IS A NUMBER AND A UNIT, stored as minutes, offered back in
+     * the largest unit it is a whole count of, and read on the settings
+     * section's record beside the other settings.
+     */
+    public function testThePingIntervalRoundTripsAsANumberAndAUnit(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea('Northern Reserve');
+
+        $this->browser()->request('POST', $this->editUrl($area), [
+            'name' => 'Northern Reserve',
+            'pingEvery' => '2',
+            'pingEveryUnit' => 'hours',
+            '_token' => $this->tokenOn($this->editUrl($area), 'area_edit'),
+        ]);
+
+        self::assertSame(302, $this->browser()->getResponse()->getStatusCode());
+
+        $this->em->clear();
+        $fresh = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Northern Reserve']);
+        self::assertInstanceOf(AreaOfInterest::class, $fresh);
+        self::assertSame(120, $fresh->getPingIntervalMinutes());
+
+        $form = $this->body($this->editUrl($fresh));
+        self::assertMatchesRegularExpression('/name="pingEvery"\s+value="2"/', $form);
+        self::assertMatchesRegularExpression('/<option value="hours" selected>hours<\/option>/', $form);
+
+        $settings = $this->body('/areas/'.$fresh->getUuidString().'/configure/settings');
+        self::assertMatchesRegularExpression('#<th>Ping every</th>\s*<td class="num">2 hours</td>#', $settings);
+    }
+
+    /** Blank is NOT SET: the record reads the default and says it is the default. */
+    public function testABlankPingIntervalIsNotSetAndReadsAsTheDefault(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea('Northern Reserve');
+        $area->setPingIntervalMinutes(15);
+        $this->em->flush();
+
+        $this->browser()->request('POST', $this->editUrl($area), [
+            'name' => 'Northern Reserve',
+            'pingEvery' => '',
+            'pingEveryUnit' => 'minutes',
+            '_token' => $this->tokenOn($this->editUrl($area), 'area_edit'),
+        ]);
+
+        $this->em->clear();
+        $fresh = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Northern Reserve']);
+        self::assertInstanceOf(AreaOfInterest::class, $fresh);
+        self::assertNull($fresh->getPingIntervalMinutes());
+
+        $settings = $this->body('/areas/'.$fresh->getUuidString().'/configure/settings');
+        self::assertMatchesRegularExpression('#<th>Ping every</th>\s*<td class="num">30 minutes <span class="chip">default</span></td>#', $settings);
+    }
+
+    /** Below one minute is no interval, so the form says so and nothing is saved. */
+    public function testAPingIntervalBelowOneMinuteIsRefusedAndTheAreaIsUnchanged(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea('Northern Reserve');
+        $area->setPingIntervalMinutes(20);
+        $this->em->flush();
+
+        $this->browser()->request('POST', $this->editUrl($area), [
+            'name' => 'Northern Reserve',
+            'pingEvery' => '0',
+            'pingEveryUnit' => 'minutes',
+            '_token' => $this->tokenOn($this->editUrl($area), 'area_edit'),
+        ]);
+
+        self::assertSame(422, $this->browser()->getResponse()->getStatusCode());
+        self::assertStringContainsString('at least one minute', $this->errorOn($this->browser()->getResponse()));
+
+        $this->em->clear();
+        $fresh = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Northern Reserve']);
+        self::assertInstanceOf(AreaOfInterest::class, $fresh);
+        self::assertSame(20, $fresh->getPingIntervalMinutes());
+    }
+
     /** Clearing the gazetted facts is allowed — they are optional and a blank means unrecorded. */
     public function testTheGazettedFactsCanBeClearedBackToUnrecorded(): void
     {

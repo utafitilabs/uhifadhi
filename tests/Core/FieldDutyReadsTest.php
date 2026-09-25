@@ -16,7 +16,11 @@ namespace Uhifadhi\Core\Tests\Core;
 use Symfony\Component\HttpFoundation\Response;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Service\DutyRosterService;
+use Uhifadhi\Bundle\AreaBundle\Service\PresenceService;
+use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
+use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 
 /**
  * THE TWO READS THE DUTY TAB LIVES ON — API-CONTRACT.md §13D and §13E.
@@ -138,6 +142,41 @@ final class FieldDutyReadsTest extends FieldApiTestCase
         $body = $this->get($this->roster($area), $this->tokenFor($this->onDuty()));
 
         self::assertSame(10, self::leaf($body, 'pingIntervalMinutes'));
+    }
+
+    /**
+     * THE AREA SETTINGS' ONE WRITE IS WHAT THE HANDSET READS. Somebody with
+     * `areas.configure` types "2 hours" on Edit area, and the next roster
+     * read tells the phone 120 — and the live reading judges freshness
+     * against the same number.
+     */
+    public function testSavingTheAreaSettingsChangesWhatTheHandsetReads(): void
+    {
+        $area = $this->area('Northern Conservation Reserve');
+        $uuid = (string) $area->getUuidString();
+        $ranger = $this->onDuty();
+        $token = $this->tokenFor($ranger);
+
+        $this->client->loginUser($this->configurer());
+        $this->client->request('GET', '/areas/'.$uuid.'/edit');
+        self::assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
+        $matched = preg_match('#name="_token" value="([^"]+)"[^>]*data-token="area_edit"#', (string) $this->client->getResponse()->getContent(), $m);
+        self::assertSame(1, $matched, 'The edit screen carries its identity token.');
+
+        $this->client->request('POST', '/areas/'.$uuid.'/edit', [
+            'name' => 'Northern Conservation Reserve',
+            'pingEvery' => '2',
+            'pingEveryUnit' => 'hours',
+            '_token' => $m[1],
+        ]);
+        self::assertSame(Response::HTTP_FOUND, $this->client->getResponse()->getStatusCode());
+
+        $body = $this->get($this->roster($area), $token);
+        self::assertSame(120, self::leaf($body, 'pingIntervalMinutes'));
+
+        $presence = static::getContainer()->get('area.presence');
+        self::assertInstanceOf(PresenceService::class, $presence);
+        self::assertSame(120, $presence->liveIn($uuid, new \DateTimeImmutable('2026-09-25 10:30'))->pingIntervalMinutes);
     }
 
     /**
@@ -327,6 +366,32 @@ final class FieldDutyReadsTest extends FieldApiTestCase
     private function onDuty(): User
     {
         return $this->ranger('sl-0142', [...self::READS_THE_PARK, 'duty.record']);
+    }
+
+    /** Somebody who may change how an area runs: the pair the settings' write asks. */
+    private function configurer(): User
+    {
+        $position = new Position()->setName('Area Warden');
+        $pairs = [...self::READS_THE_PARK, 'areas.configure'];
+        $position->setGrantValues($pairs, $pairs);
+        $this->em->persist($position);
+
+        $placement = new Placement()->acrossTheOrganization()->acrossAllDepartments();
+        $this->em->persist($placement);
+
+        $user = new User()
+            ->setEmail('warden@example.test')
+            ->setFirstName('Asha')
+            ->setLastName('Kombo')
+            ->setPassword('x')
+            ->setTeamRole(TeamRoleEnum::Staff)
+            ->setVerified(true);
+        $user->setPosition($position);
+        $user->setPlacement($placement);
+        $this->em->persist($user);
+        $this->em->flush();
+
+        return $user;
     }
 
     private function roster(AreaOfInterest $area): string

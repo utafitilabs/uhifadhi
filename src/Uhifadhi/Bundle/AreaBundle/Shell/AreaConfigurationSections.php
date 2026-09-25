@@ -21,9 +21,11 @@ use Uhifadhi\Bundle\AreaBundle\Controller\AreaModulesController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Enum\IntervalUnit;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
+use Uhifadhi\Bundle\AreaBundle\Service\PingInterval;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
 use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
 use Uhifadhi\Contracts\Shell\ConfigurationSection;
@@ -61,6 +63,8 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
         private AreaRegister $register,
         private ZoneRepository $zones,
         private AuthorizationCheckerInterface $authorization,
+        // THE AREA'S PING INTERVAL, read the way the handset reads it.
+        private PingInterval $pingInterval,
         /**
          * WHAT OTHER BUNDLES CONFIGURE ABOUT AN AREA. Departments are the
          * first: they belong to the team bundle, and an area naming them
@@ -171,6 +175,7 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
                     'area' => $area,
                     'areaKm2' => $this->register->areaKm2($area),
                     'defaultZoneOverlapTolerance' => ZoneOverlapService::DEFAULT_TOLERANCE_PCT,
+                    'pingEvery' => IntervalUnit::say($this->pingInterval->for($area)),
                     'zoneCount' => $this->zones->countFor($area),
                 ],
             );

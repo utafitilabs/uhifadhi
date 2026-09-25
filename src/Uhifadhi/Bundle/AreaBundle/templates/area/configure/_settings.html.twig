@@ -53,6 +53,14 @@
                     <th>Zone overlap tolerance</th>
                     <td class="num">{{ area.zoneOverlapTolerancePct ?? defaultZoneOverlapTolerance }} %{% if area.zoneOverlapTolerancePct is null %} <span class="chip">default</span>{% endif %}</td>
                 </tr>
+                {# HOW OFTEN THIS AREA'S HANDSETS REPORT — the area's fact, the
+                   one number the handset, the live reading and the roster's
+                   thresholds all count from. Edited on the edit screen with
+                   the rest of this record. #}
+                <tr>
+                    <th>Ping every</th>
+                    <td class="num">{{ pingEvery }}{% if area.pingIntervalMinutes is null %} <span class="chip">default</span>{% endif %}</td>
+                </tr>
                 <tr><th>Identifier</th><td class="mono">{{ area.uuidString }}</td></tr>
             </table>
             <div class="use">The registry fields are optional and a dash means UNRECORDED, not zero:

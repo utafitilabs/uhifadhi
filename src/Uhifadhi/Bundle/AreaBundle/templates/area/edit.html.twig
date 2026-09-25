@@ -96,6 +96,28 @@
                         <span class="zfnote">% of the smaller zone &middot; slivers below this are accepted</span>
                     </div>
 
+                    {# PING EVERY — how often this area's handsets report a
+                       position. A number and a unit, the roster rules' own
+                       shape, drawn in this screen's field vocabulary; kept as
+                       whole minutes. Blank is "not set" and runs at the
+                       default the placeholder names; below a minute is refused.
+                       Ported from designs/…/areas/kilimani/edit.html. #}
+                    <div style="margin-top:14px">
+                        <label class="fldlab" for="area-ping">Ping every</label>
+                        <span class="ed-pair">
+                            <input class="fld" id="area-ping" name="pingEvery"
+                                   value="{{ pingEvery.number }}" inputmode="decimal"
+                                   placeholder="{{ defaultPingInterval }}"
+                                   aria-label="Ping every, how much">
+                            <select class="fld" name="pingEveryUnit" aria-label="Ping every, in what">
+                                {% for unit in intervalUnits %}
+                                    <option value="{{ unit.value }}"{{ unit == pingEvery.unit ? ' selected' : '' }}>{{ unit.label }}</option>
+                                {% endfor %}
+                            </select>
+                            <span class="ed-pairnote">per handset &middot; each phone takes it at its next sync</span>
+                        </span>
+                    </div>
+
                     <div class="rln" style="margin-top:16px">
                         <span class="fog">Area (derived from boundary)</span>
                         <span class="mono d">{% if area.hasBoundary %}{{ areaKm2|number_format }} km&sup2; &middot; not editable{% else %}&mdash; &middot; no boundary yet{% endif %}</span>

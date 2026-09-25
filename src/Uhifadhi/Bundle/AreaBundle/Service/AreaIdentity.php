@@ -35,6 +35,11 @@ use Uhifadhi\Bundle\AreaBundle\Exception\AreaIdentityException;
  * whose IUCN category or established year was recorded in error can have it set
  * back to unrecorded — a blank is UNRECORDED, never zero — so both take null and
  * null is written through.
+ *
+ * AND THE AREA'S TWO SETTINGS SAVE WITH IT, because the settings section has
+ * one write: the zone overlap tolerance, and how often the area's handsets
+ * report a position ({@see PingInterval}). A blank is "not set" for both and
+ * reads as the product's default.
  */
 final readonly class AreaIdentity
 {
@@ -46,7 +51,9 @@ final readonly class AreaIdentity
      * Save an area's identity. The name is required and trimmed; the gazetted
      * facts are optional and a null clears them back to unrecorded.
      *
-     * @throws AreaIdentityException when the name is blank
+     * @param int|null $pingIntervalMinutes null is "not set" and reads as {@see PingInterval::DEFAULT_MINUTES}
+     *
+     * @throws AreaIdentityException when the name is blank, the tolerance is out of range, or the interval is under a minute
      */
     public function update(
         AreaOfInterest $area,
@@ -54,6 +61,7 @@ final readonly class AreaIdentity
         ?string $iucnCategory,
         ?int $establishedYear,
         ?float $zoneOverlapTolerancePct = null,
+        ?int $pingIntervalMinutes = null,
     ): AreaOfInterest {
         $name = trim($name);
         if ('' === $name) {
@@ -71,11 +79,21 @@ final readonly class AreaIdentity
             throw new AreaIdentityException(\sprintf('Zone overlap tolerance is a percentage between 0 and %s. Past that, the answer is to fix the scheme rather than to accept the overlap.', (string) ZoneOverlapService::MAX_TOLERANCE_PCT));
         }
 
+        /*
+         * BELOW A MINUTE IS NO INTERVAL, AND IT IS REFUSED RATHER THAN
+         * DEFAULTED. A phone told zero would never ping or never stop; saving
+         * the default instead would leave whoever typed it believing it held.
+         */
+        if (null !== $pingIntervalMinutes && $pingIntervalMinutes < 1) {
+            throw new AreaIdentityException('Ping every is at least one minute. Leave it blank to run at the default of '.PingInterval::DEFAULT_MINUTES.' minutes.');
+        }
+
         $area
             ->setName($name)
             ->setIucnCategory($iucnCategory)
             ->setEstablishedYear($establishedYear)
-            ->setZoneOverlapTolerancePct($zoneOverlapTolerancePct);
+            ->setZoneOverlapTolerancePct($zoneOverlapTolerancePct)
+            ->setPingIntervalMinutes($pingIntervalMinutes);
 
         $this->entityManager->flush();
 

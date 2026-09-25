@@ -123,8 +123,12 @@ class AreaOfInterest implements AreaInterface
      * catchment it is coupled to — how far apart two fixes can be and
      * still mean "at the post" depends on how far apart in time they are.
      *
+     * ONE EDITOR: the area settings' write, the Ping every field on the edit
+     * screen, through {@see \Uhifadhi\Bundle\AreaBundle\Service\AreaIdentity}.
+     * Every reader asks {@see \Uhifadhi\Bundle\AreaBundle\Service\PingInterval}.
+     *
      * NULL IS NOT ZERO, it is "not set", and it reads as the default —
-     * {@see \Uhifadhi\Bundle\AreaBundle\Service\DutyRosterService::DEFAULT_PING_INTERVAL_MINUTES}.
+     * {@see \Uhifadhi\Bundle\AreaBundle\Service\PingInterval::DEFAULT_MINUTES}.
      * Shipping the default as a column value would freeze today's number
      * into every row and make changing it a migration.
      */

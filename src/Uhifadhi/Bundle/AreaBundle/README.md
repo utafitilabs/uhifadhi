@@ -90,6 +90,8 @@ writes.
 | `source` | Where the boundary came from: a register's name, a file's name, `drawn` |
 | `iucnCategory` | IUCN protected-area category (`II`, `VI`, …), optional |
 | `establishedYear` | Year gazetted, optional |
+| `zoneOverlapTolerancePct` | How much two zones may share and still read as a sliver, optional — 1 % where unset |
+| `pingIntervalMinutes` | How often the area's handsets report a position, optional — 30 minutes where unset |
 | `uuid` | The public identifier — every URL names an area by this |
 | `createdAt` / `updatedAt` | Stamped by lifecycle callbacks |
 
@@ -103,6 +105,16 @@ named and gazetted before anybody has its edge, and an installation that drew
 its own boundary on a map has no IUCN category and no gazettement year. A
 consumer asks `hasBoundary()` and treats "unmeasured" as its own answer — never
 as zero.
+
+**The ping interval is the area's.** The check-in, the pings and the presence
+derived from them belong to the area, so the interval is its column and has one
+editor: the **Ping every** field on the edit screen, a number and a unit
+(minutes, hours or days) kept as whole minutes, blank for the default and
+refused below one minute; the settings section shows it on the area's record.
+Everything that counts from it asks `PingInterval::for($area)` (service
+`area.ping_interval`) — the handset's `pingIntervalMinutes`, the live reading's
+staleness, and a module's own thresholds measured in intervals — so a module
+never keeps a copy of its own.
 
 **Addressed by UUID.** The sequential `id` exists so foreign keys are cheap and
 never appears in a URL. The repository extends the PostGIS bundle's spatial

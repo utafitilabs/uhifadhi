@@ -33,6 +33,14 @@ Not released yet.
    option, and "No check-in today" last — read through the one presence
    derivation, so a person's status is their last watch's exactly as the
    day board reads it. Nothing to offer without an area.
+ * PING EVERY IS SET ON THE AREA: the edit screen carries a number and a unit
+   (minutes, hours, days) kept as `AreaOfInterest::$pingIntervalMinutes`,
+   blank for the 30-minute default and refused below one minute, and the
+   settings section's record shows it. The handset's roster read and the live
+   reading answer the saved number. `PingInterval` (service
+   `area.ping_interval`) is the one reading of it, with the default and the
+   floor; `DutyRosterService::DEFAULT_PING_INTERVAL_MINUTES` equals
+   `PingInterval::DEFAULT_MINUTES`
 
  * the overview plate hands the area's boundary and zones to the atlas as a
    `Ground`, so every plate of the area — the overview's and a module's —

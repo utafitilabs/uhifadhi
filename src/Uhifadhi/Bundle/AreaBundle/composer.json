@@ -38,8 +38,6 @@
         "symfony/framework-bundle": "^7.3 || ^8.0",
         "symfony/http-foundation": "^7.3 || ^8.0",
         "symfony/http-kernel": "^7.3 || ^8.0",
-        "symfony/mercure": "^0.8",
-        "symfony/mercure-bundle": "^0.5",
         "symfony/routing": "^7.3 || ^8.0",
         "symfony/security-core": "^7.3 || ^8.0",
         "symfony/security-csrf": "^7.3 || ^8.0",
@@ -54,10 +52,14 @@
         "utafitilabs/postgis-bundle": "^0.1"
     },
     "require-dev": {
+        "symfony/mercure": "^0.8",
+        "symfony/mercure-bundle": "^0.5",
         "symfony/security-bundle": "^7.3 || ^8.0",
         "symfony/twig-bundle": "^7.3 || ^8.0"
     },
     "suggest": {
+        "symfony/mercure": "With symfony/mercure-bundle, the live presence stream: every plate keeps its marks moving over the deployment's own hub instead of being drawn once per page.",
+        "symfony/mercure-bundle": "With symfony/mercure, the live presence stream: the hub the area publishes each handset write to and the subscriber cookie the area pages set.",
         "symfony/security-bundle": "The bundle that reads config/packages/security.yaml. Every screen here is registered only where it is in the kernel, so an installation without it gets the area model and no pages.",
         "symfony/twig-bundle": "The engine these screens render in. Without it the area entity, its repository and the services around it still work; the pages are not registered."
     },

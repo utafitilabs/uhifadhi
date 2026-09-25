@@ -10,7 +10,10 @@
         "inline_service",
         "service_closure",
         "service_locator",
-        "PHPUnit\\Framework\\TestCase"
+        "PHPUnit\\Framework\\TestCase",
+        "Symfony\\Component\\Mercure\\Authorization",
+        "Symfony\\Component\\Mercure\\HubInterface",
+        "Symfony\\Component\\Mercure\\Update"
     ],
     "php-core-extensions": [
         "Core",

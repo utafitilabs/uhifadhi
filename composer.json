@@ -39,8 +39,6 @@
         "symfony/http-foundation": "^7.3 || ^8.0",
         "symfony/http-kernel": "^7.3 || ^8.0",
         "symfony/mailer": "^7.3 || ^8.0",
-        "symfony/mercure": "^0.8",
-        "symfony/mercure-bundle": "^0.5",
         "symfony/mime": "^7.3 || ^8.0",
         "symfony/password-hasher": "^7.3 || ^8.0",
         "symfony/rate-limiter": "^7.3 || ^8.0",
@@ -75,7 +73,9 @@
         "phpunit/phpunit": "^13.2",
         "symfony/browser-kit": "^7.3 || ^8.0",
         "symfony/css-selector": "^7.3 || ^8.0",
-        "symfony/dom-crawler": "^7.3 || ^8.0"
+        "symfony/dom-crawler": "^7.3 || ^8.0",
+        "symfony/mercure": "^0.8",
+        "symfony/mercure-bundle": "^0.5"
     },
     "autoload": {
         "psr-4": {

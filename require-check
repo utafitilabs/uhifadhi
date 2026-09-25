@@ -48,6 +48,15 @@ declare(strict_types=1);
  * in every installation.
  * @see vendor/symfony/framework-bundle/Test/KernelTestCase.php, shipped in src/
  *      the same way, with no phpunit requirement in that package's manifest.
+ *
+ * And a third: an OPTIONAL dependency. The area bundle suggests symfony/mercure
+ * and symfony/mercure-bundle and names three of their symbols — `HubInterface`,
+ * `Update` and `Authorization` — in services that take the hub as a nullable
+ * argument and do nothing without it. The checker's documented answer for a
+ * symbol a package uses without requiring its provider is the `symbol-whitelist`
+ * of its config file, so exactly those three are listed there, and nothing else
+ * from either package may be named from src/.
+ * @see vendor/maglnet/composer-require-checker/README.md — "Configuration"
  */
 
 $root = __DIR__;

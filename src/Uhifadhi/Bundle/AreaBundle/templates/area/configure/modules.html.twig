@@ -15,8 +15,11 @@
    this is and the columns say the rest.
 
    EVERY SWITCH IS A REAL FORM and posts the state it means, so it works with
-   scripting off and a resubmitted form changes nothing. The drag ordering is
-   the one thing that needs JavaScript, and it posts the same route by hand.
+   scripting off and a resubmitted form changes nothing. The order is the one
+   thing that needs JavaScript: the shell's reorder control — a drag on the
+   grip with a dashed slot where the row will land, up and down carets one
+   step each, the arrow keys on the grip — posts every move to the reorder
+   route.
 
    THE FILTERS ARE CLIENT-SIDE, like every other register's: the rows are
    already on the page, and a round trip per keystroke would lose the typed
@@ -46,10 +49,15 @@
 {% block shell_page %}
 {% set toggleTitleOn = 'switch off — parks the module' %}
 {% set toggleTitleOff = 'switch on — runs it here' %}
+{% set reorder = 'uhifadhi--shell-bundle--reorder' %}
+{% set gripActions = 'pointerdown->' ~ reorder ~ '#grab pointermove->' ~ reorder ~ '#move pointerup->' ~ reorder ~ '#drop pointercancel->' ~ reorder ~ '#cancel lostpointercapture->' ~ reorder ~ '#cancel keydown.up->' ~ reorder ~ '#up:prevent keydown.down->' ~ reorder ~ '#down:prevent keydown.esc->' ~ reorder ~ '#cancel' %}
+{# The rows that move: running and not pinned, in the area's order. #}
+{% set movable = rows|filter(r => r.running and not r.pinned)|map(r => r.slug) %}
 <div class="c"
-     data-controller="uhifadhi--area-bundle--module-register uhifadhi--area-bundle--module-order"
-     data-uhifadhi--area-bundle--module-order-url-value="{{ path('area_modules_reorder', {uuid: area.uuidString}) }}"
-     data-uhifadhi--area-bundle--module-order-token-value="{{ token }}">
+     data-controller="uhifadhi--area-bundle--module-register {{ reorder }}"
+     data-{{ reorder }}-url-value="{{ path('area_modules_reorder', {uuid: area.uuidString}) }}"
+     data-{{ reorder }}-token-value="{{ token }}"
+     data-{{ reorder }}-first-value="{{ running - movable|length + 1 }}">
     <span class="tab">Modules<span class="src">&middot; this area&rsquo;s sub-app</span></span>
     <span class="lib">{{ running }} running &middot; {{ parked }} parked</span>
 
@@ -123,17 +131,17 @@
                     <th class="cmact" style="text-align:right">Runs here</th>
                 </tr>
             </thead>
-            <tbody data-uhifadhi--area-bundle--module-register-target="list" data-uhifadhi--area-bundle--module-order-target="list">
+            <tbody data-uhifadhi--area-bundle--module-register-target="list">
                 {% for row in rows %}
-                    {# A ROW IS DRAGGABLE ONLY WHILE IT RUNS AND IS NOT PINNED:
-                       the order is the order of what runs, and a pinned module
-                       holds the front. `data-slug` is what the order controller
-                       arms; a parked row carries none and is never moved. #}
+                    {# A ROW MOVES ONLY WHILE IT RUNS AND IS NOT PINNED: the
+                       order is the order of what runs, and a pinned module
+                       holds the front. Only such a row is a reorder row and
+                       carries a slug; a parked row carries neither. #}
                     <tr data-row data-row-slug="{{ row.slug }}"
                         data-name="{{ (row.name ~ ' ' ~ (row.description ?? ''))|lower }}"
                         data-state="{{ row.running ? 'running' : 'parked' }}"
                         data-settings="{{ row.settings ? 'has' : 'none' }}"
-                        {% if not row.running %}class="cmparked"{% elseif not row.pinned %}data-slug="{{ row.slug }}"{% endif %}>
+                        {% if not row.running %}class="cmparked"{% elseif not row.pinned %}data-slug="{{ row.slug }}" data-{{ reorder }}-target="row" data-reorder-key="{{ row.slug }}" data-reorder-name="{{ row.name }}"{% endif %}>
                         <td>
                             <div class="cmname">
                                 <b>{{ row.name }}</b>
@@ -146,8 +154,14 @@
                         <td>
                             <span class="cmord">
                                 {% if row.running %}
-                                    {% if not row.pinned %}<span class="cmgrip" title="drag to reorder">{{ ux_icon('shell:grip-vertical') }}</span>{% endif %}
-                                    <span class="n" data-position>{{ row.position }}</span>
+                                    {% if not row.pinned %}
+                                        <button type="button" class="cmgrip" aria-label="Move {{ row.name }}" title="Drag, or use the arrow keys" data-{{ reorder }}-target="grip" data-action="{{ gripActions }}">{{ ux_icon('shell:grip-vertical') }}</button>
+                                        <span class="reorder">
+                                            <button type="button" aria-label="Move {{ row.name }} up" data-{{ reorder }}-target="up" data-action="{{ reorder }}#up"{{ row.slug == movable|first ? ' disabled' }}>{{ ux_icon('shell:chevron-up') }}</button>
+                                            <button type="button" aria-label="Move {{ row.name }} down" data-{{ reorder }}-target="down" data-action="{{ reorder }}#down"{{ row.slug == movable|last ? ' disabled' }}>{{ ux_icon('shell:chevron-down') }}</button>
+                                        </span>
+                                    {% endif %}
+                                    <span class="n"{% if not row.pinned %} data-{{ reorder }}-target="number"{% endif %} data-position>{{ row.position }}</span>
                                 {% else %}
                                     <span class="none">&mdash;</span>
                                 {% endif %}
@@ -178,5 +192,6 @@
             </tbody>
         </table>
     </div>
+    <p class="visually-hidden" aria-live="polite" data-{{ reorder }}-target="status"></p>
 </div>
 {% endblock %}

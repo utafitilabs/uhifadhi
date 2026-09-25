@@ -8,6 +8,15 @@
 
 Not released yet.
 
+ * AN AREA'S RUNNING MODULES MOVE BY THE SHELL'S REORDER CONTROL: on Configure › Modules the
+   grip is a button with its label, up and down carets sit beside it (the first running row's up
+   and the last one's down disabled), a drag shows a dashed slot where the row will land, and a
+   polite live line announces each move; every move posts `order[]` to
+   `area_modules_reorder` as before. The `module-order` controller is deprecated as a no-op,
+   kept with its `assets/package.json` entry (now `enabled: false`) for this release and removed
+   in the next; no Area template names it (`ModuleOrderRetiredTest`), and `.tbl tr.dragging`
+   left area.css. Replacement: `uhifadhi--shell-bundle--reorder`
+
  * THE STATIONS SECTION'S PLATE PICKS THROUGH THE ATLAS: `AreaPlateService::picker()` states
    `AtlasMap::pickPoint()` into the add form (`AreaPlateService::ADD_FORM`), and "Pick on the
    map" and "Move on the map" wear `data-atlas-pick`; the plate draws the pin, the caption and

@@ -116,7 +116,7 @@
                 "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/module_order_controller.js",
                 "name": "uhifadhi--area-bundle--module-order",
                 "fetch": "eager",
-                "enabled": true
+                "enabled": false
             },
             "module-register": {
                 "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/module_register_controller.js",

@@ -21,8 +21,9 @@
             },
             "module-order": {
                 "main": "controllers/module_order_controller.js",
+                "name": "uhifadhi--area-bundle--module-order",
                 "fetch": "eager",
-                "enabled": true
+                "enabled": false
             },
             "module-register": {
                 "main": "controllers/module_register_controller.js",

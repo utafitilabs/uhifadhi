@@ -634,9 +634,15 @@
 .cmname b { display: block; font-size: 13px; font-weight: 600; color: rgb(var(--c-tx)); line-height: 1.3; }
 .cmname .cmwhat { display: block; font-size: 11px; color: rgb(var(--c-dim)); line-height: 1.45; margin-top: 2px; }
 
-/* Order: a grip and the position it holds. Parked rows hold none and say so. */
+/* Order: a grip, the shell's caret pair (`.reorder`) and the position it
+   holds. Parked rows hold none and say so. The grip is a button so the
+   keyboard reaches it; it wears nothing a button brings. */
 .cmord { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
-.cmord .cmgrip { color: rgb(var(--c-fog)); cursor: grab; display: inline-flex; flex: none; }
+.cmord .cmgrip {
+    color: rgb(var(--c-fog)); cursor: grab; display: inline-flex; flex: none;
+    border: 0; background: none; padding: 0;
+}
+.cmord .cmgrip:focus-visible { outline: 2px solid rgb(var(--c-acc)); outline-offset: 2px; border-radius: 3px; }
 .cmord .cmgrip svg { width: 11px; height: 15px; display: block; }
 .cmord .n { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: rgb(var(--c-tx)); }
 .cmord .none { font-family: var(--font-mono); font-size: 10px; color: rgb(var(--c-dim)); }
@@ -645,8 +651,7 @@
    hue, no strike-through: the state chip says it and the ink says it. */
 tr.cmparked .cmname b { color: rgb(var(--c-fog)); font-weight: 500; }
 tr.cmparked td { color: rgb(var(--c-dim)); }
-/* A row on its way somewhere else. */
-.tbl tr.dragging td { opacity: .45; }
+
 
 /* The door into a module's own configure pages. Same height as the switch
    beside it (26px), so a row with a door and a row without sit level. */

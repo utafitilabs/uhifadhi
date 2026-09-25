@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -47,6 +48,8 @@ use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 #[CoversClass(AreaNavigation::class)]
 final class AreaModulesTest extends WebTestCase
 {
+    private const string REORDER = 'uhifadhi--shell-bundle--reorder';
+
     /** Everything an ordinary admin holds, plus the module pairs this screen asks for. */
     private const array ALL = [...self::ALL_AREA_PERMISSIONS, 'modules.read', 'modules.configure'];
 
@@ -423,6 +426,84 @@ final class AreaModulesTest extends WebTestCase
         $this->post($area, 'patrols/toggle', ['to' => 'on']);
 
         self::assertSame(['patrols'], $this->activeSlugs($area));
+    }
+
+    /**
+     * THE RUNNING ROWS MOVE BY THE SHELL'S REORDER CONTROL — ruled 2026-09-25.
+     * A row is dragged by its grip, stepped by its carets or by the arrow keys
+     * on the grip, and every move posts the new order to the reorder route.
+     */
+    public function testTheRunningRowsMoveByTheShellsReorderControlWithCaretsAtBothEnds(): void
+    {
+        $this->boot(self::ALL);
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aCatalogue();
+        $this->install($area, 'patrols');
+        $this->install($area, 'incidents');
+        $this->install($area, 'forest-loss');
+
+        $crawler = new Crawler($this->body($this->configurePath($area)), 'http://localhost');
+        $card = $crawler->filter('[data-controller~="'.self::REORDER.'"]');
+        self::assertCount(1, $card);
+        self::assertStringContainsString('uhifadhi--area-bundle--module-register', (string) $card->attr('data-controller'));
+        self::assertSame($this->configurePath($area).'/reorder', $card->attr('data-'.self::REORDER.'-url-value'));
+        self::assertNotSame('', (string) $card->attr('data-'.self::REORDER.'-token-value'));
+        self::assertSame('1', $card->attr('data-'.self::REORDER.'-first-value'), 'no pinned row holds the front here, so the first movable row is number 1');
+
+        $rows = $card->filter('tr[data-'.self::REORDER.'-target="row"]');
+        self::assertSame(['patrols', 'incidents', 'forest-loss'], $rows->each(static fn (Crawler $row): string => (string) $row->attr('data-reorder-key')));
+        $names = ['Patrols', 'Incidents', 'Forest loss'];
+        foreach ($names as $i => $name) {
+            $row = $rows->eq($i);
+            self::assertSame($name, $row->attr('data-reorder-name'));
+
+            $grip = $row->filter('button.cmgrip');
+            self::assertCount(1, $grip, 'the grip is a button, so the keyboard reaches it');
+            self::assertSame('button', $grip->attr('type'));
+            self::assertSame('Move '.$name, $grip->attr('aria-label'));
+            self::assertSame('grip', $grip->attr('data-'.self::REORDER.'-target'));
+            $actions = (string) $grip->attr('data-action');
+            foreach (['pointerdown->'.self::REORDER.'#grab', 'pointermove->'.self::REORDER.'#move', 'pointerup->'.self::REORDER.'#drop', 'pointercancel->'.self::REORDER.'#cancel', 'keydown.up->'.self::REORDER.'#up:prevent', 'keydown.down->'.self::REORDER.'#down:prevent', 'keydown.esc->'.self::REORDER.'#cancel'] as $action) {
+                self::assertStringContainsString($action, $actions);
+            }
+
+            $carets = $row->filter('.cmord .reorder button');
+            self::assertCount(2, $carets);
+            self::assertSame('Move '.$name.' up', $carets->eq(0)->attr('aria-label'));
+            self::assertSame('Move '.$name.' down', $carets->eq(1)->attr('aria-label'));
+            self::assertSame(self::REORDER.'#up', $carets->eq(0)->attr('data-action'));
+            self::assertSame(self::REORDER.'#down', $carets->eq(1)->attr('data-action'));
+            self::assertSame(0 === $i, null !== $carets->eq(0)->attr('disabled'), 'only the first running row\'s up is disabled');
+            self::assertSame(2 === $i, null !== $carets->eq(1)->attr('disabled'), 'only the last running row\'s down is disabled');
+            self::assertCount(2, $carets->filter('svg'), 'lucide chevron-up and chevron-down');
+
+            self::assertSame('number', $row->filter('[data-position]')->attr('data-'.self::REORDER.'-target'));
+        }
+
+        $status = $card->filter('[data-'.self::REORDER.'-target="status"]');
+        self::assertCount(1, $status);
+        self::assertSame('polite', $status->attr('aria-live'));
+        self::assertStringContainsString('visually-hidden', (string) $status->attr('class'));
+
+        self::assertStringNotContainsString('module-order', $crawler->html(), 'the retired controller is named nowhere on the page');
+    }
+
+    /** A parked row has no place in the order, so nothing on it moves. */
+    public function testAParkedRowCarriesNoCaretsAndIsNoRow(): void
+    {
+        $this->boot(self::ALL);
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aCatalogue();
+        $this->install($area, 'patrols');
+
+        $incidents = $this->row($this->body($this->configurePath($area)), 'incidents');
+        self::assertStringNotContainsString('class="reorder"', $incidents);
+        self::assertStringNotContainsString('-target="row"', $incidents);
+
+        $patrols = $this->row($this->body($this->configurePath($area)), 'patrols');
+        self::assertSame(2, substr_count($patrols, ' disabled'), 'the only running row is both ends: up and down both sleep');
     }
 
     /** The order the rows are dragged into is persisted, and the page is redrawn in it. */

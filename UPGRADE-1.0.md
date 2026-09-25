@@ -774,6 +774,57 @@ the property the whole widened-reading rule depends on.
 interface, consumers call `liveIn()` as before, and a per-area reading still
 states its interval once on the set.
 
+## Live positions move over Mercure
+
+**What changed.** The core requires `symfony/mercure` and
+`symfony/mercure-bundle`; the area bundle injects `mercure.hub.default` and
+`Symfony\Component\Mercure\Authorization` straight, so **every kernel that
+registers `AreaBundle` registers `MercureBundle`** and configures one hub named
+`default`. After every handset write, `AreaBundle\Service\PresencePublisher`
+publishes one private update to `area/{areaUuid}/presence`; the area overview
+and the organization dashboard set the `mercureAuthorization` cookie for the
+areas the viewer holds `areas.read` on and hand their plates an
+`AtlasBundle\Model\LiveStream`; the atlas plate holds one credentialed
+`EventSource` open and moves the marks.
+
+**What an installation configures.** The documented minimum, in
+`config/packages/mercure.yaml`:
+
+```yaml
+mercure:
+    hubs:
+        default:
+            url: '%env(MERCURE_URL)%'
+            public_url: '%env(MERCURE_PUBLIC_URL)%'
+            jwt:
+                secret: '%env(MERCURE_JWT_SECRET)%'
+```
+
+and three environment variables: `MERCURE_URL` (the hub's publish endpoint as
+the application reaches it), `MERCURE_PUBLIC_URL` (the hub as the browser
+reaches it, same origin as the pages) and `MERCURE_JWT_SECRET` (the key the
+hub verifies subscriber and publisher tokens with). The area bundle also
+reads the `logger` service; an installation has monolog's.
+
+**A deployment without a hub keeps working.** With `MERCURE_URL` and
+`MERCURE_PUBLIC_URL` empty the publisher publishes nothing, no page sets a
+cookie, no plate opens a stream, and every plate reads as the page drew it.
+The bundle must still be registered and the hub configured, because the
+services are injected without a guard.
+
+**Constructors that changed.** `AreaBundle\Service\CheckInService` takes a
+`PresencePublisher` last; `AreaBundle\Controller\AreaController` and
+`OrgDashboardController` take a `PresenceStreamService` last;
+`AreaMapService::overview()` and `::organization()` take an optional
+`LiveStream` last. A test kernel of a module that boots `AreaBundle` registers
+`MercureBundle`, configures the hub with an empty address, and provides a
+`logger`.
+
+**What a module that draws live marks does.** Pass the same `LiveStream` to
+its plate (`$map->liveStream($subscription->stream)`) and set
+`$subscription->cookie` on its response, both from
+`PresenceStreamService::forArea()`; the marks then move on its page too.
+
 ## `/favicon.ico` is answered, where the application asks for it
 
 **What changed.** The shell ships a fourth route resource, and it serves the

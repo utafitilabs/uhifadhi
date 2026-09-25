@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Performance;
 
+use Uhifadhi\Bundle\AtlasBundle\Model\Sparkline;
 use Uhifadhi\Contracts\Performance\TopicMovement;
 
 /**
@@ -25,7 +26,6 @@ use Uhifadhi\Contracts\Performance\TopicMovement;
  */
 final readonly class TopicCard
 {
-    /** @param list<string> $spark one polyline's points per unbroken run of history */
     public function __construct(
         public string $key,
         public string $title,
@@ -36,9 +36,8 @@ final readonly class TopicCard
         public string $delta = '',
         /** 'good', 'bad', 'flat', or '' where the figure makes no claim. */
         public string $deltaTone = '',
-        public array $spark = [],
-        /** 'up', 'dn' or 'fl' — the line's tone, never a colour. */
-        public string $sparkTone = 'fl',
+        /** The history as the atlas draws it under the figure; null where there is no line to draw. */
+        public ?Sparkline $spark = null,
         /** What a card with no figure says instead of one. */
         public string $word = '',
         public string $caption = '',

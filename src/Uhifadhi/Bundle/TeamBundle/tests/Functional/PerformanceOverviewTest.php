@@ -224,6 +224,28 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
         self::assertNull($line->first()->filter('polyline')->attr('stroke'), 'A line is a class the sheet paints, never a stroke.');
     }
 
+    /**
+     * THE CARD'S LINE IS THE ATLAS'S: a figure with a written history carries
+     * the sparkline `atlas_sparkline()` draws — the card's box, one polyline a
+     * run, the tone a class — on the overview's strip and on the register.
+     */
+    public function testATopicCardsHistoryIsTheAtlasSparklineOnBothPages(): void
+    {
+        $this->seed();
+        $this->history();
+
+        foreach (['/departments/performance' => '.tpk .c.kpi', '/departments/performance/topics' => '.tpcard'] as $url => $card) {
+            $crawler = $this->client->request('GET', $url);
+            $line = $crawler->filter($card.' svg.sk');
+
+            self::assertGreaterThan(0, $line->count(), $url.' draws no sparkline under a figure with a history.');
+            self::assertSame('0 0 100 26', $line->first()->attr('viewBox'));
+            self::assertSame('none', $line->first()->attr('preserveAspectRatio'));
+            self::assertMatchesRegularExpression('/^(up|dn|fl)$/', (string) $line->first()->filter('polyline')->attr('class'));
+            self::assertNull($line->first()->filter('polyline')->attr('stroke'), 'A line is a class the sheet paints, never a stroke.');
+        }
+    }
+
     /** Every card opens its own record, carrying the scope and the period. */
     public function testEveryCardOpensItsOwnRecord(): void
     {

@@ -32,25 +32,12 @@ use Uhifadhi\Contracts\Performance\ColumnPolarity;
  * worse month; a page that painted every rise green would congratulate a
  * department for it.
  *
- * THE SPARKLINE HAS ITS OWN SIZE AT EVERY SURFACE and one rule. A matrix
- * cell's line is 70×18 and a topic card's is 100×26; what is shared is
- * that a period nobody wrote down BREAKS the line rather than dipping
- * it, and that every run is scaled against the whole history so two runs
- * of one series are on one scale.
+ * THE SPARKLINE IS THE ATLAS'S. What is settled here is only the tone a
+ * surface's line reads in, and that a history too short to be a line
+ * draws none; the boxes, the points and the breaks are Sparkline's.
  */
 final readonly class Figures
 {
-    /** The matrix cell's line, as the design draws it. */
-    public const float CELL_WIDTH = 70.0;
-    public const float CELL_HEIGHT = 18.0;
-
-    /** And the topic card's, which is wider and taller for the same history. */
-    public const float CARD_WIDTH = 100.0;
-    public const float CARD_HEIGHT = 26.0;
-
-    /** How far the line stays clear of its box, so a peak is not clipped. */
-    private const float INSET = 3.0;
-
     /** Thousands separated, a fraction kept to one place. */
     public static function figure(float $value): string
     {
@@ -91,13 +78,13 @@ final readonly class Figures
         };
     }
 
-    /** The same reading, in the two letters a line's class is written with. */
-    public static function sparkTone(?float $delta, ColumnPolarity $polarity): string
+    /** The same reading, as the tone the atlas draws a line in. */
+    public static function sparkTone(?float $delta, ColumnPolarity $polarity): SparkTone
     {
         return match (self::tone($delta, $polarity)) {
-            'good' => 'up',
-            'bad' => 'dn',
-            default => 'fl',
+            'good' => SparkTone::Good,
+            'bad' => SparkTone::Bad,
+            default => SparkTone::Flat,
         };
     }
 
@@ -113,54 +100,5 @@ final readonly class Figures
         $line = new Sparkline($history, $tone, $size);
 
         return $line->isEmpty() ? null : $line;
-    }
-
-    /**
-     * THE HISTORY AS A LINE, WITH ITS HOLES LEFT OPEN. A period nobody
-     * wrote down is not a nought on the line: the line stops there and
-     * starts again after it, so the gap is something a reader can see
-     * rather than a dip somebody measured.
-     *
-     * @param list<float|null> $history
-     *
-     * @return list<string> one polyline's points per unbroken run
-     */
-    public static function spark(array $history, float $width, float $height): array
-    {
-        $readings = array_values(array_filter($history, static fn (?float $point): bool => null !== $point));
-        $count = \count($history);
-        if (\count($readings) < 2 || $count < 2) {
-            return [];
-        }
-
-        $low = min($readings);
-        $high = max($readings);
-        $range = $high - $low;
-        $top = self::INSET;
-        $bottom = $height - self::INSET;
-
-        $runs = [];
-        $run = [];
-        foreach ($history as $index => $reading) {
-            if (null === $reading) {
-                if (\count($run) > 1) {
-                    $runs[] = implode(' ', $run);
-                }
-                $run = [];
-
-                continue;
-            }
-
-            $x = $width * $index / ($count - 1);
-            // A flat series sits on the baseline rather than dividing by zero.
-            $y = 0.0 === $range ? $bottom : $bottom - ($reading - $low) / $range * ($bottom - $top);
-            $run[] = \sprintf('%.1f,%.1f', $x, $y);
-        }
-
-        if (\count($run) > 1) {
-            $runs[] = implode(' ', $run);
-        }
-
-        return $runs;
     }
 }

@@ -58,11 +58,7 @@
                             <span>{{ card.movement.sentence }}</span>
                         </span>
                     {% endif %}
-                    {% if card.spark %}
-                        <svg class="sk" width="100" height="26" viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true">
-                            {%- for points in card.spark %}<polyline class="{{ card.sparkTone }}" points="{{ points }}"/>{% endfor -%}
-                        </svg>
-                    {% endif %}
+                    {% if card.spark %}{{ atlas_sparkline(card.spark) }}{% endif %}
                 </span>
                 <span class="ft">
                     <span>{{ card.label }}</span>

@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Performance;
 
 use Uhifadhi\Bundle\AtlasBundle\Model\SparkSize;
-use Uhifadhi\Bundle\AtlasBundle\Model\SparkTone;
 use Uhifadhi\Contracts\Performance\CellMark;
 use Uhifadhi\Contracts\Performance\ColumnPolarity;
 use Uhifadhi\Contracts\Performance\MatrixCell;
@@ -135,7 +134,7 @@ final readonly class MatrixViewBuilder
             unit: $column->unit,
             delta: Figures::delta($cell->delta),
             deltaTone: Figures::tone($cell->delta, $column->polarity),
-            spark: Figures::line($cell->history, SparkTone::from(Figures::sparkTone($cell->delta, $column->polarity)), SparkSize::Cell),
+            spark: Figures::line($cell->history, Figures::sparkTone($cell->delta, $column->polarity), SparkSize::Cell),
             title: $column->caption,
             sort: $cell->value,
         );

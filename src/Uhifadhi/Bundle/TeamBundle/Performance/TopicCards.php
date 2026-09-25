@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Performance;
 
+use Uhifadhi\Bundle\AtlasBundle\Model\SparkSize;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
@@ -116,8 +117,7 @@ final readonly class TopicCards
                 unit: $kpi->unit,
                 delta: Figures::delta($kpi->delta),
                 deltaTone: Figures::tone($kpi->delta, $kpi->polarity),
-                spark: Figures::spark($kpi->history, Figures::CARD_WIDTH, Figures::CARD_HEIGHT),
-                sparkTone: Figures::sparkTone($kpi->delta, $kpi->polarity),
+                spark: Figures::line($kpi->history, Figures::sparkTone($kpi->delta, $kpi->polarity), SparkSize::Card),
                 // A FIGURE NOBODY PUBLISHED SAYS SO IN WORDS. A blank
                 // card reads as a nought, and a nought is a measurement.
                 word: null === $kpi->value ? 'no figure yet' : '',

@@ -211,6 +211,22 @@ against Team's entity would make every module that reports a figure depend on
 Team, and typing it against nothing would hand providers an `object` to guess
 at.
 
+### What the area contributes to the team
+
+The seams run the other way too. Whoever draws a person's page and the People
+register is TeamBundle, and two facts on them are the ground's, so this bundle
+answers two of the `Contracts\People` seams rather than being depended on:
+
+| Class | Tag | What it puts on the team's pages |
+|---|---|---|
+| `People\AreaPersonPostings` | `uhifadhi.person_postings` | where a person stands — the Stationed at card on their record, the Station dropdown on the register |
+| `People\AreaPeopleStatus` | `uhifadhi.people_facets` | the Status dropdown on the register: today's check-in status of everybody, in the areas' own words, with "No check-in today" last |
+
+The status is read through the one presence derivation, so a person's status
+on the register is their last watch's, exactly as the day board colours their
+name. A word two areas share is one option; a word only one area has is offered
+too. Without an area there is no vocabulary, and the dropdown is not drawn.
+
 ## What a field client caches
 
 A handset works for days out of signal, so it fills a cache at sign-in and then

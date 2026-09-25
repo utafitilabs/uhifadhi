@@ -18,6 +18,7 @@ use Uhifadhi\Bundle\AreaBundle\Devkit\AreaContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\StationContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\ZoneContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
+use Uhifadhi\Bundle\AreaBundle\People\AreaPeopleStatus;
 use Uhifadhi\Bundle\AreaBundle\People\AreaStationDirectory;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\CheckInCorrectionRepository;
@@ -76,6 +77,7 @@ use Uhifadhi\Contracts\Area\StationDirectoryInterface;
 use Uhifadhi\Contracts\Area\StationSectionsInterface;
 use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
+use Uhifadhi\Contracts\People\PeopleFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 use Uhifadhi\Contracts\Roster\WatchProviderInterface;
@@ -272,6 +274,22 @@ return static function (ContainerConfigurator $container): void {
     $services->set('area.person_facets', PersonFacetService::class)
         ->args([tagged_iterator(PersonFacetProviderInterface::TAG)]);
     $services->alias(PersonFacetService::class, 'area.person_facets');
+
+    /*
+     * THE AREA'S DROPDOWN ON THE PEOPLE REGISTER — what everybody reported
+     * today, in the areas' own words, read through the one presence
+     * derivation. Tagged by hand for the same reason as the postings above;
+     * the register collects the tag with a tagged iterator, the documented
+     * way (https://symfony.com/doc/current/service_container/tags.html#reference-tagged-services).
+     */
+    $services->set('area.people_status', AreaPeopleStatus::class)
+        ->args([
+            service('clock'),
+            service(AreaOfInterestRepository::class),
+            service(CheckInStatusRepository::class),
+            service('area.presence'),
+        ])
+        ->tag(PeopleFacetProviderInterface::TAG);
 
     /*
      * THE AREA'S POSTS AS ONE FLAT, FILTERED, PAGED LIST — the register the

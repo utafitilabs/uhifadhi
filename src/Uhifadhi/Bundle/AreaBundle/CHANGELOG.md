@@ -26,6 +26,13 @@ Not released yet.
    address publishes nothing, sets no cookie, and draws every plate as
    before. `AreaMapService::overview()` and `::organization()` take an
    optional `LiveStream`. Documented in README, "Where everybody is, live"
+ * THE AREA PUTS A STATUS DROPDOWN ON THE PEOPLE REGISTER (ruled
+   2026-09-25): `People\AreaPeopleStatus`, tagged `uhifadhi.people_facets`,
+   offers today's check-in status of everybody in the areas' own words —
+   each area's active statuses in its order, a word two areas share as one
+   option, and "No check-in today" last — read through the one presence
+   derivation, so a person's status is their last watch's exactly as the
+   day board reads it. Nothing to offer without an area.
 
  * the overview plate hands the area's boundary and zones to the atlas as a
    `Ground`, so every plate of the area — the overview's and a module's —

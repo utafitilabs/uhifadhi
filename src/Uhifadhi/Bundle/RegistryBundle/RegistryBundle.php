@@ -20,6 +20,7 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use Uhifadhi\Bundle\RegistryBundle\DependencyInjection\Compiler\InstallationMigrationsPathFirstPass;
 use Uhifadhi\Bundle\RegistryBundle\DependencyInjection\RegistryConfiguration;
+use Uhifadhi\Bundle\RegistryBundle\Doctrine\StatementTimeoutMiddleware;
 use Uhifadhi\Bundle\RegistryBundle\Scheduler\RecomputeOpenFactsTask;
 use Uhifadhi\Contracts\Facts\FactProviderInterface;
 use Uhifadhi\Contracts\ModuleProviderInterface;
@@ -243,6 +244,24 @@ final class RegistryBundle extends AbstractBundle
                 'timezone' => $timezone,
                 'schedule' => 'default',
             ], static fn (mixed $value): bool => null !== $value));
+        }
+
+        // THE STATEMENT TIMEOUT, only where the installation set one. An
+        // abstract service tagged `doctrine.middleware`, the way DoctrineBundle
+        // registers its own middlewares: its compiler pass makes one child per
+        // connection and hands them to that connection's configuration. No
+        // `connection` attribute, so it wraps every connection the
+        // installation declares.
+        // https://symfony.com/bundles/DoctrineBundle/current/middlewares.html
+        // @see vendor/doctrine/doctrine-bundle/config/middlewares.php — `doctrine.dbal.idle_connection_middleware`, abstract, tagged in DoctrineExtension::registerDbalMiddlewares()
+        // @see vendor/doctrine/doctrine-bundle/src/DependencyInjection/Compiler/MiddlewaresPass.php
+        $statementTimeout = $config['statement_timeout_ms'] ?? null;
+        if (null !== $statementTimeout) {
+            $container->services()
+                ->set('registry.statement_timeout_middleware', StatementTimeoutMiddleware::class)
+                ->abstract()
+                ->args([$statementTimeout])
+                ->tag('doctrine.middleware');
         }
     }
 }

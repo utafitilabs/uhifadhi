@@ -112,4 +112,27 @@ final class RegistryConfigurationTest extends TestCase
 
         $this->process(['facts' => ['schedule' => ['every hour']]]);
     }
+
+    /**
+     * THE STATEMENT TIMEOUT IS OFF UNTIL IT IS SET. The core's recipe sets it
+     * from DATABASE_STATEMENT_TIMEOUT_MS; a kernel without that line has no
+     * limit and no middleware.
+     */
+    public function testTheStatementTimeoutIsUnsetByDefault(): void
+    {
+        self::assertNull($this->process([])['statement_timeout_ms']);
+    }
+
+    public function testAnInstallationSetsTheStatementTimeoutInMilliseconds(): void
+    {
+        self::assertSame(10000, $this->process(['statement_timeout_ms' => 10000])['statement_timeout_ms']);
+        self::assertSame(0, $this->process(['statement_timeout_ms' => 0])['statement_timeout_ms']);
+    }
+
+    public function testANegativeStatementTimeoutIsRefused(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->process(['statement_timeout_ms' => -1]);
+    }
 }

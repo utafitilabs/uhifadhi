@@ -27,6 +27,7 @@ use Symfony\Component\Config\Definition\Builder\NodeDefinition;
  *     facts:
  *       schedule: ['0 6-20 * * *', '0 2 * * *']   # when the open periods are recomputed
  *       timezone: ~                  # the zone those hours are in; ~ is PHP's default
+ *     statement_timeout_ms: ~        # a web request's longest SQL statement; ~ is no limit
  *
  * DELIBERATELY TINY, and it should stay that way. The registry's job is to carry
  * what modules declare; nearly everything a deployment might want to say is
@@ -82,6 +83,20 @@ final class RegistryConfiguration
                             ->defaultNull()
                         ->end()
                     ->end()
+                ->end()
+                /*
+                 * THE LONGEST ONE SQL STATEMENT OF A WEB REQUEST MAY RUN, in
+                 * milliseconds; 0 is no limit, and so is leaving it out, which
+                 * registers no middleware at all. The core's recipe binds it to
+                 * `%env(int:DATABASE_STATEMENT_TIMEOUT_MS)%`, the typed env form
+                 * an integer node takes:
+                 * https://symfony.com/doc/current/configuration/env_var_processors.html
+                 * @see Doctrine/StatementTimeoutMiddleware.php
+                 */
+                ->integerNode('statement_timeout_ms')
+                    ->info('A web request’s longest SQL statement, in milliseconds; 0 or null: no limit. The console never has one.')
+                    ->min(0)
+                    ->defaultNull()
                 ->end()
             ->end()
         ;

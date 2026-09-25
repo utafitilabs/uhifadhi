@@ -29,6 +29,11 @@ use Uhifadhi\Bundle\TeamBundle\Repository\RankScaleRepository;
  * NEVER A DEPARTMENT. A scale is the organization's; nothing here points at a
  * department, and a person's rank is independent of their department and of
  * their position.
+ *
+ * RETIRED, NEVER DELETED, ONCE A RANK ON IT WAS HELD: a scale whose ranks were
+ * all retired is retired with them and read nowhere, so the holdings that
+ * point at those ranks keep their history. A scale that never carried a rank
+ * is deleted outright.
  */
 #[ORM\Entity(repositoryClass: RankScaleRepository::class)]
 #[ORM\Table(name: 'team_rank_scale')]
@@ -50,6 +55,10 @@ class RankScale
     /** The order the scales are read in: the one the organization had first, first. */
     #[ORM\Column]
     private int $sortOrder = 1;
+
+    /** Set when the scale was taken off the list with its retired ranks; null while it is read. */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $retiredAt = null;
 
     public function getId(): ?int
     {
@@ -78,5 +87,22 @@ class RankScale
         $this->sortOrder = $sortOrder;
 
         return $this;
+    }
+
+    public function getRetiredAt(): ?\DateTimeImmutable
+    {
+        return $this->retiredAt;
+    }
+
+    public function setRetiredAt(?\DateTimeImmutable $retiredAt): static
+    {
+        $this->retiredAt = $retiredAt;
+
+        return $this;
+    }
+
+    public function isRetired(): bool
+    {
+        return null !== $this->retiredAt;
     }
 }

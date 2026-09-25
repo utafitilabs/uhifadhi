@@ -1388,6 +1388,22 @@ And if the installation configures the bundle, its root key is now
 `utafiti_labs_post_gis`, not `fundi_stadi_post_gis`. Nothing about the database
 changes: the extension, the columns and the indexes are the same.
 
+## A scale is removed only once it is empty, and the ladder reads highest first
+
+Under Team › Configure › Ranks, with several scales, a rank row's arrow moves the
+rank to another scale (its holders and history come along, it lands at that
+scale's junior end) and the card's **Remove scale** door wakes only once no rank
+in use is left on it. A scale whose ranks were all retired is retired with them
+(`team_rank_scale.retired_at`, shipped migration `Version20260925120000`) and is
+read nowhere; a scale that never carried a rank is deleted; the last scale cannot
+be removed — switch ranks off instead. With **Uses ranks** off the ladder is drawn
+read-only.
+
+`Rank::$seniority` reads 1 as the **most senior** rank; every list — the Ranks
+register, the People facet and column, the CSV, the configure ladder — reads the
+highest rank first, and `RankService::addRank()` appends at the junior end. A
+ladder loaded the other way round is turned over by dragging on the configure page.
+
 ## Ranked bars are the atlas's
 
 **What changed.** `.sxbars`, `.sxbar`, `.sxdot` and `.sxmxkey` left `shell.css` and

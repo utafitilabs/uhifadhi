@@ -214,6 +214,90 @@ final class RankServiceTest extends IntegrationTestCase
         self::assertSame(1, $counts[(int) $two->getId()] ?? 0);
     }
 
+    public function testARankMovesToAnotherScaleAtItsJuniorEndAndKeepsItsHolders(): void
+    {
+        $uniformed = $this->ranks()->defaultScale();
+        $cri = $this->ranks()->addRank($uniformed, 'Conservation Ranger I', 'CR I');
+        $civil = $this->ranks()->addScale('Civil', 'Uniformed');
+        $this->ranks()->addRank($civil, 'Officer I', 'O I');
+        $joseph = $this->person('Joseph', 'Mollel');
+        $this->em->flush();
+        $this->ranks()->assign($joseph, $cri, new \DateTimeImmutable('2024-01-09'), null);
+
+        $this->ranks()->moveRank($cri, $civil);
+        $this->em->clear();
+
+        $moved = $this->repository()->findOneBy(['shortCode' => 'CR I']);
+        self::assertInstanceOf(Rank::class, $moved);
+        self::assertSame('Civil', $moved->getScale()->getName());
+        self::assertSame(2, $moved->getSeniority(), 'it lands at the junior end of the target');
+        self::assertSame([], array_map(static fn (Rank $r): string => $r->getShortCode(), $this->repository()->findActiveByScale($this->em->find(RankScale::class, $uniformed->getId()))));
+        self::assertCount(1, $this->em->getRepository(RankHolding::class)->findBy(['rank' => $moved]), 'the holder comes along');
+    }
+
+    public function testAMoveIsRefusedWhenTheCodeIsAlreadyOnTheTargetScale(): void
+    {
+        $uniformed = $this->ranks()->defaultScale();
+        $cri = $this->ranks()->addRank($uniformed, 'Conservation Ranger I', 'CR I');
+        $civil = $this->ranks()->addScale('Civil', 'Uniformed');
+        $this->ranks()->addRank($civil, 'Clerk I', 'cr i');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('already a rank on the Civil scale');
+        $this->ranks()->moveRank($cri, $civil);
+    }
+
+    public function testAScaleWithALiveRankIsNotRemoved(): void
+    {
+        $uniformed = $this->ranks()->defaultScale();
+        $civil = $this->ranks()->addScale('Civil', 'Uniformed');
+        $this->ranks()->addRank($civil, 'Officer I', 'O I');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('still has a rank');
+        $this->ranks()->removeScale($civil);
+    }
+
+    public function testAScaleWhoseRanksWereRetiredIsRetiredWithThemAndReadNoMore(): void
+    {
+        $uniformed = $this->ranks()->defaultScale();
+        $civil = $this->ranks()->addScale('Civil', 'Uniformed');
+        $oi = $this->ranks()->addRank($civil, 'Officer I', 'O I');
+        $anna = $this->person('Anna', 'Sanka');
+        $this->em->flush();
+        $this->ranks()->assign($anna, $oi, new \DateTimeImmutable('2024-01-09'), null);
+        $this->ranks()->remove($oi);
+
+        $this->ranks()->removeScale($civil);
+        $this->em->clear();
+
+        $kept = $this->em->getRepository(RankScale::class)->findOneBy(['name' => 'Civil']);
+        self::assertInstanceOf(RankScale::class, $kept);
+        self::assertTrue($kept->isRetired());
+        self::assertSame(['Uniformed'], array_map(static fn (RankScale $s): ?string => $s->getName(), $this->ranks()->scales()));
+        self::assertCount(1, $this->em->getRepository(RankHolding::class)->findAll(), 'the history survives');
+    }
+
+    public function testAScaleThatNeverHadARankIsDeleted(): void
+    {
+        $this->ranks()->defaultScale();
+        $civil = $this->ranks()->addScale('Civil', 'Uniformed');
+
+        $this->ranks()->removeScale($civil);
+        $this->em->clear();
+
+        self::assertNull($this->em->getRepository(RankScale::class)->findOneBy(['name' => 'Civil']));
+    }
+
+    public function testTheLastScaleIsNotRemoved(): void
+    {
+        $only = $this->ranks()->defaultScale();
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('last scale');
+        $this->ranks()->removeScale($only);
+    }
+
     private function ranks(): RankService
     {
         return $this->service(RankService::class);

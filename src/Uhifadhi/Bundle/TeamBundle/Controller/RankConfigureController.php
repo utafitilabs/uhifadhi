@@ -77,7 +77,16 @@ final readonly class RankConfigureController
 
         $cards = [];
         foreach ($scales as $scale) {
-            $cards[] = ['scale' => $scale, 'ranks' => $this->rankRepository->findActiveByScale($scale)];
+            $ranks = $this->rankRepository->findActiveByScale($scale);
+            $cards[] = [
+                'scale' => $scale,
+                'ranks' => $ranks,
+                // The other scales a row's arrows move a rank to, and whether
+                // the card's own Remove door is awake: only once nothing live
+                // is on the scale, and never for the last scale.
+                'others' => array_values(array_filter($scales, static fn (RankScale $s): bool => $s !== $scale)),
+                'removable' => [] === $ranks && \count($scales) > 1,
+            ];
         }
 
         return new Response($this->twig->render('@Team/team/configure/ranks.html.twig', [
@@ -146,6 +155,49 @@ final readonly class RankConfigureController
         $this->ranks->remove($rank);
 
         return $this->back($request, $scale, $held ? \sprintf('%s is retired. Its holders keep it and their history reads on.', $name) : \sprintf('%s is removed.', $name));
+    }
+
+    /** A RANK MOVED TO ANOTHER SCALE — its holders and history with it, at that scale's junior end. */
+    #[Route('/team/configure/ranks/rank/{uuid}/move/{scaleUuid}', name: 'team_configure_ranks_move', requirements: ['uuid' => Requirement::UUID, 'scaleUuid' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted(self::CONFIGURE)]
+    public function move(Request $request, string $uuid, string $scaleUuid): RedirectResponse
+    {
+        $this->assertCsrf($request);
+        $rank = $this->rankRepository->findOneBy(['uuid' => $uuid]);
+        $to = $this->scales->findOneBy(['uuid' => $scaleUuid, 'retiredAt' => null]);
+        if (!$rank instanceof Rank || !$to instanceof RankScale) {
+            throw new NotFoundHttpException('No such rank or scale.');
+        }
+        $from = $rank->getScale();
+
+        try {
+            $this->ranks->moveRank($rank, $to);
+        } catch (\InvalidArgumentException $refusal) {
+            return $this->back($request, $from, $refusal->getMessage(), 'error');
+        }
+
+        return $this->back($request, $to, \sprintf('%s moved to the %s scale, at its junior end.', $rank->getName(), (string) $to->getName()));
+    }
+
+    /** A SCALE TAKEN OFF THE LIST once nothing live is on it: retired with its retired ranks, deleted when it never had one. */
+    #[Route('/team/configure/ranks/scales/{uuid}/remove', name: 'team_configure_ranks_scale_remove', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted(self::CONFIGURE)]
+    public function removeScale(Request $request, string $uuid): RedirectResponse
+    {
+        $this->assertCsrf($request);
+        $scale = $this->scales->findOneBy(['uuid' => $uuid, 'retiredAt' => null]);
+        if (!$scale instanceof RankScale) {
+            throw new NotFoundHttpException('No such scale.');
+        }
+        $name = (string) $scale->getName();
+
+        try {
+            $this->ranks->removeScale($scale);
+        } catch (\InvalidArgumentException $refusal) {
+            return $this->back($request, $scale, $refusal->getMessage(), 'error');
+        }
+
+        return $this->back($request, null, \sprintf('The %s scale is gone from the list.', $name));
     }
 
     /** A SCALE FOR RANKS THAT DO NOT COMPARE WITH THE OTHERS. */

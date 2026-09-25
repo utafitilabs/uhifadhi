@@ -4,11 +4,19 @@
    by default, for the whole organization. Ranks grant nothing; positions do.
 
    ONE CARD PER SCALE, each a form saved as one write: the rows in seniority
-   order (grip · order · name · short code · holders · remove), an add row,
-   and the save row. With one scale nothing says "scale": the card is "Ranks"
-   and a soft door under the list offers a second. Once there are several,
-   every card is named for its scale and a create card adds another. A scale
-   is the organization's and never a department's.
+   order, the highest rank first (grip · order · name · short code · holders ·
+   move · remove), an add row that appends at the junior end, and the save
+   row. With one scale nothing says "scale": the card is "Ranks" and a soft
+   door under the list offers a second. Once there are several, every card is
+   named for its scale, a row's arrow moves its rank to another scale, the
+   save row carries a Remove door that wakes only once nothing live is on the
+   scale, and a create card adds another. A scale is the organization's and
+   never a department's.
+
+   WITH RANKS OFF THE LADDER IS READ-ONLY (ruled 2026-09-25): the rows are
+   drawn disabled, the add row, the doors and the save row are gone, and one
+   line under the list says the ladder is kept. The switch card above is the
+   only live control.
 
    | design element                                 | type    | source                     | status |
    |------------------------------------------------|---------|----------------------------|--------|
@@ -20,6 +28,9 @@
    | scale name row, required (several scales)       | control | rank_scale.name            | done   |
    | head row · rank rows: grip, n, name, code, held | control | rank, holders              | done   |
    | remove (retire when held)                       | control | …/rank/{uuid}/remove       | done   |
+   | move arrow per other scale (several)            | control | …/rank/{uuid}/move/{scale} | done   |
+   | Remove scale door in the save row (several)     | control | …/scales/{uuid}/remove     | done   |
+   | read-only ladder + kept line (ranks off)        | state   | team_settings.uses_ranks   | done   |
    | add row: name, code, Add a rank                 | control | newName, newCode           | done   |
    | Add a second scale door + zfrag (one scale)     | control | ?add=scale                 | done   |
    | save row: note, Cancel, Save ranks / Save the X | control | …/ranks/{scale}            | done   |
@@ -54,37 +65,47 @@
 
     {% for card in cards %}
         {% set scale = card.scale %}
-        <form class="c" data-rank-scale id="scale-{{ scale.uuidString }}" method="post" action="{{ path('team_configure_ranks_save', {uuid: scale.uuidString}) }}" data-controller="uhifadhi--team-bundle--rank-order">
+        <form class="c{{ usesRanks ? '' : ' off' }}" data-rank-scale id="scale-{{ scale.uuidString }}" method="post" action="{{ path('team_configure_ranks_save', {uuid: scale.uuidString}) }}" data-controller="uhifadhi--team-bundle--rank-order">
             <input type="hidden" name="_token" value="{{ csrfToken }}">
-            <span class="tab">{{ several ? scale.name ~ ' scale' : 'Ranks' }}<span class="src">&middot; {% if not several %}one ladder &middot; {% endif %}{{ card.ranks|length }} rank{{ card.ranks|length == 1 ? '' : 's' }} &middot; order is seniority</span></span>
+            <span class="tab">{{ several ? scale.name ~ ' scale' : 'Ranks' }}<span class="src">&middot; {% if not several %}one ladder &middot; {% endif %}{{ card.ranks|length }} rank{{ card.ranks|length == 1 ? '' : 's' }} &middot; order is seniority, highest first</span></span>
 
             {% if several %}
                 <div class="frow">
                     <label for="scale-name-{{ loop.index }}">Scale name</label>
                     <span class="fcell">
-                        <input class="fld ln" type="text" id="scale-name-{{ loop.index }}" name="scaleName" value="{{ scale.name }}" required maxlength="80" aria-label="Scale name">
+                        <input class="fld ln" type="text" id="scale-name-{{ loop.index }}" name="scaleName" value="{{ scale.name }}" required maxlength="80" aria-label="Scale name"{{ usesRanks ? '' : ' disabled' }}>
                         <span class="fwhen req">required &middot; never a department</span>
                     </span>
                 </div>
             {% endif %}
 
-            <div class="rkl noladder">
-                <div class="rkl-hd"><span></span><span></span><span>Rank</span><span>Short code</span><span></span><span></span></div>
+            <div class="rkl noladder{{ several ? ' mv' : '' }}">
+                <div class="rkl-hd"><span></span><span></span><span>Rank</span><span>Short code</span><span></span>{% if several %}<span></span>{% endif %}<span></span></div>
                 {% for rank in card.ranks %}
                     <div class="rkl-row" data-uhifadhi--team-bundle--rank-order-target="row">
-                        <button type="button" class="rkl-grip" aria-label="Move {{ rank.name }}" title="Drag, or use the arrow keys" data-action="mousedown->uhifadhi--team-bundle--rank-order#grab touchstart->uhifadhi--team-bundle--rank-order#grab keydown->uhifadhi--team-bundle--rank-order#key">{{ ux_icon('shell:grip-vertical') }}</button>
+                        <button type="button" class="rkl-grip" aria-label="Move {{ rank.name }}" title="Drag, or use the arrow keys"{% if usesRanks %} data-action="mousedown->uhifadhi--team-bundle--rank-order#grab touchstart->uhifadhi--team-bundle--rank-order#grab keydown->uhifadhi--team-bundle--rank-order#key"{% else %} disabled{% endif %}>{{ ux_icon('shell:grip-vertical') }}</button>
                         <span class="rkl-n" data-uhifadhi--team-bundle--rank-order-target="number">{{ loop.index }}</span>
-                        <input class="fld" type="text" name="ranks[{{ rank.uuidString }}][name]" value="{{ rank.name }}" required maxlength="120" aria-label="Rank name">
-                        <input class="fld code" type="text" name="ranks[{{ rank.uuidString }}][code]" value="{{ rank.shortCode }}" required maxlength="24" aria-label="Short code">
+                        <input class="fld" type="text" name="ranks[{{ rank.uuidString }}][name]" value="{{ rank.name }}" required maxlength="120" aria-label="Rank name"{{ usesRanks ? '' : ' disabled' }}>
+                        <input class="fld code" type="text" name="ranks[{{ rank.uuidString }}][code]" value="{{ rank.shortCode }}" required maxlength="24" aria-label="Short code"{{ usesRanks ? '' : ' disabled' }}>
                         {% set held = holders[rank.id] ?? 0 %}
                         <span class="zfrag">{{ held }} hold it</span>
-                        <button type="submit" class="rkl-x" formaction="{{ path('team_configure_ranks_remove', {uuid: rank.uuidString}) }}" formnovalidate aria-label="Remove {{ rank.name }}" title="{{ held > 0 ? 'Retire: its holders keep it' : 'Remove' }}">{{ ux_icon('shell:x') }}</button>
+                        {% if several %}
+                            <span class="rkl-mvs">
+                                {% for other in card.others %}
+                                    <button type="submit" class="rkl-mv" formaction="{{ path('team_configure_ranks_move', {uuid: rank.uuidString, scaleUuid: other.uuidString}) }}" formnovalidate aria-label="Move {{ rank.name }} to the {{ other.name }} scale" title="Move to the {{ other.name }} scale"{{ usesRanks ? '' : ' disabled' }}>{{ ux_icon('shell:arrow-right-left') }}</button>
+                                {% endfor %}
+                            </span>
+                        {% endif %}
+                        <button type="submit" class="rkl-x" formaction="{{ path('team_configure_ranks_remove', {uuid: rank.uuidString}) }}" formnovalidate aria-label="Remove {{ rank.name }}" title="{{ held > 0 ? 'Retire: its holders keep it' : 'Remove' }}"{{ usesRanks ? '' : ' disabled' }}>{{ ux_icon('shell:x') }}</button>
                     </div>
                 {% else %}
-                    <div class="rkl-row"><span></span><span></span><span class="zfrag">No ranks yet &middot; add the most junior first</span></div>
+                    <div class="rkl-row"><span></span><span></span><span class="zfrag">No ranks yet &middot; add the highest first</span></div>
                 {% endfor %}
             </div>
 
+            {% if not usesRanks %}
+                <div class="rkl-kept">The ladder is kept &middot; switch ranks on to edit it</div>
+            {% else %}
             <div class="rkl-add noladder">
                 <input class="fld" type="text" name="newName" placeholder="Name of the new rank" maxlength="120" aria-label="New rank name">
                 <input class="fld code" type="text" name="newCode" placeholder="Code" maxlength="24" aria-label="New short code">
@@ -100,9 +121,13 @@
 
             <div class="save-row">
                 <span class="d" style="font-size:11.5px;margin-right:auto">Ranks grant nothing &middot; a rank somebody holds is retired, never deleted</span>
+                {% if several %}
+                    <button type="submit" class="btn dn rkl-drop" formaction="{{ path('team_configure_ranks_scale_remove', {uuid: scale.uuidString}) }}" formnovalidate{% if not card.removable %} disabled title="Move or remove its ranks first"{% else %} title="Take the {{ scale.name }} scale off the list"{% endif %}>Remove scale</button>
+                {% endif %}
                 <button type="reset" class="btn">Cancel</button>
                 <button type="submit" class="cta">{{ several ? 'Save the ' ~ scale.name ~ ' scale' : 'Save ranks' }}</button>
             </div>
+            {% endif %}
         </form>
     {% endfor %}
 

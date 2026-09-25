@@ -29,7 +29,7 @@ class RankRepository extends ServiceEntityRepository
     }
 
     /**
-     * EVERY RANK IN USE, scale by scale and most junior first — the order of
+     * EVERY RANK IN USE, scale by scale and the highest rank first — the order of
      * the register, the facet and the configure list.
      *
      * @return list<Rank>
@@ -51,7 +51,7 @@ class RankRepository extends ServiceEntityRepository
         return $ranks;
     }
 
-    /** @return list<Rank> the ranks in use on one scale, most junior first */
+    /** @return list<Rank> the ranks in use on one scale, the highest rank first */
     public function findActiveByScale(RankScale $scale): array
     {
         return $this->findBy(['scale' => $scale, 'retiredAt' => null], ['seniority' => 'ASC', 'id' => 'ASC']);

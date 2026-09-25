@@ -321,6 +321,110 @@ final class RanksTest extends WebTestCaseWithSchema
     }
 
     /** @return list<Rank> */
+    public function testWithSeveralScalesEveryRowCarriesAMoveArrowThatMovesTheRank(): void
+    {
+        $this->administrator();
+        [$one] = $this->ladder();
+        $civil = $this->ranks()->addScale('Civil', 'Uniformed');
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/configure/ranks');
+        $cards = $crawler->filter('form[data-rank-scale]');
+        $arrow = $cards->eq(0)->filter('.rkl-row')->eq(0)->filter('button.rkl-mv');
+        self::assertCount(1, $arrow, 'one arrow per other scale');
+        self::assertSame('Move Conservation Ranger I to the Civil scale', $arrow->attr('aria-label'));
+        self::assertSame('/team/configure/ranks/rank/'.$one->getUuidString().'/move/'.$civil->getUuidString(), $arrow->attr('formaction'));
+        $token = (string) $cards->eq(0)->filter('input[name="_token"]')->attr('value');
+
+        $this->client->request('POST', (string) $arrow->attr('formaction'), ['_token' => $token]);
+
+        self::assertResponseRedirects('/team/configure/ranks#scale-'.$civil->getUuidString());
+        $crawler = $this->client->followRedirect();
+        $cards = $crawler->filter('form[data-rank-scale]');
+        self::assertSame(['CR II', 'SCR'], $cards->eq(0)->filter('.rkl-row input.fld.code')->each(static fn (Crawler $i): string => (string) $i->attr('value')));
+        self::assertSame(['CR I'], $cards->eq(1)->filter('.rkl-row input.fld.code')->each(static fn (Crawler $i): string => (string) $i->attr('value')), 'the moved rank is the only one on its new scale');
+        self::assertStringContainsString('moved to the Civil scale', $crawler->filter('.flashes')->text());
+    }
+
+    public function testRemoveScaleWakesOnlyWhenTheScaleHoldsNoLiveRank(): void
+    {
+        $this->administrator();
+        $this->ladder();
+        $civil = $this->ranks()->addScale('Civil', 'Uniformed');
+        $oi = $this->ranks()->addRank($civil, 'Officer I', 'O I');
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/configure/ranks');
+        $doors = $crawler->filter('form[data-rank-scale] .save-row button.rkl-drop');
+        self::assertCount(2, $doors, 'every scale card carries the door once there are several');
+        self::assertNotNull($doors->eq(0)->attr('disabled'), 'the first scale carries ranks');
+        self::assertNotNull($doors->eq(1)->attr('disabled'), 'so does the second');
+        self::assertSame('Move or remove its ranks first', $doors->eq(1)->attr('title'));
+        self::assertSame('/team/configure/ranks/scales/'.$civil->getUuidString().'/remove', $doors->eq(1)->attr('formaction'));
+
+        $this->ranks()->remove($oi);
+        $this->em->flush();
+        $door = $this->client->request('GET', '/team/configure/ranks')->filter('form[data-rank-scale]')->eq(1)->filter('button.rkl-drop');
+        self::assertNull($door->attr('disabled'), 'emptied, the door wakes');
+    }
+
+    public function testRemoveScaleTakesAnEmptiedScaleAway(): void
+    {
+        $this->administrator();
+        $this->ladder();
+        $civil = $this->ranks()->addScale('Civil', 'Uniformed');
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/configure/ranks');
+        $door = $crawler->filter('form[data-rank-scale]')->eq(1)->filter('button.rkl-drop');
+        self::assertNull($door->attr('disabled'));
+        self::assertSame('/team/configure/ranks/scales/'.$civil->getUuidString().'/remove', $door->attr('formaction'));
+        $token = (string) $crawler->filter('form[data-rank-scale]')->eq(1)->filter('input[name="_token"]')->attr('value');
+
+        $this->client->request('POST', (string) $door->attr('formaction'), ['_token' => $token]);
+
+        self::assertResponseRedirects('/team/configure/ranks');
+        $crawler = $this->client->followRedirect();
+        self::assertCount(1, $crawler->filter('form[data-rank-scale]'));
+        self::assertNull($this->em->getRepository(RankScale::class)->findOneBy(['name' => 'Civil']));
+    }
+
+    public function testWithRanksOffTheLadderIsDrawnReadOnly(): void
+    {
+        $this->administrator();
+        $this->ladder();
+        $this->em->flush();
+        $token = $this->tokenFrom('/team/configure/ranks', 'form#uses-ranks input[name="_token"]');
+        $this->client->request('POST', '/team/configure/ranks/switch', ['_token' => $token, 'usesRanks' => 'off']);
+        self::assertResponseRedirects();
+
+        $crawler = $this->client->request('GET', '/team/configure/ranks');
+        $card = $crawler->filter('form[data-rank-scale]');
+        self::assertStringContainsString('off', (string) $card->attr('class'));
+        self::assertCount(6, $card->filter('.rkl-row input.fld[disabled]'), 'three rows, name and code each');
+        self::assertCount(0, $card->filter('.rkl-add'), 'no add row');
+        self::assertCount(0, $card->filter('.save-row'), 'no save row');
+        self::assertCount(0, $card->filter('.rkl-scale'), 'no second-scale door');
+        self::assertSame('The ladder is kept · switch ranks on to edit it', trim($card->filter('.rkl-kept')->text()));
+        self::assertCount(0, $card->filter('button.rkl-x:not([disabled])'), 'remove is asleep too');
+    }
+
+    public function testTheLadderReadsTheHighestRankFirst(): void
+    {
+        $this->administrator();
+        $this->ladder();
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/configure/ranks');
+        self::assertSame('Rank', trim($crawler->filter('.rkl-hd span')->eq(2)->text()));
+        self::assertStringContainsString('highest first', $crawler->filter('form[data-rank-scale] .tab .src')->text());
+        self::assertSame('1', trim($crawler->filter('.rkl-row .rkl-n')->first()->text()));
+        self::assertSame('CR I', $crawler->filter('.rkl-row input.fld.code')->first()->attr('value'), 'the first rank added is row 1, the highest; every later one joins below');
+        $this->ranks()->addRank($this->ranks()->defaultScale(), 'Ranger Recruit', 'RR');
+        $this->em->flush();
+        self::assertSame('RR', $this->client->request('GET', '/team/configure/ranks')->filter('.rkl-row input.fld.code')->last()->attr('value'), 'a new rank joins at the junior end');
+    }
+
     private function ladder(): array
     {
         $scale = $this->ranks()->defaultScale();

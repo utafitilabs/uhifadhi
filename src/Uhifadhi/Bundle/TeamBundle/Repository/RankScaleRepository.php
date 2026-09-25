@@ -27,9 +27,9 @@ class RankScaleRepository extends ServiceEntityRepository
         parent::__construct($registry, RankScale::class);
     }
 
-    /** @return list<RankScale> the scales in the order the organization reads them */
+    /** @return list<RankScale> the scales still read, in the order the organization reads them; a retired scale is nowhere */
     public function findAllOrdered(): array
     {
-        return $this->findBy([], ['sortOrder' => 'ASC', 'id' => 'ASC']);
+        return $this->findBy(['retiredAt' => null], ['sortOrder' => 'ASC', 'id' => 'ASC']);
     }
 }

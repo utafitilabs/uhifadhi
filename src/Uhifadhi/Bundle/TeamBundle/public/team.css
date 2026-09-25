@@ -3618,6 +3618,17 @@ form.c { display: block; margin-bottom: 20px; }
 /* One card per ladder: the ladder is the card, so the row has no ladder
    select. */
 .rkl.noladder .rkl-hd,.rkl.noladder .rkl-row{grid-template-columns:22px 22px minmax(0,1.6fr) 96px 78px 26px}
+/* Several scales: one more column, the arrows that move a rank across. */
+.rkl.noladder.mv .rkl-hd,.rkl.noladder.mv .rkl-row{grid-template-columns:22px 22px minmax(0,1.6fr) 96px 78px auto 26px}
+.rkl-mvs{display:flex;gap:2px}
+.rkl-mv{display:grid;place-items:center;width:26px;height:34px;border:0;background:none;padding:0;color:var(--dim);cursor:pointer}
+.rkl-mv svg{width:13px;height:13px}
+.rkl-mv:hover{color:var(--acc)}
+/* Ranks off: the ladder is read, not written (ruled 2026-09-25). */
+.c.off .rkl .fld,.c.off .rkl-grip,.c.off .rkl-x,.c.off .rkl-mv,.c.off .frow .fld{opacity:.45;pointer-events:none}
+.c.off .rkl-grip{cursor:default}
+.rkl-kept{padding:10px 0 2px;font-size:11.5px;color:var(--fog)}
+.btn.dn:not([disabled]):hover{color:var(--fail);border-color:var(--fail)}
 .rkl-add.noladder{grid-template-columns:minmax(0,1fr) 96px auto}
 .frow .fld.ln{width:300px;max-width:100%;height:34px;box-sizing:border-box;padding:0 11px;font-size:12.5px}
 

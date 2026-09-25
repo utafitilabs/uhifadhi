@@ -64,7 +64,7 @@ final readonly class RankService
         return $scale;
     }
 
-    /** A rank added at the senior end of its scale. */
+    /** A rank added at the junior end of its scale: 1 is the most senior, and the ladder reads from there. */
     public function addRank(RankScale $scale, string $name, string $code): Rank
     {
         [$name, $code] = $this->validRank($scale, $name, $code, null);
@@ -172,6 +172,48 @@ final readonly class RankService
         $this->entityManager->flush();
 
         return $scale;
+    }
+
+    /**
+     * A RANK MOVED TO ANOTHER SCALE — the same rank, its holders and its
+     * history with it, at the junior end of the scale it compares on now.
+     */
+    public function moveRank(Rank $rank, RankScale $to): void
+    {
+        if ($rank->getScale() === $to) {
+            return;
+        }
+        foreach ($this->ranks->findActiveByScale($to) as $other) {
+            if (0 === strcasecmp($other->getShortCode(), $rank->getShortCode())) {
+                throw new \InvalidArgumentException(\sprintf('The short code "%s" is already a rank on the %s scale.', $rank->getShortCode(), (string) $to->getName()));
+            }
+        }
+        $rank->setScale($to)->setSeniority($this->ranks->getMaxSeniority($to) + 1);
+        $this->entityManager->flush();
+    }
+
+    /**
+     * A SCALE TAKEN OFF THE LIST, once nothing live is on it: its ranks were
+     * moved or removed first. Retired ranks keep their holdings' history, so a
+     * scale that carries any is retired with them and read nowhere; one that
+     * never carried a rank is deleted. The last scale stays: an organization
+     * has one, and the switch is how ranks go away.
+     */
+    public function removeScale(RankScale $scale): void
+    {
+        $live = $this->scales->findAllOrdered();
+        if (\count($live) < 2) {
+            throw new \InvalidArgumentException('The last scale stays; switch ranks off to stop using them.');
+        }
+        if ([] !== $this->ranks->findActiveByScale($scale)) {
+            throw new \InvalidArgumentException(\sprintf('The %s scale still has a rank on it; move or remove its ranks first.', (string) $scale->getName()));
+        }
+        if ([] !== $this->ranks->findBy(['scale' => $scale])) {
+            $scale->setRetiredAt(new \DateTimeImmutable());
+        } else {
+            $this->entityManager->remove($scale);
+        }
+        $this->entityManager->flush();
     }
 
     /** A rank somebody held is retired, never deleted; one nobody held goes. */

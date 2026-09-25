@@ -50,7 +50,7 @@ class Rank
     #[ORM\Column(length: 24)]
     private string $shortCode = '';
 
-    /** Seniority within the scale: 1 is the most junior, read first. */
+    /** Seniority within the scale: 1 is the most senior, read first; a new rank is added at the junior end. */
     #[ORM\Column]
     private int $seniority = 1;
 
@@ -70,6 +70,14 @@ class Rank
     public function getScale(): RankScale
     {
         return $this->scale;
+    }
+
+    /** The scale the rank compares on from now; its holders and history come along. */
+    public function setScale(RankScale $scale): static
+    {
+        $this->scale = $scale;
+
+        return $this;
     }
 
     public function getName(): string

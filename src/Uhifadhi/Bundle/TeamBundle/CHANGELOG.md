@@ -19,6 +19,19 @@ Not released yet.
    `CellChip` and `CellKind` are removed, and the table, cell and legend rules left
    performance.css for the atlas's heat.css. No team template writes a heat cell or a legend
    (`VisualsAreTheAtlasTest`)
+ * A SCALE IS TAKEN OFF THE LIST ONLY ONCE NOTHING LIVE IS ON IT (ruled
+   2026-09-25): with several scales, every rank row carries an arrow per other
+   scale that moves the rank there — holders and history with it, at that
+   scale's junior end (`POST /team/configure/ranks/rank/{uuid}/move/{scale}`)
+   — and each card's save row carries a Remove door that wakes only when the
+   scale has no rank in use (`POST /team/configure/ranks/scales/{uuid}/remove`).
+   A scale whose ranks were all retired is retired with them
+   (`team_rank_scale.retired_at`, shipped migration) and read nowhere; one that
+   never carried a rank is deleted; the last scale stays. WITH RANKS OFF the
+   ladder is drawn read-only: rows disabled, no add row, no doors, no save row,
+   one line saying the ladder is kept. THE LADDER READS THE HIGHEST RANK
+   FIRST: seniority 1 is the most senior everywhere (register, facet, CSV,
+   configure), and a new rank joins at the junior end.
 
  * THE FIVE RANKINGS ARE THE ATLAS'S BARS: People by department and Positions held and
    unheld on the Team overview, and the staffing, scope and modules widgets on the

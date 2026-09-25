@@ -43,7 +43,7 @@
 
 {% block shell_page_title %}Team{% endblock %}
 
-{% block shell_page_subtitle %}{% if scales|length > 1 %}The organization&rsquo;s scales of ranks in seniority order, with who holds each rank.{% else %}The organization&rsquo;s ranks in seniority order, with who holds each.{% endif %}{% endblock %}
+{% block shell_page_subtitle %}{% if scales|length > 1 %}The organization&rsquo;s scales of ranks, highest first, with who holds each rank.{% else %}The organization&rsquo;s ranks, highest first, with who holds each.{% endif %}{% endblock %}
 
 {% block shell_page %}
 {% set several = scales|length > 1 %}

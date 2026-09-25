@@ -1,0 +1,248 @@
+{
+    "legend": [
+        {
+            "label": "Boundary",
+            "swatch": "var(--plate-acc)",
+            "shape": "line",
+            "group": "The area",
+            "count": null,
+            "layerId": "atlas.boundary",
+            "visible": true
+        },
+        {
+            "label": "Zones",
+            "swatch": "var(--plate-dim)",
+            "shape": "line",
+            "group": "The area",
+            "count": 2,
+            "layerId": "area.zones",
+            "visible": true
+        },
+        {
+            "label": "Out right now",
+            "swatch": "var(--plate-acc)",
+            "shape": "line",
+            "group": "Patrols",
+            "count": 3,
+            "layerId": "patrols.live",
+            "visible": true
+        },
+        {
+            "label": "2 km coverage buffer",
+            "swatch": "var(--plate-ok)",
+            "shape": "fill",
+            "group": "Patrols",
+            "count": null,
+            "layerId": "patrols.buffer",
+            "visible": false
+        }
+    ],
+    "layers": [
+        {
+            "id": "area.zones",
+            "features": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": {
+                            "label": "East"
+                        },
+                        "geometry": {
+                            "type": "MultiPolygon",
+                            "coordinates": [
+                                [
+                                    [
+                                        [
+                                            -29.5,
+                                            -3.6
+                                        ],
+                                        [
+                                            -29,
+                                            -3.6
+                                        ],
+                                        [
+                                            -29,
+                                            -2.8
+                                        ],
+                                        [
+                                            -29.5,
+                                            -2.8
+                                        ],
+                                        [
+                                            -29.5,
+                                            -3.6
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": {
+                            "label": "West"
+                        },
+                        "geometry": {
+                            "type": "MultiPolygon",
+                            "coordinates": [
+                                [
+                                    [
+                                        [
+                                            -30,
+                                            -3.6
+                                        ],
+                                        [
+                                            -29.5,
+                                            -3.6
+                                        ],
+                                        [
+                                            -29.5,
+                                            -2.8
+                                        ],
+                                        [
+                                            -30,
+                                            -2.8
+                                        ],
+                                        [
+                                            -30,
+                                            -3.6
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        }
+                    }
+                ]
+            },
+            "url": null,
+            "swatch": "var(--plate-dim)",
+            "shape": "line",
+            "visible": true,
+            "style": [],
+            "rules": [],
+            "tooltip": null,
+            "popup": null,
+            "featureId": null,
+            "labels": true
+        },
+        {
+            "id": "patrols.live",
+            "features": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [
+                                    -29.6,
+                                    -3.2
+                                ],
+                                [
+                                    -29.4,
+                                    -3.1
+                                ]
+                            ]
+                        },
+                        "properties": {
+                            "color": "#3ED9A8"
+                        }
+                    }
+                ]
+            },
+            "url": null,
+            "swatch": "var(--plate-acc)",
+            "shape": "line",
+            "visible": true,
+            "style": [],
+            "rules": [],
+            "tooltip": null,
+            "popup": null,
+            "featureId": null,
+            "labels": true
+        },
+        {
+            "id": "patrols.buffer",
+            "features": {
+                "type": "FeatureCollection",
+                "features": []
+            },
+            "url": null,
+            "swatch": "var(--plate-ok)",
+            "shape": "fill",
+            "visible": false,
+            "style": [],
+            "rules": [],
+            "tooltip": null,
+            "popup": null,
+            "featureId": null,
+            "labels": true
+        }
+    ],
+    "boundary": {
+        "geojson": {
+            "type": "MultiPolygon",
+            "coordinates": [
+                [
+                    [
+                        [
+                            -30,
+                            -3.6
+                        ],
+                        [
+                            -29,
+                            -3.6
+                        ],
+                        [
+                            -29,
+                            -2.8
+                        ],
+                        [
+                            -30,
+                            -2.8
+                        ],
+                        [
+                            -30,
+                            -3.6
+                        ]
+                    ]
+                ]
+            ]
+        },
+        "scrim": true
+    },
+    "subject": {
+        "geojson": {
+            "type": "MultiPolygon",
+            "coordinates": [
+                [
+                    [
+                        [
+                            -30,
+                            -3.6
+                        ],
+                        [
+                            -29,
+                            -3.6
+                        ],
+                        [
+                            -29,
+                            -2.8
+                        ],
+                        [
+                            -30,
+                            -2.8
+                        ],
+                        [
+                            -30,
+                            -3.6
+                        ]
+                    ]
+                ]
+            ]
+        },
+        "zoom": null
+    }
+}

@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * the overview plate hands the area's boundary and zones to the atlas as a
+   `Ground`, so every plate of the area — the overview's and a module's —
+   draws the zones row and layer the same way; `AreaMapPayload::forArea()`
+   is the area's answer a module passes on for its own plates
+
  * the what-runs-where matrix quotes each module by the sentence it says it
    is, `ModuleProviderInterface::description()`, and by what it reads from
    where it says none, so the settings overview's "What a module adds" card

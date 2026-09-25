@@ -24,8 +24,9 @@ use Uhifadhi\Contracts\Area\LivePresence;
  * rectangles are UX Map's own model and stay there — {@see self::ux()} hands
  * the underlying map over so a module uses `Symfony\UX\Map\Marker` and friends
  * directly. What this class adds is what UX Map has no model for: GeoJSON
- * layers, the area outline, which grounds the base-layer menu offers, the
- * legend, and whether the plate wears fullscreen.
+ * layers, the area outline and the area's zones ({@see Ground}), which
+ * grounds the base-layer menu offers, the legend, and whether the plate wears
+ * fullscreen.
  *
  * ALL OF IT TRAVELS UNDER ONE KEY. UX Map forwards a map's `extra` payload to
  * the browser untouched and documents it as the extension point for exactly
@@ -71,6 +72,17 @@ final class AtlasMap
 
     private ?Boundary $boundary = null;
 
+    /**
+     * THE AREA UNDER EVERYTHING ELSE — held apart from the layers and the
+     * legend rows the caller adds, so it is listed first in both whenever it
+     * was handed over. The plate draws layers in the order they are listed
+     * (`for (const layer of atlas.layers)` in the plate controller), so first
+     * is under every mark.
+     *
+     * @see assets/controllers/map_plate_controller.js
+     */
+    private ?Ground $ground = null;
+
     /** @var list<BaseLayer> */
     private array $baseLayers = [BaseLayer::Satellite, BaseLayer::Street];
 
@@ -109,6 +121,22 @@ final class AtlasMap
     public function boundary(Boundary $boundary): self
     {
         $this->boundary = $boundary;
+
+        return $this;
+    }
+
+    /**
+     * THE AREA'S GROUND, drawn the platform's one way: the boundary with its
+     * row, the zones as one quiet line layer with a row that counts them, both
+     * under "The area" and beneath every other layer on the plate.
+     *
+     * One ground per plate: a second call replaces the first, boundary and
+     * all.
+     */
+    public function ground(Ground $ground): self
+    {
+        $this->ground = $ground;
+        $this->boundary = null === $ground->boundary ? null : new Boundary($ground->boundary, $ground->scrim);
 
         return $this;
     }
@@ -240,10 +268,19 @@ final class AtlasMap
      */
     public function legend(): array
     {
-        return array_map(
+        $ground = [];
+        if (null !== $this->ground) {
+            $boundary = $this->ground->boundaryRow();
+            if (null !== $boundary) {
+                $ground[] = $boundary;
+            }
+            $ground[] = $this->ground->zonesLayer()->legendItem();
+        }
+
+        return [...$ground, ...array_map(
             static fn (GeoJsonLayer|LegendItem $row): LegendItem => $row instanceof GeoJsonLayer ? $row->legendItem() : $row,
             $this->legendRows,
-        );
+        )];
     }
 
     /**
@@ -262,7 +299,10 @@ final class AtlasMap
     public function toArray(): array
     {
         return [
-            'layers' => array_map(static fn (GeoJsonLayer $layer) => $layer->toArray(), $this->layers),
+            'layers' => array_map(
+                static fn (GeoJsonLayer $layer) => $layer->toArray(),
+                null === $this->ground ? $this->layers : [$this->ground->zonesLayer(), ...$this->layers],
+            ),
             'boundary' => $this->boundary?->toArray(),
             'baseLayers' => array_map(static fn (BaseLayer $base) => $base->value, $this->baseLayers),
             'fullscreen' => $this->fullscreen,

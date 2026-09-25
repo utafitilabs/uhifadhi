@@ -177,6 +177,13 @@ operational widget arrives from a module installed in that area.
 | `Overview\OverviewCopyProviderInterface` | `uhifadhi.overview.copy` | Its own words inside a sentence somebody else writes |
 | `Overview\ContributesStylesheetInterface` | — | The stylesheet its markup needs, since somebody else renders it |
 
+**The ground is the area's, and the atlas draws it.** The overview plate's boundary and
+zones come from `Service\AreaMapPayload::forArea()` (service `area.map_payload`) and are drawn
+by the atlas as a `Ground` — the "Boundary" and "Zones · N" rows under "The area", the zones
+under every contributed layer. A module drawing its own plate of the same area takes the same
+payload and hands it to the same `Ground`, so the area looks the same on every map. Stations
+are not part of the ground: they reach a plate as a module's layer.
+
 **Absent is never zero.** Every one of these may answer `[]`, and that is the
 right answer rather than a gap: a module with nothing to say puts no tile in the
 strip instead of a tile reading 0, and an unmeasured figure renders as a dashed

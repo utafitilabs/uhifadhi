@@ -403,6 +403,8 @@ final class WebKernel extends Kernel
         $services->alias('test_public.area.station_plates', 'area.station_plates')->public();
         $services->alias('test_public.area.postings', 'area.postings')->public();
         $services->alias('test_public.area.zones', 'area.zones')->public();
+        $services->alias('test_public.area.map', 'area.map')->public();
+        $services->alias('test_public.area.map_payload', 'area.map_payload')->public();
         // The ledger's writer, so a test can arrange an area's composition the
         // same way the screen does rather than inserting rows behind it.
         $services->alias('test_public.registry.area_modules', 'registry.area_modules')->public();

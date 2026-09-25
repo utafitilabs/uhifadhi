@@ -19,6 +19,7 @@ their API once it settles.
 - [Changing the plate from a link](#changing-the-plate-from-a-link)
 - [How tall a plate is](#how-tall-a-plate-is)
 - [The boundary](#the-boundary)
+- [The ground](#the-ground)
 - [The legend](#the-legend)
   - [Where it is drawn](#where-it-is-drawn)
 - [Base layers, fullscreen and fitting](#base-layers-fullscreen-and-fitting)
@@ -319,6 +320,40 @@ It is not a layer: it has the platform's one treatment (a white casing under a j
 fill), and its scrim covers the world with the outline punched out of it, so the scrim's bounds
 are the planet and fitting a map to them would zoom every plate out to nothing. The DIM control
 switches the scrim; `scrim: false` only decides whether it starts on.
+
+## The ground
+
+The area a plate stands on — its boundary and its zones — drawn the one way every plate draws it:
+
+```php
+use Uhifadhi\Bundle\AtlasBundle\Model\Ground;
+
+// $payload is the area's answer, AreaMapPayload::forArea():
+// ['boundary' => GeoJSON text|null, 'zones' => list<['name' => ?string, 'geom' => ?string]>]
+$map->ground(Ground::fromGeoJson($payload['boundary'], $payload['zones'], scrim: true));
+```
+
+`new Ground($boundary, $zones, $scrim)` takes the same thing decoded: a GeoJSON geometry (or
+`null`) and a list of `['name' => string, 'geometry' => array]`. `fromGeoJson()` decodes the text
+a geometry column returns and drops anything that will not parse; a zone with no name is drawn
+without a caption. The atlas reads no database: it is handed geometry.
+
+What the plate then carries, whatever else is on it:
+
+| What | How |
+|---|---|
+| the boundary | the [boundary](#the-boundary) treatment, with the scrim the caller chose |
+| a row **Boundary** | a line swatch in `PlatePalette::ACCENT`, switching `AtlasMap::BOUNDARY_LAYER_ID`; absent where there is no boundary |
+| the zones | one line layer, `Ground::ZONES_LAYER_ID` (`area.zones`), in `PlatePalette::DIM`, each zone wearing its name |
+| a row **Zones · N** | under the boundary row, counting the zones; present at `0`, switched off, where the area has none |
+
+Both rows sit under the heading `Ground::GROUP` (**The area**). The zones layer is listed first
+and the two rows open the legend, whenever `ground()` was called: the plate draws layers in the
+order they are listed, so the zones are under every mark a module adds. A module's own rows
+about the area — a station layer — join the group by naming `Ground::GROUP`.
+
+A module never draws zones itself and never names a zone swatch. One ground per plate: a second
+`ground()` replaces the first.
 
 ## The legend
 

@@ -8,6 +8,15 @@
 
 Not released yet.
 
+ * THE AREA'S GROUND IS AN ATLAS COMPONENT: `AtlasMap::ground(Ground)` takes
+   the boundary geometry and the zone geometries (`Ground::fromGeoJson()` for
+   the text a geometry column returns) and draws them the one way: the
+   boundary with its scrim and a "Boundary" row, the zones as one quiet line
+   layer (`area.zones`, `PlatePalette::DIM`, each zone wearing its name)
+   listed under every other layer, and a "Zones · N" row that is there at
+   nought — both rows first in the legend under "The area". The atlas reads
+   no database. Documented in docs/components.md, "The ground"
+
  * A COLUMN CHART CAN MEASURE ONE THING THAT IS NO CATEGORY: `ChartSeries(accent: true)`
    wears the house accent and its chip is the accent pill; `ChartNoughts::Hairline` keeps a
    nought's column as a two-pixel stub on the axis (`minBarLength`) that the plate fades to .28

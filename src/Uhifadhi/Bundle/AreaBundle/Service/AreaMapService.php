@@ -20,10 +20,9 @@ use Symfony\UX\Map\Point;
 use Uhifadhi\Bundle\AreaBundle\Overview\MapLayer;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
-use Uhifadhi\Bundle\AtlasBundle\Model\Boundary;
 use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
+use Uhifadhi\Bundle\AtlasBundle\Model\Ground;
 use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
-use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
 use Uhifadhi\Contracts\Area\LivePresence;
 use Uhifadhi\Contracts\Atlas\PlatePalette;
 
@@ -36,9 +35,11 @@ use Uhifadhi\Contracts\Atlas\PlatePalette;
  * own ground.
  *
  * Both are built here and drawn by the atlas. This bundle holds no opinion about
- * what satellite imagery looks like, how a boundary is cased, where the zoom
- * buttons sit or what fullscreen does; it states what is on its maps and the
- * platform draws them the one way it draws every map.
+ * what satellite imagery looks like, how a boundary is cased, how a zone is
+ * drawn and legended, where the zoom buttons sit or what fullscreen does; it
+ * states what is on its maps and the platform draws them the one way it draws
+ * every map. The overview's boundary and zones are handed over as the atlas
+ * {@see Ground}, which every module's plate of the same area stands on too.
  *
  * THE GEOMETRY ARRIVES AS TEXT, exactly as the geometry column returns it
  * (ST_AsGeoJSON, through the postgis type). It is decoded here — once, on the
@@ -47,11 +48,11 @@ use Uhifadhi\Contracts\Atlas\PlatePalette;
  */
 final readonly class AreaMapService
 {
-    /** The area's own legend heading, present whatever is installed. */
-    public const string OWN_GROUP = 'The area';
+    /** The area's own legend heading, present whatever is installed — the atlas ground's. */
+    public const string OWN_GROUP = Ground::GROUP;
 
-    /** The zones layer's id, which is also what its legend row switches. */
-    public const string ZONES_LAYER = 'area.zones';
+    /** The zones layer's id, which is also what its legend row switches — the atlas ground's. */
+    public const string ZONES_LAYER = Ground::ZONES_LAYER_ID;
 
     /** The register's two layers: the areas that are running, and the rest. */
     public const string LIVE_LAYER = 'area.live';
@@ -60,7 +61,7 @@ final readonly class AreaMapService
     private const string LIVE_SWATCH = PlatePalette::OK;
     private const string QUIET_SWATCH = PlatePalette::DIM;
     /** Public: a second plate of the same ground draws the same edge in the same colour. */
-    public const string BOUNDARY_SWATCH = PlatePalette::ACCENT;
+    public const string BOUNDARY_SWATCH = Ground::BOUNDARY_SWATCH;
 
     public function __construct(
         private MapBuilderInterface $maps,
@@ -78,44 +79,18 @@ final readonly class AreaMapService
     {
         $map = $this->maps->createMap();
 
-        $boundary = self::decode($payload['boundary']);
-        if (null !== $boundary) {
-            $map->boundary(new Boundary($boundary));
+        // THE AREA'S GROUND IS THE ATLAS'S TO DRAW: the boundary and its row,
+        // the zones as one quiet layer with a row that counts them, under
+        // "The area" and beneath every module's layer.
+        $ground = Ground::fromGeoJson($payload['boundary'], $payload['zones']);
+        $map->ground($ground);
 
-            // THE AREA IS WHAT THIS PLATE IS ABOUT. A module's layer may
-            // reach outside the boundary — a track that left the park — and
-            // a plate framed on everything it drew would open on that.
-            $map->fitTo($boundary);
-            $map->addLegendItem(new LegendItem(
-                label: 'Boundary',
-                swatch: self::BOUNDARY_SWATCH,
-                shape: LayerShape::Line,
-                group: self::OWN_GROUP,
-                layerId: AtlasMap::BOUNDARY_LAYER_ID,
-            ));
+        // THE AREA IS WHAT THIS PLATE IS ABOUT. A module's layer may reach
+        // outside the boundary — a track that left the park — and a plate
+        // framed on everything it drew would open on that.
+        if (null !== $ground->boundary) {
+            $map->fitTo($ground->boundary);
         }
-
-        $zones = [];
-        foreach ($payload['zones'] as $zone) {
-            $geometry = self::decode($zone['geom']);
-            if (null !== $geometry) {
-                $zones[] = self::feature($geometry, ['label' => $zone['name'] ?? '']);
-            }
-        }
-
-        // THE ZONES ROW IS ALWAYS THERE, empty or not. A legend that appears and
-        // disappears with the data is a legend nobody can read: "Zones · 0" is an
-        // answer, a missing row is a question.
-        $map->addLayer(new GeoJsonLayer(
-            id: self::ZONES_LAYER,
-            label: 'Zones',
-            features: self::collection($zones),
-            swatch: self::QUIET_SWATCH,
-            shape: LayerShape::Line,
-            visible: [] !== $zones,
-            count: \count($zones),
-            group: self::OWN_GROUP,
-        ));
 
         foreach ($layers as $layer) {
             $map->addLayer(new GeoJsonLayer(

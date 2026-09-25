@@ -1,5 +1,44 @@
 # UPGRADE FROM 0.x to 1.0
 
+## The queue, the schedule and the statement timeout come with the core
+
+**What it is.** What an installation runs on besides the web server — the queue the worker
+consumes, the schedule it keeps, and the limit on one SQL statement of a web request — is the
+core's: the registry's code and migration, and the core's Flex recipe.
+
+| What | Where |
+| --- | --- |
+| the queue: `async` and `failed` on the Doctrine transport, `failure_transport: failed`, `Uhifadhi\Contracts\Queue\AsyncMessageInterface` routed to `async`, `in-memory://` under `when@test` | the recipe's `config/packages/uhifadhi_messenger.yaml` |
+| `MESSENGER_TRANSPORT_DSN=doctrine://default?auto_setup=0` | `.env`, from `symfony/messenger`'s own recipe, which Flex applies with the package |
+| the queue's table, `messenger_messages` | the registry's `Version20260925210000`, `CREATE TABLE IF NOT EXISTS` |
+| the `default` schedule and its `scheduler_default` transport | built by the Scheduler from the core's tasks; an installation writes no schedule class, and one it writes (`#[AsSchedule]`) is joined |
+| the statement timeout of a web request | `registry.statement_timeout_ms`, set by the recipe's `config/packages/registry.yaml` to `%env(int:DATABASE_STATEMENT_TIMEOUT_MS)%`; the recipe's `.env` line is `DATABASE_STATEMENT_TIMEOUT_MS=10000` |
+| a new requirement of `uhifadhi/uhifadhi` | `symfony/doctrine-messenger` |
+
+The statement timeout is a `SET statement_timeout` each connection opened to serve a request runs
+first; PostgreSQL cancels a statement past it. `0` is no limit, and so is a `registry.yaml`
+without the key. The console — migrations, the worker, `uhifadhi:facts:rebuild` — never has
+it. Keep the image's `max_execution_time` above it, so PostgreSQL cancels a runaway statement
+while PHP is still there to report it.
+
+**What an installation runs after this release.**
+
+```console
+$ composer update
+$ composer recipes:update uhifadhi/uhifadhi
+$ fundi deploy:init --force
+$ fundi deploy
+```
+
+- `composer update` brings the core, `symfony/doctrine-messenger`, and — where the installation
+  has not had it yet — `symfony/messenger`'s recipe.
+- `composer recipes:update uhifadhi/uhifadhi` writes `config/packages/uhifadhi_messenger.yaml`,
+  the `statement_timeout_ms` line of `config/packages/registry.yaml` and the `.env` line. A
+  `config/packages/messenger.yaml` of the installation's own stays, and merges with it.
+- `fundi deploy:init --force` writes the deployment files from the manifest's `deploy:` block
+  again, the worker role its `deploy.workers` names included.
+- `fundi deploy` ships it; the web container's start migrates, which creates `messenger_messages`.
+
 ## Figures over growing sets are facts the worker computes
 
 **What changed** (ruled 2026-09-25). A request never computes over a set that grows with time or
@@ -20,40 +59,19 @@ page shows the last figure and its time; it never computes and it never fails.
 
 **What an installation does.**
 
-1. **Route the marker to the queue.** In `config/packages/messenger.yaml`, one line under
-   `routing` — Messenger routes by interface:
-
-   ```yaml
-   # config/packages/messenger.yaml (your application)
-   framework:
-       messenger:
-           failure_transport: failed
-           transports:
-               async:
-                   dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
-                   options: { queue_name: async }
-               failed:
-                   dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
-                   options: { queue_name: failed }
-           routing:
-               'Uhifadhi\Contracts\Queue\AsyncMessageInterface': async
-   ```
-
-   ("route all messages that extend this example base class or interface" —
-   <https://symfony.com/doc/current/messenger.html#routing-messages-to-a-transport>). Without the
-   line every such message is handled in the request that sent it: correct, and slow — the install
-   click waits for the backfill again.
-
-2. **Run the worker.** One process consumes the queue and the schedule:
+1. **The queue and the worker.** The core's recipe routes the marker to `async` — see "The queue,
+   the schedule and the statement timeout come with the core" above. Without the route every such
+   message is handled in the request that sent it: correct, and slow — the install click waits for
+   the backfill. One process consumes the queue and the schedule:
 
    ```console
    $ php bin/console messenger:consume async scheduler_default --time-limit=3600 --memory-limit=256M
    ```
 
-   The core's task joins the installation's own `default` schedule when it has one, and creates it
+   The core's task joins the installation's own `default` schedule when it has one, and makes it
    when it has not. `php bin/console debug:scheduler` lists it.
 
-3. **Migrate, then fill the ledger once** — after `doctrine:migrations:migrate`, for the months
+2. **Migrate, then fill the ledger once** — after `doctrine:migrations:migrate`, for the months
    the pages should have figures for:
 
    ```console
@@ -63,7 +81,7 @@ page shows the last figure and its time; it never computes and it never fails.
    Run it again after a rule the figures depend on changes (a zone redrawn, a width changed), for
    the months it should apply to. It is idempotent. The schedule never recomputes a closed period.
 
-4. **Optionally, set the cadence** in `config/packages/registry.yaml`:
+3. **Optionally, set the cadence** in `config/packages/registry.yaml`:
 
    ```yaml
    registry:

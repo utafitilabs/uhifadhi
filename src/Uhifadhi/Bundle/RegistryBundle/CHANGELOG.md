@@ -24,6 +24,17 @@ Not released yet.
  * requires `symfony/messenger`, `symfony/scheduler`, `symfony/clock` and
    `dragonmantank/cron-expression`
 
+ * THE STATEMENT TIMEOUT OF A WEB REQUEST: `registry.statement_timeout_ms`
+   (null by default: no middleware) registers `StatementTimeoutMiddleware` on
+   every connection; a connection opened under a web server API runs
+   `SET statement_timeout = <ms>` first, one opened by the console does not,
+   and `0` is no limit
+ * `messenger_messages`, the Doctrine transport's table, created by
+   `Version20260925210000` (`IF NOT EXISTS`); requires
+   `symfony/doctrine-messenger`
+ * the `default` schedule needs no class of the installation's: the Scheduler
+   builds it, and its `scheduler_default` transport, from the core's tasks
+
  * A MODULE SAYS WHAT IT IS, in one line: `ModuleProviderInterface::description()`
    (null by the trait's default), kept on the catalogue row and printed under
    the module's name by the area's Modules section.

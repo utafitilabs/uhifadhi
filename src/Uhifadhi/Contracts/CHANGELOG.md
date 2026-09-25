@@ -17,8 +17,9 @@ Not released yet.
    value and the instant it is true as of. `FactPeriod` mints the period keys
    (`2026-09`, `2026-Q3`, `2026`) the ledger and the performance history share;
    `FactSubject` names the subject kinds the core's pages read
- * `Queue\AsyncMessageInterface` — the marker an installation routes to its
-   `async` transport; a message that implements it is handled by the worker
+ * `Queue\AsyncMessageInterface` — the marker the core's recipe routes to the
+   installation's `async` transport; a message that implements it is handled
+   by the worker
  * `Kpi\DepartmentKpi::$asOf` — when a figure read from the facts ledger is
    true as of; null for a figure computed live, the default
 

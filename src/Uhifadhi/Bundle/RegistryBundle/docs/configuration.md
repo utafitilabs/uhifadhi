@@ -21,6 +21,7 @@ registry:
     facts:
         schedule: ['0 6-20 * * *', '0 2 * * *']   # when the open periods are recomputed
         timezone: ~                # the zone those hours are in; ~ is PHP's default
+    statement_timeout_ms: ~        # a web request's longest SQL statement; ~ or 0 is no limit
 ```
 
 `facts.schedule` is a list of cron expressions, at least one; each becomes a
@@ -30,6 +31,16 @@ so it joins the installation's own `default` schedule where there is one
 the working day and once at night: nobody watches a coverage figure tick, and
 "as of 13:00" is as true as a reader needs. `facts.timezone` names the zone the
 hours are in; left out, they are PHP's default zone, the installation's.
+
+`statement_timeout_ms` is the longest one SQL statement of a web request may
+run, in milliseconds. Set, the bundle registers `registry.statement_timeout_middleware`,
+an abstract service tagged `doctrine.middleware` — DoctrineBundle's own way —
+on every connection (<https://symfony.com/bundles/DoctrineBundle/current/middlewares.html>);
+a connection opened under a web server API then runs `SET statement_timeout`
+first, and one opened by the console does not. `0` is no limit at run time;
+left out, there is no middleware. The core's recipe binds it to the typed env
+`%env(int:DATABASE_STATEMENT_TIMEOUT_MS)%`
+(<https://symfony.com/doc/current/configuration/env_var_processors.html>).
 
 Every key has a default; the tree is closed, so an unknown key fails loudly
 rather than being ignored. There is deliberately **no key listing modules** —

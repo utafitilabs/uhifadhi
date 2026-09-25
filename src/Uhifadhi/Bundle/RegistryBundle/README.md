@@ -3,8 +3,10 @@
 The **registry**: the runtime every uhifadhi module registers with. It carries
 the module catalogue, the per-area record of what is switched on, the
 permissions modules declare, the automatic sync that keeps the catalogue in
-step with what is installed, and the facts ledger the worker files figures
-over growing sets on. It renders nothing.
+step with what is installed, the facts ledger the worker files figures over
+growing sets on, and the runtime an installation runs on: the queue's table,
+the `default` schedule and the statement timeout of a web request. It renders
+nothing.
 
 One of the bundles of the uhifadhi core, `uhifadhi/uhifadhi`. It can be
 installed on its own as `uhifadhi/registry-bundle`.
@@ -15,6 +17,7 @@ installed on its own as `uhifadhi/registry-bundle`.
 - [Installation](#installation)
 - [Parking a module closes its routes](#parking-a-module-closes-its-routes)
 - [The facts ledger](#the-facts-ledger)
+- [The runtime](#the-runtime)
 - [Configuration](#configuration)
 - [Learn more](#learn-more)
 - [License](#license)
@@ -129,11 +132,30 @@ shows the last figure and its time; it never computes and it never fails.
   [--from=2026-01] [--until=2026-09]`, after the deploy that brings a module's
   facts and after a rule they depend on changes. Idempotent.
 - **The worker.** `bin/console messenger:consume async scheduler_default`; the
-  installation routes `Uhifadhi\Contracts\Queue\AsyncMessageInterface` to
-  `async`. See the core's UPGRADE-1.0.md.
+  core's recipe routes `Uhifadhi\Contracts\Queue\AsyncMessageInterface` to
+  `async`. See [The runtime](#the-runtime).
 
 The recipe for a module is in the contracts' module guide, "Facts a module
 computes on a schedule".
+
+## The runtime
+
+What an installation runs on besides the web server, and where each piece is:
+
+| Piece | Where |
+| --- | --- |
+| **The queue.** `async` and `failed` on the Doctrine transport, `failure_transport: failed`, `Uhifadhi\Contracts\Queue\AsyncMessageInterface` routed to `async` | the core's recipe, `config/packages/uhifadhi_messenger.yaml`; `MESSENGER_TRANSPORT_DSN` is `symfony/messenger`'s recipe's `.env` line |
+| **The queue's table.** `messenger_messages` | `migrations/Version20260925210000.php` — the DSN's `auto_setup=0` leaves the schema to the migrations |
+| **The schedule.** `default`, and its `scheduler_default` transport | built by the Scheduler from the core's tasks (`registry.facts.schedule`); a provider of the installation's own is joined |
+| **The statement timeout.** `SET statement_timeout` on every connection opened to serve a request | `Doctrine/StatementTimeoutMiddleware.php`, on when `registry.statement_timeout_ms` is set; the recipe sets it to `%env(int:DATABASE_STATEMENT_TIMEOUT_MS)%`, `10000` in `.env` |
+
+The statement timeout is read from the server API when a connection opens:
+`cli` — `bin/console`, the migrations, the worker, a rebuild — never has it;
+every web server API does. `0` is no limit. PostgreSQL cancels a statement past
+it (<https://www.postgresql.org/docs/current/runtime-config-client.html#GUC-STATEMENT-TIMEOUT>),
+so the image's `max_execution_time` stays above it.
+
+The worker is one process: `bin/console messenger:consume async scheduler_default`.
 
 ## Configuration
 
@@ -145,6 +167,7 @@ registry:
     facts:
         schedule: ['0 6-20 * * *', '0 2 * * *']   # when the open periods are recomputed
         timezone: ~                # the zone those hours are in; ~ is PHP's default
+    statement_timeout_ms: ~        # a web request's longest SQL statement; ~ or 0 is no limit
 ```
 
 Every key has a default and the tree is closed. There is deliberately no key

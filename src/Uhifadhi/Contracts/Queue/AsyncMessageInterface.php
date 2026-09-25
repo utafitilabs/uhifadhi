@@ -16,8 +16,9 @@ namespace Uhifadhi\Contracts\Queue;
 /**
  * A MESSAGE THAT IS HANDLED BY THE WORKER, NEVER BY THE REQUEST THAT SENT IT.
  *
- * A marker, and nothing else: the installation routes this interface to its
- * `async` transport once, in `config/packages/messenger.yaml`, and every
+ * A marker, and nothing else: this interface is routed to the installation's
+ * `async` transport once — the core's recipe writes the line, in
+ * `config/packages/uhifadhi_messenger.yaml` — and every
  * message that implements it — the core's and any module's — goes to the
  * queue without a routing line of its own. Messenger matches a routing key
  * against the message's class, its parents and its interfaces:
@@ -32,8 +33,8 @@ namespace Uhifadhi\Contracts\Queue;
  * handler is O(1) is handled in the request and does not implement this.
  *
  * WITHOUT A ROUTING LINE the message is handled synchronously, in the
- * request that dispatched it — correct, and slow. The routing is the
- * installation's, and the upgrade guide names it.
+ * request that dispatched it — correct, and slow. The line is the
+ * installation's file once the recipe has written it.
  */
 interface AsyncMessageInterface
 {

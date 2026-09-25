@@ -1960,8 +1960,8 @@ time: declare it through your fact provider, run the rebuild, and then stop comp
 the ledger the same way for the open period it never writes.
 
 **Work you queue.** A message whose handler grows with the data — a backfill, a thumbnail, an
-outbound call — implements `Uhifadhi\Contracts\Queue\AsyncMessageInterface`. The installation routes
-that one interface to its `async` transport, so your message needs no routing line of its own:
+outbound call — implements `Uhifadhi\Contracts\Queue\AsyncMessageInterface`. The core's recipe routes
+that one interface to the installation's `async` transport, so your message needs no routing line of its own:
 
 > "route all messages that extend this example base class or interface"
 > — https://symfony.com/doc/current/messenger.html#routing-messages-to-a-transport

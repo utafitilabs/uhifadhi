@@ -8,6 +8,15 @@
 
 Not released yet.
 
+ * THE RANKS LADDER MOVES BY THE SHELL'S REORDER CONTROL: every row of Team › Configure ›
+   Ranks carries up and down carets beside its grip (the first row's up and the last row's down
+   disabled), a drag shows a dashed slot where the row will land, and a polite live line
+   announces each move. The order is still the form's field order, sent by Save. With ranks off
+   the carets are disabled and the card has no controller. The `rank-order` controller is
+   deprecated as a no-op, kept with its `assets/package.json` entry (now `enabled: false`) for
+   this release and removed in the next; no Team template names it (`RankOrderRetiredTest`).
+   Replacement: `uhifadhi--shell-bundle--reorder`
+
  * THE TEAM OVERVIEW'S FIGURE ROW IS THE DESIGN'S FLUSH ROW: `grid w-flush kstrip`, and a section
    overview's `[data-kpi]` row reads each qualifier as a sentence (`display: block`, 1.55) in a
    card as tall as its row, not the shell's fixed 107px. A falling figure's pill reads with the

@@ -3604,9 +3604,10 @@ form.c { display: block; margin-bottom: 20px; }
   text-transform:uppercase;color:var(--dim);border:1px solid var(--ln2);border-radius:4px;padding:1px 4px;line-height:1.3}
 /* ---- THE RANKS LIST (configure) -------------------------------------------
    An ordered form, not a fact sheet: every row is five controls at the host's
-   34px control height. The ladder is a group head; order is within it. */
+   34px control height. The ladder is a group head; order is within it.
+   Beside the grip, the shell's caret pair (`.reorder`) in an 18px column. */
 .rkl{margin:6px 0 0}
-.rkl-hd,.rkl-row{display:grid;grid-template-columns:22px 22px minmax(0,1.6fr) 96px 190px 78px 26px;gap:8px;
+.rkl-hd,.rkl-row{display:grid;grid-template-columns:22px 18px 22px minmax(0,1.6fr) 96px 190px 78px 26px;gap:8px;
   align-items:center}
 .rkl-hd{padding:0 0 6px;border-bottom:1px solid var(--ln);
   font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;font-weight:700;letter-spacing:.09em;
@@ -3628,15 +3629,15 @@ form.c { display: block; margin-bottom: 20px; }
 .rkl-row .zfrag{white-space:nowrap}
 /* One card per ladder: the ladder is the card, so the row has no ladder
    select. */
-.rkl.noladder .rkl-hd,.rkl.noladder .rkl-row{grid-template-columns:22px 22px minmax(0,1.6fr) 96px 78px 26px}
+.rkl.noladder .rkl-hd,.rkl.noladder .rkl-row{grid-template-columns:22px 18px 22px minmax(0,1.6fr) 96px 78px 26px}
 /* Several scales: one more column, the arrows that move a rank across. */
-.rkl.noladder.mv .rkl-hd,.rkl.noladder.mv .rkl-row{grid-template-columns:22px 22px minmax(0,1.6fr) 96px 78px auto 26px}
+.rkl.noladder.mv .rkl-hd,.rkl.noladder.mv .rkl-row{grid-template-columns:22px 18px 22px minmax(0,1.6fr) 96px 78px auto 26px}
 .rkl-mvs{display:flex;gap:2px}
 .rkl-mv{display:grid;place-items:center;width:26px;height:34px;border:0;background:none;padding:0;color:var(--dim);cursor:pointer}
 .rkl-mv svg{width:13px;height:13px}
 .rkl-mv:hover{color:var(--acc)}
 /* Ranks off: the ladder is read, not written (ruled 2026-09-25). */
-.c.off .rkl .fld,.c.off .rkl-grip,.c.off .rkl-x,.c.off .rkl-mv,.c.off .frow .fld{opacity:.45;pointer-events:none}
+.c.off .rkl .fld,.c.off .rkl-grip,.c.off .rkl-x,.c.off .rkl-mv,.c.off .rkl .reorder,.c.off .frow .fld{opacity:.45;pointer-events:none}
 .c.off .rkl-grip{cursor:default}
 .rkl-kept{padding:10px 0 2px;font-size:11.5px;color:var(--fog)}
 .rkl-drop[disabled]{opacity:.45;cursor:not-allowed}
@@ -3691,9 +3692,9 @@ form.c { display: block; margin-bottom: 20px; }
 /* ---- PHONE ---------------------------------------------------------------- */
 @media (max-width:760px){
   .rkl-hd{display:none}
-  .rkl-row{grid-template-columns:22px 22px minmax(0,1fr) 84px 26px;grid-template-rows:auto auto}
-  .rkl-row .fsel{grid-column:3/5}
-  .rkl-row .zfrag{grid-column:3/5}
+  .rkl-row{grid-template-columns:22px 18px 22px minmax(0,1fr) 84px 26px;grid-template-rows:auto auto}
+  .rkl-row .fsel{grid-column:4/6}
+  .rkl-row .zfrag{grid-column:4/6}
   .rkl-add{grid-template-columns:minmax(0,1fr) 84px}
   .rkl-add .fsel,.rkl-add .btn{grid-column:1/-1}
   .rkh{grid-template-columns:minmax(0,1fr)}

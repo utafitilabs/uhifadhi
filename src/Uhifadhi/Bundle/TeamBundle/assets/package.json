@@ -36,8 +36,9 @@
             },
             "rank-order": {
                 "main": "controllers/rank_order_controller.js",
+                "name": "uhifadhi--team-bundle--rank-order",
                 "fetch": "lazy",
-                "enabled": true
+                "enabled": false
             }
         },
         "importmap": {}

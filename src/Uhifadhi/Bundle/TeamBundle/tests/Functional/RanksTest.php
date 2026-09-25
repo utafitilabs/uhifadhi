@@ -37,6 +37,8 @@ use Uhifadhi\Bundle\TeamBundle\Shell\TeamSectionTabs;
 #[CoversClass(TeamSectionConfiguration::class)]
 final class RanksTest extends WebTestCaseWithSchema
 {
+    private const string REORDER = 'uhifadhi--shell-bundle--reorder';
+
     // ---- the register ----------------------------------------------------
 
     public function testTheRegisterListsTheOneScaleInSeniorityOrderWithItsHolders(): void
@@ -415,13 +417,83 @@ final class RanksTest extends WebTestCaseWithSchema
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/configure/ranks');
-        self::assertSame('Rank', trim($crawler->filter('.rkl-hd span')->eq(2)->text()));
+        self::assertSame('Rank', trim($crawler->filter('.rkl-hd span')->eq(3)->text()), 'grip, carets, number, then the rank');
         self::assertStringContainsString('highest first', $crawler->filter('form[data-rank-scale] .tab .src')->text());
         self::assertSame('1', trim($crawler->filter('.rkl-row .rkl-n')->first()->text()));
         self::assertSame('CR I', $crawler->filter('.rkl-row input.fld.code')->first()->attr('value'), 'the first rank added is row 1, the highest; every later one joins below');
         $this->ranks()->addRank($this->ranks()->defaultScale(), 'Ranger Recruit', 'RR');
         $this->em->flush();
         self::assertSame('RR', $this->client->request('GET', '/team/configure/ranks')->filter('.rkl-row input.fld.code')->last()->attr('value'), 'a new rank joins at the junior end');
+    }
+
+    /**
+     * THE LADDER MOVES BY THE SHELL'S REORDER CONTROL — ruled 2026-09-25. A
+     * row is dragged by its grip, stepped by its carets or by the arrow keys
+     * on the grip, and the order is the form's own field order, sent by Save.
+     */
+    public function testEveryRowMovesByTheShellsReorderControlWithCaretsAtBothEnds(): void
+    {
+        $this->administrator();
+        $this->ladder();
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/configure/ranks');
+        $card = $crawler->filter('form[data-rank-scale]');
+        self::assertSame(self::REORDER, $card->attr('data-controller'));
+        self::assertNull($card->attr('data-'.self::REORDER.'-url-value'), 'the form sends the order; the control posts nothing');
+
+        $rows = $card->filter('.rkl-row');
+        self::assertCount(3, $rows);
+        $names = ['Conservation Ranger I', 'Conservation Ranger II', 'Senior Conservation Ranger'];
+        foreach ($names as $i => $name) {
+            $row = $rows->eq($i);
+            self::assertSame('row', $row->attr('data-'.self::REORDER.'-target'));
+            self::assertSame($name, $row->attr('data-reorder-name'));
+
+            $grip = $row->filter('button.rkl-grip');
+            self::assertSame('Move '.$name, $grip->attr('aria-label'), 'the grip stays a button with its label');
+            self::assertSame('grip', $grip->attr('data-'.self::REORDER.'-target'));
+            $actions = (string) $grip->attr('data-action');
+            foreach (['pointerdown->'.self::REORDER.'#grab', 'pointermove->'.self::REORDER.'#move', 'pointerup->'.self::REORDER.'#drop', 'pointercancel->'.self::REORDER.'#cancel', 'keydown.up->'.self::REORDER.'#up:prevent', 'keydown.down->'.self::REORDER.'#down:prevent', 'keydown.esc->'.self::REORDER.'#cancel'] as $action) {
+                self::assertStringContainsString($action, $actions);
+            }
+
+            $carets = $row->filter('.reorder button');
+            self::assertCount(2, $carets, 'up over down, beside the grip');
+            self::assertSame('Move '.$name.' up', $carets->eq(0)->attr('aria-label'));
+            self::assertSame('Move '.$name.' down', $carets->eq(1)->attr('aria-label'));
+            self::assertSame('button', $carets->eq(0)->attr('type'), 'a caret never submits the form');
+            self::assertSame(self::REORDER.'#up', $carets->eq(0)->attr('data-action'));
+            self::assertSame(self::REORDER.'#down', $carets->eq(1)->attr('data-action'));
+            self::assertSame(0 === $i, null !== $carets->eq(0)->attr('disabled'), 'only the first row\'s up is disabled');
+            self::assertSame(2 === $i, null !== $carets->eq(1)->attr('disabled'), 'only the last row\'s down is disabled');
+            self::assertCount(2, $carets->filter('svg'), 'lucide chevron-up and chevron-down');
+
+            self::assertSame('number', $row->filter('.rkl-n')->attr('data-'.self::REORDER.'-target'));
+            self::assertSame('grip', $row->children()->eq(0)->attr('data-'.self::REORDER.'-target'), 'the grip first');
+            self::assertStringContainsString('reorder', (string) $row->children()->eq(1)->attr('class'), 'the carets beside it');
+        }
+
+        $status = $card->filter('[data-'.self::REORDER.'-target="status"]');
+        self::assertCount(1, $status);
+        self::assertSame('polite', $status->attr('aria-live'));
+        self::assertStringContainsString('visually-hidden', (string) $status->attr('class'));
+
+        self::assertStringNotContainsString('rank-order', (string) $this->client->getResponse()->getContent(), 'the retired controller is named nowhere on the page');
+    }
+
+    public function testWithRanksOffTheCaretsSleepAndNothingMoves(): void
+    {
+        $this->administrator();
+        $this->ladder();
+        $this->em->flush();
+        $token = $this->tokenFrom('/team/configure/ranks', 'form#uses-ranks input[name="_token"]');
+        $this->client->request('POST', '/team/configure/ranks/switch', ['_token' => $token, 'usesRanks' => 'off']);
+
+        $card = $this->client->request('GET', '/team/configure/ranks')->filter('form[data-rank-scale]');
+        self::assertNull($card->attr('data-controller'), 'a read-only ladder has nothing to move');
+        self::assertCount(6, $card->filter('.reorder button[disabled]'));
+        self::assertCount(3, $card->filter('button.rkl-grip[disabled]'));
     }
 
     /** @return list<Rank> */

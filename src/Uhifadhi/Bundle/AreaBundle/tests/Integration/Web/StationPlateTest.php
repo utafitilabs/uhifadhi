@@ -50,6 +50,18 @@ final class StationPlateTest extends WebTestCase
         self::assertNull($this->plates()->plateFor('not-a-uuid'));
     }
 
+    /**
+     * THE PLATE IS THE STATION'S GROUND, so somebody who may not read the
+     * area's stations gets no plate at all — no markup handed over.
+     */
+    public function testSomebodyWhoMayNotReadTheStationsGetsNoPlate(): void
+    {
+        $this->boot(['areas.read']);
+        $station = $this->aStation();
+
+        self::assertNull($this->plates()->plateFor((string) $station->getUuidString()));
+    }
+
     private function plates(): StationPlateProviderInterface
     {
         $provider = static::getContainer()->get('test_public.area.station_plates');

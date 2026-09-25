@@ -69,6 +69,9 @@ final readonly class ZoneConfigureController
     /** Where the strip's Zones entry points, and where every write comes back to. */
     public const string ROUTE = 'area_zones_configure';
 
+    /** The pair the section enforces, and the one its strip entry asks. */
+    public const string READ = 'zones.read';
+
     /**
      * THE TWO THINGS THE ADDRESS CARRIES. Which card is open is a place, so it
      * is a query a link can be shared and a write can come back to; taking an
@@ -113,7 +116,7 @@ final readonly class ZoneConfigureController
     }
 
     #[Route('/areas/{uuid}/configure/zones', name: self::ROUTE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'], priority: 1)]
-    #[IsGranted('zones.read', subject: 'area')]
+    #[IsGranted(self::READ, subject: 'area')]
     public function configure(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

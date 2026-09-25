@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Shell;
 
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Uid\Uuid;
+use Uhifadhi\Bundle\AreaBundle\Controller\AreaEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaModulesController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneConfigureController;
@@ -44,6 +46,12 @@ use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
  * shell renders and the ones with a screen of their own alike — so a person
  * reads one address shape for everything an area is set up with, and a
  * module adding a section of its own lands in the same place.
+ *
+ * A SECTION THE VIEWER MAY NOT HOLD IS NOT DECLARED. Each one asks, of this
+ * area, the pair the screen behind it enforces — and a section the shell
+ * renders has no screen of its own, so it asks the pair of what it shows. The
+ * shell holds no authorization service; a section left out here is one the
+ * frame never draws and its address never serves.
  */
 final readonly class AreaConfigurationSections implements ConfigurationSectionsInterface
 {
@@ -52,6 +60,7 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
         private AreaOfInterestRepository $areas,
         private AreaRegister $register,
         private ZoneRepository $zones,
+        private AuthorizationCheckerInterface $authorization,
         /**
          * WHAT OTHER BUNDLES CONFIGURE ABOUT AN AREA. Departments are the
          * first: they belong to the team bundle, and an area naming them
@@ -88,71 +97,72 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
     {
         $area = $this->currentArea();
 
-        $sections = [
-            ConfigurationSection::page(
-                ConfigurationSection::WIDGETS,
-                'Widget library',
-                '@Area/area/configure/_widgets.html.twig',
-            ),
-        ];
-
         /*
          * A SECTION WITH NO AREA TO BE ABOUT IS WITHHELD rather than rendered
          * over nothing. It can only happen on a request the configure route does
          * not serve, and answering it with an empty record would be worse than
          * answering it with a shorter strip.
          */
-        if (null !== $area) {
-            /*
-             * MODULES IS A SCREEN — the register of what this area runs, with
-             * the switch and the order — and it stands second because what an
-             * area runs on is decided before how its ground is divided.
-             */
-            $sections[] = ConfigurationSection::screen(
-                'modules',
-                'Modules',
-                AreaModulesController::CONFIGURE,
-                ['uuid' => (string) $area->getUuidString()],
-            );
+        if (null === $area) {
+            return [];
+        }
 
-            /*
-             * ZONES IS A SCREEN, NOT A RENDERED SECTION. A section the shell
-             * draws is a template with no request of its own; this one takes an
-             * uploaded file, previews it and writes, so it answers at its own
-             * address and the strip links there. The frame is identical either
-             * way — the shell recognises a section's own route and keeps the
-             * strip and the Configure action exactly as they are here.
-             */
-            $sections[] = ConfigurationSection::screen(
-                'zones',
-                'Zones',
-                ZoneConfigureController::ROUTE,
-                ['uuid' => (string) $area->getUuidString()],
-            );
+        $uuid = ['uuid' => (string) $area->getUuidString()];
+        $sections = [];
 
-            /*
-             * STATIONS IS A SCREEN TOO, and it sits beside Zones because the
-             * two are read together: the ground, then the places on it.
-             */
-            $sections[] = ConfigurationSection::screen(
-                'stations',
-                'Stations',
-                StationConfigureController::ROUTE,
-                ['uuid' => (string) $area->getUuidString()],
+        // THE COMPOSITION OF THE AREA'S DASHBOARD, which is the area's to read.
+        if ($this->authorization->isGranted('areas.read', $area)) {
+            $sections[] = ConfigurationSection::page(
+                ConfigurationSection::WIDGETS,
+                'Widget library',
+                '@Area/area/configure/_widgets.html.twig',
             );
+        }
 
-            /*
-             * CONTRIBUTED SECTIONS STAND HERE — after the area's own, before
-             * Area settings, which is last on every configure page in the
-             * platform. They are told the area by identifier and by name, so
-             * neither bundle learns the other's classes.
-             */
-            foreach ($this->contributors as $contributor) {
-                foreach ($contributor->sectionsFor((string) $area->getUuidString(), (string) $area->getName()) as $section) {
-                    $sections[] = $section;
-                }
+        /*
+         * MODULES IS A SCREEN — the register of what this area runs, with
+         * the switch and the order — and it stands second because what an
+         * area runs on is decided before how its ground is divided.
+         */
+        if ($this->authorization->isGranted(AreaModulesController::COMPOSE, $area)) {
+            $sections[] = ConfigurationSection::screen('modules', 'Modules', AreaModulesController::CONFIGURE, $uuid);
+        }
+
+        /*
+         * ZONES IS A SCREEN, NOT A RENDERED SECTION. A section the shell
+         * draws is a template with no request of its own; this one takes an
+         * uploaded file, previews it and writes, so it answers at its own
+         * address and the strip links there. The frame is identical either
+         * way — the shell recognises a section's own route and keeps the
+         * strip and the Configure action exactly as they are here.
+         */
+        if ($this->authorization->isGranted(ZoneConfigureController::READ, $area)) {
+            $sections[] = ConfigurationSection::screen('zones', 'Zones', ZoneConfigureController::ROUTE, $uuid);
+        }
+
+        /*
+         * STATIONS IS A SCREEN TOO, and it sits beside Zones because the
+         * two are read together: the ground, then the places on it.
+         */
+        if ($this->authorization->isGranted(StationConfigureController::READ, $area)) {
+            $sections[] = ConfigurationSection::screen('stations', 'Stations', StationConfigureController::ROUTE, $uuid);
+        }
+
+        /*
+         * CONTRIBUTED SECTIONS STAND HERE — after the area's own, before
+         * Area settings, which is last on every configure page in the
+         * platform. They are told the area by identifier and by name, so
+         * neither bundle learns the other's classes, and each withholds
+         * itself.
+         */
+        foreach ($this->contributors as $contributor) {
+            foreach ($contributor->sectionsFor((string) $area->getUuidString(), (string) $area->getName()) as $section) {
+                $sections[] = $section;
             }
+        }
 
+        // THE AREA'S OWN RECORD, whose one door is the edit screen.
+        if ($this->authorization->isGranted(AreaEditController::CONFIGURE, $area)) {
             $sections[] = ConfigurationSection::page(
                 ConfigurationSection::SETTINGS,
                 'Area settings',

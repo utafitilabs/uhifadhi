@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\Settings;
 
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Contracts\Settings\DecisionUrgency;
 use Uhifadhi\Contracts\Settings\SettingsDecision;
 use Uhifadhi\Contracts\Settings\SettingsDecisionSourceInterface;
@@ -33,12 +34,19 @@ use Uhifadhi\Contracts\Settings\SettingsDecisionSourceInterface;
  */
 final readonly class AreaSetupDecision implements SettingsDecisionSourceInterface
 {
-    public function __construct(private AreaSetup $setup)
-    {
+    public function __construct(
+        private AreaSetup $setup,
+        private AuthorizationCheckerInterface $authorization,
+    ) {
     }
 
     public function settingsDecisions(): iterable
     {
+        // IT NAMES AREAS, so it asks what reading one asks.
+        if (!$this->authorization->isGranted(AreaFigure::READ)) {
+            return;
+        }
+
         $waiting = \count($this->setup->waiting());
         if (0 === $waiting) {
             return;

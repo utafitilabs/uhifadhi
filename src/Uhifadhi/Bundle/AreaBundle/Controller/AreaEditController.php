@@ -75,6 +75,9 @@ final readonly class AreaEditController
     public const string IDENTITY_TOKEN = 'area_edit';
     public const string BOUNDARY_TOKEN = 'area_boundary_replace';
 
+    /** The pair both screens enforce, and the one every door to them asks. */
+    public const string CONFIGURE = 'areas.configure';
+
     public function __construct(
         private Environment $twig,
         private AreaIdentity $identity,
@@ -94,7 +97,7 @@ final readonly class AreaEditController
      * values are the lead.
      */
     #[Route('/areas/{uuid}/edit', name: 'area_edit', requirements: ['uuid' => Requirement::UUID], methods: ['GET', 'POST'])]
-    #[IsGranted('areas.configure', subject: 'area')]
+    #[IsGranted(self::CONFIGURE, subject: 'area')]
     public function edit(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -125,7 +128,7 @@ final readonly class AreaEditController
      * confirmation.
      */
     #[Route('/areas/{uuid}/boundary/replace', name: 'area_boundary_replace', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('areas.configure', subject: 'area')]
+    #[IsGranted(self::CONFIGURE, subject: 'area')]
     public function replaceBoundary(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

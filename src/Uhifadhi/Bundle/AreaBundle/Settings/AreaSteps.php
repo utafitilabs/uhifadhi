@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Settings;
 
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Contracts\Settings\AreaRun;
 use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
 use Uhifadhi\Contracts\Settings\SettingsStep;
@@ -46,6 +47,7 @@ final readonly class AreaSteps implements SettingsStepSourceInterface
     public function __construct(
         private ModuleMatrixSourceInterface $matrix,
         private UrlGeneratorInterface $urls,
+        private AuthorizationCheckerInterface $authorization,
     ) {
     }
 
@@ -56,6 +58,12 @@ final readonly class AreaSteps implements SettingsStepSourceInterface
 
     public function settingsSteps(): iterable
     {
+        // ALL THREE ARE READINGS OF THE AREAS, AND ALL THREE LINK TO THEIR
+        // REGISTER — so they ask what the register enforces.
+        if (!$this->authorization->isGranted(AreaFigure::READ)) {
+            return;
+        }
+
         $matrix = $this->matrix->moduleMatrix();
         $areas = \count($matrix->rows);
         $register = $this->address('area_index');

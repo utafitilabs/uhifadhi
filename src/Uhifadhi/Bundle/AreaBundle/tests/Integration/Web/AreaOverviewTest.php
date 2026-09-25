@@ -37,6 +37,43 @@ use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 #[CoversClass(AreaController::class)]
 final class AreaOverviewTest extends WebTestCase
 {
+    /** @var list<string> Everything the ground offers, and reading which modules run here. */
+    private const array WITH_MODULES_READ = [...self::ALL_AREA_PERMISSIONS, 'modules.read'];
+
+    /**
+     * A CELL ASKS FOR ITS OWN PAIR BEFORE IT DRAWS. Somebody who may only
+     * read the area gets no modules cell — the Modules tab read as a card —
+     * and no door to the area's settings or its Modules tab anywhere on the
+     * page: none of it is in the markup at all.
+     */
+    public function testSomebodyWhoMayOnlyReadTheAreaGetsNoModulesCellAndNoDoorsBeyondIt(): void
+    {
+        $this->boot(['areas.read']);
+        $this->signIn();
+
+        $area = $this->anArea();
+        $body = $this->body($area);
+
+        self::assertStringNotContainsString('data-w="modules"', $body);
+        self::assertStringNotContainsString('Modules in this area', $body);
+        self::assertStringNotContainsString('/areas/'.$area->getUuidString().'/configure/settings', $body);
+        self::assertStringNotContainsString('/areas/'.$area->getUuidString().'/modules"', $body);
+    }
+
+    /** And each is drawn for somebody who holds its pair. */
+    public function testTheCellAndItsDoorsAreDrawnForSomebodyWhoHoldsTheirPairs(): void
+    {
+        $this->boot(self::WITH_MODULES_READ);
+        $this->signIn();
+
+        $area = $this->anArea();
+        $body = $this->body($area);
+
+        self::assertStringContainsString('data-w="modules"', $body);
+        self::assertStringContainsString('/areas/'.$area->getUuidString().'/configure/settings', $body);
+        self::assertStringContainsString('/areas/'.$area->getUuidString().'/modules"', $body);
+    }
+
     /**
      * THE BAND NAMES WHERE THE AREA IS AND WHAT STANDS ON IT. The centroid is
      * the database's answer, not a number computed from degrees in PHP, and
@@ -230,7 +267,7 @@ final class AreaOverviewTest extends WebTestCase
     /** The registry's own cell says what is on here, out of what there is. */
     public function testTheModulesCellStatesWhatIsOnAgainstTheCatalogue(): void
     {
-        $this->boot();
+        $this->boot(self::WITH_MODULES_READ);
         $this->signIn();
 
         $body = $this->body($this->anArea());
@@ -385,7 +422,7 @@ final class AreaOverviewTest extends WebTestCase
      */
     public function testTheModulesCellCountsWhatEachModuleContributesAndSinceWhen(): void
     {
-        $this->boot();
+        $this->boot(self::WITH_MODULES_READ);
         $this->signIn();
         $area = $this->anArea();
         $this->modulesInstalledIn($area, ['patrols']);
@@ -402,7 +439,7 @@ final class AreaOverviewTest extends WebTestCase
     /** A module of the catalogue this area has not taken on says so. */
     public function testACatalogueModuleThisAreaDoesNotRunIsARowThatSaysSo(): void
     {
-        $this->boot();
+        $this->boot(self::WITH_MODULES_READ);
         $this->signIn();
         $area = $this->anArea();
         $this->modulesInstalledIn($area, ['patrols', 'incidents']);

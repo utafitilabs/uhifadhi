@@ -13,8 +13,10 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\People;
 
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
+use Uhifadhi\Bundle\AreaBundle\Controller\StationRecordController;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPlateService;
@@ -26,6 +28,9 @@ use Uhifadhi\Contracts\People\StationPlateProviderInterface;
  * THE AREA'S ANSWER TO "SHOW ME WHERE THEY ARE STATIONED" — the same plate the
  * station's own record draws, the ground around the post at the distance the
  * design draws it, rendered here and handed over as markup.
+ *
+ * IT IS THE STATION'S GROUND, so it is drawn only for somebody who may read
+ * that station's area's stations; anybody else gets no plate at all.
  */
 final readonly class AreaStationPlates implements StationPlateProviderInterface
 {
@@ -35,6 +40,7 @@ final readonly class AreaStationPlates implements StationPlateProviderInterface
         private PostingRepository $postings,
         private ZoneSetService $set,
         private AreaPlateService $plates,
+        private AuthorizationCheckerInterface $authorization,
     ) {
     }
 
@@ -48,7 +54,7 @@ final readonly class AreaStationPlates implements StationPlateProviderInterface
             return null;
         }
         $area = $station->getArea();
-        if (null === $area) {
+        if (null === $area || !$this->authorization->isGranted(StationRecordController::READ, $area)) {
             return null;
         }
 

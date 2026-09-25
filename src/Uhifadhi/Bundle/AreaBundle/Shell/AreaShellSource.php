@@ -49,15 +49,17 @@ final class AreaShellSource implements AreaShellSourceInterface
 {
     /**
      * The area's screens in the order the design draws them, each with the route
-     * that serves it and the permission that grants it.
+     * that serves it, the pair that route enforces, and whether the route asks
+     * it of the area.
      *
-     * ZONES CARRIES NO GATE OF ITS OWN, exactly like the first screen: a zone is
-     * a lens, and a lens nobody may look through explains nothing. Reading the
-     * zoning scheme is for anyone who can reach the area; the writes are gated
-     * inside the page.
+     * EVERY SCREEN NAMES ITS PAIR, the first one included. A tab is a door,
+     * and a door is drawn only for somebody who holds the pair the route
+     * behind it enforces — a tab drawn on a weaker question is a click that
+     * ends in a refusal.
      *
-     * STATIONS FOLLOWS ZONES, and carries no gate either, for the same
-     * reason and in that order: the ground, then the places on it.
+     * DEPARTMENTS IS ASKED WITHOUT THE AREA because its route is: departments
+     * offer organization and department placements and never an area, so the
+     * ground the strip is drawn under is not part of the question.
      *
      * SETTINGS IS NOT HERE, AND THAT IS THE RULE RATHER THAN AN OMISSION. A tab
      * is a place where DATA lives; what an area is set up with is configuration,
@@ -68,13 +70,15 @@ final class AreaShellSource implements AreaShellSourceInterface
      * DEPARTMENTS IS HERE AND MAY NOT BE MOUNTED, which is what route-tolerance
      * is for: an installation that serves the screen gets the tab, and one that
      * does not gets a shorter strip rather than a broken page.
+     *
+     * @var list<array{string, string, string, bool}>
      */
     private const array SCREENS = [
-        ['Overview', 'area_show', null],
-        ['Modules', 'area_modules', 'modules.read'],
-        ['Zones', 'area_zones', null],
-        ['Stations', 'area_stations', null],
-        ['Departments', 'area_departments', null],
+        ['Overview', 'area_show', 'areas.read', true],
+        ['Modules', 'area_modules', 'modules.read', true],
+        ['Zones', 'area_zones', 'zones.read', true],
+        ['Stations', 'area_stations', 'stations.read', true],
+        ['Departments', 'area_departments', 'departments.read', false],
     ];
 
     public function __construct(
@@ -165,13 +169,13 @@ final class AreaShellSource implements AreaShellSourceInterface
         $here = $inThisArea && !$configuring ? $this->whereWeAre(\is_string($route) ? $route : '', $path) : null;
 
         $tabs = [];
-        foreach (self::SCREENS as [$label, $routeName, $permission]) {
-            // ASKED WITH THE AREA THE STRIP IS DRAWN FOR. A tab is a door,
-            // and a door asks the question its gate asks — the pair AND the
-            // ground. Asking without the area would draw Modules for
-            // somebody placed at another area, who is then refused on the
-            // click.
-            if (null !== $permission && !$this->authorization->isGranted($permission, $area)) {
+        foreach (self::SCREENS as [$label, $routeName, $pair, $ofTheArea]) {
+            // ASKED WITH THE AREA THE STRIP IS DRAWN FOR wherever the route
+            // asks it so. A tab is a door, and a door asks the question its
+            // gate asks — the pair AND the ground. Asking without the area
+            // would draw Modules for somebody placed at another area, who is
+            // then refused on the click.
+            if (!$this->authorization->isGranted($pair, $ofTheArea ? $area : null)) {
                 continue;
             }
             $url = $this->url($routeName, $uuid);

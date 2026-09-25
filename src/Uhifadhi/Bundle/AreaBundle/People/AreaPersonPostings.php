@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\People;
 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationRecordController;
 use Uhifadhi\Bundle\AreaBundle\Entity\Posting;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
@@ -30,12 +31,16 @@ use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
  *
  * ONE QUERY FOR THE WHOLE PAGE. A register draws a page of people at a time,
  * so the request carries the set and this reads it in one go.
+ *
+ * THE LINE'S LINK IS A DOOR to the station's record, so it is handed over
+ * only where the viewer may read that area's stations.
  */
 final readonly class AreaPersonPostings implements PersonPostingProviderInterface
 {
     public function __construct(
         private PostingRepository $postings,
         private UrlGeneratorInterface $router,
+        private AuthorizationCheckerInterface $authorization,
     ) {
     }
 
@@ -85,7 +90,9 @@ final readonly class AreaPersonPostings implements PersonPostingProviderInterfac
             zoneName: $station->getZone()?->getName(),
             since: $since,
             leader: $posting->isLeader(),
-            url: $this->router->generate(StationRecordController::ROUTE, ['uuid' => (string) $area->getUuidString(), 'station' => (string) $station->getUuidString()]),
+            url: $this->authorization->isGranted(StationRecordController::READ, $area)
+                ? $this->router->generate(StationRecordController::ROUTE, ['uuid' => (string) $area->getUuidString(), 'station' => (string) $station->getUuidString()])
+                : null,
         );
     }
 }

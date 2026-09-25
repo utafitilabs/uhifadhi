@@ -64,6 +64,9 @@ final readonly class OrgDashboardController
     /** `/`, and what the brandmark points at. */
     public const string ROUTE = 'organization_dashboard';
 
+    /** The pair the dashboard enforces, and the one its sidebar row asks. */
+    public const string READ = 'areas.read';
+
     /** Its widget library. */
     public const string WIDGETS_ROUTE = 'organization_widgets';
 
@@ -88,7 +91,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/', name: self::ROUTE, methods: ['GET'])]
-    #[IsGranted('areas.read')]
+    #[IsGranted(self::READ)]
     public function dashboard(): Response
     {
         // ONE MOMENT FOR THE WHOLE PAGE, handed to every cell, so two figures

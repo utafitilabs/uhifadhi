@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\Settings;
 
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
 use Uhifadhi\Contracts\Settings\SettingsFigure;
 use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
@@ -34,8 +35,13 @@ final readonly class AreaFigure implements SettingsFigureSourceInterface
     /** FIRST: the places come before what runs in them. */
     public const int POSITION = 10;
 
-    public function __construct(private ModuleMatrixSourceInterface $matrix)
-    {
+    /** Counting the areas is reading them. */
+    public const string READ = 'areas.read';
+
+    public function __construct(
+        private ModuleMatrixSourceInterface $matrix,
+        private AuthorizationCheckerInterface $authorization,
+    ) {
     }
 
     public function position(): int
@@ -45,6 +51,10 @@ final readonly class AreaFigure implements SettingsFigureSourceInterface
 
     public function settingsFigures(): iterable
     {
+        if (!$this->authorization->isGranted(self::READ)) {
+            return;
+        }
+
         $matrix = $this->matrix->moduleMatrix();
         $areas = \count($matrix->rows);
         $waiting = $matrix->awaitingSetup();

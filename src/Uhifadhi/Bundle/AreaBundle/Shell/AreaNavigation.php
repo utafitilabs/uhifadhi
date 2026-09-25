@@ -110,6 +110,13 @@ final readonly class AreaNavigation implements NavigationSourceInterface
 
         $rows = [];
         foreach ($this->areas->findBy([], ['name' => 'ASC']) as $area) {
+            // AN AREA IS A DOOR OF ITS OWN, asked of that area: somebody
+            // placed at one area holds `areas.read` there and nowhere else,
+            // and a row for another area would open onto a refusal.
+            if (!$this->authorization->isGranted('areas.read', $area)) {
+                continue;
+            }
+
             $url = $this->screenUrl($area->getUuidString());
             if (null === $url) {
                 continue;

@@ -98,8 +98,7 @@ final class AreaShellSourceTest extends WebTestCase
     /**
      * A TAB THE VIEWER MAY NOT HAVE IS ABSENT, NEVER GREYED OUT. A disabled tab
      * tells a ranger a screen exists and they are not trusted with it, which is
-     * a worse product than not mentioning it. The Modules tab carries the gate
-     * that proves it, now that the area's own screens carry none.
+     * a worse product than not mentioning it.
      */
     public function testAGatedTabIsWithheldFromSomebodyWhoDoesNotHoldIt(): void
     {
@@ -109,13 +108,22 @@ final class AreaShellSourceTest extends WebTestCase
     }
 
     /**
-     * ZONES CARRIES NO GATE OF ITS OWN. A zone is a lens, and a lens nobody may
-     * look through explains nothing; the writes inside the page are gated
-     * instead.
+     * EVERY TAB ASKS WHAT ITS ROUTE ENFORCES. Zones and Stations are gated on
+     * `zones.read` and `stations.read`, so somebody who may only reach the
+     * area is offered neither — a tab drawn for them would open onto a
+     * refusal.
      */
-    public function testZonesIsReadableByAnybodyWhoCanReachTheArea(): void
+    public function testZonesAndStationsAreWithheldFromSomebodyWhoMayOnlyReachTheArea(): void
     {
-        self::assertContains('Zones', $this->labels($this->sourceAt('/areas/{uuid}', grants: ['areas.read'])));
+        $labels = $this->labels($this->sourceAt('/areas/{uuid}', grants: ['areas.read']));
+
+        self::assertSame(['Overview'], $labels);
+    }
+
+    /** And each is there for somebody who holds its own pair and nothing more. */
+    public function testEachTabIsOfferedToWhoeverHoldsItsOwnPair(): void
+    {
+        self::assertSame(['Overview', 'Zones'], $this->labels($this->sourceAt('/areas/{uuid}', grants: ['areas.read', 'zones.read'])));
     }
 
     /**

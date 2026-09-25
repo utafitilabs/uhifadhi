@@ -72,6 +72,9 @@ final readonly class StationConfigureController
 {
     public const string ROUTE = 'area_stations_configure';
 
+    /** The pair the section enforces, and the one its strip entry asks. */
+    public const string READ = 'stations.read';
+
     /** Which row is open is a place, so it is a query a link can carry. */
     public const string OPEN_QUERY = 'open';
 
@@ -94,7 +97,7 @@ final readonly class StationConfigureController
     }
 
     #[Route('/areas/{uuid}/configure/stations', name: self::ROUTE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'], priority: 1)]
-    #[IsGranted('stations.read', subject: 'area')]
+    #[IsGranted(self::READ, subject: 'area')]
     public function configure(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

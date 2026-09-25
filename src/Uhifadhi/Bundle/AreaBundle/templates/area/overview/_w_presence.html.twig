@@ -14,7 +14,7 @@
     <span class="tab">Stations &amp; who is on<span class="src">&middot; awaiting the roster</span></span>
     <span class="ao-by next"><i></i>the roster module</span>
     <div class="use" style="margin:0 2px">Nothing to show until the roster module is installed.</div>
-    {% if door('modules.read') %}
+    {% if door('modules.read', area) %}
         <a class="more" href="{{ path('area_modules', {uuid: area.uuidString}) }}">The Modules tab &rarr;</a>
     {% endif %}
 </div>

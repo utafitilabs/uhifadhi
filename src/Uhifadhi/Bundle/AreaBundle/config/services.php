@@ -18,7 +18,6 @@ use Uhifadhi\Bundle\AreaBundle\Devkit\AreaContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\StationContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\ZoneContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
-use Uhifadhi\Bundle\AreaBundle\People\AreaPersonPostings;
 use Uhifadhi\Bundle\AreaBundle\People\AreaStationDirectory;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\CheckInCorrectionRepository;
@@ -63,12 +62,8 @@ use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneStationService;
-use Uhifadhi\Bundle\AreaBundle\Settings\AreaFigure;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaModuleMatrix;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetup;
-use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetupCheck;
-use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetupDecision;
-use Uhifadhi\Bundle\AreaBundle\Settings\AreaSteps;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaOverviewWidgets;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
@@ -83,13 +78,8 @@ use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
-use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 use Uhifadhi\Contracts\Roster\WatchProviderInterface;
 use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
-use Uhifadhi\Contracts\Settings\SettingsCheckSourceInterface;
-use Uhifadhi\Contracts\Settings\SettingsDecisionSourceInterface;
-use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
-use Uhifadhi\Contracts\Settings\SettingsStepSourceInterface;
 
 /*
  * The bundle's static service wiring.
@@ -132,12 +122,10 @@ return static function (ContainerConfigurator $container): void {
      * looks the implementation up by the id the contract publishes, and an
      * installation with no areas bundle simply has no matrix.
      *
-     * THE FIGURE READS THE MATRIX rather than counting areas again: the table
-     * and the card are on the same screen, and two counts made a query apart
-     * is how one comes to disagree with the other.
-     *
-     * THE SETUP CHECK IS ONE FACT WITH TWO READINGS — a health row and a
-     * queue item — which is why it is one service carrying both tags.
+     * THE FIGURE, THE CHECK, THE QUEUE ITEM AND THE STEPS that read it are
+     * drawn contributions, so each asks the viewer's pair before it answers —
+     * which needs the authorization checker, and they are registered in
+     * config/screens.php beside everything else that does.
      */
     $services->set('area.settings.module_matrix', AreaModuleMatrix::class)
         ->args([
@@ -148,36 +136,13 @@ return static function (ContainerConfigurator $container): void {
         ]);
     $services->alias(ModuleMatrixSourceInterface::SERVICE, 'area.settings.module_matrix');
 
-    $services->set('area.settings.figure', AreaFigure::class)
-        ->args([service('area.settings.module_matrix')])
-        ->tag(SettingsFigureSourceInterface::TAG);
-
     /*
-     * TWO SOURCES OVER ONE READING. A class cannot implement two contract
-     * interfaces that each publish a `TAG` constant — PHP refuses it — and
-     * sharing the reading is the better shape anyway: the check and the queue
-     * item are the same fact, so they are built from the same answer and the
-     * matrix is read once.
+     * ONE READING UNDER TWO SOURCES — the setup check and the queue item are
+     * the same fact, so they are built from the same answer and the matrix is
+     * read once.
      */
     $services->set('area.settings.setup', AreaSetup::class)
         ->args([service('area.settings.module_matrix')]);
-
-    $services->set('area.settings.setup_check', AreaSetupCheck::class)
-        ->args([service('area.settings.setup')])
-        ->tag(SettingsCheckSourceInterface::TAG);
-
-    $services->set('area.settings.setup_decision', AreaSetupDecision::class)
-        ->args([service('area.settings.setup')])
-        ->tag(SettingsDecisionSourceInterface::TAG);
-
-    /*
-     * THE THREE STEPS THAT ARE ABOUT THE GROUND. They come off the same
-     * matrix the tables do, so the checklist and the Installation tab cannot
-     * disagree about how much of this installation is set up.
-     */
-    $services->set('area.settings.steps', AreaSteps::class)
-        ->args([service('area.settings.module_matrix'), service('router')])
-        ->tag(SettingsStepSourceInterface::TAG);
 
     $services->set(ZoneRepository::class)
         ->args([service('doctrine')])
@@ -290,16 +255,6 @@ return static function (ContainerConfigurator $container): void {
             service('area.person_facets'),
         ]);
     $services->alias(PostingBoardService::class, 'area.posting_board');
-
-    /*
-     * THE AREA'S ANSWER TO "WHERE DOES THIS PERSON WORK?" — tagged BY HAND,
-     * because a reusable bundle is not autoconfigured and an attribute on the
-     * interface would be silently dead. Whoever draws a person's page reads
-     * the tag; nothing in either bundle names a class in the other.
-     */
-    $services->set('area.person_postings', AreaPersonPostings::class)
-        ->args([service(PostingRepository::class), service('router')])
-        ->tag(PersonPostingProviderInterface::TAG);
 
     /*
      * AND THE STATION-SHAPED HALF OF IT: every station and who stands at each,

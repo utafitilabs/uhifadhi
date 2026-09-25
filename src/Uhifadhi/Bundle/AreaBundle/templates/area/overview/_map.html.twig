@@ -48,7 +48,9 @@
             <div class="ao-slotrow">
                 <span class="nm">The map</span>
                 <span class="wd">This area has <b>no boundary on file</b> yet, so there is nothing to draw. Import one and this plate opens on it, with the zones and every module&rsquo;s layers over it.</span>
-                <span class="st"><a href="{{ path('area_edit', {uuid: area.uuidString}) }}">Add a boundary &rarr;</a></span>
+                {% if door('areas.configure', area) %}
+                    <span class="st"><a href="{{ path('area_edit', {uuid: area.uuidString}) }}">Add a boundary &rarr;</a></span>
+                {% endif %}
             </div>
         </div>
     </div>

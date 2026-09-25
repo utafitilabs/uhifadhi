@@ -349,7 +349,7 @@ final class AreaPagesTest extends WebTestCase
      */
     public function testAnOverviewWithNoModulesIsHonestRatherThanEmpty(): void
     {
-        $this->boot();
+        $this->boot([...self::ALL_AREA_PERMISSIONS, 'modules.read']);
         $area = $this->anArea();
 
         $body = $this->body('/areas/'.$area->getUuidString());
@@ -420,7 +420,7 @@ final class AreaPagesTest extends WebTestCase
      */
     public function testTheConfigurePageShowsItsSectionStripAndNotTheAreasDataTabs(): void
     {
-        $this->boot();
+        $this->boot([...self::ALL_AREA_PERMISSIONS, 'modules.configure']);
         $area = $this->anArea();
 
         $strip = $this->tabStrip($this->body('/areas/'.$area->getUuidString().'/configure'));
@@ -461,6 +461,28 @@ final class AreaPagesTest extends WebTestCase
     }
 
     /** The strip above the page body, whatever is currently in it. */
+    /**
+     * A CONFIGURE SECTION ASKS FOR ITS OWN PAIR, of the area. Somebody who
+     * may read the ground and change none of it is offered neither the
+     * Modules switch nor the area's own settings: neither is in the strip,
+     * and the settings section's address serves nothing.
+     */
+    public function testTheConfigureStripOffersOnlyTheSectionsTheViewerHolds(): void
+    {
+        $this->boot(self::READ_ONLY_AREA_PERMISSIONS);
+        $area = $this->anArea();
+
+        $strip = $this->tabStrip($this->body('/areas/'.$area->getUuidString().'/configure/widgets'));
+
+        self::assertStringContainsString('Widget library', $strip);
+        self::assertStringContainsString('/configure/zones">Zones</a>', $strip);
+        self::assertStringContainsString('/configure/stations">Stations</a>', $strip);
+        self::assertStringNotContainsString('Modules', $strip);
+        self::assertStringNotContainsString('Area settings', $strip);
+
+        self::assertSame(404, $this->get('/areas/'.$area->getUuidString().'/configure/settings')->getStatusCode());
+    }
+
     private function tabStrip(string $body): string
     {
         $strip = preg_split('#<div class="atabs">#', $body, 2);

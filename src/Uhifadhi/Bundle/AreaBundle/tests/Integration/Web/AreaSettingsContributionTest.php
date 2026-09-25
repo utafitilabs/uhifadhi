@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaFigure;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaModuleMatrix;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetup;
@@ -72,7 +73,7 @@ final class AreaSettingsContributionTest extends WebTestCase
         $this->aLiveArea('Northern Conservation Reserve');
         $this->anArea('Southern Reserve');
 
-        $figures = iterator_to_array(new AreaFigure($this->matrix())->settingsFigures());
+        $figures = iterator_to_array(new AreaFigure($this->matrix(), $this->checker())->settingsFigures());
 
         self::assertCount(1, $figures);
         self::assertSame('2', $figures[0]->value);
@@ -92,8 +93,8 @@ final class AreaSettingsContributionTest extends WebTestCase
         $this->anArea('Southern Reserve');
         $setup = $this->emptyAreas();
 
-        $checks = iterator_to_array(new AreaSetupCheck($setup)->settingsChecks());
-        $decisions = iterator_to_array(new AreaSetupDecision($setup)->settingsDecisions());
+        $checks = iterator_to_array(new AreaSetupCheck($setup, $this->checker())->settingsChecks());
+        $decisions = iterator_to_array(new AreaSetupDecision($setup, $this->checker())->settingsDecisions());
 
         self::assertCount(1, $checks);
         self::assertSame(CheckVerdict::Check, $checks[0]->verdict);
@@ -110,8 +111,8 @@ final class AreaSettingsContributionTest extends WebTestCase
         $this->aLiveArea('Northern Conservation Reserve');
         $setup = $this->emptyAreas();
 
-        self::assertTrue(iterator_to_array(new AreaSetupCheck($setup)->settingsChecks())[0]->passed());
-        self::assertSame([], iterator_to_array(new AreaSetupDecision($setup)->settingsDecisions()));
+        self::assertTrue(iterator_to_array(new AreaSetupCheck($setup, $this->checker())->settingsChecks())[0]->passed());
+        self::assertSame([], iterator_to_array(new AreaSetupDecision($setup, $this->checker())->settingsDecisions()));
     }
 
     /**
@@ -123,7 +124,7 @@ final class AreaSettingsContributionTest extends WebTestCase
     {
         $this->boot();
 
-        self::assertSame([], iterator_to_array(new AreaSetupCheck($this->emptyAreas())->settingsChecks()));
+        self::assertSame([], iterator_to_array(new AreaSetupCheck($this->emptyAreas(), $this->checker())->settingsChecks()));
 
         $steps = $this->steps();
         self::assertSame('add-an-area', $steps[0]->key);
@@ -170,6 +171,33 @@ final class AreaSettingsContributionTest extends WebTestCase
         return $matrix;
     }
 
+    /**
+     * SOMEBODY WHO MAY NOT READ THE AREAS IS TOLD NOTHING ABOUT THEM — no
+     * count, no area named in a check or a queue item, no step linking to
+     * the register. The section holds no authorization service, so each
+     * source is what withholds itself.
+     */
+    public function testAViewerWithoutAreasReadGetsNoFigureCheckDecisionOrStep(): void
+    {
+        $this->boot([]);
+        $this->aLiveArea('Northern Conservation Reserve');
+        $this->anArea('Southern Reserve');
+        $setup = $this->emptyAreas();
+
+        self::assertSame([], iterator_to_array(new AreaFigure($this->matrix(), $this->checker())->settingsFigures()));
+        self::assertSame([], iterator_to_array(new AreaSetupCheck($setup, $this->checker())->settingsChecks()));
+        self::assertSame([], iterator_to_array(new AreaSetupDecision($setup, $this->checker())->settingsDecisions()));
+        self::assertSame([], $this->steps());
+    }
+
+    private function checker(): AuthorizationCheckerInterface
+    {
+        $checker = static::getContainer()->get('security.authorization_checker');
+        \assert($checker instanceof AuthorizationCheckerInterface);
+
+        return $checker;
+    }
+
     /** PHP method names are case-insensitive, so this cannot be called `setup`. */
     private function emptyAreas(): AreaSetup
     {
@@ -182,6 +210,6 @@ final class AreaSettingsContributionTest extends WebTestCase
         $urls = static::getContainer()->get('router');
         \assert($urls instanceof UrlGeneratorInterface);
 
-        return array_values(iterator_to_array(new AreaSteps($this->matrix(), $urls)->settingsSteps()));
+        return array_values(iterator_to_array(new AreaSteps($this->matrix(), $urls, $this->checker())->settingsSteps()));
     }
 }

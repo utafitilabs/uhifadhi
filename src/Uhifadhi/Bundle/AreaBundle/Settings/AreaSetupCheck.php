@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\Settings;
 
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Contracts\Settings\CheckVerdict;
 use Uhifadhi\Contracts\Settings\SettingsCheck;
 use Uhifadhi\Contracts\Settings\SettingsCheckSourceInterface;
@@ -35,8 +36,10 @@ final readonly class AreaSetupCheck implements SettingsCheckSourceInterface
     /** Among the last of the checks: it is about setup, not about running. */
     public const int POSITION = 60;
 
-    public function __construct(private AreaSetup $setup)
-    {
+    public function __construct(
+        private AreaSetup $setup,
+        private AuthorizationCheckerInterface $authorization,
+    ) {
     }
 
     public function position(): int
@@ -46,7 +49,8 @@ final readonly class AreaSetupCheck implements SettingsCheckSourceInterface
 
     public function settingsChecks(): iterable
     {
-        if (0 === $this->setup->areas()) {
+        // IT NAMES AREAS, so it asks what reading one asks.
+        if (!$this->authorization->isGranted(AreaFigure::READ) || 0 === $this->setup->areas()) {
             return;
         }
 

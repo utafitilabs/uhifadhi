@@ -16,7 +16,12 @@
 
    SINCE IS THE MONTH THE AREA TOOK IT ON. A row written before the date was
    recorded has none, and says so — a date nobody wrote down cannot be
-   recovered. #}
+   recovered.
+
+   THE CELL IS THE MODULES TAB READ AS ONE CARD, so it asks what that tab
+   asks, of this area, and draws nothing for somebody who may not read which
+   modules run here. #}
+{% if door('modules.read', area) %}
 <div class="c" data-w="modules">
     <span class="tab">Modules in this area<span class="src">&middot; {{ moduleCards|length }} installed &middot; {{ catalogueCount }} in the catalogue</span></span>
     <span class="ao-by next"><i></i>the registry</span>
@@ -65,7 +70,6 @@
         the moment it is not &mdash; including its tiles inside this page&rsquo;s own strip and its items inside its
         attention list.</div>
 
-    {% if door('modules.read') %}
-        <a class="open-btn" href="{{ path('area_modules', {uuid: area.uuidString}) }}" style="margin-top:8px">Add a module to this area &rarr;</a>
-    {% endif %}
+    <a class="open-btn" href="{{ path('area_modules', {uuid: area.uuidString}) }}" style="margin-top:8px">Add a module to this area &rarr;</a>
 </div>
+{% endif %}

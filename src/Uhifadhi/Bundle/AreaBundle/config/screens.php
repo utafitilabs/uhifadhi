@@ -29,6 +29,7 @@ use Uhifadhi\Bundle\AreaBundle\Controller\ZoneEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneImportController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneRecordController;
 use Uhifadhi\Bundle\AreaBundle\Overview\OrgOverviewContributorInterface;
+use Uhifadhi\Bundle\AreaBundle\People\AreaPersonPostings;
 use Uhifadhi\Bundle\AreaBundle\People\AreaStationPlates;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
@@ -39,6 +40,10 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\OrgOverviewCatalogue;
 use Uhifadhi\Bundle\AreaBundle\Service\StationNoticeStore;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
+use Uhifadhi\Bundle\AreaBundle\Settings\AreaFigure;
+use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetupCheck;
+use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetupDecision;
+use Uhifadhi\Bundle\AreaBundle\Settings\AreaSteps;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaConfigurationSections;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaNavigation;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaShellSource;
@@ -48,7 +53,12 @@ use Uhifadhi\Bundle\AreaBundle\Widget\OrgOverviewWidgets;
 use Uhifadhi\Bundle\ShellBundle\Contract\AreaShellSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\ModuleGroup;
+use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 use Uhifadhi\Contracts\People\StationPlateProviderInterface;
+use Uhifadhi\Contracts\Settings\SettingsCheckSourceInterface;
+use Uhifadhi\Contracts\Settings\SettingsDecisionSourceInterface;
+use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
+use Uhifadhi\Contracts\Settings\SettingsStepSourceInterface;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
 
 /*
@@ -290,9 +300,47 @@ return static function (ContainerConfigurator $container): void {
             service(PostingRepository::class),
             service('area.zone_set'),
             service('area.zone_plate'),
+            service('security.authorization_checker'),
         ])
         ->tag(StationPlateProviderInterface::TAG);
     $services->alias(AreaStationPlates::class, 'area.station_plates');
+
+    /*
+     * THE AREA'S ANSWER TO "WHERE DOES THIS PERSON WORK?" — tagged BY HAND,
+     * because a reusable bundle is not autoconfigured and an attribute on the
+     * interface would be silently dead. Whoever draws a person's page reads
+     * the tag; nothing in either bundle names a class in the other. Each
+     * line's link is a door, asked here, which is why it lives in this file.
+     */
+    $services->set('area.person_postings', AreaPersonPostings::class)
+        ->args([
+            service(PostingRepository::class),
+            service('router'),
+            service('security.authorization_checker'),
+        ])
+        ->tag(PersonPostingProviderInterface::TAG);
+
+    /*
+     * WHAT THIS BUNDLE TELLS THE SETTINGS SECTION — a figure, a health row,
+     * a queue item and three steps, all read off the one matrix. The section
+     * holds no authorization service, so each of them asks the viewer's pair
+     * itself and answers nothing to somebody who may not read the areas.
+     */
+    $services->set('area.settings.figure', AreaFigure::class)
+        ->args([service('area.settings.module_matrix'), service('security.authorization_checker')])
+        ->tag(SettingsFigureSourceInterface::TAG);
+
+    $services->set('area.settings.setup_check', AreaSetupCheck::class)
+        ->args([service('area.settings.setup'), service('security.authorization_checker')])
+        ->tag(SettingsCheckSourceInterface::TAG);
+
+    $services->set('area.settings.setup_decision', AreaSetupDecision::class)
+        ->args([service('area.settings.setup'), service('security.authorization_checker')])
+        ->tag(SettingsDecisionSourceInterface::TAG);
+
+    $services->set('area.settings.steps', AreaSteps::class)
+        ->args([service('area.settings.module_matrix'), service('router'), service('security.authorization_checker')])
+        ->tag(SettingsStepSourceInterface::TAG);
 
     /*
      * EVERY STATION IN ONE AREA — the tab. It reads; the section beside it is
@@ -471,6 +519,7 @@ return static function (ContainerConfigurator $container): void {
                 service(AreaOfInterestRepository::class),
                 service('area.register'),
                 service(ZoneRepository::class),
+                service('security.authorization_checker'),
                 tagged_iterator('uhifadhi.area_sections'),
             ])
             ->tag('uhifadhi.configuration_sections');
@@ -521,7 +570,7 @@ return static function (ContainerConfigurator $container): void {
          * needs a door; the brandmark points at the same address.
          */
         $services->set('area.dashboard_navigation', OrgDashboardNavigation::class)
-            ->args([service('router'), service('request_stack')])
+            ->args([service('router'), service('request_stack'), service('security.authorization_checker')])
             ->tag('shell.nav_section');
     }
 };

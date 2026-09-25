@@ -58,6 +58,9 @@ final readonly class StationRecordController
 {
     public const string ROUTE = 'area_station_show';
 
+    /** The pair the record enforces, and the one every door to it asks. */
+    public const string READ = 'stations.read';
+
     public function __construct(
         private Environment $twig,
         private StationRepository $stations,
@@ -85,7 +88,7 @@ final readonly class StationRecordController
         requirements: ['uuid' => Requirement::UUID, 'station' => Requirement::UUID],
         methods: ['GET'],
     )]
-    #[IsGranted('stations.read', subject: 'area')]
+    #[IsGranted(self::READ, subject: 'area')]
     public function show(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

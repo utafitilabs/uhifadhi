@@ -17,8 +17,11 @@ use Symfony\Component\Console\Application;
 use Uhifadhi\Bundle\RegistryBundle\Access\RegistryConcerns;
 use Uhifadhi\Bundle\RegistryBundle\Command\RegistrySyncCommand;
 use Uhifadhi\Bundle\RegistryBundle\EventListener\ParkedModuleListener;
+use Uhifadhi\Bundle\RegistryBundle\Facts\FactProviders;
+use Uhifadhi\Bundle\RegistryBundle\Facts\FactReader;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
+use Uhifadhi\Bundle\RegistryBundle\Repository\FigureFactRepository;
 use Uhifadhi\Bundle\RegistryBundle\Repository\ModuleRepository;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleLedger;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
@@ -30,6 +33,8 @@ use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
 use Uhifadhi\Bundle\RegistryBundle\Settings\CatalogueFigure;
 use Uhifadhi\Bundle\RegistryBundle\Version\DependencyOrderComparator;
 use Uhifadhi\Contracts\Access\ConcernSourceInterface;
+use Uhifadhi\Contracts\Facts\FactProviderInterface;
+use Uhifadhi\Contracts\Facts\FactReaderInterface;
 use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
 
 /*
@@ -62,6 +67,8 @@ use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
  *   registry.parked_module_listener  the gate, applied to every incoming request
  *   registry.sync                  the create-only reconciliation itself
  *   registry.command.sync          `registry:sync`, the command that runs it and reports
+ *   registry.facts.providers       every module that computes facts, and the figures they declared
+ *   registry.facts.reader          the facts ledger, read (aliased from FactReaderInterface)
  */
 return static function (ContainerConfigurator $container): void {
     $services = $container->services();
@@ -89,6 +96,24 @@ return static function (ContainerConfigurator $container): void {
     $services->set(AreaModuleRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
+
+    /*
+     * THE FACTS LEDGER. Figures over growing sets, computed by the worker on
+     * a schedule and read by pages as stored numbers. The table is written
+     * by SQL (an upsert) through its repository; the reader is the one
+     * service a page or a module asks, published under the contract's
+     * interface so a module type-hints the contract and never this bundle.
+     */
+    $services->set(FigureFactRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    $services->set('registry.facts.providers', FactProviders::class)
+        ->args([tagged_iterator(FactProviderInterface::TAG)]);
+
+    $services->set('registry.facts.reader', FactReader::class)
+        ->args([service(FigureFactRepository::class), service('registry.facts.providers')]);
+    $services->alias(FactReaderInterface::class, 'registry.facts.reader');
 
     $services->set('registry.provider_mapper', ProviderCatalogueMapper::class)
         ->args([param('registry.default_category')]);

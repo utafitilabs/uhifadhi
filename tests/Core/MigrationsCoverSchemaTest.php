@@ -90,6 +90,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'duty_checkin_correction',
                 'duty_checkin_status',
                 'duty_position',
+                'figure_fact',
                 'module',
                 // PostGIS's own, brought by the extension migration zero
                 // creates — not the core's, and not something a diff will ever
@@ -193,6 +194,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260924000200',
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260925000100',
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260925120000',
+                'Uhifadhi\\Bundle\\RegistryBundle\\Migrations\\Version20260925180000',
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260925200000',
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260925220000',
             ],

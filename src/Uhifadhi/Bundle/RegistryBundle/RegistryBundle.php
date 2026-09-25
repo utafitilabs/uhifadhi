@@ -20,6 +20,7 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use Uhifadhi\Bundle\RegistryBundle\DependencyInjection\Compiler\InstallationMigrationsPathFirstPass;
 use Uhifadhi\Bundle\RegistryBundle\DependencyInjection\RegistryConfiguration;
+use Uhifadhi\Contracts\Facts\FactProviderInterface;
 use Uhifadhi\Contracts\ModuleProviderInterface;
 
 /**
@@ -118,6 +119,11 @@ final class RegistryBundle extends AbstractBundle
         // already a working registry.
         $container->registerForAutoconfiguration(ModuleProviderInterface::class)
             ->addTag(self::MODULE_TAG);
+
+        // THE FACTS SEAM, collected the same way: a provider the application
+        // defines is tagged for it, a module bundle tags its own by hand.
+        $container->registerForAutoconfiguration(FactProviderInterface::class)
+            ->addTag(FactProviderInterface::TAG);
 
         // WHERE A FLAGLESS `migrations:diff` LANDS. The registry already owns
         // how doctrine/migrations behaves across a whole installation — it

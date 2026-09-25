@@ -254,7 +254,8 @@ reads both sides of the seam as text for that reason.*
 ranks ladder and an area's running modules use it, and a module's own ordered
 list uses the same markup. Three ways to move, one result: a pointer drag on the
 grip (mouse, pen or touch), the up and down carets beside it, and the arrow keys
-while the grip has focus. A caret or a key moves the row one step; a drag moves
+while the grip has focus. A caret or a key moves the row one step, and the two rows
+slide past each other in 180 ms with the moved one lifted, so the swap is seen; a drag moves
 it wherever it is released, and Escape puts it back.
 
 ```twig

@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * A CARET STEP IS SEEN: the reorder control slides the two rows past each other in
+   180 ms on the settle's curve, the moved row lifted (`.reorder-stepping`, `.reorder-passing`);
+   where motion is refused they swap in place.
+
  * ONE CONTROL MOVES A ROW WITHIN AN ORDERED LIST: the `reorder` Stimulus controller
    (`uhifadhi--shell-bundle--reorder`, eager). A pointer drag on the grip — mouse, pen or
    touch — lifts the row on the `--lift` shadow and opens a dashed slot of its height where it

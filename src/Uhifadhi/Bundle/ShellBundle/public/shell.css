@@ -2873,6 +2873,13 @@ tr.reorder-slot > td { padding: 0; border: 0; }
     from { height: var(--reorder-h); opacity: 1; }
     to { height: 0; opacity: 0; }
 }
+/* A CARET STEP SLIDES THE TWO ROWS PAST EACH OTHER: the moved row travels
+   lifted, its neighbour slides the other way, both on the settle's curve. */
+.reorder-stepping, .reorder-passing { transition: transform .18s cubic-bezier(.32, .72, 0, 1); }
+.reorder-stepping { position: relative; z-index: 1; box-shadow: var(--lift); border-radius: 8px; }
+@media (prefers-reduced-motion: reduce) {
+    .reorder-stepping, .reorder-passing { transition: none; }
+}
 
 /* THE LIFTED ROW rides the pointer on the plate's ground and the overlay's
    shadow, its own rules gone; on release it settles into the slot. */

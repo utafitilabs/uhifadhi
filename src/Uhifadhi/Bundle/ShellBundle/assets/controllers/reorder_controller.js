@@ -119,12 +119,24 @@ export default class extends Controller {
         if (to < 0 || to >= rows.length) {
             return;
         }
+        // THE TWO ROWS SLIDE PAST EACH OTHER. A row that simply reappears one
+        // place up reads as nothing having happened. So: note where both rows
+        // stand, swap them in the DOM, put each back where it was with a
+        // transform, and let the transform go — the FLIP idiom (first, last,
+        // invert, play; https://aerotwist.com/blog/flip-your-animations/),
+        // on the settle's own curve and duration. The moved row travels
+        // lifted, above its neighbour. Where motion is refused, the rows swap.
+        const other = rows[to];
+        const before = [row, other].map((r) => r.getBoundingClientRect().top);
         if (by < 0) {
-            rows[to].before(row);
+            other.before(row);
         } else {
-            rows[to].after(row);
+            other.after(row);
         }
         this.moved(row);
+        if (!this.still()) {
+            this.slide([row, other], before);
+        }
 
         // Moving a row takes focus out of it; it goes back to what was
         // pressed, or to the grip when that caret has just become an end.
@@ -338,6 +350,27 @@ export default class extends Controller {
         }
 
         return slot;
+    }
+
+    /* Slide rows from where they stood to where they stand now. `tops` are the
+       rows' former tops, in the same order. The controller is `settling` for
+       the duration so a second press waits for the first to land. */
+    slide(rows, tops) {
+        this.settling = true;
+        rows.forEach((r, i) => {
+            const delta = tops[i] - r.getBoundingClientRect().top;
+            r.classList.add(i === 0 ? 'reorder-stepping' : 'reorder-passing');
+            r.style.transition = 'none';
+            r.style.transform = `translateY(${delta}px)`;
+        });
+        // One frame with the inverted transform painted, then the transition.
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            rows.forEach((r) => { r.style.transition = ''; r.style.transform = ''; });
+            window.setTimeout(() => {
+                rows.forEach((r) => r.classList.remove('reorder-stepping', 'reorder-passing'));
+                this.settling = false;
+            }, SETTLE);
+        }));
     }
 
     // ---- what every move does ------------------------------------------------

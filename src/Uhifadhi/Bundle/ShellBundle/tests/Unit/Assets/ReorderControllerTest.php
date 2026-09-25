@@ -64,6 +64,14 @@ final class ReorderControllerTest extends TestCase
         self::assertStringContainsString('down(event) {', $js);
         self::assertStringContainsString('this.step(event, -1)', $js);
         self::assertStringContainsString('this.step(event, 1)', $js);
+        // A caret step slides the two rows past each other (FLIP), lifted, on
+        // the settle's curve; where motion is refused it swaps in place.
+        self::assertStringContainsString('this.slide([row, other], before)', $js);
+        self::assertStringContainsString("classList.add(i === 0 ? 'reorder-stepping' : 'reorder-passing')", $js);
+        self::assertStringContainsString('if (!this.still())', $js);
+        $css = (string) file_get_contents(\dirname(__DIR__, 3).'/public/shell.css');
+        self::assertStringContainsString('.reorder-stepping, .reorder-passing { transition: transform .18s cubic-bezier(.32, .72, 0, 1); }', $css);
+        self::assertStringContainsString('.reorder-stepping { position: relative; z-index: 1; box-shadow: var(--lift);', $css);
         self::assertStringContainsString('.before(row)', $js, 'up puts the row before the one above it');
         self::assertStringContainsString('.after(row)', $js, 'down puts it after the one below');
         self::assertStringContainsString('.focus(', $js, 'focus stays on the control that moved the row');

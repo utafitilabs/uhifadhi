@@ -1,5 +1,43 @@
 # UPGRADE FROM 0.x to 1.0
 
+## Rows move by the shell's reorder control
+
+**What changed** (ruled 2026-09-25). One Stimulus controller moves a row within an ordered
+list: `uhifadhi--shell-bundle--reorder` (`ShellBundle/assets/controllers/reorder_controller.js`,
+eager). The ranks ladder under Team › Configure › Ranks and an area's running modules under
+Configure › Modules both wear it. A drag on the grip lifts the row and opens a dashed slot where
+it will land; every movable row carries **up and down carets** beside its grip (the first row's
+up and the last row's down disabled); the arrow keys on the focused grip move one step; a polite
+live line announces each move.
+
+| What | Now |
+| --- | --- |
+| the ranks order | the form's own field order, sent by Save — unchanged |
+| the modules order | `POST area_modules_reorder` with `order[]` after every move — unchanged |
+| `uhifadhi--team-bundle--rank-order` | **deprecated**, a no-op; removed in the next release |
+| `uhifadhi--area-bundle--module-order` | **deprecated**, a no-op; removed in the next release |
+| `.tbl tr.dragging` (area.css) | gone; the lifted row is `.reorder-lifted` (shell.css) |
+| `shell:chevron-up` | new in the shell's icon set |
+
+**Both old controllers' files and `assets/package.json` entries stay for this release**, switched
+to `enabled: false`, so an installation whose `assets/controllers.json` still enables them keeps
+rendering. Flex adds the new `reorder` entry on `composer update`; a linked working copy adds it
+by hand. Then delete the two old entries from `assets/controllers.json`:
+
+```json
+"reorder":      { "enabled": true,  "fetch": "eager" },
+"rank-order":   { "enabled": true,  "fetch": "lazy" },
+"module-order": { "enabled": true,  "fetch": "eager" }
+```
+
+— keep the first line, remove the other two — then `cache:clear` and `asset-map:compile`.
+
+**What to change in a module.** A module with an ordered list of its own writes the shell's
+markup rather than a controller: `data-controller="uhifadhi--shell-bundle--reorder"` on the
+list's holder, the `row`, `grip`, `up`, `down`, `number` and `status` targets, and
+`.reorder` around the caret pair. The shell's docs/theming.md, "Moving a row within a list", has
+the whole markup.
+
 ## Positions are a register, a record and a configure page
 
 **What changed** (ruled 2026-09-21). The positions screen used to be ONE page:
@@ -117,7 +155,7 @@ library — so `doctrine:migrations:diff` on this platform emits the bare
 generate a migration removing it. `tests/Core/MigrationsCoverSchemaTest` is
 what holds the two together.
 
-### Four new Stimulus controllers
+### Three new Stimulus controllers
 
 `uhifadhi--team-bundle--grants` (`assets/controllers/grants_controller.js`),
 lazy: the configure page's per-module **grant all / none** and the save bar's
@@ -134,13 +172,11 @@ a time with no JavaScript; this is only the pair of shortcuts over them.
 lazy: the two-button **On / Off** control every configure section states a
 rule with. The pair is a radio group underneath and posts with no JavaScript.
 
-`uhifadhi--team-bundle--rank-order` (`assets/controllers/rank_order_controller.js`),
-lazy: the **grip** on every row of a rank scale under Team › Configure ›
-Ranks — drag, or focus it and use the arrow keys — and the row numbers that
-follow it. The order is posted as the form's own field order; without the
-controller the rows still save, but nothing moves.
+`uhifadhi--team-bundle--rank-order` (`assets/controllers/rank_order_controller.js`)
+is **deprecated and does nothing**: the ranks ladder moves by the shell's
+`reorder` controller (see "Rows move by the shell's reorder control" above).
 
-**All four arrive through `assets/controllers.json`**, and Flex keeps that
+**All three arrive through `assets/controllers.json`**, and Flex keeps that
 file: on every `composer install` and `composer update` it reads each
 package's `assets/package.json` and adds, under `@uhifadhi/uhifadhi`, any
 controller the file does not yet name, with the `enabled` and `fetch` the
@@ -151,8 +187,7 @@ working copy that reaches the core through a link, where Composer never ran
 for the new controller, adds the entries itself:
 
 ```json
-"yes-no":     { "enabled": true, "fetch": "lazy" },
-"rank-order": { "enabled": true, "fetch": "lazy" }
+"yes-no": { "enabled": true, "fetch": "lazy" }
 ```
 
 A controller a host never enables is a file nobody loads, and the button is

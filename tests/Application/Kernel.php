@@ -113,8 +113,8 @@ class Kernel extends BaseKernel
             // installation.
             'assets' => [],
             'asset_mapper' => ['paths' => [__DIR__.'/assets' => '']],
-            // THE QUEUE THE CORE'S RECIPE CONFIGURES — its
-            // `config/packages/uhifadhi_messenger.yaml` transports: the Doctrine
+            // THE QUEUE THE CORE'S RECIPE CONFIGURES — the transports in its
+            // `config/packages/registry.yaml`: the Doctrine
             // transport on the installation's own connection. It is here
             // because the transport's table is the registry's to create, and
             // the drift lock can only see that table where a Doctrine transport

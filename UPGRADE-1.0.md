@@ -8,7 +8,7 @@ core's: the registry's code and migration, and the core's Flex recipe.
 
 | What | Where |
 | --- | --- |
-| the queue: `async` and `failed` on the Doctrine transport, `failure_transport: failed`, `Uhifadhi\Contracts\Queue\AsyncMessageInterface` routed to `async`, `in-memory://` under `when@test` | the recipe's `config/packages/uhifadhi_messenger.yaml` |
+| the queue: `async` and `failed` on the Doctrine transport, `failure_transport: failed`, `Uhifadhi\Contracts\Queue\AsyncMessageInterface` routed to `async`, `in-memory://` under `when@test` | the recipe's `config/packages/registry.yaml`, beside the `registry:` keys |
 | `MESSENGER_TRANSPORT_DSN=doctrine://default?auto_setup=0` | `.env`, from `symfony/messenger`'s own recipe, which Flex applies with the package |
 | the queue's table, `messenger_messages` | the registry's `Version20260925210000`, `CREATE TABLE IF NOT EXISTS` |
 | the `default` schedule and its `scheduler_default` transport | built by the Scheduler from the core's tasks, stateful on `cache.app`, only the last missed run, the framework's default lock; an installation writes no schedule class, and one it writes (`#[AsSchedule]`) is joined and keeps its own state |
@@ -32,8 +32,8 @@ $ fundi deploy
 
 - `composer update` brings the core, `symfony/doctrine-messenger`, `symfony/lock`, and — where the installation
   has not had it yet — `symfony/messenger`'s recipe.
-- `composer recipes:update uhifadhi/uhifadhi` writes `config/packages/uhifadhi_messenger.yaml`,
-  the `statement_timeout_ms` line of `config/packages/registry.yaml` and the `.env` line. A
+- `composer recipes:update uhifadhi/uhifadhi` writes the `framework.messenger` block and the
+  `statement_timeout_ms` line into `config/packages/registry.yaml`, and the `.env` line. A
   `config/packages/messenger.yaml` of the installation's own stays, and merges with it.
 - `fundi deploy:init --force` writes the deployment files from the manifest's `deploy:` block
   again, the worker role its `deploy.workers` names included.

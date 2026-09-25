@@ -42,6 +42,14 @@ left out, there is no middleware. The core's recipe binds it to the typed env
 `%env(int:DATABASE_STATEMENT_TIMEOUT_MS)%`
 (<https://symfony.com/doc/current/configuration/env_var_processors.html>).
 
+The core's recipe writes this file with a second root beside `registry:` —
+the queue the registry's work runs on, `framework.messenger`: `async` and
+`failed` on `%env(MESSENGER_TRANSPORT_DSN)%`, `failure_transport: failed`,
+`Uhifadhi\Contracts\Queue\AsyncMessageInterface` routed to `async`, and
+`in-memory://` transports under `when@test`. Framework configuration merges
+across files, so an installation's own `config/packages/messenger.yaml` and
+this block make one (<https://symfony.com/doc/current/configuration.html#configuration-files>).
+
 Every key has a default; the tree is closed, so an unknown key fails loudly
 rather than being ignored. There is deliberately **no key listing modules** —
 installing a module is the declaration, and a second place to enable one is

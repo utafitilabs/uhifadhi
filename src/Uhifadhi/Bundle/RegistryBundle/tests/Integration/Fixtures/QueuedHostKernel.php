@@ -21,7 +21,7 @@ use Uhifadhi\Contracts\Queue\AsyncMessageInterface;
  * transport, the core's marker routed to the queue — and a `default` schedule
  * of its own.
  *
- * THE MESSENGER BLOCK IS THE RECIPE'S `config/packages/uhifadhi_messenger.yaml`,
+ * THE MESSENGER BLOCK IS THE ONE IN THE RECIPE'S `config/packages/registry.yaml`,
  * written in PHP, with its `when@test` transports — `in-memory://`, so a
  * specification can see what was queued:
  *

@@ -18,7 +18,7 @@ namespace Uhifadhi\Contracts\Queue;
  *
  * A marker, and nothing else: this interface is routed to the installation's
  * `async` transport once — the core's recipe writes the line, in
- * `config/packages/uhifadhi_messenger.yaml` — and every
+ * `config/packages/registry.yaml` — and every
  * message that implements it — the core's and any module's — goes to the
  * queue without a routing line of its own. Messenger matches a routing key
  * against the message's class, its parents and its interfaces:

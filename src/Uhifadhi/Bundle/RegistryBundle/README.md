@@ -144,7 +144,7 @@ What an installation runs on besides the web server, and where each piece is:
 
 | Piece | Where |
 | --- | --- |
-| **The queue.** `async` and `failed` on the Doctrine transport, `failure_transport: failed`, `Uhifadhi\Contracts\Queue\AsyncMessageInterface` routed to `async` | the core's recipe, `config/packages/uhifadhi_messenger.yaml`; `MESSENGER_TRANSPORT_DSN` is `symfony/messenger`'s recipe's `.env` line |
+| **The queue.** `async` and `failed` on the Doctrine transport, `failure_transport: failed`, `Uhifadhi\Contracts\Queue\AsyncMessageInterface` routed to `async` | the core's recipe, `config/packages/registry.yaml`, beside the `registry:` keys; `MESSENGER_TRANSPORT_DSN` is `symfony/messenger`'s recipe's `.env` line |
 | **The queue's table.** `messenger_messages` | `migrations/Version20260925210000.php` — the DSN's `auto_setup=0` leaves the schema to the migrations |
 | **The schedule.** `default`, and its `scheduler_default` transport | built by the Scheduler from the core's tasks (`registry.facts.schedule`), stateful on `cache.app`, running only the last missed run, under the default lock (`DependencyInjection/Compiler/StatefulDefaultSchedulePass.php`); a provider of the installation's own is joined and keeps its own state |
 | **The statement timeout.** `SET statement_timeout` on every connection opened to serve a request | `Doctrine/StatementTimeoutMiddleware.php`, on when `registry.statement_timeout_ms` is set; the recipe sets it to `%env(int:DATABASE_STATEMENT_TIMEOUT_MS)%`, `10000` in `.env` |

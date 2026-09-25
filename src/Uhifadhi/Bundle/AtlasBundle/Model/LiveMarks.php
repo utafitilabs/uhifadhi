@@ -159,7 +159,8 @@ final class LiveMarks
                 'initials' => self::initials($position->personName),
                 'age' => self::age($position->ageSeconds($presence->asOf)),
                 'stale' => $stale,
-                'at' => $position->recordedAt->format(\DateTimeInterface::ATOM),
+                // Stated in UTC whatever the process's own zone: the viewer's clock localises it.
+                'at' => $position->recordedAt->setTimezone(new \DateTimeZone('UTC'))->format(\DateTimeInterface::ATOM),
                 'staleAfterSeconds' => $interval * 60 * LivePresence::STALE_AFTER_INTERVALS,
             ],
         ];

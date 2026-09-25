@@ -226,7 +226,7 @@ final class LiveMarksTest extends TestCase
         self::assertSame(self::features(LiveMarks::layer($presence))[0], $frame, 'the same feature the layer draws');
         $properties = self::arr($frame['properties']);
         self::assertSame(['name', 'initials', 'age', 'stale', 'at', 'staleAfterSeconds'], array_keys($properties));
-        self::assertSame(new \DateTimeImmutable(self::NOW.' -4 minutes')->format(\DateTimeInterface::ATOM), $properties['at']);
+        self::assertSame(new \DateTimeImmutable(self::NOW.' -4 minutes')->setTimezone(new \DateTimeZone('UTC'))->format(\DateTimeInterface::ATOM), $properties['at']);
         self::assertSame(15 * 60 * LivePresence::STALE_AFTER_INTERVALS, $properties['staleAfterSeconds']);
     }
 

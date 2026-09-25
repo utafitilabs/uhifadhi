@@ -170,7 +170,7 @@ final class PresencePagesReadTheSameTest extends WebTestCase
         // script edited anywhere in the core changes it, and this test is about
         // presence, not about the digest.
         $body = (string) preg_replace('#(/assets/[^"\s]+?)-[A-Za-z0-9_-]{7}\.(css|js)#', '$1-digest.$2', $body);
-        $body = (string) preg_replace('/(?!'.self::DAY.')\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+00:00/', 'wall-clock', $body);
+        $body = (string) preg_replace('/(?!'.self::DAY.')\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}/', 'wall-clock', $body);
 
         // AND WHAT SUCH A STAMP PRINTS — "25 Sep · 15:42" is the run's minute.
         $body = (string) preg_replace('/(<time[^>]*datetime="wall-clock"[^>]*>)[^<]*/', '$1wall-clock', $body);

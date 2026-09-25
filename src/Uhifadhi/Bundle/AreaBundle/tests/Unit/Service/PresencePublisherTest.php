@@ -71,7 +71,7 @@ final class PresencePublisherTest extends TestCase
         self::assertSame('AM', $properties['initials']);
         self::assertSame('4 min', $properties['age']);
         self::assertFalse($properties['stale']);
-        self::assertSame('2026-09-19T06:56:00+03:00', $properties['at']);
+        self::assertSame('2026-09-19T03:56:00+00:00', $properties['at']);
         // Fifteen-minute pings: two missed is thirty minutes.
         self::assertSame(1800, $properties['staleAfterSeconds']);
     }

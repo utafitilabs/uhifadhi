@@ -87,7 +87,9 @@ final class WebKernel extends Kernel
      * an installation supplies; the suite supplies them literally so the
      * pages set their subscriber cookie and hand their plates a stream.
      * Nothing in this suite publishes, so the address is never reached. A
-     * test standing for the deployment that configured none passes ''.
+     * test standing for the deployment that configured none passes ''; one
+     * standing for the installation that carries no hub bundle at all
+     * passes null, and this kernel then registers no MercureBundle.
      */
     public const string HUB_URL = 'http://localhost:3000/.well-known/mercure';
 
@@ -108,10 +110,11 @@ final class WebKernel extends Kernel
      *                                about is read from the clock now, so a
      *                                month boundary is a thing a test can
      *                                stand on
-     * @param string       $hubUrl    the hub's address, or '' for the deployment
-     *                                that configured none
+     * @param string|null  $hubUrl    the hub's address, '' for the deployment
+     *                                that configured none, or null for the
+     *                                installation without the hub bundle
      */
-    public function __construct(array $grants = [], private int $attention = 2, private string $clock = self::CLOCK, private int $figures = 1, private string $hubUrl = self::HUB_URL)
+    public function __construct(array $grants = [], private int $attention = 2, private string $clock = self::CLOCK, private int $figures = 1, private ?string $hubUrl = self::HUB_URL)
     {
         $this->grants = $grants;
         // The cache is keyed by what the viewer holds AND by what the
@@ -119,7 +122,7 @@ final class WebKernel extends Kernel
         // different fixtures must not share a compiled container. The clock
         // joins them for the same reason — a container built at one instant
         // must not answer for another — and so does the hub's address.
-        parent::__construct('test'.md5(implode(',', $grants).'|'.$attention.'|'.$this->clock.'|'.$this->figures.'|'.$this->hubUrl), true);
+        parent::__construct('test'.md5(implode(',', $grants).'|'.$attention.'|'.$this->clock.'|'.$this->figures.'|'.($this->hubUrl ?? 'no-hub-bundle')), true);
     }
 
     public function registerBundles(): iterable
@@ -142,8 +145,11 @@ final class WebKernel extends Kernel
         // publishes and render their plates through it, so an installation that
         // draws an area's boundary has it and so does this kernel.
         yield new AtlasBundle();
-        // The live-presence wire's hub: a requirement of the area bundle.
-        yield new MercureBundle();
+        // The live-presence wire's hub, where the installation carries it: the
+        // area bundle suggests it, and every area page answers without it.
+        if (null !== $this->hubUrl) {
+            yield new MercureBundle();
+        }
         yield new AreaBundle();
     }
 
@@ -241,15 +247,17 @@ final class WebKernel extends Kernel
          * @see https://symfony.com/doc/current/mercure.html — "Configuration"
          * @see vendor/symfony/mercure-bundle/src/DependencyInjection/MercureExtension.php
          */
-        $container->extension('mercure', [
-            'hubs' => [
-                'default' => [
-                    'url' => $this->hubUrl,
-                    'public_url' => $this->hubUrl,
-                    'jwt' => ['secret' => 'test-mercure-jwt-secret-at-least-256-bits-long'],
+        if (null !== $this->hubUrl) {
+            $container->extension('mercure', [
+                'hubs' => [
+                    'default' => [
+                        'url' => $this->hubUrl,
+                        'public_url' => $this->hubUrl,
+                        'jwt' => ['secret' => 'test-mercure-jwt-secret-at-least-256-bits-long'],
+                    ],
                 ],
-            ],
-        ]);
+            ]);
+        }
 
         $services = $container->services();
 
@@ -448,6 +456,10 @@ final class WebKernel extends Kernel
         $services->alias('test_public.area.zones', 'area.zones')->public();
         $services->alias('test_public.area.map', 'area.map')->public();
         $services->alias('test_public.area.map_payload', 'area.map_payload')->public();
+        /* The live-presence pair, reached by the suite proving the installation without a hub bundle. */
+        $services->alias('test_public.area.presence', 'area.presence')->public();
+        $services->alias('test_public.area.presence_stream', 'area.presence_stream')->public();
+        $services->alias('test_public.area.checkin_statuses', 'area.checkin_statuses')->public();
         // The ledger's writer, so a test can arrange an area's composition the
         // same way the screen does rather than inserting rows behind it.
         $services->alias('test_public.registry.area_modules', 'registry.area_modules')->public();

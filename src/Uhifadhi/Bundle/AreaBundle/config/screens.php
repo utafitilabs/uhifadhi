@@ -130,11 +130,24 @@ return static function (ContainerConfigurator $container): void {
      * authorization are the hub bundle's, registered under their own ids and
      * class name (@see vendor/symfony/mercure-bundle/src/DependencyInjection/MercureExtension.php);
      * the checker is what the pair is asked of, per area.
+     *
+     * THE HUB BUNDLE IS OPTIONAL — the core suggests it, an installation
+     * requires it — so both references carry the documented behaviour for a
+     * dependency that may be absent: "You can use the `null` strategy to
+     * explicitly set the argument to `null` if the service does not exist".
+     * With null the service offers no stream and sets no cookie, the same
+     * answer it gives a hub with no address. Nullable arguments rather than a
+     * second, hub-less definition of the service behind a `kernel.bundles`
+     * guard: the controllers take the service either way, and "no hub" is a
+     * state the service already models.
+     *
+     * @see https://symfony.com/doc/current/service_container/optional_dependencies.html — "Setting Missing Dependencies to null"
+     * @see vendor/symfony/dependency-injection/Loader/Configurator/ReferenceConfigurator.php — `nullOnInvalid()`
      */
     $services->set('area.presence_stream', PresenceStreamService::class)
         ->args([
-            service('mercure.hub.default'),
-            service(Authorization::class),
+            service('mercure.hub.default')->nullOnInvalid(),
+            service(Authorization::class)->nullOnInvalid(),
             service('security.authorization_checker'),
             service(AreaOfInterestRepository::class),
         ]);

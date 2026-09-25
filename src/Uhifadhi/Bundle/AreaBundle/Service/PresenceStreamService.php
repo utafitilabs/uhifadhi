@@ -43,9 +43,11 @@ use Uhifadhi\Bundle\AtlasBundle\Model\LiveStream;
  * page subscribes to every area the viewer may read, in ONE cookie, because
  * the hub reads one.
  *
- * NOTHING TO AUTHORIZE A SUBSCRIBER AGAINST WHILE THE HUB HAS NO ADDRESS: a
- * deployment that configured none gets no cookie and a plate with no stream,
- * which is the plate exactly as the page drew it.
+ * NOTHING TO AUTHORIZE A SUBSCRIBER AGAINST WITHOUT A HUB: an installation
+ * that carries no hub bundle — the core suggests symfony/mercure-bundle, and
+ * the hub and the authorization arrive as null where it is not registered —
+ * and a deployment that configured no address both get no cookie and a plate
+ * with no stream, which is the plate exactly as the page drew it.
  *
  * @see https://symfony.com/doc/current/mercure.html — "Authorization", "Programmatically Setting The Cookie"
  * @see vendor/symfony/mercure/src/Authorization.php — `createCookie(Request, array $grants)`
@@ -60,8 +62,9 @@ final readonly class PresenceStreamService
     public const string PAIR = 'areas.read';
 
     public function __construct(
-        private HubInterface $hub,
-        private Authorization $authorization,
+        /** The hub and the subscriber authorization, or null in an installation without the hub bundle. */
+        private ?HubInterface $hub,
+        private ?Authorization $authorization,
         private AuthorizationCheckerInterface $checker,
         private AreaOfInterestRepository $areas,
     ) {
@@ -84,6 +87,10 @@ final readonly class PresenceStreamService
      */
     private function open(Request $request, iterable $areas): ?PresenceSubscription
     {
+        if (null === $this->hub || null === $this->authorization) {
+            return null;
+        }
+
         $hub = $this->hub->getPublicUrl();
         if ('' === $hub || !self::sameOrigin($hub, $request)) {
             return null;

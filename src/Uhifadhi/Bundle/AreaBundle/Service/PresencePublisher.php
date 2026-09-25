@@ -41,10 +41,13 @@ use Uhifadhi\Contracts\Area\LivePositionsInterface;
  * {@see LivePositionsInterface} the plate reads, at the clock's instant, so
  * a mark cannot be verified on the wire and unverified on the page.
  *
- * THE HANDSET NEVER WAITS ON THE HUB. A deployment may have left the hub's
- * address unset, and a configured hub may be down; neither is the ping's
- * problem. An address-less hub publishes nothing at all, and a failing one
- * is logged and swallowed — a lost frame is never a lost ping.
+ * THE HANDSET NEVER WAITS ON THE HUB. An installation may carry no hub
+ * bundle at all — the core suggests symfony/mercure-bundle and the hub is
+ * handed in as null where it is not registered — a deployment may have left
+ * the hub's address unset, and a configured hub may be down; none of that is
+ * the ping's problem. No hub or an address-less hub publishes nothing at
+ * all, and a failing one is logged and swallowed — a lost frame is never a
+ * lost ping.
  *
  * The update is the documented private one: "Mercure also allows dispatching
  * updates only to authorized clients. To do so, mark the update as private
@@ -65,7 +68,8 @@ final readonly class PresencePublisher
     private const string TOPIC = 'area/%s/presence';
 
     public function __construct(
-        private HubInterface $hub,
+        /** The hub, or null in an installation without the hub bundle. */
+        private ?HubInterface $hub,
         private LivePositionsInterface $positions,
         private ClockInterface $clock,
         private LoggerInterface $logger,
@@ -79,12 +83,12 @@ final readonly class PresencePublisher
 
     /**
      * Publish one person's current mark in one area — where they are now, or
-     * that they are gone. A no-op where the deployment configured no hub
-     * address; never throws.
+     * that they are gone. A no-op where the installation has no hub or the
+     * deployment configured no hub address; never throws.
      */
     public function publish(string $areaUuid, string $personUuid): void
     {
-        if ('' === $this->hub->getPublicUrl()) {
+        if (null === $this->hub || '' === $this->hub->getPublicUrl()) {
             return;
         }
 

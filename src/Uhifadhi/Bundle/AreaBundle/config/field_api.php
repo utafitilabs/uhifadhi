@@ -113,18 +113,23 @@ return static function (ContainerConfigurator $container): void {
      */
     /*
      * THE WIRE — one person's mark published to the area's private Mercure
-     * topic after each write. The hub bundle is a requirement of this bundle,
-     * so `mercure.hub.default` is simply there and is injected straight; what
-     * a deployment still decides is the hub's ADDRESS, and an empty one the
-     * publisher reads off the hub itself and treats as "publish nothing".
-     * The clock is the same one the presence reading uses, so the frame and
-     * the plate agree about now.
+     * topic after each write. THE HUB IS OPTIONAL: the core suggests
+     * symfony/mercure-bundle and an installation requires it (the starter
+     * does), so `mercure.hub.default` is named with the documented behaviour
+     * for a dependency that may be absent — "You can use the `null` strategy
+     * to explicitly set the argument to `null` if the service does not
+     * exist" — and the publisher reads null as "publish nothing", exactly as
+     * it reads a hub whose ADDRESS the deployment left empty. The clock is
+     * the same one the presence reading uses, so the frame and the plate
+     * agree about now.
      *
+     * @see https://symfony.com/doc/current/service_container/optional_dependencies.html — "Setting Missing Dependencies to null"
+     * @see vendor/symfony/dependency-injection/Loader/Configurator/ReferenceConfigurator.php — `nullOnInvalid()`
      * @see vendor/symfony/mercure-bundle/src/DependencyInjection/MercureExtension.php — `mercure.hub.<name>`
      */
     $services->set('area.presence_publisher', PresencePublisher::class)
         ->args([
-            service('mercure.hub.default'),
+            service('mercure.hub.default')->nullOnInvalid(),
             service('area.presence'),
             service('clock'),
             service('logger'),

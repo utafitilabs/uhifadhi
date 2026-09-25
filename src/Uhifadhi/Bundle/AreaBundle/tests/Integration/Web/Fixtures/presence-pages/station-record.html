@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Eastgate Post · Sample Reserve — Sample Reserve — Uhifadhi</title>
+
+        <link rel="icon" type="image/svg+xml" href="/assets/bundles/shell/favicon-1X1B-o4.svg">
+
+        <script>
+        (function () {
+            try {
+                // Four answers, in the order they outrank each other: what this
+                // link asked for, what the visitor chose, what the deployment
+                // defaults to, and — if that default is "system" — what the
+                // operating system prefers. The link override is here rather
+                // than in a controller so that a screenshot or a projector gets
+                // the palette it asked for on the FIRST frame.
+                var asked = new URLSearchParams(window.location.search).get('theme');
+                var choice = asked || localStorage.getItem('shell-theme')
+                    || 'light';
+                var dark = choice === 'dark' || (choice === 'system'
+                    && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', dark);
+
+                // THE SIDEBAR'S WIDTH IS THE SAME KIND OF FACT, and it is
+                // resolved here for the same reason: a remembered rail applied
+                // when the sidebar's controller connects is a 236px sidebar
+                // that jumps to 66px after the first frame, on every load.
+                // <html> is the only element that exists this early, so the
+                // stylesheet draws the rail from a class on it as well.
+                document.documentElement.classList.toggle('shell-rail',
+                    localStorage.getItem('shell-sidebar') === 'rail');
+            } catch (e) { /* a browser that refuses to remember still gets a themed page */ }
+        })();
+    </script>
+
+                        <link rel="stylesheet" href="/assets/bundles/shell/shell-b5VmR1v.css">
+
+                            <link rel="stylesheet" href="/assets/bundles/atlas/map-7Aef8O_.css">
+                    <link rel="stylesheet" href="/assets/bundles/atlas/chart-DjKr_8a.css">
+                    <link rel="stylesheet" href="/assets/bundles/atlas/calendar-O9GLeC-.css">
+                    <link rel="stylesheet" href="/assets/bundles/atlas/heat-O_vPTRb.css">
+            
+    <link rel="stylesheet" href="/assets/bundles/shell/widget-m1LJ-Qk.css">
+<link rel="stylesheet" href="/assets/bundles/area/area-FmFCMO_.css">
+
+
+                    
+<script type="importmap">
+{
+    "imports": {
+        "app": "/assets/app--dNaIVl.js"
+    }
+}
+</script><script>
+if (!HTMLScriptElement.supports || !HTMLScriptElement.supports('importmap')) (function () {
+    const script = document.createElement('script');
+    script.src = 'https://ga.jspm.io/npm:es-module-shims@1.10.0/dist/es-module-shims.js';
+    if (document.currentScript?.nonce) script.nonce = document.currentScript.nonce;
+    script.setAttribute('crossorigin', 'anonymous');
+    script.setAttribute('integrity', 'sha384-ie1x72Xck445i0j4SlNJ5W5iGeL3Dpa0zD48MZopgWsjNB/lt60SuG1iduZGNnJn');
+    document.head.appendChild(script);
+})();
+</script>
+<link rel="modulepreload" href="/assets/app--dNaIVl.js">
+<script type="module">import 'app';</script>    </head>
+<body data-controller="uhifadhi--shell-bundle--localtime uhifadhi--shell-bundle--confirm-modal">
+    <div class="shell" data-controller="uhifadhi--shell-bundle--sidebar"
+         data-action="keydown.esc@document->uhifadhi--shell-bundle--sidebar#close">
+                    <aside class="side" id="side" data-uhifadhi--shell-bundle--sidebar-target="side"
+                   data-action="click->uhifadhi--shell-bundle--sidebar#follow">
+                <div class="side-top">
+                    <a class="brand" href="/"><svg class="brandmark" viewBox="0 0 100 100" width="32" height="32" role="img" aria-label="Uhifadhi">
+    <path class="bm-tile" fill-rule="evenodd" d="M18 0H82A18 18 0 0 1 100 18V64L64 100H18A18 18 0 0 1 0 82V18A18 18 0 0 1 18 0ZM23 20V50A27 27 0 0 0 77 50V20H62V50A12 12 0 0 1 38 50V20Z"/>
+    <g transform="translate(52,52) scale(0.48)">
+        <path class="bm-child" d="M18 0H82A18 18 0 0 1 100 18V64L64 100H18A18 18 0 0 1 0 82V18A18 18 0 0 1 18 0Z"/>
+        <path class="bm-ring" d="M18 0H82A18 18 0 0 1 100 18V64L64 100H18A18 18 0 0 1 0 82V18A18 18 0 0 1 18 0Z" stroke-width="11"/>
+    </g>
+</svg>
+<b>UHIFADHI</b>
+                        </a>
+                                        <button class="collapse-btn" type="button" data-action="uhifadhi--shell-bundle--sidebar#toggle"
+                            title="Collapse sidebar" aria-label="Collapse sidebar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m11 17l-5-5l5-5m7 10l-5-5l5-5"></path></svg></button>
+                                        <button class="side-close" type="button" data-uhifadhi--shell-bundle--sidebar-target="closer"
+                            data-action="uhifadhi--shell-bundle--sidebar#close"
+                            title="Close menu" aria-label="Close menu"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 6L6 18M6 6l12 12"></path></svg></button>
+                </div>
+
+                                                        <nav class="nav" data-controller="uhifadhi--shell-bundle--sidebar-tree">
+            <div class="nav-hd">Observatory</div>
+                    <a class="nav-item" href="/"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect width="18" height="7" x="3" y="3" rx="1"></rect><rect width="9" height="7" x="3" y="14" rx="1"></rect><rect width="5" height="7" x="16" y="14" rx="1"></rect></g></svg><span>Dashboard</span></a>
+                    <a class="nav-item path" data-nav-key="Areas" href="/areas"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0zm.894.211v15M9 3.236v15"></path></svg><span>Areas</span><button class="chev" type="button" aria-label="Fold Areas"
+            data-action="uhifadhi--shell-bundle--sidebar-tree#fold"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg></button></a>    <div class="ntree"><a class="nta on" data-nav-key="Areas/Sample Reserve" href="/areas/id-1"><b>Sample Reserve</b><button class="chev" type="button" aria-label="Fold Sample Reserve"
+            data-action="uhifadhi--shell-bundle--sidebar-tree#fold"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg></button></a>    <div class="nta-group"><a class="ntt" href="/areas/id-1">Overview</a><a class="ntt par closed" data-nav-key="Areas/Sample Reserve/Zones" href="/areas/id-1/zones">Zones<button class="chev" type="button" aria-label="Fold Zones"
+            data-action="uhifadhi--shell-bundle--sidebar-tree#fold"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg></button></a>    <div class="ntgroup closed"><a class="ntm" href="/areas/id-1/zones/id-2"><i class="mdot" style="background:var(--cat-1)"></i>West</a></div>
+<a class="ntt par closed" data-nav-key="Areas/Sample Reserve/Stations" href="/areas/id-1/stations">Stations<button class="chev" type="button" aria-label="Fold Stations"
+            data-action="uhifadhi--shell-bundle--sidebar-tree#fold"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg></button></a>    <div class="ntgroup closed"><a class="ntm" href="/areas/id-1/stations?focus=1"><i class="mdot"></i>Contributed one</a><a class="ntm" href="/areas/id-1/stations?focus=2"><i class="mdot"></i>Contributed two</a></div>
+</div>
+</div>
+
+                    <a class="nav-item closed" data-nav-key="Sightings" href="/sightings"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0zm.894.211v15M9 3.236v15"></path></svg><span>Sightings</span><button class="chev" type="button" aria-label="Fold Sightings"
+            data-action="uhifadhi--shell-bundle--sidebar-tree#fold"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg></button></a>    <div class="ntree closed"><a class="ntt" href="/sightings">Overview</a><a class="ntt" href="/sightings/today">Today</a></div>
+
+                    <div class="nav-hd">Settings</div>
+                    <a class="nav-item closed" data-nav-key="Settings" href="/settings"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></circle></svg><span>Settings</span><button class="chev" type="button" aria-label="Fold Settings"
+            data-action="uhifadhi--shell-bundle--sidebar-tree#fold"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg></button></a>    <div class="ntree closed"><a class="ntt" href="/settings">Overview</a><a class="ntt" href="/settings/installation">Installation</a><a class="ntt" href="/settings/modules">Modules</a><a class="ntt" href="/settings/organization">Organization</a></div>
+
+            </nav>
+                            </aside>
+        
+                <div class="side-scrim" aria-hidden="true" data-action="click->uhifadhi--shell-bundle--sidebar#close"></div>
+
+                    <main class="main" data-uhifadhi--shell-bundle--sidebar-target="main">
+                
+                                    <header class="topbar">
+                        <span class="tb-right">
+                                                        <button class="tb-icon side-open" type="button" data-uhifadhi--shell-bundle--sidebar-target="opener"
+                                    data-action="uhifadhi--shell-bundle--sidebar#open"
+                                    aria-controls="side" aria-expanded="false"
+                                    title="Open menu" aria-label="Open menu"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5h16M4 12h16M4 19h16"></path></svg></button>
+
+                            <span class="tb-rightgrp">
+                                                                                                                        <span class="tb-icon off" title="Alerts — planned"
+                                      aria-label="Alerts — planned"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></g></svg></span>
+
+                                                                <button class="tb-icon" type="button" data-controller="uhifadhi--shell-bundle--theme"
+                                        data-action="uhifadhi--shell-bundle--theme#toggle"
+                                        title="Toggle theme" aria-label="Toggle theme"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></g></svg></button>
+
+                                                            </span>
+                        </span>
+                    </header>
+                
+                                
+                                <div class="page"><div class="crumb">    <a href="/areas">uhifadhi</a> /
+    <a href="/areas/id-1">Sample Reserve</a> /
+        <a href="/areas/id-1/stations">stations</a> /
+    eastgate post
+</div><div class="pghead"><div><h1 class="pg">Eastgate Post</h1><p class="pgsub">ST-01 &middot; West &middot; 0 stationed</p></div><div class="pgact w-pgact">        <a class="tgl w-act" href="/areas/id-1/configure/stations?open=id-3"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1l1-4Z"></path></g></svg> Edit the station</a>
+</div></div><div class="pgbody">
+<div class="factband stband">
+    <span class="f"><span class="k">Zone</span><span class="v">West<em>derived</em></span></span>
+    <span class="f"><span class="k">Code</span><span class="v">ST-01</span></span>    <span class="f"><span class="k">Stationed</span><span class="v">0</span></span>
+    <span class="f"><span class="k">Lead</span><span class="v">&mdash;</span></span>
+            <span class="f"><span class="k">Opened</span><span class="v">&mdash;<em>active</em>
+    </span></span>
+    <span class="sp"></span>
+    <a class="more" href="/areas/id-1/stations?zone=id-2">West zone &rarr;</a></div>
+
+<div class="recgrid">
+    <div class="col">
+        <div class="c">
+            <span class="tab">The ground around the station<span class="src">&middot; ST-01 </span></span>
+                        <div class="map-plate" data-controller="uhifadhi--atlas-bundle--map-plate" data-atlas-plate>
+        <div class="map-body">
+        
+        <div class="viewer" data-uhifadhi--atlas-bundle--map-plate-target="frame"><div data-controller="symfony--ux-leaflet-map--map" data-symfony--ux-leaflet-map--map-provider-options-value="{}" data-symfony--ux-leaflet-map--map-center-value="{&quot;lat&quot;:0,&quot;lng&quot;:0}" data-symfony--ux-leaflet-map--map-zoom-value="2" data-symfony--ux-leaflet-map--map-fit-bounds-to-markers-value="false" data-symfony--ux-leaflet-map--map-options-value="{&quot;tileLayer&quot;:false,&quot;attributionControlOptions&quot;:{&quot;position&quot;:&quot;bottomleft&quot;,&quot;prefix&quot;:false},&quot;@provider&quot;:&quot;leaflet&quot;}" data-symfony--ux-leaflet-map--map-markers-value="[]" data-symfony--ux-leaflet-map--map-polygons-value="[]" data-symfony--ux-leaflet-map--map-polylines-value="[]" data-symfony--ux-leaflet-map--map-circles-value="[]" data-symfony--ux-leaflet-map--map-rectangles-value="[]" data-symfony--ux-leaflet-map--map-extra-value="{&quot;atlas&quot;:{&quot;layers&quot;:[{&quot;id&quot;:&quot;area.zones.set&quot;,&quot;features&quot;:{&quot;type&quot;:&quot;FeatureCollection&quot;,&quot;features&quot;:[{&quot;type&quot;:&quot;Feature&quot;,&quot;properties&quot;:{&quot;zone&quot;:&quot;West&quot;,&quot;label&quot;:&quot;West&quot;},&quot;geometry&quot;:{&quot;type&quot;:&quot;MultiPolygon&quot;,&quot;coordinates&quot;:[[[[-30,-3.6],[-29.5,-3.6],[-29.5,-2.8],[-30,-2.8],[-30,-3.6]]]]}}]},&quot;url&quot;:null,&quot;swatch&quot;:&quot;var(--plate-acc)&quot;,&quot;shape&quot;:&quot;fill&quot;,&quot;visible&quot;:true,&quot;style&quot;:[],&quot;rules&quot;:[{&quot;property&quot;:&quot;zone&quot;,&quot;values&quot;:[&quot;West&quot;],&quot;style&quot;:{&quot;color&quot;:&quot;var(--cat-p-1)&quot;,&quot;fillColor&quot;:&quot;var(--cat-p-1)&quot;}}],&quot;tooltip&quot;:null,&quot;popup&quot;:null,&quot;featureId&quot;:null,&quot;labels&quot;:false},{&quot;id&quot;:&quot;area.stations&quot;,&quot;features&quot;:{&quot;type&quot;:&quot;FeatureCollection&quot;,&quot;features&quot;:[{&quot;type&quot;:&quot;Feature&quot;,&quot;properties&quot;:{&quot;label&quot;:&quot;Eastgate Post&quot;,&quot;posted&quot;:0,&quot;here&quot;:true,&quot;zone&quot;:null,&quot;hue&quot;:null},&quot;geometry&quot;:{&quot;type&quot;:&quot;Point&quot;,&quot;coordinates&quot;:[-29.75,-3.2]}},{&quot;type&quot;:&quot;Feature&quot;,&quot;properties&quot;:{&quot;label&quot;:&quot;Westgate Post&quot;,&quot;posted&quot;:0,&quot;here&quot;:false,&quot;zone&quot;:null,&quot;hue&quot;:null},&quot;geometry&quot;:{&quot;type&quot;:&quot;Point&quot;,&quot;coordinates&quot;:[-29.9,-3.3]}}]},&quot;url&quot;:null,&quot;swatch&quot;:&quot;var(--plate-acc)&quot;,&quot;shape&quot;:&quot;fill&quot;,&quot;visible&quot;:true,&quot;style&quot;:[],&quot;rules&quot;:[{&quot;property&quot;:&quot;here&quot;,&quot;values&quot;:[true],&quot;style&quot;:{&quot;color&quot;:&quot;var(--plate-acc)&quot;,&quot;fillColor&quot;:&quot;var(--plate-acc)&quot;}}],&quot;tooltip&quot;:null,&quot;popup&quot;:null,&quot;featureId&quot;:null,&quot;labels&quot;:true}],&quot;boundary&quot;:{&quot;geojson&quot;:{&quot;type&quot;:&quot;MultiPolygon&quot;,&quot;coordinates&quot;:[[[[-30,-3.6],[-29,-3.6],[-29,-2.8],[-30,-2.8],[-30,-3.6]]]]},&quot;scrim&quot;:true},&quot;baseLayers&quot;:[&quot;satellite&quot;,&quot;osm&quot;],&quot;fullscreen&quot;:true,&quot;fit&quot;:true,&quot;subject&quot;:{&quot;geojson&quot;:{&quot;type&quot;:&quot;Point&quot;,&quot;coordinates&quot;:[-29.75,-3.2]},&quot;zoom&quot;:12},&quot;live&quot;:null,&quot;pick&quot;:null}}" role="img" aria-label="Eastgate Post and the ground around it" class="map-canvas map-chrome-host"></div></div>
+    </div>
+                    <div class="map-legend" data-uhifadhi--atlas-bundle--map-plate-target="legend">
+                            <div class="grp">
+                                            <b><i style="background:var(--plate-acc)"></i>The area</b>
+                                                                                                                                            <button type="button" class="lay"
+                                    data-action="uhifadhi--atlas-bundle--map-plate#toggleLayer"
+                                    data-uhifadhi--atlas-bundle--map-plate-layer-param="atlas.boundary"
+                                    aria-pressed="true"><span class="sw ln" style="color:var(--plate-acc)"></span>Boundary                                <span class="tog">on</span>
+                            </button>
+                                                            </div>
+                            <div class="grp">
+                                            <b><i style="background:var(--cat-p-1)"></i>The zones</b>
+                                                                                                                                                                                                    <span class="lay" data-atlas-shape="fill"><span class="sw" style="background:var(--cat-p-1)"></span>West · 4,916 km²</span>
+                                                                                                                                                <button type="button" class="lay"
+                                    data-action="uhifadhi--atlas-bundle--map-plate#toggleLayer"
+                                    data-uhifadhi--atlas-bundle--map-plate-layer-param="area.zones.set"
+                                    aria-pressed="true"><span class="sw" style="background:var(--plate-acc)"></span>Zones<em>1</em>                                <span class="tog">on</span>
+                            </button>
+                                                            </div>
+                            <div class="grp">
+                                            <b><i style="background:var(--plate-acc)"></i>The posts</b>
+                                                                                                                                            <button type="button" class="lay"
+                                    data-action="uhifadhi--atlas-bundle--map-plate#toggleLayer"
+                                    data-uhifadhi--atlas-bundle--map-plate-layer-param="area.stations"
+                                    aria-pressed="true"><span class="sw" style="background:var(--plate-acc)"></span>Stations<em>2</em>                                <span class="tog">on</span>
+                            </button>
+                                                            </div>
+                    </div>
+    
+    </div>
+
+        </div>
+
+        <div class="c stpostings">
+            <span class="tab">Who is stationed here<span class="src">&middot; 0 people</span></span>
+
+                        <div class="lfilt stfilt">
+                                <details class="i-dd">
+    <summary class="mchip i-ddt">
+        <span class="i-ddval">source</span>
+        <span class="i-ddcaret">&#9662;</span>
+    </summary>
+    <div class="i-ddmenu">
+        <span class="i-ddhead">source</span>
+        <a class="i-ddopt on"
+           href="/areas/id-1/stations/id-3">
+            <span class="i-ddopt-l">source</span>
+        </a>
+        <span class="i-ddsep"></span>
+            </div>
+</details>
+
+                <details class="i-dd">
+    <summary class="mchip i-ddt">
+        <span class="i-ddval">order</span>
+        <span class="i-ddcaret">&#9662;</span>
+    </summary>
+    <div class="i-ddmenu">
+        <span class="i-ddhead">a&ndash;z</span>
+        <a class="i-ddopt on"
+           href="/areas/id-1/stations/id-3">
+            <span class="i-ddopt-l">order</span>
+        </a>
+        <span class="i-ddsep"></span>
+                    <a class="i-ddopt"
+               href="/areas/id-1/stations/id-3?sort=since">
+                                <span class="i-ddopt-l">by how long</span>
+                            </a>
+            </div>
+</details>
+
+
+                <form class="lsearch" method="get" action="/areas/id-1/stations/id-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m21 21l-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></g></svg>
+                    <input class="fld" type="search" name="q" value="" placeholder="Search&hellip;"
+                           aria-label="Search the people stationed here">
+                                    </form>
+            </div>
+
+                                            <div class="zempty stpplnone">
+                    <b class="zeh">Nobody is stationed here</b>
+                    <p class="zeb">A station with nobody at it is a normal state, not an error. Assignments are made on the area&rsquo;s configure page.</p>
+                                            <span class="zea"><a class="btn sm" href="/areas/id-1/configure/stations?open=id-3">Station somebody &rarr;</a></span>
+                                    </div>
+                    </div>
+
+                            <div class="c rband" id="watch">
+    <div class="rb-hd">
+        <span class="tab"><span class="ao-by patrols"><i></i>patrols</span>Watch and presence</span>
+        <span class="rb-ttl">day &amp; night · 2 rostered now</span>                    <span class="rb-act">
+                <a class="btn sm" href="/modules/fake/rotation">The rotation</a>            </span>
+            </div>
+    <div class="rb-body"><div class="rln"><span class="fog">Expected shifts</span><span>day 06-18 and night 18-06</span></div>
+</div>
+</div>
+
+            </div>
+
+    <div class="col">
+        <div class="c">
+            <span class="tab">The point</span>
+            <div class="rln"><span class="fog">Coordinates</span><span class="mono">-3.20000, -29.75000</span></div>
+                                    <div class="rln"><span class="fog">Catchment</span><span class="mono">300 m
+                    of the station point &mdash; a check-in claiming this station is verified inside it</span></div>
+
+                        <div class="stsep">What the modules publish<span>September 2026</span></div>
+                            <div class="use">No module publishes figures for this station yet.</div>
+                    </div>
+
+        <div class="c stlogcard">
+            <span class="tab">What happened here<span class="src">&middot; 2 lines</span></span>
+                            <div class="zhist stlog zhistcap">
+                                            <div class="zhrow">
+                            <span class="zhdot on"></span>
+                            <div><b>Now in West <span>&middot; the station was recorded</span></b></div>
+                            <time class="zhwhen" datetime="wall-clock" data-localtime-format="day">25 Sep</time>
+                        </div>
+                                            <div class="zhrow">
+                            <span class="zhdot"></span>
+                            <div><b>Station recorded</b></div>
+                            <time class="zhwhen" datetime="wall-clock" data-localtime-format="day">25 Sep</time>
+                        </div>
+                                    </div>
+                    </div>
+    </div>
+</div>
+</div>
+    </div>
+
+                            </main>
+            </div>
+</body>
+</html>

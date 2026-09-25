@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Uhifadhi — Uhifadhi</title>
+
+        <link rel="icon" type="image/svg+xml" href="/assets/bundles/shell/favicon-1X1B-o4.svg">
+
+        <script>
+        (function () {
+            try {
+                // Four answers, in the order they outrank each other: what this
+                // link asked for, what the visitor chose, what the deployment
+                // defaults to, and — if that default is "system" — what the
+                // operating system prefers. The link override is here rather
+                // than in a controller so that a screenshot or a projector gets
+                // the palette it asked for on the FIRST frame.
+                var asked = new URLSearchParams(window.location.search).get('theme');
+                var choice = asked || localStorage.getItem('shell-theme')
+                    || 'light';
+                var dark = choice === 'dark' || (choice === 'system'
+                    && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', dark);
+
+                // THE SIDEBAR'S WIDTH IS THE SAME KIND OF FACT, and it is
+                // resolved here for the same reason: a remembered rail applied
+                // when the sidebar's controller connects is a 236px sidebar
+                // that jumps to 66px after the first frame, on every load.
+                // <html> is the only element that exists this early, so the
+                // stylesheet draws the rail from a class on it as well.
+                document.documentElement.classList.toggle('shell-rail',
+                    localStorage.getItem('shell-sidebar') === 'rail');
+            } catch (e) { /* a browser that refuses to remember still gets a themed page */ }
+        })();
+    </script>
+
+                        <link rel="stylesheet" href="/assets/bundles/shell/shell-b5VmR1v.css">
+
+                            <link rel="stylesheet" href="/assets/bundles/atlas/map-7Aef8O_.css">
+                    <link rel="stylesheet" href="/assets/bundles/atlas/chart-DjKr_8a.css">
+                    <link rel="stylesheet" href="/assets/bundles/atlas/calendar-O9GLeC-.css">
+                    <link rel="stylesheet" href="/assets/bundles/atlas/heat-O_vPTRb.css">
+            
+    <link rel="stylesheet" href="/assets/bundles/shell/widget-m1LJ-Qk.css">
+<link rel="stylesheet" href="/assets/bundles/area/area-FmFCMO_.css">
+
+    <link rel="stylesheet" href="/assets/bundles/shell/widget-m1LJ-Qk.css">
+                <link rel="stylesheet" href="/bundles/patrols/patrols.css">
+    
+                    
+<script type="importmap">
+{
+    "imports": {
+        "app": "/assets/app--dNaIVl.js"
+    }
+}
+</script><script>
+if (!HTMLScriptElement.supports || !HTMLScriptElement.supports('importmap')) (function () {
+    const script = document.createElement('script');
+    script.src = 'https://ga.jspm.io/npm:es-module-shims@1.10.0/dist/es-module-shims.js';
+    if (document.currentScript?.nonce) script.nonce = document.currentScript.nonce;
+    script.setAttribute('crossorigin', 'anonymous');
+    script.setAttribute('integrity', 'sha384-ie1x72Xck445i0j4SlNJ5W5iGeL3Dpa0zD48MZopgWsjNB/lt60SuG1iduZGNnJn');
+    document.head.appendChild(script);
+})();
+</script>
+<link rel="modulepreload" href="/assets/app--dNaIVl.js">
+<script type="module">import 'app';</script>    </head>
+<body data-controller="uhifadhi--shell-bundle--localtime uhifadhi--shell-bundle--confirm-modal">
+    <div class="shell" data-controller="uhifadhi--shell-bundle--sidebar"
+         data-action="keydown.esc@document->uhifadhi--shell-bundle--sidebar#close">
+                    <aside class="side" id="side" data-uhifadhi--shell-bundle--sidebar-target="side"
+                   data-action="click->uhifadhi--shell-bundle--sidebar#follow">
+                <div class="side-top">
+                    <a class="brand" href="/"><svg class="brandmark" viewBox="0 0 100 100" width="32" height="32" role="img" aria-label="Uhifadhi">
+    <path class="bm-tile" fill-rule="evenodd" d="M18 0H82A18 18 0 0 1 100 18V64L64 100H18A18 18 0 0 1 0 82V18A18 18 0 0 1 18 0ZM23 20V50A27 27 0 0 0 77 50V20H62V50A12 12 0 0 1 38 50V20Z"/>
+    <g transform="translate(52,52) scale(0.48)">
+        <path class="bm-child" d="M18 0H82A18 18 0 0 1 100 18V64L64 100H18A18 18 0 0 1 0 82V18A18 18 0 0 1 18 0Z"/>
+        <path class="bm-ring" d="M18 0H82A18 18 0 0 1 100 18V64L64 100H18A18 18 0 0 1 0 82V18A18 18 0 0 1 18 0Z" stroke-width="11"/>
+    </g>
+</svg>
+<b>UHIFADHI</b>
+                        </a>
+                                        <button class="collapse-btn" type="button" data-action="uhifadhi--shell-bundle--sidebar#toggle"
+                            title="Collapse sidebar" aria-label="Collapse sidebar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m11 17l-5-5l5-5m7 10l-5-5l5-5"></path></svg></button>
+                                        <button class="side-close" type="button" data-uhifadhi--shell-bundle--sidebar-target="closer"
+                            data-action="uhifadhi--shell-bundle--sidebar#close"
+                            title="Close menu" aria-label="Close menu"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 6L6 18M6 6l12 12"></path></svg></button>
+                </div>
+
+                                                        <nav class="nav" data-controller="uhifadhi--shell-bundle--sidebar-tree">
+            <div class="nav-hd">Observatory</div>
+                    <a class="nav-item on" href="/"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect width="18" height="7" x="3" y="3" rx="1"></rect><rect width="9" height="7" x="3" y="14" rx="1"></rect><rect width="5" height="7" x="16" y="14" rx="1"></rect></g></svg><span>Dashboard</span></a>
+                    <a class="nav-item closed" data-nav-key="Areas" href="/areas"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0zm.894.211v15M9 3.236v15"></path></svg><span>Areas</span><button class="chev" type="button" aria-label="Fold Areas"
+            data-action="uhifadhi--shell-bundle--sidebar-tree#fold"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg></button></a>    <div class="ntree closed"><a class="nta closed" data-nav-key="Areas/Sample Reserve" href="/areas/id-1"><b>Sample Reserve</b><button class="chev" type="button" aria-label="Fold Sample Reserve"
+            data-action="uhifadhi--shell-bundle--sidebar-tree#fold"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg></button></a>    <div class="nta-group closed"><a class="ntt" href="/areas/id-1">Overview</a><a class="ntt" href="/areas/id-1/zones">Zones</a><a class="ntt" href="/areas/id-1/stations">Stations</a></div>
+</div>
+
+                    <a class="nav-item closed" data-nav-key="Sightings" href="/sightings"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0zm.894.211v15M9 3.236v15"></path></svg><span>Sightings</span><button class="chev" type="button" aria-label="Fold Sightings"
+            data-action="uhifadhi--shell-bundle--sidebar-tree#fold"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg></button></a>    <div class="ntree closed"><a class="ntt" href="/sightings">Overview</a><a class="ntt" href="/sightings/today">Today</a></div>
+
+                    <div class="nav-hd">Settings</div>
+                    <a class="nav-item closed" data-nav-key="Settings" href="/settings"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></circle></svg><span>Settings</span><button class="chev" type="button" aria-label="Fold Settings"
+            data-action="uhifadhi--shell-bundle--sidebar-tree#fold"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg></button></a>    <div class="ntree closed"><a class="ntt" href="/settings">Overview</a><a class="ntt" href="/settings/installation">Installation</a><a class="ntt" href="/settings/modules">Modules</a><a class="ntt" href="/settings/organization">Organization</a></div>
+
+            </nav>
+                            </aside>
+        
+                <div class="side-scrim" aria-hidden="true" data-action="click->uhifadhi--shell-bundle--sidebar#close"></div>
+
+                    <main class="main" data-uhifadhi--shell-bundle--sidebar-target="main">
+                
+                                    <header class="topbar">
+                        <span class="tb-right">
+                                                        <button class="tb-icon side-open" type="button" data-uhifadhi--shell-bundle--sidebar-target="opener"
+                                    data-action="uhifadhi--shell-bundle--sidebar#open"
+                                    aria-controls="side" aria-expanded="false"
+                                    title="Open menu" aria-label="Open menu"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5h16M4 12h16M4 19h16"></path></svg></button>
+
+                            <span class="tb-rightgrp">
+                                                                                                                        <span class="tb-icon off" title="Alerts — planned"
+                                      aria-label="Alerts — planned"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></g></svg></span>
+
+                                                                <button class="tb-icon" type="button" data-controller="uhifadhi--shell-bundle--theme"
+                                        data-action="uhifadhi--shell-bundle--theme#toggle"
+                                        title="Toggle theme" aria-label="Toggle theme"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></g></svg></button>
+
+                                                            </span>
+                        </span>
+                    </header>
+                
+                                
+                                <div class="page"><div class="crumb">uhifadhi</div><div class="pghead"><div><h1 class="pg">Uhifadhi</h1><p class="pgsub">What the whole organization looks like this minute, composed from every module installed in every area.</p></div><div class="pgact w-pgact">        <a class="tgl w-act" href="/widgets"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></g></svg> Widget library</a>
+    <a class="cta" href="/areas/new"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7-7v14"></path></svg> New area</a>
+</div></div><div class="pgbody">    <div class="w-grid">
+                    <div class="w-cell w-span-6">
+                                <div class="c" data-w="patrols_org">
+    <span class="tab">Out across the organization<span class="src">&middot; 3 open</span></span>
+    <span class="ao-by patrols"><i></i>patrols</span>
+    <div class="use">96 km walked today, everywhere.</div>
+</div>
+
+            </div>
+                    <div class="w-cell w-span-12">
+                                <div class="grid kstrip ao-kstrip" data-w="kpis">
+            <div class="c kpi">
+            <span class="tab">Patrols out</span>
+            <b class="disp">3</b>
+            <span class="sub">across every area</span>        </div>
+            <div class="c kpi">
+            <span class="tab">Areas</span>
+            <b class="disp">1</b>
+            <span class="sub">1 running</span>        </div>
+                            <div class="c kpi">
+                <span class="tab">Nothing measured</span>
+                <b class="disp">&mdash;</b>
+                <span class="sub">nothing measured &middot; no module publishes this</span>
+            </div>
+                    <div class="c kpi">
+                <span class="tab">Nothing measured</span>
+                <b class="disp">&mdash;</b>
+                <span class="sub">nothing measured &middot; no module publishes this</span>
+            </div>
+            </div>
+
+            </div>
+                    <div class="w-cell w-span-12">
+                                <div class="c" data-w="attention">
+    <span class="tab">Needs a decision<span class="src">&middot; 2 items &middot; sorted by urgency, not by module</span></span>
+    <a class="more" href="/areas">Every area &rarr;</a>
+    <span class="ao-by"><i></i>the organization &middot; module items</span>
+
+            <a class="ao-att now" href="/x/0">
+            <span class="sev"></span>
+            <span class="bd">
+                <span class="t"><b>A patrol has stopped pinging</b></span>
+                <span class="m"><i></i>Patrols &middot; live position</span>
+            </span>
+            <span class="age">2 h 10</span>
+        </a>
+            <a class="ao-att soon" href="/x/1">
+            <span class="sev"></span>
+            <span class="bd">
+                <span class="t"><b>A track was never filed</b></span>
+                <span class="m"><i></i>Patrols &middot; unfiled</span>
+            </span>
+            <span class="age">2 h 10</span>
+        </a>
+    
+    </div>
+
+            </div>
+                    <div class="w-cell w-span-12">
+                                    <div class="c" data-w="plate">
+        <span class="tab">Where everybody is<span class="src">&middot; <span class="ao-live"><i></i>live</span> &middot; <time datetime="wall-clock" data-localtime-format="stamp">25 Sep &middot; 15:42</time></span></span>
+        <span class="ao-by"><i></i>the organization&rsquo;s ground &middot; module layers</span>
+        <div class="map-plate" style="--map-plate-height:min(58vh, 560px)" data-controller="uhifadhi--atlas-bundle--map-plate" data-atlas-plate>
+        <div class="map-body">
+        
+        <div class="viewer" data-uhifadhi--atlas-bundle--map-plate-target="frame"><div data-controller="symfony--ux-leaflet-map--map" data-symfony--ux-leaflet-map--map-provider-options-value="{}" data-symfony--ux-leaflet-map--map-center-value="{&quot;lat&quot;:0,&quot;lng&quot;:0}" data-symfony--ux-leaflet-map--map-zoom-value="2" data-symfony--ux-leaflet-map--map-fit-bounds-to-markers-value="false" data-symfony--ux-leaflet-map--map-options-value="{&quot;tileLayer&quot;:false,&quot;attributionControlOptions&quot;:{&quot;position&quot;:&quot;bottomleft&quot;,&quot;prefix&quot;:false},&quot;@provider&quot;:&quot;leaflet&quot;}" data-symfony--ux-leaflet-map--map-markers-value="[{&quot;position&quot;:{&quot;lat&quot;:-3.2,&quot;lng&quot;:-29.5},&quot;title&quot;:&quot;Sample Reserve&quot;,&quot;infoWindow&quot;:{&quot;headerContent&quot;:&quot;Sample Reserve&quot;,&quot;content&quot;:&quot;&lt;a href=\&quot;\/areas\/id-1\&quot;&gt;Open the area &amp;rarr;&lt;\/a&gt;&quot;,&quot;position&quot;:null,&quot;opened&quot;:false,&quot;autoClose&quot;:true,&quot;extra&quot;:[]},&quot;icon&quot;:{&quot;type&quot;:&quot;svg&quot;,&quot;width&quot;:24,&quot;height&quot;:24,&quot;html&quot;:&quot;&lt;svg xmlns=\&quot;http:\/\/www.w3.org\/2000\/svg\&quot; width=\&quot;16\&quot; height=\&quot;16\&quot; viewBox=\&quot;0 0 16 16\&quot;&gt;&lt;circle cx=\&quot;8\&quot; cy=\&quot;8\&quot; r=\&quot;6\&quot; fill=\&quot;var(--plate-ok)\&quot; stroke=\&quot;var(--plate-ok)\&quot; stroke-width=\&quot;2\&quot;\/&gt;&lt;\/svg&gt;&quot;},&quot;extra&quot;:[],&quot;id&quot;:null,&quot;@id&quot;:&quot;id-2&quot;}]" data-symfony--ux-leaflet-map--map-polygons-value="[]" data-symfony--ux-leaflet-map--map-polylines-value="[]" data-symfony--ux-leaflet-map--map-circles-value="[]" data-symfony--ux-leaflet-map--map-rectangles-value="[]" data-symfony--ux-leaflet-map--map-extra-value="{&quot;atlas&quot;:{&quot;layers&quot;:[{&quot;id&quot;:&quot;area.live&quot;,&quot;features&quot;:{&quot;type&quot;:&quot;FeatureCollection&quot;,&quot;features&quot;:[{&quot;type&quot;:&quot;Feature&quot;,&quot;properties&quot;:[],&quot;geometry&quot;:{&quot;type&quot;:&quot;MultiPolygon&quot;,&quot;coordinates&quot;:[[[[-30,-3.6],[-29,-3.6],[-29,-2.8],[-30,-2.8],[-30,-3.6]]]]}}]},&quot;url&quot;:null,&quot;swatch&quot;:&quot;var(--plate-ok)&quot;,&quot;shape&quot;:&quot;fill&quot;,&quot;visible&quot;:true,&quot;style&quot;:[],&quot;rules&quot;:[],&quot;tooltip&quot;:null,&quot;popup&quot;:null,&quot;featureId&quot;:null,&quot;labels&quot;:true},{&quot;id&quot;:&quot;area.setup&quot;,&quot;features&quot;:{&quot;type&quot;:&quot;FeatureCollection&quot;,&quot;features&quot;:[]},&quot;url&quot;:null,&quot;swatch&quot;:&quot;var(--plate-dim)&quot;,&quot;shape&quot;:&quot;line&quot;,&quot;visible&quot;:true,&quot;style&quot;:[],&quot;rules&quot;:[],&quot;tooltip&quot;:null,&quot;popup&quot;:null,&quot;featureId&quot;:null,&quot;labels&quot;:true},{&quot;id&quot;:&quot;atlas.live&quot;,&quot;features&quot;:{&quot;type&quot;:&quot;FeatureCollection&quot;,&quot;features&quot;:[{&quot;type&quot;:&quot;Feature&quot;,&quot;id&quot;:&quot;id-3&quot;,&quot;geometry&quot;:{&quot;type&quot;:&quot;Point&quot;,&quot;coordinates&quot;:[-29.7502,-3.2002]},&quot;properties&quot;:{&quot;name&quot;:&quot;Asha Mollel&quot;,&quot;initials&quot;:&quot;AM&quot;,&quot;age&quot;:&quot;148 h 12&quot;,&quot;stale&quot;:true,&quot;at&quot;:&quot;2026-09-19T13:30:00+02:00&quot;,&quot;staleAfterSeconds&quot;:3600}},{&quot;type&quot;:&quot;Feature&quot;,&quot;id&quot;:&quot;id-4&quot;,&quot;geometry&quot;:{&quot;type&quot;:&quot;Point&quot;,&quot;coordinates&quot;:[-29.735,-3.2]},&quot;properties&quot;:{&quot;name&quot;:&quot;Baraka Sanka&quot;,&quot;initials&quot;:&quot;BS&quot;,&quot;age&quot;:&quot;148 h 22&quot;,&quot;stale&quot;:true,&quot;at&quot;:&quot;2026-09-19T13:20:00+02:00&quot;,&quot;staleAfterSeconds&quot;:3600}},{&quot;type&quot;:&quot;Feature&quot;,&quot;id&quot;:&quot;id-5&quot;,&quot;geometry&quot;:{&quot;type&quot;:&quot;Point&quot;,&quot;coordinates&quot;:[-29.7504,-3.2004]},&quot;properties&quot;:{&quot;name&quot;:&quot;Fatuma Said&quot;,&quot;initials&quot;:&quot;FS&quot;,&quot;age&quot;:&quot;148 h 27&quot;,&quot;stale&quot;:true,&quot;at&quot;:&quot;2026-09-19T13:15:30+02:00&quot;,&quot;staleAfterSeconds&quot;:3600}},{&quot;type&quot;:&quot;Feature&quot;,&quot;id&quot;:&quot;id-6&quot;,&quot;geometry&quot;:{&quot;type&quot;:&quot;Point&quot;,&quot;coordinates&quot;:[-29.6,-3.1]},&quot;properties&quot;:{&quot;name&quot;:&quot;Daudi Kimaro&quot;,&quot;initials&quot;:&quot;DK&quot;,&quot;age&quot;:&quot;148 h 42&quot;,&quot;stale&quot;:true,&quot;at&quot;:&quot;2026-09-19T13:00:00+02:00&quot;,&quot;staleAfterSeconds&quot;:3600}},{&quot;type&quot;:&quot;Feature&quot;,&quot;id&quot;:&quot;id-7&quot;,&quot;geometry&quot;:{&quot;type&quot;:&quot;Point&quot;,&quot;coordinates&quot;:[-29.9001,-3.3001]},&quot;properties&quot;:{&quot;name&quot;:&quot;Chausiku Lema&quot;,&quot;initials&quot;:&quot;CL&quot;,&quot;age&quot;:&quot;149 h 42&quot;,&quot;stale&quot;:true,&quot;at&quot;:&quot;2026-09-19T12:00:00+02:00&quot;,&quot;staleAfterSeconds&quot;:3600}}]},&quot;url&quot;:null,&quot;swatch&quot;:&quot;var(--plate-acc)&quot;,&quot;shape&quot;:&quot;live&quot;,&quot;visible&quot;:true,&quot;style&quot;:[],&quot;rules&quot;:[],&quot;tooltip&quot;:null,&quot;popup&quot;:null,&quot;featureId&quot;:null,&quot;labels&quot;:true}],&quot;boundary&quot;:null,&quot;baseLayers&quot;:[&quot;satellite&quot;,&quot;osm&quot;],&quot;fullscreen&quot;:true,&quot;fit&quot;:true,&quot;subject&quot;:null,&quot;live&quot;:{&quot;hub&quot;:&quot;http:\/\/localhost:3000\/.well-known\/mercure&quot;,&quot;topics&quot;:[&quot;area\/id-1\/presence&quot;]},&quot;pick&quot;:null}}" role="img" aria-label="Every area, and everybody reporting a position" class="map-canvas map-chrome-host"></div></div>
+    </div>
+                    <div class="map-legend" data-uhifadhi--atlas-bundle--map-plate-target="legend">
+                            <div class="grp">
+                                                                                                                                            <button type="button" class="lay"
+                                    data-action="uhifadhi--atlas-bundle--map-plate#toggleLayer"
+                                    data-uhifadhi--atlas-bundle--map-plate-layer-param="area.live"
+                                    aria-pressed="true"><span class="sw" style="background:var(--plate-ok)"></span>Live<em>1</em>                                <span class="tog">on</span>
+                            </button>
+                                                                                                                                                <button type="button" class="lay"
+                                    data-action="uhifadhi--atlas-bundle--map-plate#toggleLayer"
+                                    data-uhifadhi--atlas-bundle--map-plate-layer-param="area.setup"
+                                    aria-pressed="true"><span class="sw ln" style="color:var(--plate-dim)"></span>Boundary only<em>0</em>                                <span class="tog">on</span>
+                            </button>
+                                                            </div>
+                            <div class="grp">
+                                            <b><i style="background:var(--plate-acc)"></i>On the plate</b>
+                                                                                                                                            <button type="button" class="lay"
+                                    data-action="uhifadhi--atlas-bundle--map-plate#toggleLayer"
+                                    data-uhifadhi--atlas-bundle--map-plate-layer-param="atlas.live"
+                                    aria-pressed="true"><span class="sw dot"><i class="livedot"></i></span>Live position<em>0</em>                                <span class="tog">on</span>
+                            </button>
+                                                                                                                                                                                                        <span class="lay" data-atlas-shape="live-stale"><span class="sw dot"><i class="livedot stale"></i></span>Stale · older than two intervals<em>5</em></span>
+                                                                                                                                                                                                        <span class="lay off" data-atlas-shape="live-absent"><span class="sw dot"><i class="livedot none"></i></span>No position<em>0</em></span>
+                                                            </div>
+                    </div>
+    
+    </div>
+
+    </div>
+
+            </div>
+                    <div class="w-cell w-span-6">
+                                <div class="c" data-w="areas">
+    <span class="tab">The areas<span class="src">&middot; 1 &middot; 1 live &middot; 0 awaiting setup</span></span>
+    <a class="more" href="/areas">The areas register &rarr;</a>
+    <span class="ao-by"><i></i>the organization</span>
+
+            <table class="tbl">
+            <tr>
+                <th>area</th>
+                <th>modules</th>
+                <th>patrols this wk</th><th>open incidents</th><th>team on duty</th>                <th>state</th>
+            </tr>
+                            <tr>
+                    <td>
+                        <b>Sample Reserve</b>
+                        <span class="mono">9,832 km&sup2;</span>                    </td>
+                    <td class="g">1</td>
+                                                                        <td class="">23</td>
+                                                                                                <td class="">7</td>
+                                                                                                <td class="">14/22</td>
+                                                                <td><span class="chip ok">live</span></td>
+                </tr>
+                    </table>
+    </div>
+
+            </div>
+            </div>
+
+    <div class="pghint">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4m0-4h.01"></path></g></svg>
+    <div><b>This page is composed, not authored.</b> Every figure on it arrives from an installed module through the overview seam; the host owns the grid, the presets and nothing else. Install a module in any area and its cells appear in the library here.</div>
+</div>
+
+</div>
+    </div>
+
+                            </main>
+            </div>
+</body>
+</html>

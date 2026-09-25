@@ -46,10 +46,12 @@
        the last closed period was still true — and a period nobody wrote gets no
        pill at all.
 
-       THE DESIGN'S FLUSH ROW: `grid w-flush dp-kstrip` in team/overview.html,
-       whose `.dp-kstrip` is the shell's `.kstrip`; `w-flush` gives the row's
-       margin back, and team.css reads the qualifier as a sentence. #}
-    <div class="grid w-flush kstrip" data-kpi>
+       THE FIGURE ROW: `grid dp-kstrip` in team/overview.html, whose
+       `.dp-kstrip` is the shell's `.kstrip`, keeping the rhythm every other
+       row on the page keeps (a flush row that touched the cards below it was
+       a slip of the design, corrected 2026-09-25); team.css reads the
+       qualifier as a sentence. #}
+    <div class="grid kstrip" data-kpi>
         {% for kpi in kpis %}
             <div class="c kpi{{ kpi.hot ? ' hot' }}">
                 <span class="tab">{{ kpi.label }}</span>

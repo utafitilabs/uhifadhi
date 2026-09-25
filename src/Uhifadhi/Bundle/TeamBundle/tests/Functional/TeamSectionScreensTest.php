@@ -65,10 +65,10 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
     }
 
     /**
-     * THE ROW IS THE DESIGN'S FLUSH FIGURE ROW (`grid w-flush dp-kstrip` in
-     * team/overview.html; the shell's `.kstrip` is the design's `.dp-kstrip`):
-     * no margin of its own under it, and the qualifier read as a sentence the
-     * pill sits at the end of, not a row of flex columns.
+     * THE ROW IS THE DESIGN'S FIGURE ROW (`grid dp-kstrip` in
+     * team/overview.html; the shell's `.kstrip` is the design's `.dp-kstrip`),
+     * keeping the page's rhythm under it, and the qualifier read as a sentence
+     * the pill sits at the end of, not a row of flex columns.
      */
     public function testTheKpiRowIsTheDesignsFlushFigureRow(): void
     {
@@ -77,7 +77,7 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
         $row = $this->visit('/team/overview')->filter('[data-kpi]');
 
         self::assertCount(1, $row);
-        self::assertSame('grid w-flush kstrip', $row->attr('class'));
+        self::assertSame('grid kstrip', $row->attr('class'));
 
         $css = (string) file_get_contents(\dirname(__DIR__, 2).'/public/team.css');
         self::assertStringContainsString('.grid.kstrip[data-kpi] .c.kpi { height: auto; }', $css);

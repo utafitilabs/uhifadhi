@@ -29,9 +29,11 @@ Not released yet.
    stream and the subscriber cookie for the areas the viewer holds
    `areas.read` on; the area overview and the organization dashboard set
    the cookie and hand their plates the stream. `symfony/mercure` and
-   `symfony/mercure-bundle` are requirements; a deployment with no hub
-   address publishes nothing, sets no cookie, and draws every plate as
-   before. `AreaMapService::overview()` and `::organization()` take an
+   `symfony/mercure-bundle` are suggestions the installation requires (the
+   starter does): the hub and the authorization are nullable references, and
+   a kernel without `MercureBundle` compiles, answers every page, publishes
+   nothing, sets no cookie and draws every plate once — as does a deployment
+   with no hub address. `AreaMapService::overview()` and `::organization()` take an
    optional `LiveStream`. Documented in README, "Where everybody is, live"
  * THE AREA PUTS A STATUS DROPDOWN ON THE PEOPLE REGISTER (ruled
    2026-09-25): `People\AreaPeopleStatus`, tagged `uhifadhi.people_facets`,

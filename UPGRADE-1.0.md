@@ -817,11 +817,12 @@ states its interval once on the set.
 
 ## Live positions move over Mercure
 
-**What changed.** The core requires `symfony/mercure` and
-`symfony/mercure-bundle`; the area bundle injects `mercure.hub.default` and
-`Symfony\Component\Mercure\Authorization` straight, so **every kernel that
-registers `AreaBundle` registers `MercureBundle`** and configures one hub named
-`default`. After every handset write, `AreaBundle\Service\PresencePublisher`
+**What changed.** The core *suggests* `symfony/mercure` and
+`symfony/mercure-bundle`; **an installation requires them** — the starter
+does, with `config/packages/mercure.yaml` — and the area bundle names
+`mercure.hub.default` and `Symfony\Component\Mercure\Authorization` as
+references that resolve to null where no `MercureBundle` is registered. With
+the bundle, after every handset write, `AreaBundle\Service\PresencePublisher`
 publishes one private update to `area/{areaUuid}/presence`; the area overview
 and the organization dashboard set the `mercureAuthorization` cookie for the
 areas the viewer holds `areas.read` on and hand their plates an
@@ -847,19 +848,21 @@ reaches it, same origin as the pages) and `MERCURE_JWT_SECRET` (the key the
 hub verifies subscriber and publisher tokens with). The area bundle also
 reads the `logger` service; an installation has monolog's.
 
-**A deployment without a hub keeps working.** With `MERCURE_URL` and
-`MERCURE_PUBLIC_URL` empty the publisher publishes nothing, no page sets a
-cookie, no plate opens a stream, and every plate reads as the page drew it.
-The bundle must still be registered and the hub configured, because the
-services are injected without a guard.
+**Without the bundle, the platform runs.** A kernel that registers
+`AreaBundle` and no `MercureBundle` compiles, every area page answers, the
+publisher publishes nothing, no page sets a cookie, no plate opens a stream,
+and every plate is drawn once, as the page drew it. A deployment that has the
+bundle and leaves `MERCURE_URL` and `MERCURE_PUBLIC_URL` empty behaves the same
+way.
 
 **Constructors that changed.** `AreaBundle\Service\CheckInService` takes a
 `PresencePublisher` last; `AreaBundle\Controller\AreaController` and
 `OrgDashboardController` take a `PresenceStreamService` last;
 `AreaMapService::overview()` and `::organization()` take an optional
-`LiveStream` last. A test kernel of a module that boots `AreaBundle` registers
-`MercureBundle`, configures the hub with an empty address, and provides a
-`logger`.
+`LiveStream` last. `PresencePublisher` takes a nullable `HubInterface`;
+`PresenceStreamService` takes a nullable `HubInterface` and a nullable
+`Authorization`. A test kernel of a module that boots `AreaBundle` provides a
+`logger` and registers `MercureBundle` only where it tests the stream.
 
 **What a module that draws live marks does.** Pass the same `LiveStream` to
 its plate (`$map->liveStream($subscription->stream)`) and set

@@ -355,8 +355,11 @@ work in must never widen because the thing that narrows it was missing.
 
 `Contracts\Area\LivePositionsInterface` (implemented by `Service\PresenceService`)
 answers where everybody on an open watch is at one instant, and the atlas draws
-the answer as the live layer of a plate. The marks then **keep moving over
-Mercure**, on the same-origin hub the deployment runs.
+the answer as the live layer of a plate. Where the installation carries
+`symfony/mercure-bundle`, the marks then **keep moving over Mercure**, on the
+same-origin hub the deployment runs. The core suggests the bundle and an
+installation requires it — the starter does; without it the platform runs with
+every plate drawn once per page and no subscriber cookie.
 
 **The topic.** One per area, `area/{areaUuid}/presence`, spelt once in
 `Service\PresencePublisher::topicFor()`. It is private: only a browser holding
@@ -389,24 +392,27 @@ takes the mark off. No email, no station, no claim reference, no battery: a
 subscriber sees what a viewer of the plate already sees.
 
 **The write never waits on the hub.** The row is flushed first and the frame
-published second; a hub with no address (`MERCURE_URL` empty) publishes
-nothing, and a hub that fails is logged and swallowed.
+published second; no hub bundle, or a hub with no address (`MERCURE_URL`
+empty), publishes nothing, and a hub that fails is logged and swallowed.
 
 **The page.** `Service\PresenceStreamService::forArea()` and
 `::forOrganization()` return a `Model\PresenceSubscription` — the
 `AtlasBundle\Model\LiveStream` (hub public address + topics) the builder hands
 the plate, and the `mercureAuthorization` cookie the response sets — or null
-where the hub has no address or the viewer holds no area. **The cookie and the
+where there is no hub bundle, the hub has no address or the viewer holds no
+area. **The cookie and the
 layer ask the same pair**, `areas.read` on each area: the area overview
 subscribes to its one topic, the organization dashboard to every area the
 viewer may read, in one cookie. A module's cell on the same page that draws the
 same area's marks rides on that cookie; a module page of its own passes the
 same `LiveStream` to `AtlasMap::liveStream()` and sets the cookie the same way.
 
-**What an installation configures**, per the Mercure bundle's documented minimum:
-`MERCURE_URL` (the hub as the application reaches it), `MERCURE_PUBLIC_URL` (the
-hub as the browser reaches it) and `MERCURE_JWT_SECRET`. All three empty is a
-working deployment whose plates are drawn once per page.
+**What an installation configures**: `symfony/mercure-bundle` in its own
+`composer.json` (the starter ships it with `config/packages/mercure.yaml`), and
+per the bundle's documented minimum `MERCURE_URL` (the hub as the application
+reaches it), `MERCURE_PUBLIC_URL` (the hub as the browser reaches it) and
+`MERCURE_JWT_SECRET`. All three empty is a working deployment whose plates are
+drawn once per page; so is an installation without the bundle.
 
 The hub has to be at the page's own origin, the way every deployment carries it inside the app's server. A hub address on another origin — the Mercure recipe's placeholder, for one — is read as no hub: the page draws as before, sets no cookie and streams nothing.
 

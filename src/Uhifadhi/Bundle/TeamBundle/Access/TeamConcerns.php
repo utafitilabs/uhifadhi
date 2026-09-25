@@ -50,6 +50,7 @@ final readonly class TeamConcerns implements ConcernSourceInterface
     public const string PERSONAL_DETAILS = 'personal-details';
     public const string POSITIONS = 'positions';
     public const string DEPARTMENTS = 'departments';
+    public const string RANKS = 'ranks';
 
     public function declaredBy(): string
     {
@@ -90,6 +91,14 @@ final readonly class TeamConcerns implements ConcernSourceInterface
             label: 'Departments',
             description: 'The departments the organization is arranged into, and the modules each one runs.',
             verbs: [Verb::Read, Verb::Configure],
+            scopeKinds: $people,
+        );
+
+        yield new Concern(
+            key: self::RANKS,
+            label: 'Ranks',
+            description: 'The ranks the organization keeps, in seniority order, and who holds each. A rank grants nothing.',
+            verbs: [Verb::Read, Verb::Configure, Verb::Export],
             scopeKinds: $people,
         );
     }

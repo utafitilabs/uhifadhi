@@ -171,7 +171,7 @@ final class SidebarRowTest extends WebTestCaseWithSchema
         // The open tree is the one the viewer is in; Performance's is in the
         // document and folded, which is the sidebar's own rule.
         self::assertSame(
-            ['Overview', 'People', 'Positions', 'Assignments', 'Roles'],
+            ['Overview', 'People', 'Positions', 'Assignments', 'Roles', 'Ranks'],
             $crawler->filter('nav.nav .ntree:not(.closed) .ntt')->each(static fn ($node): string => trim($node->text())),
         );
     }

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Unit\Shell;
 
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,7 +30,9 @@ use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\TeamSettingsRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
+use Uhifadhi\Bundle\TeamBundle\Service\TeamSettingsService;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionTabs;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamSectionTabs;
@@ -65,6 +68,7 @@ final class TeamNavigationTest extends TestCase
             new RequestStack(),
             $this->departmentsNamed([]),
             $this->paletteOver([]),
+            $this->settings(),
         );
 
         self::assertSame([], iterator_to_array($navigation->sections()));
@@ -93,6 +97,7 @@ final class TeamNavigationTest extends TestCase
             new RequestStack(),
             $this->departmentsNamed([]),
             $this->paletteOver([]),
+            $this->settings(),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -117,6 +122,7 @@ final class TeamNavigationTest extends TestCase
             new RequestStack(),
             $this->departmentsNamed([]),
             $this->paletteOver([]),
+            $this->settings(),
         );
 
         self::assertSame([], iterator_to_array($navigation->sections()));
@@ -144,6 +150,7 @@ final class TeamNavigationTest extends TestCase
             $requests,
             $this->departmentsNamed([]),
             $this->paletteOver([]),
+            $this->settings(),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -185,6 +192,7 @@ final class TeamNavigationTest extends TestCase
             $requests,
             $this->departmentsNamed([]),
             $this->paletteOver([]),
+            $this->settings(),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -214,6 +222,7 @@ final class TeamNavigationTest extends TestCase
             $requests,
             $this->departmentsNamed(['Ecology' => null, 'Wetland Management' => 'Northern Reserve']),
             $this->paletteOver(['Ecology' => null, 'Wetland Management' => 'Northern Reserve']),
+            $this->settings(),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -251,6 +260,7 @@ final class TeamNavigationTest extends TestCase
             $requests,
             $this->departmentsThatMustNotBeAsked(),
             $this->paletteOver([]),
+            $this->settings(),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -297,6 +307,7 @@ final class TeamNavigationTest extends TestCase
             $requests,
             $this->departmentsNamed([]),
             $this->paletteOver([]),
+            $this->settings(),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -326,6 +337,7 @@ final class TeamNavigationTest extends TestCase
                 $requests,
                 $this->departmentsNamed([]),
                 $this->paletteOver([]),
+                $this->settings(),
             );
 
             $team = null;
@@ -358,6 +370,7 @@ final class TeamNavigationTest extends TestCase
             $requests,
             $this->departmentsNamed([]),
             $this->paletteOver([]),
+            $this->settings(),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -385,6 +398,7 @@ final class TeamNavigationTest extends TestCase
             $requests,
             $this->departmentsNamed($named),
             $this->paletteOver($named),
+            $this->settings(),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -523,5 +537,11 @@ final class TeamNavigationTest extends TestCase
         $checker->expects(self::never())->method('isGranted');
 
         return $checker;
+    }
+
+    /** The rules of an installation that never saved them: ranks on. */
+    private function settings(): TeamSettingsService
+    {
+        return new TeamSettingsService($this->createStub(TeamSettingsRepository::class), $this->createStub(EntityManagerInterface::class));
     }
 }

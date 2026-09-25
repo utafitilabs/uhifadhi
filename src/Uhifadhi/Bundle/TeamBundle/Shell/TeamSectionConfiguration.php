@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Shell;
 
 use Uhifadhi\Bundle\TeamBundle\Access\Door;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
+use Uhifadhi\Bundle\TeamBundle\Controller\RankConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamConfigureController;
 use Uhifadhi\Contracts\Shell\ConfigurationSection;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
@@ -76,6 +77,11 @@ final readonly class TeamSectionConfiguration implements ConfigurationSectionsIn
         }
         if ($this->door->opens(TeamConfigureController::DIRECTORY)) {
             $sections[] = ConfigurationSection::screen('assignments', 'Assignments', TeamConfigureController::ASSIGNMENTS);
+        }
+        // RANKS STAYS WHEN RANKS ARE OFF: the switch that turns them back on
+        // is in it.
+        if ($this->door->opens(RankConfigureController::CONFIGURE)) {
+            $sections[] = ConfigurationSection::screen('ranks', 'Ranks', RankConfigureController::SECTION);
         }
 
         return $sections;

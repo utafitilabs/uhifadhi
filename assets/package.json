@@ -46,6 +46,12 @@
                 "fetch": "lazy",
                 "enabled": true
             },
+            "rank-order": {
+                "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/rank_order_controller.js",
+                "name": "uhifadhi--team-bundle--rank-order",
+                "fetch": "lazy",
+                "enabled": true
+            },
             "folds": {
                 "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/folds_controller.js",
                 "name": "uhifadhi--team-bundle--folds",

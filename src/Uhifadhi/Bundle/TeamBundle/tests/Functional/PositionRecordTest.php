@@ -70,7 +70,7 @@ final class PositionRecordTest extends WebTestCaseWithSchema
         );
         self::assertStringContainsString('1of 8', $band->eq(0)->filter('.v')->text());
         self::assertStringContainsString('7', $band->eq(1)->filter('.v')->text());
-        self::assertStringContainsString('2of 8', $band->eq(3)->filter('.v')->text());
+        self::assertStringContainsString('2of 9', $band->eq(3)->filter('.v')->text());
         self::assertStringContainsString('1 sensitive', $crawler->filter('.factband')->text());
     }
 

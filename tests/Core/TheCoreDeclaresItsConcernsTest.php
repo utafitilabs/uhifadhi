@@ -51,10 +51,10 @@ final class TheCoreDeclaresItsConcernsTest extends TestCase
         );
     }
 
-    public function testTheTeamDeclaresTheDirectoryPersonalDetailsPositionsAndDepartments(): void
+    public function testTheTeamDeclaresTheDirectoryPersonalDetailsPositionsDepartmentsAndRanks(): void
     {
         self::assertSame(
-            ['directory', 'personal-details', 'positions', 'departments'],
+            ['directory', 'personal-details', 'positions', 'departments', 'ranks'],
             array_map(static fn (ConcernInterface $c): string => $c->key(), self::iterate(new TeamConcerns())),
         );
     }
@@ -116,7 +116,7 @@ final class TheCoreDeclaresItsConcernsTest extends TestCase
             }
         }
 
-        self::assertCount(10, $seen);
+        self::assertCount(11, $seen);
     }
 
     public function testEverySourceSaysWhoItIs(): void

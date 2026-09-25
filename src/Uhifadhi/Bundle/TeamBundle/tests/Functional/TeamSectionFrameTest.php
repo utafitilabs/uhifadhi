@@ -35,7 +35,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeStationDirectory;
 final class TeamSectionFrameTest extends WebTestCaseWithSchema
 {
     /** The five tabs of the section, and the label lit on each. */
-    private const array TABS = ['Overview', 'People', 'Positions', 'Assignments', 'Roles'];
+    private const array TABS = ['Overview', 'People', 'Positions', 'Assignments', 'Roles', 'Ranks'];
 
     /** @return \Generator<string, array{string, string}> */
     public static function tabs(): \Generator
@@ -45,6 +45,7 @@ final class TeamSectionFrameTest extends WebTestCaseWithSchema
         yield 'positions' => ['/team/positions', 'Positions'];
         yield 'assignments' => ['/team/assignments', 'Assignments'];
         yield 'roles' => ['/team/roles', 'Roles'];
+        yield 'ranks' => ['/team/ranks', 'Ranks'];
     }
 
     #[DataProvider('tabs')]
@@ -110,7 +111,7 @@ final class TeamSectionFrameTest extends WebTestCaseWithSchema
         $crawler = $this->visit('/team/configure/people');
 
         self::assertSame(
-            ['People', 'Positions', 'Assignments'],
+            ['People', 'Positions', 'Assignments', 'Ranks'],
             $crawler->filter('.atabs a')->each(static fn (Crawler $c): string => $c->text()),
         );
         self::assertSame(['People'], $crawler->filter('.atabs a.on')->each(static fn (Crawler $c): string => $c->text()));

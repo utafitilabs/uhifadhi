@@ -65,7 +65,7 @@ final class TeamConfigureTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', $path);
 
         self::assertResponseIsSuccessful();
-        self::assertSame(['People', 'Positions', 'Assignments'], $crawler->filter('.atabs a')->each(static fn (Crawler $a): string => $a->text()));
+        self::assertSame(['People', 'Positions', 'Assignments', 'Ranks'], $crawler->filter('.atabs a')->each(static fn (Crawler $a): string => $a->text()));
         self::assertSame([$lit], $crawler->filter('.atabs a.on')->each(static fn (Crawler $a): string => $a->text()));
         self::assertSame('Team', trim($crawler->filter('h1.pg')->text()));
 

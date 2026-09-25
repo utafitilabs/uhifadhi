@@ -1,0 +1,134 @@
+{# TEAM · CONFIGURE · RANKS — the switch, then the organization's ranks.
+
+   THE SWITCH FIRST, as a form of one rule: this organization uses ranks, on
+   by default, for the whole organization. Ranks grant nothing; positions do.
+
+   ONE CARD PER SCALE, each a form saved as one write: the rows in seniority
+   order (grip · order · name · short code · holders · remove), an add row,
+   and the save row. With one scale nothing says "scale": the card is "Ranks"
+   and a soft door under the list offers a second. Once there are several,
+   every card is named for its scale and a create card adds another. A scale
+   is the organization's and never a department's.
+
+   | design element                                 | type    | source                     | status |
+   |------------------------------------------------|---------|----------------------------|--------|
+   | crumb … / configure / ranks                     | chrome  | layout                     | done   |
+   | ‹ The register · Configure (lit)                | control | layout, frame              | done   |
+   | strip People · Positions · Assignments · Ranks  | control | TeamSectionConfiguration   | done   |
+   | Uses ranks card: On/Off, when-line, save row    | control | team_settings.uses_ranks   | done   |
+   | scale card tab: Ranks · one ladder · N ranks    | data    | cards                      | done   |
+   | scale name row, required (several scales)       | control | rank_scale.name            | done   |
+   | head row · rank rows: grip, n, name, code, held | control | rank, holders              | done   |
+   | remove (retire when held)                       | control | …/rank/{uuid}/remove       | done   |
+   | add row: name, code, Add a rank                 | control | newName, newCode           | done   |
+   | Add a second scale door + zfrag (one scale)     | control | ?add=scale                 | done   |
+   | save row: note, Cancel, Save ranks / Save the X | control | …/ranks/{scale}            | done   |
+   | Add a scale create card (several, or the door)  | control | …/ranks/scales             | done   |
+   NOT PORTED, and why: the `.idx` accent labels (TC·04 …) — the configure
+   sections here wear the shell's `.tab`/`.src` only, as People, Positions
+   and Assignments do. #}
+{% extends '@Team/team/configure/_layout.html.twig' %}
+{% import '@Team/team/configure/_bits.html.twig' as bits %}
+
+{% set section = 'ranks' %}
+
+{% block shell_page_subtitle %}Configure &middot; Ranks: the switch, then the organization&rsquo;s {{ several ? 'scales' : 'one ladder' }} as {{ several ? 'ordered lists' : 'an ordered list' }} of ranks.{% endblock %}
+
+{% block shell_page %}
+    <form class="c" id="uses-ranks" method="post" action="{{ path('team_configure_ranks_switch') }}">
+        <input type="hidden" name="_token" value="{{ csrfToken }}">
+        <span class="tab">Uses ranks<span class="src">&middot; the organization</span></span>
+        <div class="frow">
+            <label>Uses ranks</label>
+            <span class="fcell">
+                {{ bits.yesno('usesRanks', usesRanks ? 'on' : 'off', {'on': 'On', 'off': 'Off'}, 'Uses ranks') }}
+                <span class="fwhen">off hides the column, the filter, the field and the Ranks page</span>
+            </span>
+        </div>
+        <div class="save-row">
+            <span class="d" style="font-size:11.5px;margin-right:auto">Ranks grant nothing &middot; positions do</span>
+            <button type="reset" class="btn">Cancel</button>
+            <button type="submit" class="cta">Save</button>
+        </div>
+    </form>
+
+    {% for card in cards %}
+        {% set scale = card.scale %}
+        <form class="c" data-rank-scale id="scale-{{ scale.uuidString }}" method="post" action="{{ path('team_configure_ranks_save', {uuid: scale.uuidString}) }}" data-controller="uhifadhi--team-bundle--rank-order">
+            <input type="hidden" name="_token" value="{{ csrfToken }}">
+            <span class="tab">{{ several ? scale.name ~ ' scale' : 'Ranks' }}<span class="src">&middot; {% if not several %}one ladder &middot; {% endif %}{{ card.ranks|length }} rank{{ card.ranks|length == 1 ? '' : 's' }} &middot; order is seniority</span></span>
+
+            {% if several %}
+                <div class="frow">
+                    <label for="scale-name-{{ loop.index }}">Scale name</label>
+                    <span class="fcell">
+                        <input class="fld ln" type="text" id="scale-name-{{ loop.index }}" name="scaleName" value="{{ scale.name }}" required maxlength="80" aria-label="Scale name">
+                        <span class="fwhen req">required &middot; never a department</span>
+                    </span>
+                </div>
+            {% endif %}
+
+            <div class="rkl noladder">
+                <div class="rkl-hd"><span></span><span></span><span>Rank</span><span>Short code</span><span></span><span></span></div>
+                {% for rank in card.ranks %}
+                    <div class="rkl-row" data-uhifadhi--team-bundle--rank-order-target="row">
+                        <button type="button" class="rkl-grip" aria-label="Move {{ rank.name }}" title="Drag, or use the arrow keys" data-action="mousedown->uhifadhi--team-bundle--rank-order#grab touchstart->uhifadhi--team-bundle--rank-order#grab keydown->uhifadhi--team-bundle--rank-order#key">{{ ux_icon('shell:grip-vertical') }}</button>
+                        <span class="rkl-n" data-uhifadhi--team-bundle--rank-order-target="number">{{ loop.index }}</span>
+                        <input class="fld" type="text" name="ranks[{{ rank.uuidString }}][name]" value="{{ rank.name }}" required maxlength="120" aria-label="Rank name">
+                        <input class="fld code" type="text" name="ranks[{{ rank.uuidString }}][code]" value="{{ rank.shortCode }}" required maxlength="24" aria-label="Short code">
+                        {% set held = holders[rank.id] ?? 0 %}
+                        <span class="zfrag">{{ held }} hold it</span>
+                        <button type="submit" class="rkl-x" formaction="{{ path('team_configure_ranks_remove', {uuid: rank.uuidString}) }}" formnovalidate aria-label="Remove {{ rank.name }}" title="{{ held > 0 ? 'Retire: its holders keep it' : 'Remove' }}">{{ ux_icon('shell:x') }}</button>
+                    </div>
+                {% else %}
+                    <div class="rkl-row"><span></span><span></span><span class="zfrag">No ranks yet &middot; add the most junior first</span></div>
+                {% endfor %}
+            </div>
+
+            <div class="rkl-add noladder">
+                <input class="fld" type="text" name="newName" placeholder="Name of the new rank" maxlength="120" aria-label="New rank name">
+                <input class="fld code" type="text" name="newCode" placeholder="Code" maxlength="24" aria-label="New short code">
+                <button type="submit" class="btn sm">{{ ux_icon('shell:plus', {width: 12, height: 12}) }} Add a rank</button>
+            </div>
+
+            {% if not several and not addingScale %}
+                <div class="rkl-scale">
+                    <a class="softbtn dash rk-scale" href="{{ path('team_configure_ranks', {add: 'scale'}) }}#add-scale">{{ ux_icon('shell:plus', {width: 12, height: 12}) }} Add a second scale</a>
+                    <span class="zfrag">only if the organization needs two scales that do not compare &middot; never a department</span>
+                </div>
+            {% endif %}
+
+            <div class="save-row">
+                <span class="d" style="font-size:11.5px;margin-right:auto">Ranks grant nothing &middot; a rank somebody holds is retired, never deleted</span>
+                <button type="reset" class="btn">Cancel</button>
+                <button type="submit" class="cta">{{ several ? 'Save the ' ~ scale.name ~ ' scale' : 'Save ranks' }}</button>
+            </div>
+        </form>
+    {% endfor %}
+
+    {% if addingScale %}
+        <div class="dcadd" id="add-scale">
+            <div class="dcaddhd">
+                {{ ux_icon('shell:plus', {width: 16, height: 16}) }}
+                <b>Add a scale</b>
+                <span class="hint">Only for ranks that do not compare with the others &middot; never a department</span>
+            </div>
+            <form class="crcard" method="post" action="{{ path('team_configure_ranks_scale_add') }}">
+                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                <div class="crgrid">
+                    {% if firstUnnamed %}
+                        <div class="crfield grow">
+                            <span class="crlab">The scale you have</span>
+                            <input type="text" class="fld" name="firstScaleName" placeholder="Uniformed" aria-label="Name of the scale the organization has" required maxlength="80">
+                        </div>
+                    {% endif %}
+                    <div class="crfield grow">
+                        <span class="crlab">Name</span>
+                        <input type="text" class="fld" name="name" placeholder="Civil" aria-label="Scale name" required maxlength="80">
+                    </div>
+                    <button class="cta" type="submit">Add scale</button>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,108 @@
+{# TEAM › RANKS — the organization's ranks in seniority order, and who holds
+   each. A register, so it wears the People-table idiom: the two-line name
+   cell (the order where the avatar sits, the name, the code under it), one
+   fact per column, the count line, the export door, the Open row action.
+
+   ONE SCALE SAYS NOTHING ABOUT SCALES: no Scale column, no chips, no band
+   row. Once the organization has several, each scale is a band row with its
+   totals, a chip filters to it, and the Scale column names it per row.
+
+   | design element                              | type    | source                    | status |
+   |---------------------------------------------|---------|---------------------------|--------|
+   | crumb uhifadhi / team / ranks                | chrome  | routes                    | done   |
+   | h1 Team + one-line subtitle                  | chrome  | copy                      | done   |
+   | tab strip, Ranks lit                         | control | TeamSectionTabs           | done   |
+   | Configure action                             | control | frame                     | done   |
+   | card tab "Ranks · N · …"                     | data    | total, scales             | done   |
+   | search "Rank name or short code"             | control | ?q=                       | done   |
+   | All chip + count; one chip per scale (s2)    | control | ?scale=, scaleCounts      | done   |
+   | export door "export N rows · CSV"            | control | ranks.export → ranks.csv  | done   |
+   | count line "showing N of M"                  | data    | shown, total              | done   |
+   | head Rank · [Scale] · Holders · Since · —    | chrome  | several scales            | done   |
+   | band row per scale (s2): name + totals       | data    | RankBand                  | done   |
+   | rank cell: order, name, code                 | data    | RankRow                   | done   |
+   | scale cell (s2)                              | data    | scale.name                | done   |
+   | holders door → People filtered on the rank   | control | /team?rank=uuid           | done   |
+   | since                                        | data    | rank.createdAt            | done   |
+   | Open → configure, the scale's card           | control | #scale-uuid               | done   |
+   | foot "N ranks · one ladder" + page 1 of 1    | data    | total, scales             | done   |
+   | no result row                                | state   | bands empty               | done   |
+#}
+{% extends '@Shell/page.html.twig' %}
+{% import '@Team/team/_bits.html.twig' as bits %}
+
+{% block title %}Team · Ranks{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}<a href="{{ path('team_overview') }}">uhifadhi</a> / <a href="{{ path('team_index') }}">team</a> / ranks{% endblock %}
+
+{% block shell_page_title %}Team{% endblock %}
+
+{% block shell_page_subtitle %}{% if scales|length > 1 %}The organization&rsquo;s scales of ranks in seniority order, with who holds each rank.{% else %}The organization&rsquo;s ranks in seniority order, with who holds each.{% endif %}{% endblock %}
+
+{% block shell_page %}
+{% set several = scales|length > 1 %}
+<div class="c" data-tm>
+    <span class="tab">Ranks<span class="src">&middot; {{ total }} &middot; {{ several ? (scales|length ~ ' scales, and who holds each rank') : 'one ladder, and who holds each rank' }}</span></span>
+
+    <form class="tm-tools" method="get" action="{{ path('team_ranks') }}">
+        <label class="tm-search">
+            {{ bits.icon_search() }}
+            <input type="search" name="q" value="{{ query.q }}" placeholder="Rank name or short code" aria-label="Search the ranks">
+        </label>
+        {% if query.scale %}<input type="hidden" name="scale" value="{{ query.scale }}">{% endif %}
+        <a class="fchip{{ query.scale is null ? ' on' }}" href="{{ path('team_ranks', query.with('scale', null)) }}">All <span class="n">{{ total }}</span></a>
+        {% if several %}
+            {% for scale in scales %}
+                <a class="fchip{{ query.scale == scale.uuidString ? ' on' }}" href="{{ path('team_ranks', query.with('scale', scale.uuidString)) }}">{{ scale.name }} <span class="n">{{ scaleCounts[scale.uuidString] ?? 0 }}</span></a>
+            {% endfor %}
+        {% endif %}
+        {% if door('ranks.export') %}
+            <a class="tm-export" href="{{ path('team_ranks_export', query.with('q', query.q)) }}" title="The rows this filter shows, as CSV &middot; ranks.export">{{ ux_icon('shell:download') }}export <b>{{ shown }}</b> rows &middot; CSV</a>
+        {% endif %}
+        <span class="tm-shown">showing <b>{{ shown }}</b> of {{ total }}</span>
+    </form>
+
+    <div class="tm-scroll">
+        <table class="tbl">
+            <thead><tr><th>Rank</th>{% if several %}<th>Scale</th>{% endif %}<th>Holders</th><th>Since</th><th></th></tr></thead>
+            <tbody>
+                {% for band in bands %}
+                    {% if several %}
+                        <tr class="tm-bandrow"><td colspan="5"><div class="tm-band"><b>{{ band.scale.name }}</b><span class="n">{{ band.ranks }} rank{{ band.ranks == 1 ? '' : 's' }} &middot; {{ band.holders }} {{ band.holders == 1 ? 'person' : 'people' }} &middot; order is seniority</span></div></td></tr>
+                    {% endif %}
+                    {% for row in band.rows %}
+                        <tr{% if several %} class="tm-memrow"{% endif %}>
+                            <td{% if several %} class="tm-in"{% endif %}><div class="who"><span class="rk-ord">{{ row.order }}</span><b>{{ row.rank.name }}</b></div><span class="tm-code">{{ row.rank.shortCode }}</span></td>
+                            {% if several %}<td><span class="tm-ladder">{{ band.scale.name }}</span></td>{% endif %}
+                            <td><a class="tm-holders" href="{{ path('team_index', {rank: row.rank.uuidString}) }}"><b>{{ row.holders }}</b> {{ row.holders == 1 ? 'person' : 'people' }} {{ ux_icon('shell:chevron-right', {width: 12, height: 12}) }}</a></td>
+                            <td><span class="tm-code">{% if row.rank.createdAt %}<time datetime="{{ row.rank.createdAt|date('c') }}" data-localtime-format="day">{{ row.rank.createdAt|date('j M Y') }}</time>{% else %}&mdash;{% endif %}</span></td>
+                            <td class="tm-acts"><a class="open-btn" href="{{ path('team_configure_ranks') }}#scale-{{ band.scale.uuidString }}">Open</a></td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="{{ several ? 5 : 4 }}">
+                        <div class="tm-nores">
+                            {{ bits.icon_search() }}
+                            {% if total == 0 %}
+                                <span>No ranks yet. They are written on <a href="{{ path('team_configure_ranks') }}">Team configure &rsaquo; Ranks</a>.</span>
+                            {% else %}
+                                <span>No rank matches {% if query.q %}&ldquo;{{ query.q }}&rdquo;{% else %}this filter{% endif %}. <a href="{{ path('team_ranks') }}">Show every rank</a>.</span>
+                            {% endif %}
+                        </div>
+                    </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="rdf-foot">
+        <span>{{ total }} rank{{ total == 1 ? '' : 's' }} &middot; {{ several ? (scales|length ~ ' scales') : 'one ladder' }}</span>
+        <span class="rdf-page">page <span class="pg">1</span> of 1</span>
+    </div>
+</div>
+{% endblock %}

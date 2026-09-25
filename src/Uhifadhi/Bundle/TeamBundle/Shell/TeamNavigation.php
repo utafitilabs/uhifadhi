@@ -25,6 +25,8 @@ use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
+use Uhifadhi\Bundle\TeamBundle\Controller\RankConfigureController;
+use Uhifadhi\Bundle\TeamBundle\Controller\RankController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
@@ -33,6 +35,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\TeamSectionController;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
+use Uhifadhi\Bundle\TeamBundle\Service\TeamSettingsService;
 use Uhifadhi\Contracts\Access\Grant;
 use Uhifadhi\Contracts\Access\Verb;
 use Uhifadhi\Contracts\Shell\NavGroup;
@@ -102,6 +105,7 @@ final readonly class TeamNavigation implements NavigationSourceInterface
         private RequestStack $requests,
         private DepartmentRepository $departments,
         private DepartmentPalette $palette,
+        private TeamSettingsService $settings,
     ) {
     }
 
@@ -301,6 +305,9 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             $this->screen('Positions', PositionController::REGISTER, ['team_position_show', 'team_position_configure', TeamConfigureController::POSITIONS]),
             $this->screen('Assignments', TeamPostingsController::POSTINGS, [TeamConfigureController::ASSIGNMENTS]),
             $this->screen('Roles', TeamRolesController::ROLES),
+            // RANKS ONLY WHERE THE STRIP HAS IT: while the organization uses
+            // ranks and the viewer may read them.
+            $this->ranksScreen(),
         ]));
 
         if ([] === $screens) {
@@ -332,6 +339,15 @@ final readonly class TeamNavigation implements NavigationSourceInterface
      * screen that adds somebody carry no marker and are not screens of the
      * section, so the tree stays folded there, exactly as the strip is absent.
      */
+    private function ranksScreen(): ?NavItem
+    {
+        if (!$this->settings->current()->usesRanks() || !$this->authorization->isGranted(RankController::READ)) {
+            return null;
+        }
+
+        return $this->screen('Ranks', RankController::REGISTER, [RankConfigureController::SECTION]);
+    }
+
     private function viewerIsInTeam(): bool
     {
         return TeamSectionTabs::SURFACE === $this->requests->getCurrentRequest()?->attributes->get(ModuleFrameService::MODULE_ROUTE_ATTRIBUTE);

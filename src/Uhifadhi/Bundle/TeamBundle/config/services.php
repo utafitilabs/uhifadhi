@@ -37,6 +37,8 @@ use Uhifadhi\Bundle\TeamBundle\Controller\PasswordResetController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
+use Uhifadhi\Bundle\TeamBundle\Controller\RankConfigureController;
+use Uhifadhi\Bundle\TeamBundle\Controller\RankController;
 use Uhifadhi\Bundle\TeamBundle\Controller\SecurityController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
@@ -75,6 +77,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Security\GrantVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
+use Uhifadhi\Bundle\TeamBundle\Service\CsvExportService;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentDirectory;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentKindService;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership;
@@ -94,6 +97,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy;
 use Uhifadhi\Bundle\TeamBundle\Service\PostingBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\PostingDoorService;
+use Uhifadhi\Bundle\TeamBundle\Service\RankBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\RankService;
 use Uhifadhi\Bundle\TeamBundle\Service\RolesBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
@@ -711,6 +715,8 @@ return static function (ContainerConfigurator $container): void {
                     // And the same category each department wears everywhere else,
                     // so the dot in the tree and the mark on the card agree.
                     service('team.department_palette'),
+                    // Whether the organization uses ranks, for the Ranks screen.
+                    service('team.settings'),
                 ])
                 ->tag('shell.nav_section');
     }
@@ -1305,11 +1311,49 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(TeamConfigureController::class, 'team.controller.configure')->public();
 
     /*
+     * TEAM › RANKS AND TEAM CONFIGURE › RANKS — the register of the
+     * organization's ranks with its CSV door, and the section that writes
+     * the switch, the scales and the ranks on each.
+     */
+    $services->set('team.rank_board', RankBoard::class)
+        ->args([
+            service(RankScaleRepository::class),
+            service(RankRepository::class),
+            service(RankHoldingRepository::class),
+        ]);
+    $services->set('team.csv_export', CsvExportService::class);
+
+    $services->set('team.controller.rank', RankController::class)
+        ->args([
+            service('twig'),
+            service('team.rank_board'),
+            service('team.settings'),
+            service('team.csv_export'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(RankController::class, 'team.controller.rank')->public();
+
+    $services->set('team.controller.rank_configure', RankConfigureController::class)
+        ->args([
+            service('twig'),
+            service('team.ranks'),
+            service(RankScaleRepository::class),
+            service(RankRepository::class),
+            service(RankHoldingRepository::class),
+            service('team.settings'),
+            service('security.csrf.token_manager'),
+            service('router'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(RankConfigureController::class, 'team.controller.rank_configure')->public();
+
+    /*
      * TEAM WEARS THE AREA IDIOM: the strip, the header and the one Configure
      * action come from the same two contracts a module's tabs use, so nothing
      * here is a second implementation of a strip.
      */
     $services->set('team.section_tabs', TeamSectionTabs::class)
+        ->args([service('team.access.door'), service('team.settings')])
         ->tag(ModuleTabsInterface::TAG);
     $services->set('team.section_configuration', TeamSectionConfiguration::class)
         ->args([service('team.access.door')])

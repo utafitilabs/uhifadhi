@@ -3536,3 +3536,144 @@ form.c { display: block; margin-bottom: 20px; }
     form.c > .save-row { flex-wrap: wrap; }
     form.c > .save-row > .d { flex: 1 1 100%; margin-bottom: 4px; }
 }
+
+/* ============================================================================
+   TEAM · RANKS — the People register's rank cell, facet and export door; the
+   Ranks register's order mark and holders door; the ranks list on Team
+   configure › Ranks; the rank history inside the person's Position card.
+   Ported from the settled design (team-module/team/variants-ranks/ranks.css);
+   every colour is a token, so both themes work from one rule.
+   ========================================================================== */
+/* ---- THE REGISTER BAR ------------------------------------------------------
+   The grouped dropdowns are the house .i-dd (the incidents pattern, the
+   positions register). Inside .tm-tools every control is 28px, so the trigger
+   is matched to the chips beside it. */
+.tm-tools .i-dd{flex:none}
+.tm-tools .i-ddt{height:28px;box-sizing:border-box;display:inline-flex;align-items:center;gap:7px;
+  padding:0 10px;border:1px solid var(--ln2);border-radius:999px;color:var(--fog);
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;font-weight:700;letter-spacing:.05em;
+  white-space:nowrap;cursor:pointer}
+.tm-tools .i-ddt:hover{color:var(--tx);border-color:var(--fog)}
+/* A chosen facet wears the house on-state — the accent, never a hue of its own. */
+.tm-tools .i-ddt.on{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 55%,transparent);
+  background:color-mix(in srgb,var(--acc) 10%,transparent)}
+.tm-tools .i-ddmenu{min-width:232px;max-height:420px;overflow-y:auto}
+/* A facet near the bar's right edge opens its menu towards the left, so the
+   menu never leaves the page. */
+.tm-tools .i-dd.r .i-ddmenu{left:auto;right:0}
+
+/* THE EXPORT DOOR. It states the set it exports, and the set is the bar's
+   filter — so it lives on the bar, at 28px like everything else in it. The
+   verb is the concern's export verb; a viewer without it does not see the door. */
+.tm-export{display:inline-flex;align-items:center;gap:6px;height:28px;box-sizing:border-box;padding:0 10px;
+  border:1px solid color-mix(in srgb,var(--acc) 42%,transparent);border-radius:8px;color:var(--acc);
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;font-weight:700;letter-spacing:.06em;
+  text-decoration:none;white-space:nowrap}
+.tm-export b{color:var(--acc)}
+.tm-export svg{width:12px;height:12px;flex:none}
+.tm-export:hover{background:var(--acc);color:var(--accT);text-decoration:none}
+.tm-export:hover b{color:var(--accT)}
+/* In the count line the door drops its box and reads as part of the sentence. */
+.tm-shown .tm-export{height:auto;border:0;padding:0;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.tm-shown .tm-export:hover{background:none;color:var(--acc)}
+/* As a page action it takes the action-row baseline. */
+.w-pgact .tm-export{height:32px;padding:0 11px;font-size:11px;letter-spacing:0;font-family:inherit;font-weight:600;
+  text-transform:none;border-radius:8px}
+.w-pgact .tm-export svg{width:14px;height:14px}
+
+/* ---- THE RANK CELL --------------------------------------------------------
+   One fact per column: the short code is the fact, the name is its gloss. */
+.tm-rk{display:flex;flex-direction:column;gap:2px;min-width:0;white-space:nowrap}
+.tm-rk b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;font-weight:700;color:var(--tx);
+  letter-spacing:.02em;display:inline-flex;align-items:center;gap:6px}
+.tm-rk em{font-style:normal;font-size:11px;color:var(--dim)}
+.tm-rk.none{color:var(--dim);font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px}
+/* The scale tag: two scales never read as one. */
+.tm-rk .ld{display:inline-flex;align-items:center;font-style:normal;font-size:8px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim);border:1px solid var(--ln2);border-radius:4px;padding:1px 4px;line-height:1.3}
+/* ---- THE RANKS LIST (configure) -------------------------------------------
+   An ordered form, not a fact sheet: every row is five controls at the host's
+   34px control height. The ladder is a group head; order is within it. */
+.rkl{margin:6px 0 0}
+.rkl-hd,.rkl-row{display:grid;grid-template-columns:22px 22px minmax(0,1.6fr) 96px 190px 78px 26px;gap:8px;
+  align-items:center}
+.rkl-hd{padding:0 0 6px;border-bottom:1px solid var(--ln);
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--dim)}
+.rkl-grp{display:flex;align-items:baseline;gap:10px;padding:14px 0 6px}
+.rkl-grp b{font-size:13px;font-weight:700;color:var(--tx)}
+.rkl-row{padding:5px 0;border-bottom:1px dashed var(--ln)}
+.rkl-row:last-child{border-bottom:0}
+.rkl-row .fld,.rkl-add .fld{height:34px;box-sizing:border-box;padding:0 11px;font-size:12.5px}
+.rkl-row .fld.code,.rkl-add .fld.code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;text-align:center}
+.rkl-row .fsel>select.fld{width:100%;padding-top:0;padding-bottom:0;height:34px}
+.rkl-n{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;color:var(--dim);text-align:center}
+.rkl-grip,.rkl-x{display:grid;place-items:center;width:22px;height:34px;border:0;background:none;padding:0;
+  color:var(--dim);cursor:grab}
+.rkl-grip svg{width:16px;height:16px}
+.rkl-x{cursor:pointer;width:26px}
+.rkl-x svg{width:13px;height:13px}
+.rkl-x:hover{color:var(--fail)}
+.rkl-row .zfrag{white-space:nowrap}
+/* One card per ladder: the ladder is the card, so the row has no ladder
+   select. */
+.rkl.noladder .rkl-hd,.rkl.noladder .rkl-row{grid-template-columns:22px 22px minmax(0,1.6fr) 96px 78px 26px}
+.rkl-add.noladder{grid-template-columns:minmax(0,1fr) 96px auto}
+.frow .fld.ln{width:300px;max-width:100%;height:34px;box-sizing:border-box;padding:0 11px;font-size:12.5px}
+
+/* THE RANKS REGISTER: a rank row in the People-table idiom — the order
+   where the avatar sits, the name, the code on the second line; the ladder is
+   a band row, the holders count is the door. */
+.rk-ord{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex:none;
+  font:700 10px "JetBrains Mono",ui-monospace,monospace;background:var(--raised);color:var(--fog)}
+.tm-ladder{font-size:12.5px;color:var(--fog)}
+.tm-holders{display:inline-flex;align-items:center;gap:5px;color:var(--fog);text-decoration:none;font-size:12.5px;white-space:nowrap}
+.tm-holders b{color:var(--tx);font-variant-numeric:tabular-nums}
+.tm-holders svg{color:var(--acc)}
+.tm-holders:hover{color:var(--acc)}
+.tm-holders:hover b{color:var(--acc)}
+
+/* THE SECOND-SCALE DOOR. Most organizations never open it, so it is a dashed
+   soft door under the list, not a card of its own. */
+.rkl-scale{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px dashed var(--ln)}
+.rkl-scale .rk-scale{text-decoration:none;height:30px;box-sizing:border-box;padding:0 11px;border-radius:8px}
+.rkl-scale .rk-scale svg{width:12px;height:12px}
+.rkl-scale .zfrag{min-width:0}
+
+/* The add row: the same columns minus the grip, the order and the count. */
+.rkl-add{display:grid;grid-template-columns:minmax(0,1fr) 96px 190px auto;gap:8px;align-items:center;
+  margin-top:12px;padding-top:12px;border-top:1px solid var(--ln)}
+.rkl-add .fsel>select.fld{width:100%;padding-top:0;padding-bottom:0;height:34px}
+.rkl-add .btn.sm{height:34px;box-sizing:border-box;white-space:nowrap}
+
+/* ---- RANK HISTORY (record) -------------------------------------------------
+   from · to · rank · by — one stamp column for the list, so the ranks line up. */
+.rkh{display:grid;grid-template-columns:max-content max-content minmax(0,1fr) max-content;margin-top:6px}
+.rkh-hd,.rkh-row{display:grid;grid-template-columns:subgrid;grid-column:1/-1;gap:4px 14px;align-items:center}
+.rkh-hd{padding:0 0 6px;border-bottom:1px solid var(--ln);
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--dim)}
+.rkh-row{padding:8px 0;border-bottom:1px dashed var(--ln)}
+.rkh-row:last-child{border-bottom:0}
+.rkh-row .w{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;letter-spacing:.05em;color:var(--dim);white-space:nowrap}
+.rkh-row .r{display:flex;align-items:baseline;gap:8px;min-width:0}
+.rkh-row .r b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;font-weight:700;color:var(--tx)}
+.rkh-row .r em{font-style:normal;font-size:12px;color:var(--fog);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rkh-row .by{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:var(--dim);white-space:nowrap}
+/* The rank held now. */
+.rkh-row.now .w.to{color:var(--acc);font-weight:700}
+.rkh-row.now .r b{color:var(--acc)}
+.pcard .rkh{margin-bottom:2px}
+
+/* ---- PHONE ---------------------------------------------------------------- */
+@media (max-width:760px){
+  .rkl-hd{display:none}
+  .rkl-row{grid-template-columns:22px 22px minmax(0,1fr) 84px 26px;grid-template-rows:auto auto}
+  .rkl-row .fsel{grid-column:3/5}
+  .rkl-row .zfrag{grid-column:3/5}
+  .rkl-add{grid-template-columns:minmax(0,1fr) 84px}
+  .rkl-add .fsel,.rkl-add .btn{grid-column:1/-1}
+  .rkh{grid-template-columns:minmax(0,1fr)}
+  .rkh-hd{display:none}
+  .rkh-row{grid-template-columns:minmax(0,1fr);gap:2px}
+}

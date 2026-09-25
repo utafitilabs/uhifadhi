@@ -14,6 +14,10 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Service;
 
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Contracts\Facts\Fact;
+use Uhifadhi\Contracts\Facts\FactPeriod;
+use Uhifadhi\Contracts\Facts\FactReaderInterface;
+use Uhifadhi\Contracts\Facts\FactSubject;
 use Uhifadhi\Contracts\Kpi\DepartmentKpi;
 use Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface;
 use Uhifadhi\Contracts\Kpi\DepartmentRef;
@@ -37,6 +41,17 @@ use Uhifadhi\Contracts\Kpi\DepartmentRef;
  *
  * `$now` IS PASSED IN, not read, so a period is a parameter and a page is
  * testable — the same arrangement the contract asks of every provider.
+ *
+ * THE LEDGER BEFORE THE LIVE ANSWER — the transition rule. A figure the
+ * worker has filed on the facts ledger for the department, as
+ * `<module>.<key>` in the month `$now` falls in, is read from there: its
+ * value, its time ({@see DepartmentKpi::$asOf}), and the month before's as
+ * the comparison when that was filed too. A figure with no fact keeps the
+ * module's live answer. So a module moves its figures onto the ledger one
+ * at a time — declare it through a fact provider, and stop computing it in
+ * `kpisFor()` (answer it as unknown) once the worker files it — and no
+ * page changes until the first run. One read per department, for every
+ * figure at once.
  */
 final readonly class DepartmentPerformance
 {
@@ -45,6 +60,7 @@ final readonly class DepartmentPerformance
      */
     public function __construct(
         private iterable $providers = [],
+        private ?FactReaderInterface $facts = null,
     ) {
     }
 
@@ -101,6 +117,49 @@ final readonly class DepartmentPerformance
             }
         }
 
-        return $kpis;
+        return $this->fromLedger($kpis, $department->getUuidString(), $now);
+    }
+
+    /**
+     * @param list<DepartmentKpi> $kpis
+     *
+     * @return list<DepartmentKpi>
+     */
+    private function fromLedger(array $kpis, ?string $department, \DateTimeImmutable $now): array
+    {
+        if (null === $this->facts || null === $department || [] === $kpis) {
+            return $kpis;
+        }
+
+        $keys = array_values(array_unique(array_map(static fn (DepartmentKpi $kpi): string => $kpi->moduleSlug.'.'.$kpi->key, $kpis)));
+        $month = FactPeriod::month($now);
+
+        $filed = $this->facts->batch(FactSubject::DEPARTMENT, [$department], $keys, $month->key)[$department] ?? [];
+        if ([] === $filed) {
+            return $kpis;
+        }
+        $before = $this->facts->batch(FactSubject::DEPARTMENT, [$department], $keys, $month->previous()->key)[$department] ?? [];
+
+        return array_map(static function (DepartmentKpi $kpi) use ($filed, $before): DepartmentKpi {
+            $key = $kpi->moduleSlug.'.'.$kpi->key;
+            $fact = $kpi->isTotal() ? ($filed[$key] ?? null) : null;
+            if (!$fact instanceof Fact) {
+                return $kpi;
+            }
+
+            return new DepartmentKpi(
+                key: $kpi->key,
+                label: $kpi->label,
+                moduleSlug: $kpi->moduleSlug,
+                moduleName: $kpi->moduleName,
+                value: $fact->value,
+                unit: $kpi->unit,
+                previous: isset($before[$key]) ? $before[$key]->value : $kpi->previous,
+                spark: $kpi->spark,
+                caption: $kpi->caption,
+                areaName: $kpi->areaName,
+                asOf: $fact->isFinal() ? null : $fact->asOf,
+            );
+        }, $kpis);
     }
 }

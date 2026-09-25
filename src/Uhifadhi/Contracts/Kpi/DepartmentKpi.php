@@ -35,22 +35,26 @@ final readonly class DepartmentKpi
     public const string SHARE = '%';
 
     /**
-     * @param string      $key        stable across modules and releases ('patrols', 'coverage') — the
-     *                                board's columns are these, and a goal's kpiRef names one
-     * @param string      $label      what a plate calls it ('Patrols logged')
-     * @param string      $moduleSlug the module that computed it; the surface checks the department attaches it
-     * @param string      $moduleName that module's display name, for the "what produced this" table
-     * @param float|null  $value      null means UNKNOWN — never render it as 0
-     * @param string      $unit       '' for a bare count, 'km', or {@see self::SHARE}
-     * @param float|null  $previous   the same figure over the period before, for the MoM delta
-     * @param list<float> $spark      oldest-first series behind the sparkline; [] draws none
-     * @param string      $caption    the plate's own provenance line ('Patrols module · Northern Reserve')
-     * @param string|null $areaName   NULL means this is the department TOTAL — the figure every
-     *                                headline plate, board cell and goal is scored from. A name
-     *                                means it is one area's share of that total, which the
-     *                                per-area widget reads and nothing else does. A module that
-     *                                cannot split its figure by area simply returns totals, and
-     *                                the per-area widget says so rather than inventing a split.
+     * @param string                  $key        stable across modules and releases ('patrols', 'coverage') — the
+     *                                            board's columns are these, and a goal's kpiRef names one
+     * @param string                  $label      what a plate calls it ('Patrols logged')
+     * @param string                  $moduleSlug the module that computed it; the surface checks the department attaches it
+     * @param string                  $moduleName that module's display name, for the "what produced this" table
+     * @param float|null              $value      null means UNKNOWN — never render it as 0
+     * @param string                  $unit       '' for a bare count, 'km', or {@see self::SHARE}
+     * @param float|null              $previous   the same figure over the period before, for the MoM delta
+     * @param list<float>             $spark      oldest-first series behind the sparkline; [] draws none
+     * @param string                  $caption    the plate's own provenance line ('Patrols module · Northern Reserve')
+     * @param string|null             $areaName   NULL means this is the department TOTAL — the figure every
+     *                                            headline plate, board cell and goal is scored from. A name
+     *                                            means it is one area's share of that total, which the
+     *                                            per-area widget reads and nothing else does. A module that
+     *                                            cannot split its figure by area simply returns totals, and
+     *                                            the per-area widget says so rather than inventing a split.
+     * @param \DateTimeImmutable|null $asOf       WHEN THE FIGURE IS TRUE AS OF, where it was read from
+     *                                            the facts ledger rather than computed for this request —
+     *                                            the time a page prints beside it ("as of 13:00"). Null
+     *                                            means it was computed live, or its period has closed.
      */
     public function __construct(
         public string $key,
@@ -63,6 +67,7 @@ final readonly class DepartmentKpi
         public array $spark = [],
         public string $caption = '',
         public ?string $areaName = null,
+        public ?\DateTimeImmutable $asOf = null,
     ) {
         if ('' === $key || '' === $moduleSlug) {
             throw new \InvalidArgumentException('A department KPI must name its key and the module that computed it.');

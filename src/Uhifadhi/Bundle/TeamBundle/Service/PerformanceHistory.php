@@ -19,6 +19,9 @@ use Uhifadhi\Bundle\TeamBundle\Entity\DepartmentPeriodFigure;
 use Uhifadhi\Bundle\TeamBundle\Entity\InstallationPeriodFigure;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\InstallationPeriodFigureRepository;
+use Uhifadhi\Contracts\Facts\FactPeriod;
+use Uhifadhi\Contracts\Facts\FactReaderInterface;
+use Uhifadhi\Contracts\Facts\FactSubject;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 
 /**
@@ -31,9 +34,15 @@ use Uhifadhi\Contracts\Kpi\FigurePeriod;
  * so the snapshot command and the page cannot disagree about what a period
  * is called or where its figures live.
  *
- * PERIOD KEYS ARE SORTABLE STRINGS and this class is where they are minted:
- * `2026-08`, `2026-Q3`, `2026`. A page that built its own would be one
- * typo away from a history it cannot find.
+ * PERIOD KEYS ARE SORTABLE STRINGS — `2026-08`, `2026-Q3`, `2026` — minted by
+ * {@see FactPeriod}, the one place the history and the facts ledger both
+ * take them from. A page that built its own would be one typo away from a
+ * history it cannot find.
+ *
+ * THE OPEN PERIOD IS NEVER WRITTEN HERE, and a figure the worker filed for
+ * it on the facts ledger (subject: the department, figure: the same key) is
+ * what {@see valueAt()} and {@see runFor()} read where no row was written.
+ * A written row always wins: it is what the period was when it closed.
  */
 final readonly class PerformanceHistory
 {
@@ -41,24 +50,25 @@ final readonly class PerformanceHistory
         private EntityManagerInterface $entityManager,
         private DepartmentPeriodFigureRepository $figures,
         private InstallationPeriodFigureRepository $installation,
+        private ?FactReaderInterface $facts = null,
     ) {
     }
 
     /** The month an instant falls in, as a key. */
     public static function monthKey(\DateTimeImmutable $when): string
     {
-        return $when->format('Y-m');
+        return FactPeriod::month($when)->key;
     }
 
     /** The quarter an instant falls in — the calendar's, not a fiscal year's. */
     public static function quarterKey(\DateTimeImmutable $when): string
     {
-        return \sprintf('%s-Q%d', $when->format('Y'), (int) ceil(((int) $when->format('n')) / 3));
+        return FactPeriod::quarter($when)->key;
     }
 
     public static function yearKey(\DateTimeImmutable $when): string
     {
-        return $when->format('Y');
+        return FactPeriod::year($when)->key;
     }
 
     /**
@@ -154,10 +164,23 @@ final readonly class PerformanceHistory
         return $this->installation->of($periodKey);
     }
 
-    /** What one figure was, or null where nobody wrote it down. */
+    /**
+     * What one figure was, or — for a period nobody wrote down — what the
+     * facts ledger holds for it; null where neither has it.
+     */
     public function valueAt(Department $department, string $figureKey, string $periodKey): ?float
     {
-        return $this->figures->findOne($department, $periodKey, $figureKey)?->getValue();
+        $written = $this->figures->findOne($department, $periodKey, $figureKey);
+        if (null !== $written) {
+            return $written->getValue();
+        }
+
+        $uuid = $department->getUuidString();
+        if (null === $this->facts || null === $uuid) {
+            return null;
+        }
+
+        return $this->facts->latest(FactSubject::DEPARTMENT, $uuid, $figureKey, $periodKey)?->value;
     }
 
     /**
@@ -175,10 +198,21 @@ final readonly class PerformanceHistory
 
         $run = [];
         foreach ($periodKeys as $key) {
-            $run[$key] = $written[$key] ?? null;
+            $run[$key] = \array_key_exists($key, $written) ? $written[$key] : $this->filed($department, $figureKey, $key);
         }
 
         return $run;
+    }
+
+    /** What the facts ledger holds for a period nobody wrote down, one read per hole. */
+    private function filed(Department $department, string $figureKey, string $periodKey): ?float
+    {
+        $uuid = $department->getUuidString();
+        if (null === $this->facts || null === $uuid) {
+            return null;
+        }
+
+        return $this->facts->latest(FactSubject::DEPARTMENT, $uuid, $figureKey, $periodKey)?->value;
     }
 
     /**

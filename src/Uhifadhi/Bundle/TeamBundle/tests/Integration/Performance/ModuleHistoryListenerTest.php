@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Uhifadhi\Bundle\RegistryBundle\Event\ModuleInstalledEvent;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ModuleHistoryListener;
+use Uhifadhi\Bundle\TeamBundle\MessageHandler\BackfillModuleHistoryHandler;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
@@ -33,8 +34,13 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
  * IT INVENTS NOTHING. What is written is what the module answers when
  * asked about that month; where it answers with nothing, the period stays
  * a hole.
+ *
+ * This kernel routes nothing to a queue, so the backfill the install
+ * dispatches is handled in the same process — which is what lets this
+ * suite see the listener and the worker's handler as one path.
  */
 #[CoversClass(ModuleHistoryListener::class)]
+#[CoversClass(BackfillModuleHistoryHandler::class)]
 final class ModuleHistoryListenerTest extends IntegrationTestCase
 {
     public function testInstallingAModuleWritesTheClosedPeriodsItCanAnswerFor(): void
@@ -46,10 +52,10 @@ final class ModuleHistoryListenerTest extends IntegrationTestCase
         $written = $this->history()->runFor(
             $department,
             'surveys.surveys',
-            PerformanceHistory::monthsEndingAt(new \DateTimeImmutable('first day of last month'), ModuleHistoryListener::PERIODS),
+            PerformanceHistory::monthsEndingAt(new \DateTimeImmutable('first day of last month'), BackfillModuleHistoryHandler::PERIODS),
         );
 
-        self::assertCount(ModuleHistoryListener::PERIODS, $written);
+        self::assertCount(BackfillModuleHistoryHandler::PERIODS, $written);
         self::assertNotContains(null, $written, 'the stand-in answers for every month it is asked about');
     }
 

@@ -417,6 +417,10 @@ final class TestKernel extends Kernel
             \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Service\DepartmentDirectory::class => 'team.department_directory',
+            \Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance::class => 'team.department_performance',
+            // The facts ledger's table, for the suites that write what the
+            // worker would have written.
+            \Uhifadhi\Bundle\RegistryBundle\Repository\FigureFactRepository::class => \Uhifadhi\Bundle\RegistryBundle\Repository\FigureFactRepository::class,
             // The registry's own write path, for the suites that ask what a
             // department can be asked about.
             'registry.area_modules' => 'registry.area_modules',

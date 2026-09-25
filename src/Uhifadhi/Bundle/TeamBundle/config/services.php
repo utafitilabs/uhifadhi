@@ -48,6 +48,8 @@ use Uhifadhi\Bundle\TeamBundle\Controller\TeamSectionController;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ModuleHistoryListener;
+use Uhifadhi\Bundle\TeamBundle\Message\BackfillModuleHistory;
+use Uhifadhi\Bundle\TeamBundle\MessageHandler\BackfillModuleHistoryHandler;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonDirectory;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonFacets;
 use Uhifadhi\Bundle\TeamBundle\Performance\AcrossTopicsMatrix;
@@ -441,13 +443,23 @@ return static function (ContainerConfigurator $container): void {
      */
     if (class_exists(ModuleInstalledEvent::class)) {
         $services->set('team.module_history_listener', ModuleHistoryListener::class)
-            ->args([
-                service(DepartmentRepository::class),
-                service('team.department_performance'),
-                service('team.performance_history'),
-            ])
+            ->args([service('messenger.default_bus')])
             ->tag('kernel.event_listener', ['event' => ModuleInstalledEvent::class, 'method' => 'onModuleInstalled']);
     }
+
+    /*
+     * THE WORKER'S SIDE OF THAT QUESTION: the closed periods, asked and
+     * written down. Tagged by hand with the message it handles — a reusable
+     * bundle is not autoconfigured.
+     * @see https://symfony.com/doc/current/messenger.html#manually-configuring-handlers
+     */
+    $services->set('team.backfill_module_history_handler', BackfillModuleHistoryHandler::class)
+        ->args([
+            service(DepartmentRepository::class),
+            service('team.department_performance'),
+            service('team.performance_history'),
+        ])
+        ->tag('messenger.message_handler', ['handles' => BackfillModuleHistory::class]);
 
     $services->set('team.api_error_listener', ApiErrorListener::class)
         ->tag('kernel.event_listener', ['event' => 'kernel.exception', 'method' => 'onException', 'priority' => 512])
@@ -854,6 +866,7 @@ return static function (ContainerConfigurator $container): void {
             service('doctrine.orm.entity_manager'),
             service(DepartmentPeriodFigureRepository::class),
             service(InstallationPeriodFigureRepository::class),
+            service('registry.facts.reader'),
         ]);
     $services->alias(PerformanceHistory::class, 'team.performance_history');
 
@@ -976,7 +989,7 @@ return static function (ContainerConfigurator $container): void {
      * department it is asked about comes from the screen.
      */
     $services->set('team.department_performance', DepartmentPerformance::class)
-        ->args([tagged_iterator('uhifadhi.department_kpi')]);
+        ->args([tagged_iterator('uhifadhi.department_kpi'), service('registry.facts.reader')]);
 
     /*
      * THE THREE WRITES BEHIND THE DOORS A STRANGER REACHES. It knows nothing

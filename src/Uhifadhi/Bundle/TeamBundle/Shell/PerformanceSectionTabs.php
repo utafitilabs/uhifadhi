@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Shell;
 
 use Symfony\Component\HttpFoundation\RequestStack;
+use Uhifadhi\Bundle\TeamBundle\Access\Door;
+use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceController;
 use Uhifadhi\Contracts\Shell\ModuleTab;
 use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
@@ -56,12 +58,19 @@ final readonly class PerformanceSectionTabs implements ModuleTabsInterface
         return self::SURFACE;
     }
 
-    public function __construct(private RequestStack $requests)
-    {
+    public function __construct(
+        private RequestStack $requests,
+        private Door $door,
+    ) {
     }
 
     public function tabs(): array
     {
+        // ALL THREE OR NONE: every screen of the section enforces one pair.
+        if (!$this->door->opens(DepartmentController::READ)) {
+            return [];
+        }
+
         /*
          * THE READING TRAVELS WITH THE READER. Moving from the Overview
          * to Topics is a change of SCREEN and never of subject, so the

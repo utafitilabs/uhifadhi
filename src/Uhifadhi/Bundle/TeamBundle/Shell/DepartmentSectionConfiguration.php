@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Shell;
 
+use Uhifadhi\Bundle\TeamBundle\Access\Door;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentConfigureController;
 use Uhifadhi\Contracts\Shell\ConfigurationSection;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
@@ -37,6 +38,10 @@ use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
  */
 final readonly class DepartmentSectionConfiguration implements ConfigurationSectionsInterface
 {
+    public function __construct(private Door $door)
+    {
+    }
+
     public function slug(): string
     {
         return DepartmentSectionTabs::SURFACE;
@@ -54,6 +59,12 @@ final readonly class DepartmentSectionConfiguration implements ConfigurationSect
 
     public function sections(): array
     {
+        // BOTH SCREENS ENFORCE ONE PAIR, so a viewer without it has no
+        // section to be offered and no Configure action to reach one by.
+        if (!$this->door->opens(DepartmentConfigureController::PAIR)) {
+            return [];
+        }
+
         return [
             ConfigurationSection::screen(
                 ConfigurationSection::SETTINGS,

@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Settings;
 
+use Uhifadhi\Bundle\TeamBundle\Access\Door;
+use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Contracts\Settings\SettingsFigure;
 use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
 
@@ -41,8 +43,10 @@ final readonly class PeopleFigure implements SettingsFigureSourceInterface
     /** After the areas and what runs in them: the places, then the people. */
     public const int POSITION = 30;
 
-    public function __construct(private PeopleReading $reading)
-    {
+    public function __construct(
+        private PeopleReading $reading,
+        private Door $door,
+    ) {
     }
 
     public function position(): int
@@ -52,6 +56,11 @@ final readonly class PeopleFigure implements SettingsFigureSourceInterface
 
     public function settingsFigures(): iterable
     {
+        // COUNTING THE PEOPLE IS READING THE DIRECTORY.
+        if (!$this->door->opens(TeamController::READ)) {
+            return;
+        }
+
         $active = $this->reading->active();
         $posted = $this->reading->posted();
 

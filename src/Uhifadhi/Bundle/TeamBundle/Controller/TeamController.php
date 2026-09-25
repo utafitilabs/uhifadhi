@@ -83,6 +83,9 @@ final readonly class TeamController
     /** The section's second tab: everybody who can sign in here. */
     public const string PEOPLE = 'team_index';
 
+    /** The pair the section's reading screens enforce, and every door to one asks. */
+    public const string READ = 'directory.read';
+
     /** The People register's rows, as CSV. */
     public const string EXPORT = 'team_people_export';
     public const string EXPORT_PAIR = TeamConcerns::DIRECTORY.'.export';

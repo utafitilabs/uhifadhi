@@ -15,7 +15,9 @@ namespace Uhifadhi\Bundle\TeamBundle\Shell;
 
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\RouterInterface;
+use Uhifadhi\Bundle\TeamBundle\Access\Door;
 use Uhifadhi\Bundle\TeamBundle\Controller\AreaDepartmentController;
+use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Contracts\Shell\AreaNavChild;
@@ -41,6 +43,7 @@ final readonly class DepartmentAreaNavChildren implements AreaNavChildrenInterfa
         private RouterInterface $router,
         private RequestStack $requests,
         private DepartmentRepository $departments,
+        private Door $door,
     ) {
     }
 
@@ -51,6 +54,11 @@ final readonly class DepartmentAreaNavChildren implements AreaNavChildrenInterfa
 
     public function childrenFor(string $areaUuid, string $areaName): array
     {
+        // EVERY RUNG OPENS THE AREA'S DEPARTMENTS TAB, so it asks that tab's pair.
+        if (!$this->door->opens(DepartmentController::READ)) {
+            return [];
+        }
+
         $tab = $this->router->generate(AreaDepartmentController::TAB, ['uuid' => $areaUuid]);
         $focused = $this->requests->getCurrentRequest()?->query->get(DepartmentQuery::FOCUS);
 

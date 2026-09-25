@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Settings;
 
+use Uhifadhi\Bundle\TeamBundle\Access\Door;
+use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Contracts\Settings\SettingsFigure;
 use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
@@ -31,8 +33,10 @@ final readonly class PositionFigure implements SettingsFigureSourceInterface
     /** Last of the four: what a person may do, after who they are. */
     public const int POSITION = 40;
 
-    public function __construct(private PositionRepository $positions)
-    {
+    public function __construct(
+        private PositionRepository $positions,
+        private Door $door,
+    ) {
     }
 
     public function position(): int
@@ -42,6 +46,11 @@ final readonly class PositionFigure implements SettingsFigureSourceInterface
 
     public function settingsFigures(): iterable
     {
+        // WHAT THE POSITIONS GRANT IS READ FROM THE POSITIONS.
+        if (!$this->door->opens(PositionController::READ)) {
+            return;
+        }
+
         $composed = 0;
         $granting = 0;
         foreach ($this->positions->findAllOrdered() as $position) {

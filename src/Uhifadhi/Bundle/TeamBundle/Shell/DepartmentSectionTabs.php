@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Shell;
 
+use Uhifadhi\Bundle\TeamBundle\Access\Door;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
 use Uhifadhi\Contracts\Shell\ModuleTab;
@@ -46,13 +47,25 @@ final readonly class DepartmentSectionTabs implements ModuleTabsInterface
      */
     public const string SURFACE = 'departments';
 
+    public function __construct(private Door $door)
+    {
+    }
+
     public function slug(): string
     {
         return self::SURFACE;
     }
 
+    /**
+     * ALL THREE OR NONE: every screen of the section enforces the one pair,
+     * so a viewer without it is offered no strip at all.
+     */
     public function tabs(): array
     {
+        if (!$this->door->opens(DepartmentController::READ)) {
+            return [];
+        }
+
         return [
             new ModuleTab('Overview', DepartmentSectionController::OVERVIEW),
             new ModuleTab('Departments', DepartmentController::REGISTER),

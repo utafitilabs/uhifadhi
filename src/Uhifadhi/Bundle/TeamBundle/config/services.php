@@ -246,11 +246,11 @@ return static function (ContainerConfigurator $container): void {
         ]);
 
     $services->set('team.settings.figure', PeopleFigure::class)
-        ->args([service('team.settings.people')])
+        ->args([service('team.settings.people'), service('team.access.door')])
         ->tag(SettingsFigureSourceInterface::TAG);
 
     $services->set('team.settings.position_figure', PositionFigure::class)
-        ->args([service(PositionRepository::class)])
+        ->args([service(PositionRepository::class), service('team.access.door')])
         ->tag(SettingsFigureSourceInterface::TAG);
 
     $services->set('team.settings.steps', TeamSteps::class)
@@ -258,6 +258,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.settings.people'),
             service(PositionRepository::class),
             service('router'),
+            service('team.access.door'),
         ])
         ->tag(SettingsStepSourceInterface::TAG);
 
@@ -854,6 +855,7 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(PerformanceHistory::class, 'team.performance_history');
 
     $services->set('team.area_sections', DepartmentAreaSections::class)
+        ->args([service('team.access.door')])
         ->tag(AreaSectionsInterface::TAG);
     $services->alias(DepartmentAreaSections::class, 'team.area_sections');
 
@@ -867,6 +869,7 @@ return static function (ContainerConfigurator $container): void {
             service('router'),
             service('request_stack'),
             service(DepartmentRepository::class),
+            service('team.access.door'),
         ])
         ->tag(AreaNavChildrenInterface::TAG);
     $services->alias(DepartmentAreaNavChildren::class, 'team.area_nav_children');
@@ -1201,10 +1204,12 @@ return static function (ContainerConfigurator $container): void {
      * collecting these tags.
      */
     $services->set('team.department_section_tabs', DepartmentSectionTabs::class)
+        ->args([service('team.access.door')])
         ->tag(ModuleTabsInterface::TAG);
     $services->alias(DepartmentSectionTabs::class, 'team.department_section_tabs');
 
     $services->set('team.department_section_configuration', DepartmentSectionConfiguration::class)
+        ->args([service('team.access.door')])
         ->tag(ConfigurationSectionsInterface::TAG);
     $services->alias(DepartmentSectionConfiguration::class, 'team.department_section_configuration');
 
@@ -1215,11 +1220,12 @@ return static function (ContainerConfigurator $container): void {
      * costs the page the code it was using to fake one of them.
      */
     $services->set('team.performance_section_tabs', PerformanceSectionTabs::class)
-        ->args([service('request_stack')])
+        ->args([service('request_stack'), service('team.access.door')])
         ->tag(ModuleTabsInterface::TAG);
     $services->alias(PerformanceSectionTabs::class, 'team.performance_section_tabs');
 
     $services->set('team.performance_section_configuration', PerformanceSectionConfiguration::class)
+        ->args([service('team.access.door')])
         ->tag(ConfigurationSectionsInterface::TAG);
     $services->alias(PerformanceSectionConfiguration::class, 'team.performance_section_configuration');
 

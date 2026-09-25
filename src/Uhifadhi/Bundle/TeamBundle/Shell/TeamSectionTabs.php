@@ -70,13 +70,22 @@ final readonly class TeamSectionTabs implements ModuleTabsInterface
 
     public function tabs(): array
     {
-        $tabs = [
-            new ModuleTab('Overview', TeamSectionController::OVERVIEW),
-            new ModuleTab('People', TeamController::PEOPLE),
-            new ModuleTab('Positions', PositionController::REGISTER),
-            new ModuleTab('Assignments', TeamPostingsController::POSTINGS),
-            new ModuleTab('Roles', TeamRolesController::ROLES),
-        ];
+        $tabs = [];
+
+        // EVERY TAB ASKS THE PAIR ITS ROUTE ENFORCES: the directory for
+        // the reading screens, positions for the register of positions.
+        $reads = $this->door->opens(TeamController::READ);
+        if ($reads) {
+            $tabs[] = new ModuleTab('Overview', TeamSectionController::OVERVIEW);
+            $tabs[] = new ModuleTab('People', TeamController::PEOPLE);
+        }
+        if ($this->door->opens(PositionController::READ)) {
+            $tabs[] = new ModuleTab('Positions', PositionController::REGISTER);
+        }
+        if ($reads) {
+            $tabs[] = new ModuleTab('Assignments', TeamPostingsController::POSTINGS);
+            $tabs[] = new ModuleTab('Roles', TeamRolesController::ROLES);
+        }
 
         if ($this->settings->current()->usesRanks() && $this->door->opens(RankController::READ)) {
             $tabs[] = new ModuleTab('Ranks', RankController::REGISTER);

@@ -134,6 +134,9 @@ final readonly class DepartmentController
     /** The register — the section's second tab, and the list every row opens from. */
     public const string REGISTER = 'team_departments';
 
+    /** The pair every screen of the section enforces, and every door to one asks. */
+    public const string READ = 'departments.read';
+
     /** A department's own page: inside the section, and not one of its screens. */
     public const string RECORD = 'team_department_show';
 

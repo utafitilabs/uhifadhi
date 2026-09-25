@@ -60,6 +60,24 @@ final class AreaDepartmentNavTest extends WebTestCaseWithSchema
         self::assertNotContains('Coastal Watch', $labels);
     }
 
+    /**
+     * EVERY RUNG OPENS THE AREA'S DEPARTMENTS TAB, so somebody without the
+     * pair that tab enforces is handed no rung at all.
+     */
+    public function testAViewerWithoutDepartmentsReadIsHandedNoRungs(): void
+    {
+        $north = $this->area('Northern Reserve');
+        $this->department('Ecology');
+        $reader = $this->person('Wera', 'Mwita');
+        $reader->setPosition($this->position('Directory reader', ['directory.read']));
+        $this->place($reader);
+        $this->em->flush();
+        $this->client->loginUser($reader);
+        $this->client->request('GET', '/_elsewhere');
+
+        self::assertSame([], $this->contributor()->childrenFor((string) $north->getUuidString(), (string) $north->getName()));
+    }
+
     /** The rungs hang under the area's Departments screen and no other. */
     public function testTheyHangUnderTheDepartmentsScreen(): void
     {

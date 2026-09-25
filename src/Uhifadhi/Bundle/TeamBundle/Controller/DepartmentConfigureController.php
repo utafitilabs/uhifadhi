@@ -65,6 +65,9 @@ final readonly class DepartmentConfigureController
     /** The vocabulary this section writes with. */
     public const string LISTS = 'team_departments_configure_lists';
 
+    /** The pair every configure screen of the section enforces, and every door to one asks. */
+    public const string PAIR = 'departments.configure';
+
     public const string KIND_CREATE = 'team_department_kind_create';
 
     public const string KIND_RENAME = 'team_department_kind_rename';

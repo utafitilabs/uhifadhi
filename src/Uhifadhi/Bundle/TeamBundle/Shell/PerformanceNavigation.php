@@ -21,12 +21,10 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
-use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
+use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceController;
 use Uhifadhi\Bundle\TeamBundle\Performance\RequiredPeriod;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
-use Uhifadhi\Contracts\Access\Grant;
-use Uhifadhi\Contracts\Access\Verb;
 use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
@@ -93,7 +91,8 @@ final readonly class PerformanceNavigation implements NavigationSourceInterface
             return;
         }
 
-        if (!$this->authorization->isGranted((string) Grant::of(TeamConcerns::DIRECTORY, Verb::Manage))) {
+        // THE ROW ASKS WHAT EVERY PERFORMANCE SCREEN ENFORCES.
+        if (!$this->authorization->isGranted(DepartmentController::READ)) {
             return;
         }
 

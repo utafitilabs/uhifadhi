@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Shell;
 
+use Uhifadhi\Bundle\TeamBundle\Access\Door;
 use Uhifadhi\Bundle\TeamBundle\Controller\AreaDepartmentController;
+use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
 use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
 use Uhifadhi\Contracts\Shell\ConfigurationSection;
 
@@ -30,8 +32,18 @@ use Uhifadhi\Contracts\Shell\ConfigurationSection;
  */
 final readonly class DepartmentAreaSections implements AreaSectionsInterface
 {
+    public function __construct(private Door $door)
+    {
+    }
+
     public function sectionsFor(string $areaUuid, string $areaName): array
     {
+        // THE SCREEN ENFORCES `departments.read`, asked without the area as
+        // its route asks it: departments are never placed by area.
+        if (!$this->door->opens(DepartmentController::READ)) {
+            return [];
+        }
+
         return [ConfigurationSection::screen(
             'departments',
             'Departments',

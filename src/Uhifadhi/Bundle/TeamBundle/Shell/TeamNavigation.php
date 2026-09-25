@@ -22,7 +22,7 @@ use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
-use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
+use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\RankConfigureController;
@@ -36,8 +36,6 @@ use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamSettingsService;
-use Uhifadhi\Contracts\Access\Grant;
-use Uhifadhi\Contracts\Access\Verb;
 use Uhifadhi\Contracts\Shell\NavGroup;
 
 /**
@@ -65,10 +63,11 @@ use Uhifadhi\Contracts\Shell\NavGroup;
  * else's sidebar.
  *
  * GATING IS THIS CLASS'S JOB, not the shell's — the shell holds no
- * authorization service and asks nothing about the viewer. So the row is
- * ABSENT, never hidden, for anybody without `team.manage`, which is the exact
- * permission the screens behind it are gated on. A row that offered a door
- * closing in somebody's face would be worse than no row.
+ * authorization service and asks nothing about the viewer. So every row and
+ * every screen under it is ABSENT, never hidden, for anybody without the pair
+ * the route behind it enforces: `departments.read` for the Departments
+ * section, `directory.read` for Team, `positions.read` for Positions. A row
+ * that offered a door closing in somebody's face would be worse than no row.
  *
  * ROUTE-TOLERANT. The addresses are mounted by the APPLICATION (the recipe's
  * config/routes/team.yaml, which an installation may edit or delete), so
@@ -121,10 +120,6 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             return;
         }
 
-        if (!$this->authorization->isGranted((string) Grant::of(TeamConcerns::DIRECTORY, Verb::Manage))) {
-            return;
-        }
-
         /*
          * ROW BY ROW, because unmounting is per-address. An installation that
          * kept the roster and dropped the departments screen must lose one row
@@ -172,6 +167,10 @@ final readonly class TeamNavigation implements NavigationSourceInterface
      */
     private function departmentsRow(): ?NavItem
     {
+        if (!$this->authorization->isGranted(DepartmentController::READ)) {
+            return null;
+        }
+
         $row = $this->row('Departments', self::DEPARTMENTS_ROUTE, 'shell:building-2', $this->viewerIsInDepartments());
         if (null === $row) {
             return null;
@@ -287,6 +286,10 @@ final readonly class TeamNavigation implements NavigationSourceInterface
      */
     private function teamRow(): ?NavItem
     {
+        if (!$this->authorization->isGranted(TeamController::READ)) {
+            return null;
+        }
+
         $row = $this->row('Team', self::ROUTE, 'shell:users');
         if (null === $row) {
             return null;
@@ -302,7 +305,9 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             // and a position's are the register's: the tree opens the path to
             // the screen a record belongs to, or the viewer stands nowhere.
             $this->screen('People', TeamController::PEOPLE, ['team_member', 'team_member_configure', TeamConfigureController::PEOPLE]),
-            $this->screen('Positions', PositionController::REGISTER, ['team_position_show', 'team_position_configure', TeamConfigureController::POSITIONS]),
+            $this->authorization->isGranted(PositionController::READ)
+                ? $this->screen('Positions', PositionController::REGISTER, ['team_position_show', 'team_position_configure', TeamConfigureController::POSITIONS])
+                : null,
             $this->screen('Assignments', TeamPostingsController::POSTINGS, [TeamConfigureController::ASSIGNMENTS]),
             $this->screen('Roles', TeamRolesController::ROLES),
             // RANKS ONLY WHERE THE STRIP HAS IT: while the organization uses

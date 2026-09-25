@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Shell;
 
+use Uhifadhi\Bundle\TeamBundle\Access\Door;
+use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceConfigureController;
 use Uhifadhi\Contracts\Shell\ConfigurationSection;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
@@ -33,6 +35,10 @@ use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
  */
 final readonly class PerformanceSectionConfiguration implements ConfigurationSectionsInterface
 {
+    public function __construct(private Door $door)
+    {
+    }
+
     public function slug(): string
     {
         return PerformanceSectionTabs::SURFACE;
@@ -50,6 +56,11 @@ final readonly class PerformanceSectionConfiguration implements ConfigurationSec
 
     public function sections(): array
     {
+        // THE SETTINGS SCREEN ENFORCES THE DEPARTMENTS' CONFIGURE PAIR.
+        if (!$this->door->opens(DepartmentConfigureController::PAIR)) {
+            return [];
+        }
+
         return [
             ConfigurationSection::screen(
                 ConfigurationSection::SETTINGS,

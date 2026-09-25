@@ -15,7 +15,9 @@ namespace Uhifadhi\Bundle\TeamBundle\Settings;
 
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Uhifadhi\Bundle\TeamBundle\Access\Door;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
+use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Contracts\Settings\SettingsStep;
@@ -44,6 +46,7 @@ final readonly class TeamSteps implements SettingsStepSourceInterface
         private PeopleReading $people,
         private PositionRepository $positions,
         private UrlGeneratorInterface $urls,
+        private Door $door,
     ) {
     }
 
@@ -53,6 +56,18 @@ final readonly class TeamSteps implements SettingsStepSourceInterface
     }
 
     public function settingsSteps(): iterable
+    {
+        // EACH STEP ASKS WHAT THE PAGE IT LINKS TO ENFORCES.
+        if ($this->door->opens(TeamController::READ)) {
+            yield from $this->postPeople();
+        }
+        if ($this->door->opens(PositionController::READ)) {
+            yield from $this->composeAPosition();
+        }
+    }
+
+    /** @return iterable<SettingsStep> */
+    private function postPeople(): iterable
     {
         $active = $this->people->active();
         $posted = $this->people->posted();
@@ -73,7 +88,11 @@ final readonly class TeamSteps implements SettingsStepSourceInterface
             0 !== $active && null !== $posted && $posted === $active,
             null === $posted || $posted === $active ? null : \sprintf('%d to post', $active - $posted),
         );
+    }
 
+    /** @return iterable<SettingsStep> */
+    private function composeAPosition(): iterable
+    {
         $composed = \count($this->positions->findAllOrdered());
 
         yield new SettingsStep(

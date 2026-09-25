@@ -1,10 +1,12 @@
-{# DP·A2 — the positions nobody holds, longest vacant first. #}
+{# DP·A2 — the positions nobody holds, longest vacant first. Each door leads
+   to the positions register, so each is drawn only for its pair. #}
+{% set toPositions = door('positions.read') %}
 <div class="c">
     <span class="tab">Positions nobody holds<span class="src">&middot; longest vacant first</span></span>
     {% for line in vacancies %}
-        <div class="rln"><span><a href="{{ path('team_positions') }}">{{ line.label }}</a></span><span class="mono {{ line.tone }}">{{ line.note }}</span></div>
+        <div class="rln"><span>{% if toPositions %}<a href="{{ path('team_positions') }}">{{ line.label }}</a>{% else %}{{ line.label }}{% endif %}</span><span class="mono {{ line.tone }}">{{ line.note }}</span></div>
     {% else %}
         <div class="rln"><span class="d">Every position is held.</span></div>
     {% endfor %}
-    <div class="sxmore"><span>{{ vacancies|length }} of {{ vacanciesTotal }} positions</span><span class="sp"></span><a href="{{ path('team_positions') }}">Positions in Team &rarr;</a></div>
+    <div class="sxmore"><span>{{ vacancies|length }} of {{ vacanciesTotal }} positions</span><span class="sp"></span>{% if toPositions %}<a href="{{ path('team_positions') }}">Positions in Team &rarr;</a>{% endif %}</div>
 </div>

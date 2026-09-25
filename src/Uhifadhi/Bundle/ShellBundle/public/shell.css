@@ -979,7 +979,13 @@ h2.zone {
 }
 h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
 
-.grid { display: grid; gap: 20px; margin-bottom: 20px; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; margin-bottom: 20px; }
+/* A BARE GRID IS ONE BOUNDED COLUMN. Without a stated track a grid sizes its
+   only track to its content, and a card holding a plate is as wide as the
+   plate's intrinsic width — off the page. `minmax(0, 1fr)` is the one track
+   that lets a card shrink to the page (the grid item's automatic minimum is
+   zero, not its content), which is what every stack of cards means; a
+   column class below states more tracks. */
 /* A GRID INSIDE A GRID GIVES ITS MARGIN BACK: the outer grid's gap already
    spaces it from what follows, and the two together read as forty pixels
    where every other pair of cards is twenty. A strip that is the first band

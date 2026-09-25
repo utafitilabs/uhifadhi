@@ -26,9 +26,22 @@
 {% set extra = extra ?? '' %}
 {# Every page's address, built once, so the markup below is the design and
    nothing else. #}
-{% set urls = range(1, max(1, pages))|map(number => query is defined
-    ? path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(query.with('page', number ~ '')))
-    : base ~ '?' ~ param ~ '=' ~ number ~ extra) %}
+{# A SECOND LIST NAMES ITS PARAMETER, AND THAT DECIDES: an include sees the
+   page's own `query` through the context it inherits, so the test is for the
+   parameter the second list hands over, never for the presence of `query`. #}
+{% set urls = range(1, max(1, pages))|map(number => param is defined
+    ? base ~ '?' ~ param ~ '=' ~ number ~ extra
+    : path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(query.with('page', number ~ '')))) %}
+{# THE NUMBERS ARE A WINDOW, NEVER THE WHOLE RUN (design: `1 2 3 … 8`): the
+   first page, the pages beside the one you are on, the last page, and a gap
+   where numbers are skipped. Thirty-eight links in one row is what stretched
+   a card past the page. #}
+{% set shown = [] %}
+{% for number in 1..max(1, pages) %}
+    {% if number == 1 or number == pages or (number >= page - 1 and number <= page + 1) or (page <= 2 and number <= 3) or (page >= pages - 1 and number >= pages - 2) %}
+        {% set shown = shown|merge([number]) %}
+    {% endif %}
+{% endfor %}
 {% if pages > 1 or (scope is defined and scope > total) %}
     <div class="pgr">
         <span class="cnt">
@@ -38,7 +51,10 @@
         <span class="sp"></span>
         {% if pages > 1 %}
             <a class="{{ page == 1 ? 'off' : '' }}" href="{{ urls[max(1, page - 1) - 1] }}">{{ back|raw }}</a>
-            {% for number in 1..pages %}
+            {% for number in shown %}
+                {% if loop.index > 1 and number > shown[loop.index0 - 1] + 1 %}
+                    <span class="pg-n gap">&hellip;</span>
+                {% endif %}
                 {% if number == page %}
                     <span class="pg-n on">{{ number }}</span>
                 {% else %}

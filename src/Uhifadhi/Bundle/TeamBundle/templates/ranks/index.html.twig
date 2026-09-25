@@ -15,6 +15,7 @@
    | Configure action                             | control | frame                     | done   |
    | card tab "Ranks · N · …"                     | data    | total, scales             | done   |
    | search "Rank name or short code"             | control | ?q=                       | done   |
+   | sort caret on Rank and Holders               | control | ?sort=, ?dir= (house idiom) | done |
    | All chip + count; one chip per scale (s2)    | control | ?scale=, scaleCounts      | done   |
    | export door "export N rows · CSV"            | control | ranks.export → ranks.csv  | done   |
    | count line "showing N of M"                  | data    | shown, total              | done   |
@@ -55,6 +56,9 @@
             <input type="search" name="q" value="{{ query.q }}" placeholder="Rank name or short code" aria-label="Search the ranks">
         </label>
         {% if query.scale %}<input type="hidden" name="scale" value="{{ query.scale }}">{% endif %}
+        {# THE SEARCH KEEPS THE SORT, as the chips and the export do. #}
+        {% if query.sort != 'rank' %}<input type="hidden" name="sort" value="{{ query.sort }}">{% endif %}
+        {% if query.direction != 'asc' %}<input type="hidden" name="dir" value="{{ query.direction }}">{% endif %}
         <a class="fchip{{ query.scale is null ? ' on' }}" href="{{ path('team_ranks', query.with('scale', null)) }}">All <span class="n">{{ total }}</span></a>
         {% if several %}
             {% for scale in scales %}
@@ -69,7 +73,17 @@
 
     <div class="tm-scroll">
         <table class="tbl">
-            <thead><tr><th>Rank</th>{% if several %}<th>Scale</th>{% endif %}<th>Holders</th><th>Since</th><th></th></tr></thead>
+            {# THE HOUSE IN-COLUMN SORT CARET, as the Positions register draws
+               it: the sorted header alone says so, with the direction as a
+               mark, and every sortable header is a link that turns it over. #}
+            <thead><tr>
+                {% for column, label in {rank: 'Rank', holders: 'Holders'} %}
+                    {% set sorted = query.sort == column %}
+                    <th{{ sorted ? ' class="sorted"' }} aria-sort="{{ sorted ? (query.direction == 'desc' ? 'descending' : 'ascending') : 'none' }}"><a href="{{ path('team_ranks', query.sortedBy(column)) }}">{{ label }}</a></th>
+                    {% if column == 'rank' and several %}<th>Scale</th>{% endif %}
+                {% endfor %}
+                <th>Since</th><th></th>
+            </tr></thead>
             <tbody>
                 {% for band in bands %}
                     {% if several %}

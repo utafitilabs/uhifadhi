@@ -27,6 +27,13 @@ Not released yet.
    positions in its tab and keeps a department with no position as a dimmed row; modules per
    department are read against the department that reads the most. `Model\SectionBar` is
    removed. No team template writes a `.sxbar` row (`VisualsAreTheAtlasTest`)
+ * THE RANKS REGISTER SORTS BY RANK AND BY HOLDERS through the house
+   in-column caret (ruled 2026-09-25), exactly as the Positions register
+   does: the sorted header carries `.sorted` and `aria-sort`, each sortable
+   header is a link that turns the direction over, `?sort=holders&dir=desc`
+   is the address, seniority stays the default, ties by holders break by
+   seniority, and the search and the CSV keep the order.
+
  * THE RANK IS SET INSIDE THE POSITION CARD (ruled 2026-09-25): on a person's
    configure page the rank select and its From date sit under the assigned
    position, and `POST /team/{uuid}/position` writes the seat, the placement

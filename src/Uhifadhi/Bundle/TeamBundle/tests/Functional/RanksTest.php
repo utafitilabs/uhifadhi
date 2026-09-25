@@ -66,6 +66,54 @@ final class RanksTest extends WebTestCaseWithSchema
         self::assertSame('Ranks', trim($crawler->filter('.atabs a.on')->text()));
     }
 
+    /**
+     * THE HOUSE IN-COLUMN SORT CARET, exactly as the Positions register
+     * draws it: the sorted header carries `.sorted` and `aria-sort`, every
+     * sortable header is a link that turns the direction over, and the
+     * default is seniority.
+     */
+    public function testTheRegisterSortsByRankAndByHoldersThroughTheColumnCaret(): void
+    {
+        $this->administrator();
+        [$one, $two] = $this->ladder();
+        $this->holds('Joseph', 'Mollel', $one);
+        $this->holds('Anna', 'Sanka', $two);
+        $this->holds('Desta', 'Haile', $two);
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/ranks');
+        $rank = $crawler->filter('table.tbl thead th')->eq(0);
+        $holders = $crawler->filter('table.tbl thead th')->eq(1);
+        self::assertSame('sorted', $rank->attr('class'));
+        self::assertSame('ascending', $rank->attr('aria-sort'));
+        self::assertSame('/team/ranks?dir=desc', $rank->filter('a')->attr('href'));
+        self::assertSame('none', $holders->attr('aria-sort'));
+        self::assertSame('/team/ranks?sort=holders', $holders->filter('a')->attr('href'));
+        self::assertCount(0, $crawler->filter('table.tbl thead th')->eq(2)->filter('a'), 'Since is not a sort');
+        self::assertSame(['1', '2', '3'], $crawler->filter('tbody .rk-ord')->each(static fn (Crawler $o): string => $o->text()));
+
+        $byHolders = $this->client->request('GET', '/team/ranks?sort=holders&dir=desc');
+        self::assertSame(['2', '1', '3'], $byHolders->filter('tbody .rk-ord')->each(static fn (Crawler $o): string => $o->text()), 'most held first, ties by seniority');
+        $holders = $byHolders->filter('table.tbl thead th')->eq(1);
+        self::assertSame('sorted', $holders->attr('class'));
+        self::assertSame('descending', $holders->attr('aria-sort'));
+        self::assertSame('/team/ranks?sort=holders', $holders->filter('a')->attr('href'), 'clicked again, it turns over');
+        self::assertSame('none', $byHolders->filter('table.tbl thead th')->eq(0)->attr('aria-sort'));
+
+        $fromTheTop = $this->client->request('GET', '/team/ranks?dir=desc');
+        self::assertSame(['3', '2', '1'], $fromTheTop->filter('tbody .rk-ord')->each(static fn (Crawler $o): string => $o->text()));
+        self::assertSame('descending', $fromTheTop->filter('table.tbl thead th')->eq(0)->attr('aria-sort'));
+
+        // THE SEARCH KEEPS THE SORT, and the export follows the same order.
+        $searched = $this->client->request('GET', '/team/ranks?sort=holders&dir=desc&q=ranger');
+        self::assertSame('desc', $searched->filter('form.tm-tools input[name="dir"]')->attr('value'));
+        self::assertSame('holders', $searched->filter('form.tm-tools input[name="sort"]')->attr('value'));
+        $this->client->request('GET', '/team/ranks.csv?sort=holders&dir=desc');
+        $lines = array_values(array_filter(explode("\n", (string) $this->client->getInternalResponse()->getContent())));
+        self::assertStringStartsWith('2,', $lines[1]);
+        self::assertStringStartsWith('1,', $lines[2]);
+    }
+
     public function testTheSearchNarrowsByNameOrCode(): void
     {
         $this->administrator();

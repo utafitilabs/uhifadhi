@@ -27,7 +27,8 @@ use Uhifadhi\Bundle\TeamBundle\Repository\RankScaleRepository;
  * order, with the number of people holding it now.
  *
  * THE ORDER NUMBER IS THE RANK'S PLACE ON ITS SCALE, not its row on the page:
- * a search that leaves the third rank alone still reads it as 3.
+ * a search that leaves the third rank alone still reads it as 3, and a band
+ * sorted by holders still numbers each rank by its seniority.
  */
 final readonly class RankBoard
 {
@@ -65,7 +66,7 @@ final readonly class RankBoard
 
             $bands[] = new RankBand(
                 $scale,
-                $rows,
+                $query->order($rows),
                 \count($rows),
                 array_sum(array_map(static fn (RankRow $row): int => $row->holders, $rows)),
             );

@@ -17,6 +17,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
+use Uhifadhi\Bundle\AtlasBundle\Model\DotKey;
+use Uhifadhi\Bundle\AtlasBundle\Model\KeyEntry;
+use Uhifadhi\Bundle\AtlasBundle\Model\KeyMark;
 use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
@@ -136,6 +139,12 @@ final readonly class DepartmentSectionController
         }
 
         return new Response($this->twig->render('@Team/departments/modules.html.twig', [
+            // THE KEY IS THE ATLAS'S, in the marks the matrix's cells wear.
+            'key' => new DotKey([
+                new KeyEntry('attached'),
+                new KeyEntry('not attached', KeyMark::Absent),
+                new KeyEntry("an org-wide department\u{2019}s attachment is read in every area", null),
+            ]),
             'modules' => $modules,
             'rows' => $rows,
             'perModule' => $perModule,

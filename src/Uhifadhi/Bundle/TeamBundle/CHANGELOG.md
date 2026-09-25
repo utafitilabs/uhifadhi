@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * THE MODULES MATRIX'S KEY IS THE ATLAS'S DOT KEY, `atlas_key()`, in the marks its cells
+   wear: attached, not attached, and the sentence after them. No team template writes a
+   `.sxmxkey` (`VisualsAreTheAtlasTest`)
+
  * A TOPIC'S MATRIX IS THE ATLAS'S HEAT TABLE: `render_matrix()` keeps the card, the scroll
    and the sort and draws the table with `atlas_heatmap()` and the legend with
    `atlas_heat_legend()`. `MatrixViewBuilder::build()` returns the atlas's `HeatTable`;

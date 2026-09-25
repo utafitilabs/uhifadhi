@@ -143,6 +143,16 @@ final class DepartmentSectionScreensTest extends WebTestCaseWithSchema
         self::assertCount(3, $crawler->filter('.sxmx tbody tr:not(.sxgrp)'));
     }
 
+    /** THE MATRIX'S KEY IS THE ATLAS'S DOT KEY: present, absent, and the sentence after them. */
+    public function testTheMatrixKeyIsTheAtlasDotKey(): void
+    {
+        $key = $this->matrix()->filter('.c .sxmxkey');
+
+        self::assertCount(1, $key);
+        self::assertSame(['attached', 'not attached', 'an org-wide department’s attachment is read in every area'], $key->filter('span')->each(static fn (Crawler $c): string => $c->text()));
+        self::assertSame(['sxdot', 'sxdot no'], $key->filter('i')->each(static fn (Crawler $c): string => (string) $c->attr('class')));
+    }
+
     /** EVERY ROW STATES ITS SCOPE, which is how the matrix is read across areas. */
     public function testEveryMatrixRowStatesItsScope(): void
     {

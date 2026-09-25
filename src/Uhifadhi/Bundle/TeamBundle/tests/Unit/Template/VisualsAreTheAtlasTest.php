@@ -38,6 +38,7 @@ final class VisualsAreTheAtlasTest extends TestCase
         'a ranked bar — write atlas_bars()' => '/\bclass="sxbars?\b/',
         'a heat cell — write atlas_heatmap()' => '/\bclass="hcell\b/',
         'a heat legend — write atlas_heat_legend()' => '/\bclass="legend\b/',
+        'a dot key — write atlas_key()' => '/\bclass="sxmxkey\b/',
     ];
 
     /** @return iterable<string, array{string}> */

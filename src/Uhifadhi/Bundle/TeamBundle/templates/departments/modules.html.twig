@@ -36,11 +36,7 @@
 
         <div class="c">
             <span class="tab">Which department reads which module<span class="src">&middot; {{ rows|length }} &times; {{ modules|length }}</span></span>
-            <div class="sxmxkey">
-                <span><i class="sxdot"></i>attached</span>
-                <span><i class="sxdot no"></i>not attached</span>
-                <span>an org-wide department&rsquo;s attachment is read in every area</span>
-            </div>
+            {{ atlas_key(key) }}
             <table class="tbl sxmx">
                 <thead>
                 <tr>

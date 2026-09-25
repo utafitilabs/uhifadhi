@@ -117,7 +117,7 @@ library — so `doctrine:migrations:diff` on this platform emits the bare
 generate a migration removing it. `tests/Core/MigrationsCoverSchemaTest` is
 what holds the two together.
 
-### Two new Stimulus controllers
+### Four new Stimulus controllers
 
 `uhifadhi--team-bundle--grants` (`assets/controllers/grants_controller.js`),
 lazy: the configure page's per-module **grant all / none** and the save bar's
@@ -130,11 +130,27 @@ lazy: the grants matrix's **Fold all / Open all**, on the position record and
 on the configure page. The folds are native `<details>` and still open one at
 a time with no JavaScript; this is only the pair of shortcuts over them.
 
-**Both arrive through `assets/controllers.json`**, which Flex writes on
-install. An installation upgrading in place — or one whose `controllers.json`
-predates a controller — adds the entry itself, or re-runs
-`composer recipes:install uhifadhi/uhifadhi --force -v`; a controller a host
-never enables is a file nobody loads, and the button is drawn and dead.
+`uhifadhi--team-bundle--yes-no` (`assets/controllers/yes_no_controller.js`),
+lazy: the two-button **On / Off** control every configure section states a
+rule with. The pair is a radio group underneath and posts with no JavaScript.
+
+`uhifadhi--team-bundle--rank-order` (`assets/controllers/rank_order_controller.js`),
+lazy: the **grip** on every row of a rank scale under Team › Configure ›
+Ranks — drag, or focus it and use the arrow keys — and the row numbers that
+follow it. The order is posted as the form's own field order; without the
+controller the rows still save, but nothing moves.
+
+**All four arrive through `assets/controllers.json`**, the file the starter
+ships and the installation owns; no recipe writes it. An installation
+upgrading in place adds each entry itself, under `@uhifadhi/uhifadhi`:
+
+```json
+"yes-no":     { "enabled": true, "fetch": "lazy" },
+"rank-order": { "enabled": true, "fetch": "lazy" }
+```
+
+A controller a host never enables is a file nobody loads, and the button is
+drawn and dead.
 
 ## A department is a placement, not an owner
 

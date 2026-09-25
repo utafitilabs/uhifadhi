@@ -8,6 +8,14 @@
 
 Not released yet.
 
+ * THE FIVE RANKINGS ARE THE ATLAS'S BARS: People by department and Positions held and
+   unheld on the Team overview, and the staffing, scope and modules widgets on the
+   Departments overview, are `atlas_bars()`. People by department keeps a department nobody
+   is placed in at nought and dims "No department"; Positions held and unheld counts its
+   positions in its tab and keeps a department with no position as a dimmed row; modules per
+   department are read against the department that reads the most. `Model\SectionBar` is
+   removed. No team template writes a `.sxbar` row (`VisualsAreTheAtlasTest`)
+
  * TEAM'S CONFIGURE PAGE IS THREE SECTIONS (ruled 2026-09-24), each an
    address of its own on the shape every area configure section wears:
    `/team/configure/people` (the invitation rules), `/team/configure/positions`

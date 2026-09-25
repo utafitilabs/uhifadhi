@@ -35,6 +35,7 @@ final class VisualsAreTheAtlasTest extends TestCase
     private const array FORBIDDEN = [
         'a sparkline polyline — write atlas_sparkline()' => '/<polyline\b/',
         'a plotted chart — write atlas_chart()' => '/<svg\b[^>]*\bclass="ch\b/',
+        'a ranked bar — write atlas_bars()' => '/\bclass="sxbars?\b/',
     ];
 
     /** @return iterable<string, array{string}> */

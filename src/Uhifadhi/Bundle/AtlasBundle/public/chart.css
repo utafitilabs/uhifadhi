@@ -85,3 +85,48 @@
 .sk polyline.up, .spark polyline.up { stroke: rgb(var(--c-ok)); }
 .sk polyline.dn, .spark polyline.dn { stroke: rgb(var(--c-fail)); }
 .sk polyline.fl, .spark polyline.fl { stroke: color-mix(in srgb, rgb(var(--c-fog)) 62%, transparent); }
+
+/* ════════════════════════════════════════════════════════════════════════
+   RANKED BARS — one row per thing, the value read off the end of the bar
+   rather than off an axis. A 162px label, a 14px track holding the fill
+   and, on a two-part bar, the rest beside it, then the bold figure and its
+   note; a quiet row is dimmed. The card that holds them is bounded by the
+   rows it draws, never by the data. Drawn by `atlas_bars()`.
+
+   THE DOT KEY — a dot and a word per entry, under the bars or the matrix it
+   reads; the dot is also a matrix cell: present, inherited or absent, and
+   absence is drawn so an empty row reads as an answer. Drawn by
+   `atlas_key()` and under `atlas_bars()`.
+
+   Design: team/overview.html and departments/overview.html (the bars),
+   departments/modules.html (the key and the dot).
+   ════════════════════════════════════════════════════════════════════════ */
+.sxbars { display: flex; flex-direction: column; gap: 7px; margin: 12px 0 2px; }
+.sxbar { display: grid; grid-template-columns: minmax(0, 162px) minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.sxbar .l { font-size: 12px; color: var(--tx); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sxbar .t {
+    position: relative; height: 14px; border-radius: 4px;
+    background: color-mix(in srgb, var(--fog) 12%, transparent); overflow: hidden; display: flex;
+}
+.sxbar .t i { display: block; height: 100%; }
+.sxbar .t i.f { background: var(--acc); }
+.sxbar .t i.v { background: color-mix(in srgb, var(--fail) 42%, transparent); }
+.sxbar .t i.b { background: color-mix(in srgb, var(--acc) 42%, transparent); }
+.sxbar .n {
+    font-family: var(--font-mono); font-size: 10.5px; color: var(--fog);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.sxbar .n b { color: var(--tx); font-weight: 700; }
+.sxbar.q .l, .sxbar.q .n { color: var(--dim); }
+
+.sxdot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; background: var(--acc); }
+/* The key's dots wear the bar's own parts, so a key cannot name a colour its bars do not draw. */
+.sxdot.v { background: color-mix(in srgb, var(--fail) 42%, transparent); }
+.sxdot.b { background: color-mix(in srgb, var(--acc) 42%, transparent); }
+.sxdot.inh { background: none; border: 1.5px solid color-mix(in srgb, var(--acc) 60%, transparent); }
+.sxdot.no { background: none; border: 1.5px dashed color-mix(in srgb, var(--fog) 34%, transparent); }
+.sxmxkey {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 2px 0 12px;
+    font-family: var(--font-mono); font-size: 9.5px; color: var(--dim);
+}
+.sxmxkey span { display: inline-flex; align-items: center; gap: 6px; }

@@ -97,6 +97,14 @@ final class MapExtension extends AbstractExtension
              * KPI card's figure and beside a matrix cell's movement.
              */
             new TwigFunction('atlas_sparkline', [SparklineRuntime::class, 'renderSparkline'], ['is_safe' => ['html']]),
+
+            /*
+             * AND A RANKING DRAWN AS ROWS: a label, a track and the figure
+             * off the end — with the dot key that reads it, which a matrix
+             * of dots also wears on its own.
+             */
+            new TwigFunction('atlas_bars', [BarsRuntime::class, 'renderBars'], ['is_safe' => ['html']]),
+            new TwigFunction('atlas_key', [BarsRuntime::class, 'renderKey'], ['is_safe' => ['html']]),
         ];
     }
 

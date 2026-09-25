@@ -8,6 +8,15 @@
 
 Not released yet.
 
+ * RANKED BARS ARE AN ATLAS COMPONENT: `atlas_bars(RankedBars)` draws the design's rows — a
+   162px label, a 14px track, the bold figure and its note, a quiet row dimmed, the optional
+   rest beside the fill and the dot key under them — with every width worked out by
+   `RankedBars::rows()` against the largest row or a row's own `of`. `atlas_key(DotKey)` draws
+   the key alone, for a matrix of dots. `.sxbars`, `.sxbar`, `.sxdot` and `.sxmxkey` are
+   chart.css's, and the key's dots wear classes (`.sxdot.v`, `.sxdot.b`) rather than a colour
+   on the page. Server-drawn, on Twig alone. Documented in docs/components.md, "Ranked bars
+   and the dot key"
+
  * THE AREA'S GROUND IS AN ATLAS COMPONENT: `AtlasMap::ground(Ground)` takes
    the boundary geometry and the zone geometries (`Ground::fromGeoJson()` for
    the text a geometry column returns) and draws them the one way: the

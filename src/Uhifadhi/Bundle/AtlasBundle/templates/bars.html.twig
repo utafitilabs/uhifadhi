@@ -1,0 +1,25 @@
+{# RANKED BARS — one row per thing, the value read off the end of the bar.
+
+   The design's own rows: a 162px label, a 14px track holding the fill and,
+   on a two-part bar, the rest beside it, then the bold figure and its note.
+   A quiet row is dimmed. Every width arrived worked out.
+
+   Rendered by Twig\BarsRuntime, never included by hand — a surface writes
+   {{ atlas_bars(bars) }}. #}
+<div class="sxbars">
+    {%- for row in rows %}
+        <div class="sxbar{{ row.bar.isQuiet() ? ' q' }}">
+            <span class="l">{{ row.bar.label }}</span>
+            <span class="t">
+                {%- if row.fill > 0 %}<i class="{{ fill }}" style="width:{{ row.fill }}%"></i>{% endif -%}
+                {%- if row.rest > 0 %}<i class="v" style="width:{{ row.rest }}%"></i>{% endif -%}
+            </span>
+            <span class="n">{% if row.bar.figure is not null %}<b>{{ row.bar.figure }}</b>{% endif %}{{ row.bar.note }}</span>
+        </div>
+    {%- else %}
+        <p class="use">{{ empty }}</p>
+    {%- endfor %}
+</div>
+{%- if key %}
+    {{ include('@Atlas/key.html.twig', {key: key}) }}
+{%- endif %}

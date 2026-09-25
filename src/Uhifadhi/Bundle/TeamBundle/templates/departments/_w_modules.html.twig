@@ -1,16 +1,6 @@
 {# DP·C3 — how many of the installed modules each department reads. #}
 <div class="c">
     <span class="tab">Modules per department<span class="src">&middot; of the installed catalogue</span></span>
-    <div class="sxbars">
-        {% for bar in modules %}
-            <div class="sxbar{{ bar.value == 0 ? ' q' }}">
-                <span class="l">{{ bar.label }}</span>
-                <span class="t">{% if bar.value > 0 %}<i class="b" style="width:{{ bar.filledWidth }}%"></i>{% endif %}</span>
-                <span class="n">{{ bar.note }}</span>
-            </div>
-        {% else %}
-            <p class="use">No department yet.</p>
-        {% endfor %}
-    </div>
-    <div class="sxmore"><span>{{ modules|length }} of {{ modules|length }} departments</span><span class="sp"></span><a href="{{ path('team_departments_modules') }}">The matrix &rarr;</a></div>
+    {{ atlas_bars(modules) }}
+    <div class="sxmore"><span>{{ modules.bars|length }} of {{ modules.bars|length }} departments</span><span class="sp"></span><a href="{{ path('team_departments_modules') }}">The matrix &rarr;</a></div>
 </div>

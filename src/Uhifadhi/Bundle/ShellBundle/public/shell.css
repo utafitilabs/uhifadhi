@@ -2607,27 +2607,6 @@ table.tbl tr:hover .open-btn {
    IS a house surface, so its marks belong in the house sheet and not in a sheet
    only three pages load.
    ========================================================================== */
-/* RANKED BARS — one row per thing, longest first, the value read off the end of
-   the bar rather than off an axis. The card that holds them is bounded by the
-   number of rows it draws, never by the data. */
-.sxbars { display: flex; flex-direction: column; gap: 7px; margin: 12px 0 2px; }
-.sxbar { display: grid; grid-template-columns: minmax(0, 162px) minmax(0, 1fr) auto; align-items: center; gap: 10px; }
-.sxbar .l { font-size: 12px; color: var(--tx); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sxbar .t {
-    position: relative; height: 14px; border-radius: 4px;
-    background: color-mix(in srgb, var(--fog) 12%, transparent); overflow: hidden; display: flex;
-}
-.sxbar .t i { display: block; height: 100%; }
-.sxbar .t i.f { background: var(--acc); }
-.sxbar .t i.v { background: color-mix(in srgb, var(--fail) 42%, transparent); }
-.sxbar .t i.b { background: color-mix(in srgb, var(--acc) 42%, transparent); }
-.sxbar .n {
-    font-family: var(--font-mono); font-size: 10.5px; color: var(--fog);
-    font-variant-numeric: tabular-nums; white-space: nowrap;
-}
-.sxbar .n b { color: var(--tx); font-weight: 700; }
-.sxbar.q .l, .sxbar.q .n { color: var(--dim); }
-
 /* THE BOUND — the line a bounded card ends on: what it is not showing, and the
    door to the register that shows it. Never a scrollbar inside the card. */
 .sxmore {
@@ -2640,19 +2619,11 @@ table.tbl tr:hover .open-btn {
 .sxmore a { font-weight: 700; letter-spacing: .06em; }
 .sxmore a:hover { text-decoration: underline; }
 
-/* THE MATRIX DOT — a cell in a departments x modules grid. Present, inherited
-   (an org-wide department reads it in every area) or absent; absence is drawn,
-   not left blank, so an empty row reads as an answer. */
+/* THE ATTACHMENT MATRIX — a departments x modules grid. Its dot and the key
+   that reads it are the atlas's (chart.css); the table's alignment is the
+   frame's. */
 .sxmx td, .sxmx th { text-align: center; }
 .sxmx td:first-child, .sxmx th:first-child { text-align: left; }
-.sxdot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; background: var(--acc); }
-.sxdot.inh { background: none; border: 1.5px solid color-mix(in srgb, var(--acc) 60%, transparent); }
-.sxdot.no { background: none; border: 1.5px dashed color-mix(in srgb, var(--fog) 34%, transparent); }
-.sxmxkey {
-    display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 2px 0 12px;
-    font-family: var(--font-mono); font-size: 9.5px; color: var(--dim);
-}
-.sxmxkey span { display: inline-flex; align-items: center; gap: 6px; }
 
 /* THE DOORS — a row of onward surfaces at the foot of an overview. A door is a
    destination, not a figure, so it carries a name, a line and an arrow. */

@@ -3,21 +3,6 @@
    a reader gets. #}
 <div class="c">
     <span class="tab">Positions filled by department<span class="src">&middot; longest first</span></span>
-    <div class="sxbars">
-        {% for bar in staffing %}
-            <div class="sxbar{{ bar.isQuiet() ? ' q' }}">
-                <span class="l">{{ bar.label }}</span>
-                <span class="t">{% if not bar.isQuiet() %}<i class="f" style="width:{{ bar.filledWidth }}%"></i><i class="v" style="width:{{ bar.restWidth }}%"></i>{% endif %}</span>
-                <span class="n">{{ bar.isQuiet() ? bar.note|raw : ('<b>' ~ bar.value ~ '</b>/' ~ bar.total ~ ' &middot; ' ~ (bar.total - bar.value) ~ ' vacant')|raw }}</span>
-            </div>
-        {% else %}
-            <p class="use">No department yet.</p>
-        {% endfor %}
-    </div>
-    <div class="sxmxkey">
-        <span><i class="sxdot"></i>filled</span>
-        <span><i class="sxdot" style="background:color-mix(in srgb,var(--fail) 42%,transparent)"></i>vacant</span>
-        <span>scaled to the largest department</span>
-    </div>
-    <div class="sxmore"><span>{{ staffing|length }} of {{ staffing|length }} departments &middot; nothing hidden</span><span class="sp"></span><a href="{{ path('team_departments') }}">The register &rarr;</a></div>
+    {{ atlas_bars(staffing) }}
+    <div class="sxmore"><span>{{ staffing.bars|length }} of {{ staffing.bars|length }} departments &middot; nothing hidden</span><span class="sp"></span><a href="{{ path('team_departments') }}">The register &rarr;</a></div>
 </div>

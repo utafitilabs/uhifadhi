@@ -412,16 +412,13 @@ final class LayoutContract
         'seg',
 
         // TOP-LEVEL SECTION MARKS — the vocabulary a section surface
-        // (Departments, Team, Files) needs: ranked bars, the bound a bounded
-        // card ends on, the attachment matrix and its dot, the doors at the
+        // (Departments, Team, Files) needs: the bound a bounded card ends
+        // on, the attachment matrix's table, the doors at the
         // foot of an overview, a card's footer strip and its lead, a grouped
         // table's band row, a vocabulary row's quiet edit, and the strip entry
         // for a section that is named but not drawn yet.
-        'sxbars',
         'sxmore',
         'sxmx',
-        'sxdot',
-        'sxmxkey',
         'sxdoors',
         'sxdoor',
         'sxfoot',

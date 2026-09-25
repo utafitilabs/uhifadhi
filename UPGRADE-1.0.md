@@ -1295,3 +1295,18 @@ In `config/bundles.php`:
 And if the installation configures the bundle, its root key is now
 `utafiti_labs_post_gis`, not `fundi_stadi_post_gis`. Nothing about the database
 changes: the extension, the columns and the indexes are the same.
+
+## Ranked bars are the atlas's
+
+**What changed.** `.sxbars`, `.sxbar`, `.sxdot` and `.sxmxkey` left `shell.css` and
+`LayoutContract::COMPONENTS` for the atlas's `chart.css`, which every head carries, and a
+ranking is drawn with `atlas_bars(RankedBars)` (`atlas_key(DotKey)` for a key alone).
+`Uhifadhi\Bundle\TeamBundle\Model\SectionBar` is removed; its widths are
+`RankedBars::rows()`.
+
+**What to change in a module.** Markup that writes the rows still renders, because the names
+and the rules are unchanged. Draw them through the atlas instead: build `Bar` rows and pass a
+`RankedBars` to the template. A module whose `VocabularyConformanceTest` lists only the
+shell's sheets under `linkedStylesheets()` adds the atlas's `chart.css` there, or the class
+sweep reports `.sxbar` as shipped by nobody — **storage-module** writes the rows on its Files
+overview and storage page and is in that position.

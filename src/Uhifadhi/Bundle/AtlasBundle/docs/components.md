@@ -38,6 +38,7 @@ their API once it settles.
   - [How tall a chart is](#how-tall-a-chart-is)
   - [What each statement becomes in Chart.js](#what-each-statement-becomes-in-chartjs)
 - [The sparkline](#the-sparkline)
+- [Ranked bars and the dot key](#ranked-bars-and-the-dot-key)
 - [What a module must not do](#what-a-module-must-not-do)
 
 ## How a module gets a map
@@ -744,6 +745,48 @@ and every run is scaled against the whole history. Fewer than two readings is no
 `atlas_sparkline()` then prints nothing. It is drawn on the server, on Twig alone: a handful of
 coordinates needs no chart engine per cell.
 
+## Ranked bars and the dot key
+
+One row per thing, the value read off the end of the bar rather than off an axis. The caller
+states each row's reading and words, in the order they are drawn; how long each bar is, is the
+atlas's.
+
+```php
+use Uhifadhi\Bundle\AtlasBundle\Model\Bar;
+use Uhifadhi\Bundle\AtlasBundle\Model\DotKey;
+use Uhifadhi\Bundle\AtlasBundle\Model\KeyEntry;
+use Uhifadhi\Bundle\AtlasBundle\Model\KeyMark;
+use Uhifadhi\Bundle\AtlasBundle\Model\RankedBars;
+
+new RankedBars(
+    [
+        new Bar('North', 31.0, rest: 4.0, figure: '31', note: '/35 · 4 vacant'),
+        new Bar('South', 0.0, note: 'no position yet'),
+    ],
+    key: new DotKey([new KeyEntry('filled'), new KeyEntry('vacant', KeyMark::Rest)]),
+    empty: 'No department yet.',
+);
+```
+
+```twig
+{{ atlas_bars(bars) }}
+{{ atlas_key(key) }}   {# the key alone, under a matrix of dots #}
+```
+
+| Statement | What it draws |
+|---|---|
+| `Bar($label, $value)` | a row: the label in a 162px column, the fill in a 14px track, the figure and note in 10.5px mono |
+| `Bar(rest: n)` | the two-part bar: the rest beside the fill, in the faded fail |
+| `Bar(figure: '31', note: ' · 38 %')` | `<b>31</b> · 38 %` at the end of the row; the note is read as written |
+| `Bar(quiet: true)` | the row dimmed; a row holding nothing is dimmed without being asked |
+| `Bar(of: n)` | the row read against its own whole; without it, against the largest row |
+| `RankedBars(fill: BarFill::Soft)` | the fill in the accent at 42% rather than the accent |
+| `KeyEntry($label, KeyMark::…)` | a dot and a word: `Solid`, `Rest`, `Soft`, `Inherited`, `Absent`; `null` is words alone |
+
+Drawn on the server, on Twig alone, as the design's own rows (`.sxbars > .sxbar > .l, .t, .n`);
+the rules are in chart.css. A matrix cell writes the same dot as `<span class="sxdot">`, with
+`inh` or `no` beside it, and the key under the matrix is `atlas_key()`.
+
 ## What a module must not do
 
 - **Do not create a map yourself.** `new Map()` from UX Map skips the imagery, the control stack
@@ -754,6 +797,6 @@ coordinates needs no chart engine per cell.
 - **Do not style the plate.** `.map-plate`, `.map-body`, `.viewer`, `.map-filters`, `.map-legend` and the
   chrome classes are the atlas's vocabulary; a module that restyles them makes its own map the
   odd one out, and a module that clamps a height around one breaks its fullscreen.
-- **Do not draw a chart of your own.** No `<svg>` bar or `<polyline>` in a template, no Chart.js plugin, no chart
+- **Do not draw a chart of your own.** No `<svg>` bar, `<polyline>` or `.sxbar` row in a template, no Chart.js plugin, no chart
   options: if a design draws something `AtlasChart` cannot state, the gap is in the atlas and is
   filled here for every module at once.

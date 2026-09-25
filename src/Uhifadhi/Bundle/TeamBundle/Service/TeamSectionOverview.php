@@ -15,17 +15,21 @@ namespace Uhifadhi\Bundle\TeamBundle\Service;
 
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
 use Uhifadhi\Bundle\AtlasBundle\Model\AxisScale;
+use Uhifadhi\Bundle\AtlasBundle\Model\Bar;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartNoughts;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
+use Uhifadhi\Bundle\AtlasBundle\Model\DotKey;
+use Uhifadhi\Bundle\AtlasBundle\Model\KeyEntry;
+use Uhifadhi\Bundle\AtlasBundle\Model\KeyMark;
+use Uhifadhi\Bundle\AtlasBundle\Model\RankedBars;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\PostingStation;
-use Uhifadhi\Bundle\TeamBundle\Model\SectionBar;
 use Uhifadhi\Bundle\TeamBundle\Model\SectionFact;
 use Uhifadhi\Bundle\TeamBundle\Model\SectionKpi;
 use Uhifadhi\Bundle\TeamBundle\Model\SectionLine;
@@ -60,6 +64,9 @@ final readonly class TeamSectionOverview
 {
     /** How many rows a bounded card shows before it hands the rest to a register. */
     private const int BOUND = 5;
+
+    /** The row somebody placed in no department is counted under. */
+    private const string UNPLACED = 'No department';
 
     /** The chart's axis climbs in eights, so its half is a whole number too. */
     private const int AXIS_STEP = 8;
@@ -110,9 +117,10 @@ final readonly class TeamSectionOverview
      * @return array{
      *     facts: list<SectionFact>,
      *     kpis: list<SectionKpi>,
-     *     byDepartment: list<SectionBar>,
+     *     byDepartment: RankedBars,
      *     people: int,
-     *     seats: list<SectionBar>,
+     *     seats: RankedBars,
+     *     positions: int,
      *     departments: int,
      *     postingsChart: AtlasChart|null,
      *     postings: int,
@@ -163,6 +171,7 @@ final readonly class TeamSectionOverview
             'byDepartment' => $byDepartment,
             'people' => \count($people),
             'seats' => $seats,
+            'positions' => \count($positions),
             'departments' => $departments,
             'postingsChart' => self::postingsChart($areas),
             'postings' => $postings,
@@ -363,12 +372,14 @@ final readonly class TeamSectionOverview
      *
      * @param list<User>       $people
      * @param list<Department> $departments
-     *
-     * @return list<SectionBar>
      */
-    private static function peopleByDepartment(array $people, array $departments): array
+    private static function peopleByDepartment(array $people, array $departments): RankedBars
     {
+        // A DEPARTMENT NOBODY IS PLACED IN KEEPS ITS ROW, at nought and dimmed.
         $counts = [];
+        foreach ($departments as $department) {
+            $counts[(string) $department->getName()] = 0;
+        }
         foreach ($people as $person) {
             $placement = $person->getPlacement();
             $in = [];
@@ -378,34 +389,28 @@ final readonly class TeamSectionOverview
                 }
             }
 
-            foreach ([] === $in ? ['No department'] : $in as $name) {
+            foreach ([] === $in ? [self::UNPLACED] : $in as $name) {
                 $counts[$name] = ($counts[$name] ?? 0) + 1;
             }
         }
         arsort($counts);
 
         $total = \count($people);
-        $largest = 0;
-        foreach ($counts as $count) {
-            $largest = max($largest, $count);
-        }
-
         $bars = [];
         foreach ($counts as $name => $count) {
             $share = $total > 0 ? (int) round($count / $total * 100) : 0;
-            $bars[] = new SectionBar(
+            $bars[] = new Bar(
                 label: (string) $name,
-                value: $count,
-                total: $count,
-                people: $count,
-                note: \sprintf('<b>%d</b> · %d %%', $count, $share),
-                // The loop runs only where there is a row, so the largest row
-                // is at least one and the scale cannot divide by nothing.
-                filledWidth: round($count / $largest * 100, 1),
+                value: (float) $count,
+                figure: (string) $count,
+                note: \sprintf(' · %d %%', $share),
+                // SOMEBODY PLACED NOWHERE IS NOT A DEPARTMENT, and is dimmed
+                // beside the ones that are.
+                quiet: self::UNPLACED === $name ? true : null,
             );
         }
 
-        return $bars;
+        return new RankedBars($bars, empty: 'Nobody on this installation yet.');
     }
 
     /**
@@ -420,10 +425,8 @@ final readonly class TeamSectionOverview
      * @param list<User>       $people
      * @param list<Department> $departments
      * @param array<int, true> $held
-     *
-     * @return list<SectionBar>
      */
-    private static function seatsByDepartment(array $people, array $departments, array $held): array
+    private static function seatsByDepartment(array $people, array $departments, array $held): RankedBars
     {
         $totals = $filled = [];
         foreach ($departments as $department) {
@@ -441,27 +444,29 @@ final readonly class TeamSectionOverview
             $filled[$name] = \count(array_intersect_key($seen, $held));
         }
 
-        $totals = array_filter($totals, static fn (int $total): bool => $total > 0);
-        arsort($totals);
-
-        $largest = 0;
-        foreach ($totals as $total) {
-            $largest = max($largest, $total);
-        }
+        // LONGEST FIRST, and a department with no position last: it keeps its
+        // row, dimmed, and says so rather than drawing an empty track.
+        uksort($totals, static fn (string|int $a, string|int $b): int => $totals[$b] <=> $totals[$a] ?: strcmp((string) $a, (string) $b));
 
         $bars = [];
         foreach ($totals as $name => $total) {
             $unheld = $total - $filled[$name];
-            $bars[] = new SectionBar(
-                label: (string) $name,
-                value: $filled[$name],
-                total: $total,
-                people: $filled[$name],
-                note: \sprintf('<b>%d</b>/%d%s', $filled[$name], $total, $unheld > 0 ? \sprintf(' · %d unheld', $unheld) : ''),
-            )->scaledTo($largest);
+            $bars[] = 0 === $total
+                ? new Bar(label: (string) $name, value: 0.0, note: 'no position yet')
+                : new Bar(
+                    label: (string) $name,
+                    value: (float) $filled[$name],
+                    rest: (float) $unheld,
+                    figure: (string) $filled[$name],
+                    note: \sprintf('/%d%s', $total, $unheld > 0 ? \sprintf(' · %d unheld', $unheld) : ''),
+                );
         }
 
-        return $bars;
+        return new RankedBars(
+            $bars,
+            key: new DotKey([new KeyEntry('somebody holds it'), new KeyEntry('nobody holds it', KeyMark::Rest)]),
+            empty: 'No position yet.',
+        );
     }
 
     /**

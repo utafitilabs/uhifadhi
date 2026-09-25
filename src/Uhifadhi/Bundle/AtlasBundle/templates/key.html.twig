@@ -1,0 +1,10 @@
+{# THE DOT KEY — a dot and a word per entry, under the bars or the matrix it
+   reads. An entry with no mark is a line of words.
+
+   Rendered by Twig\BarsRuntime — a surface writes {{ atlas_key(key) }}, and
+   the bars include it under their rows. #}
+<div class="sxmxkey">
+    {%- for entry in key.entries %}
+        <span>{% if entry.mark %}<i class="{{ entry.mark.className() }}"></i>{% endif %}{{ entry.label }}</span>
+    {%- endfor %}
+</div>

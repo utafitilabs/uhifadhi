@@ -109,6 +109,22 @@ final class DepartmentSectionScreensTest extends WebTestCaseWithSchema
         self::assertSame('Ecology', $bars->first()->filter('.l')->text());
     }
 
+    /**
+     * THE THREE DEPARTMENT RANKINGS ARE THE ATLAS'S BARS: the staffing and
+     * scope keys wear the bar's own marks, and no key names a colour on the
+     * page.
+     */
+    public function testTheDepartmentRankingsAreTheAtlasBars(): void
+    {
+        $crawler = $this->overview();
+
+        self::assertCount(3, $crawler->filter('.sxbars'));
+        self::assertCount(1, $crawler->filter('.sxmxkey i.sxdot.v'), 'Vacant is the rest of a two-part bar.');
+        self::assertCount(1, $crawler->filter('.sxmxkey i.sxdot.b'), 'Area-level is the soft fill.');
+        self::assertCount(0, $crawler->filter('.sxmxkey [style]'));
+        self::assertCount(0, $crawler->filter('.sxbar .n b b'));
+    }
+
     // ---- the matrix --------------------------------------------------------
 
     /**

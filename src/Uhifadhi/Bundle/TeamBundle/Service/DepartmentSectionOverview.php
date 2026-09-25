@@ -13,10 +13,15 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Service;
 
+use Uhifadhi\Bundle\AtlasBundle\Model\Bar;
+use Uhifadhi\Bundle\AtlasBundle\Model\BarFill;
+use Uhifadhi\Bundle\AtlasBundle\Model\DotKey;
+use Uhifadhi\Bundle\AtlasBundle\Model\KeyEntry;
+use Uhifadhi\Bundle\AtlasBundle\Model\KeyMark;
+use Uhifadhi\Bundle\AtlasBundle\Model\RankedBars;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
-use Uhifadhi\Bundle\TeamBundle\Model\SectionBar;
 use Uhifadhi\Bundle\TeamBundle\Model\SectionFact;
 use Uhifadhi\Bundle\TeamBundle\Model\SectionKpi;
 use Uhifadhi\Bundle\TeamBundle\Model\SectionLine;
@@ -63,9 +68,9 @@ final readonly class DepartmentSectionOverview
      * @return array{
      *     facts: list<SectionFact>,
      *     kpis: list<SectionKpi>,
-     *     staffing: list<SectionBar>,
-     *     scope: array{orgWide: int, areaLevel: int, areas: list<array{name: string, areaLevel: int}>},
-     *     modules: list<SectionBar>,
+     *     staffing: RankedBars,
+     *     scope: array{orgWide: int, areaLevel: int, bars: RankedBars},
+     *     modules: RankedBars,
      *     unattached: list<SectionLine>,
      *     unattachedTotal: int,
      *     vacancies: list<SectionLine>,
@@ -97,15 +102,16 @@ final readonly class DepartmentSectionOverview
         $modules = $this->modules($departments);
 
         $seats = $filled = $people = 0;
-        foreach ($staffing as $bar) {
-            $seats += $bar->total;
-            $filled += $bar->value;
-            $people += $bar->people;
+        foreach ($staffing as $tally) {
+            $seats += $tally['total'];
+            $filled += $tally['filled'];
+            $people += $tally['people'];
         }
 
-        $attached = 0;
-        foreach ($modules as $bar) {
-            $attached += $bar->value;
+        $attached = $reading = 0;
+        foreach ($modules as $names) {
+            $attached += \count($names);
+            $reading += [] === $names ? 0 : 1;
         }
 
         $goals = $this->goals->findAllOrdered();
@@ -128,20 +134,16 @@ final readonly class DepartmentSectionOverview
             'kpis' => [
                 new SectionKpi('Positions filled', (string) $filled, \sprintf('of %d', $seats), \sprintf('%d vacant', $seats - $filled)),
                 new SectionKpi('People', (string) $people, null, \sprintf('%d in a position', $people)),
-                new SectionKpi('Modules attached', (string) $attached, null, \sprintf('%d of %d departments · %d installed', $this->departmentsReadingSomething($modules), \count($departments), $this->catalogue->count())),
+                new SectionKpi('Modules attached', (string) $attached, null, \sprintf('%d of %d departments · %d installed', $reading, \count($departments), $this->catalogue->count())),
                 new SectionKpi('Goals declared', (string) \count($goals), null, \sprintf('across %d departments', $this->departmentsWithAGoal($goals)), hot: true),
             ],
-            'staffing' => $staffing,
+            'staffing' => self::staffingBars($staffing),
             'scope' => [
                 'orgWide' => $orgWide,
                 'areaLevel' => $areaLevel,
-                'areas' => array_map(
-                    static fn (string $name, int $count): array => ['name' => $name, 'areaLevel' => $count],
-                    array_keys($areas),
-                    array_values($areas),
-                ),
+                'bars' => self::scopeBars($orgWide, $areaLevel, $areas),
             ],
-            'modules' => $modules,
+            'modules' => self::moduleBars($modules),
             'unattached' => $this->unattached($departments, $held, self::BOUND),
             'unattachedTotal' => \count($this->unattached($departments, $held, null)),
             'vacancies' => $this->vacancies($held, self::BOUND),
@@ -198,18 +200,17 @@ final readonly class DepartmentSectionOverview
     }
 
     /**
-     * POSITIONS FILLED PER DEPARTMENT, LONGEST FIRST — the ranked bars, scaled
-     * to the largest department. A department with no position keeps its row
-     * and says so rather than drawing an empty bar.
+     * WHAT EACH DEPARTMENT'S POSITIONS COME TO: how many, how many are held,
+     * and how many people hold them.
      *
      * @param list<Department>                                    $departments
      * @param array<int, array{position: Position, holders: int}> $held
      *
-     * @return list<SectionBar>
+     * @return array<string, array{total: int, filled: int, people: int}>
      */
     private function staffing(array $departments, array $held): array
     {
-        $bars = [];
+        $tallies = [];
         foreach ($departments as $department) {
             $total = $filled = $people = 0;
             foreach ($this->rowsFor($department, $held) as $row) {
@@ -220,53 +221,111 @@ final readonly class DepartmentSectionOverview
                 }
             }
 
-            $bars[] = new SectionBar(
-                label: (string) $department->getName(),
-                value: $filled,
-                total: $total,
-                people: $people,
-                note: 0 === $total
-                    ? 'no positions · nothing filed here yet'
-                    : \sprintf('%d/%d · %d vacant', $filled, $total, $total - $filled),
-            );
+            $tallies[(string) $department->getName()] = ['total' => $total, 'filled' => $filled, 'people' => $people];
         }
 
-        usort($bars, static fn (SectionBar $a, SectionBar $b): int => $b->total <=> $a->total ?: strcmp($a->label, $b->label));
-
-        return self::scaled($bars);
+        return $tallies;
     }
 
     /**
-     * HOW MANY MODULES EACH DEPARTMENT READS, out of the installed catalogue.
+     * POSITIONS FILLED PER DEPARTMENT, LONGEST FIRST — the ranked bars, the
+     * vacant part drawn beside the filled one and both read against the
+     * largest department. A department with no position keeps its row and
+     * says so rather than drawing an empty bar.
+     *
+     * @param array<string, array{total: int, filled: int, people: int}> $tallies
+     */
+    private static function staffingBars(array $tallies): RankedBars
+    {
+        uksort($tallies, static fn (string|int $a, string|int $b): int => $tallies[$b]['total'] <=> $tallies[$a]['total'] ?: strcmp((string) $a, (string) $b));
+
+        $bars = [];
+        foreach ($tallies as $name => $tally) {
+            $vacant = $tally['total'] - $tally['filled'];
+            $bars[] = 0 === $tally['total']
+                ? new Bar(label: (string) $name, value: 0.0, figure: 'no positions', note: ' · nothing filed here yet')
+                : new Bar(
+                    label: (string) $name,
+                    value: (float) $tally['filled'],
+                    rest: (float) $vacant,
+                    figure: (string) $tally['filled'],
+                    note: \sprintf('/%d · %d vacant', $tally['total'], $vacant),
+                );
+        }
+
+        return new RankedBars(
+            $bars,
+            key: new DotKey([new KeyEntry('filled'), new KeyEntry('vacant', KeyMark::Rest), new KeyEntry('scaled to the largest department', null)]),
+            empty: 'No department yet.',
+        );
+    }
+
+    /**
+     * WHERE EACH DEPARTMENT IS READ: the org-wide bucket every area inherits,
+     * then each area's own — every area row read against all the area-level
+     * departments there are, so the rows add up to the whole.
+     *
+     * @param array<string, int> $areas
+     */
+    private static function scopeBars(int $orgWide, int $areaLevel, array $areas): RankedBars
+    {
+        $bars = [new Bar(label: 'Org-wide', value: (float) $orgWide, figure: (string) $orgWide, note: ' · every area', of: (float) $orgWide)];
+        foreach ($areas as $name => $count) {
+            $bars[] = new Bar(label: (string) $name, value: (float) $count, figure: (string) $count, note: ' · its own', quiet: false, of: (float) $areaLevel);
+        }
+
+        return new RankedBars(
+            $bars,
+            BarFill::Soft,
+            key: new DotKey([new KeyEntry('Org-wide — every area reads it'), new KeyEntry('Area-level — one area only', KeyMark::Soft)]),
+        );
+    }
+
+    /**
+     * WHICH MODULES EACH DEPARTMENT READS, sorted, by department.
      *
      * @param list<Department> $departments
      *
-     * @return list<SectionBar>
+     * @return array<string, list<string>>
      */
     private function modules(array $departments): array
     {
-        $installed = max(1, $this->catalogue->count());
-
-        $bars = [];
+        $read = [];
         foreach ($departments as $department) {
             $names = [];
             foreach ($department->getModules() as $module) {
-                $names[] = $module->getName() ?? $module->getSlug();
+                // A module row not yet flushed has neither, and names nothing.
+                $name = $module->getName() ?? $module->getSlug();
+                if (null !== $name) {
+                    $names[] = $name;
+                }
             }
             sort($names);
 
-            $bars[] = new SectionBar(
-                label: (string) $department->getName(),
-                value: \count($names),
-                total: $installed,
-                people: 0,
-                note: [] === $names ? 'reads no module' : \sprintf('%d · %s', \count($names), implode(', ', $names)),
-            );
+            $read[(string) $department->getName()] = $names;
         }
 
-        usort($bars, static fn (SectionBar $a, SectionBar $b): int => $b->value <=> $a->value ?: strcmp($a->label, $b->label));
+        return $read;
+    }
 
-        return self::scaled($bars);
+    /**
+     * HOW MANY MODULES EACH DEPARTMENT READS, most first, read against the
+     * department that reads the most.
+     *
+     * @param array<string, list<string>> $read
+     */
+    private static function moduleBars(array $read): RankedBars
+    {
+        uksort($read, static fn (string|int $a, string|int $b): int => \count($read[$b]) <=> \count($read[$a]) ?: strcmp((string) $a, (string) $b));
+
+        $bars = [];
+        foreach ($read as $name => $names) {
+            $bars[] = [] === $names
+                ? new Bar(label: (string) $name, value: 0.0, note: 'reads no module')
+                : new Bar(label: (string) $name, value: (float) \count($names), figure: (string) \count($names), note: ' · '.implode(', ', $names));
+        }
+
+        return new RankedBars($bars, BarFill::Soft, empty: 'No department yet.');
     }
 
     /**
@@ -377,12 +436,6 @@ final readonly class DepartmentSectionOverview
         return implode(' · ', $parts);
     }
 
-    /** @param list<SectionBar> $bars */
-    private function departmentsReadingSomething(array $bars): int
-    {
-        return \count(array_filter($bars, static fn (SectionBar $bar): bool => $bar->value > 0));
-    }
-
     /** @param list<\Uhifadhi\Bundle\TeamBundle\Entity\DepartmentGoal> $goals */
     private function departmentsWithAGoal(array $goals): int
     {
@@ -392,29 +445,6 @@ final readonly class DepartmentSectionOverview
         }
 
         return \count($seen);
-    }
-
-    /**
-     * SCALED TO THE LARGEST ROW, not to the page. A bar read against its own
-     * department's total would make a department of two look like one of
-     * thirty-five, which is the one comparison the card exists to make.
-     *
-     * @param list<SectionBar> $bars
-     *
-     * @return list<SectionBar>
-     */
-    private static function scaled(array $bars): array
-    {
-        $largest = 0;
-        foreach ($bars as $bar) {
-            $largest = max($largest, $bar->total);
-        }
-
-        if (0 === $largest) {
-            return $bars;
-        }
-
-        return array_map(static fn (SectionBar $bar): SectionBar => $bar->scaledTo($largest), $bars);
     }
 
     private static function trim(float $value): string

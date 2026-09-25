@@ -23,6 +23,7 @@ use Uhifadhi\Bundle\AtlasBundle\Chart\ChartBuilder;
 use Uhifadhi\Bundle\AtlasBundle\DependencyInjection\AtlasConfiguration;
 use Uhifadhi\Bundle\AtlasBundle\Model\SatelliteSource;
 use Uhifadhi\Bundle\AtlasBundle\Shell\AtlasStylesheets;
+use Uhifadhi\Bundle\AtlasBundle\Twig\BarsRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\CalendarRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\ChartRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapExtension;
@@ -299,6 +300,11 @@ final class AtlasBundle extends AbstractBundle
 
             // The sparkline stands on Twig alone too: a polyline needs no library.
             $services->set('atlas.twig_sparkline_runtime', SparklineRuntime::class)
+                ->args([service('twig')])
+                ->tag('twig.runtime');
+
+            // And the ranked bars and their key: three spans a row, on Twig alone.
+            $services->set('atlas.twig_bars_runtime', BarsRuntime::class)
                 ->args([service('twig')])
                 ->tag('twig.runtime');
         }

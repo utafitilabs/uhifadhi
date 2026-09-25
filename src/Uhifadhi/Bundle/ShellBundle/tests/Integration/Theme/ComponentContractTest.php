@@ -182,11 +182,8 @@ final class ComponentContractTest extends ContractTestCase
             // Team, Files) needs that the rest of the vocabulary does not
             // already own. A section is a house surface, so these are house
             // marks and not a sheet only three pages load.
-            'sxbars',       // ranked bars, longest first, value off the end
             'sxmore',       // the bound: what is not shown, and the door to it
-            'sxmx',         // the attachment matrix
-            'sxdot',        // one cell of it: present / inherited / absent
-            'sxmxkey',      // and the key that reads it
+            'sxmx',         // the attachment matrix's table; its dot and key are the atlas's
             'sxdoors',      // the onward surfaces at the foot of an overview
             'sxdoor',
             'sxfoot',       // a card's footer strip

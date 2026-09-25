@@ -58,40 +58,16 @@
     <div class="grid g2">
         <div class="c">
             <span class="tab">People by department<span class="src">&middot; {{ people }} &middot; one position each</span></span>
-            <div class="sxbars">
-                {% for bar in byDepartment %}
-                    <div class="sxbar{{ bar.value == 0 ? ' q' }}">
-                        <span class="l">{{ bar.label }}</span>
-                        <span class="t">{% if bar.value > 0 %}<i class="f" style="width:{{ bar.filledWidth }}%"></i>{% endif %}</span>
-                        <span class="n">{{ bar.note|raw }}</span>
-                    </div>
-                {% else %}
-                    <p class="use">Nobody on this installation yet.</p>
-                {% endfor %}
-            </div>
-            <div class="sxmore"><span>{{ byDepartment|length }} of {{ byDepartment|length }} groups &middot; nothing hidden</span><span class="sp"></span><a href="{{ path('team_index') }}">The people &rarr;</a></div>
+            {{ atlas_bars(byDepartment) }}
+            <div class="sxmore"><span>{{ byDepartment.bars|length }} of {{ byDepartment.bars|length }} groups &middot; nothing hidden</span><span class="sp"></span><a href="{{ path('team_index') }}">The people &rarr;</a></div>
         </div>
 
         <div class="c">
-            <span class="tab">Positions held and unheld<span class="src">&middot; by department</span></span>
-            <div class="sxbars">
-                {% for bar in seats %}
-                    <div class="sxbar{{ bar.isQuiet() ? ' q' }}">
-                        <span class="l">{{ bar.label }}</span>
-                        <span class="t">{% if not bar.isQuiet() %}<i class="f" style="width:{{ bar.filledWidth }}%"></i><i class="v" style="width:{{ bar.restWidth }}%"></i>{% endif %}</span>
-                        <span class="n">{{ bar.note|raw }}</span>
-                    </div>
-                {% else %}
-                    <p class="use">No position yet.</p>
-                {% endfor %}
-            </div>
-            <div class="sxmxkey">
-                <span><i class="sxdot"></i>somebody holds it</span>
-                <span><i class="sxdot" style="background:color-mix(in srgb,var(--fail) 42%,transparent)"></i>nobody holds it</span>
-            </div>
+            <span class="tab">Positions held and unheld<span class="src">&middot; {{ positions }} &middot; by department</span></span>
+            {{ atlas_bars(seats) }}
             {# A POSITION WITH NO HOLDER IS A PERMISSION SET SITTING READY, not
                an error. #}
-            <div class="sxmore"><span>{{ seats|length }} of {{ seats|length }} departments</span><span class="sp"></span><a href="{{ path('team_positions') }}">Positions &amp; permissions &rarr;</a></div>
+            <div class="sxmore"><span>{{ seats.bars|length }} of {{ seats.bars|length }} departments</span><span class="sp"></span><a href="{{ path('team_positions') }}">Positions &amp; permissions &rarr;</a></div>
         </div>
     </div>
 

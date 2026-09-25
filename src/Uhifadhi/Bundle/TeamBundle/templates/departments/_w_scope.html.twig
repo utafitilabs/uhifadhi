@@ -2,24 +2,7 @@
    the org-wide bucket every area inherits, and each area's own. #}
 <div class="c">
     <span class="tab">Departments by scope<span class="src">&middot; where each one is read</span></span>
-    <div class="sxbars">
-        <div class="sxbar{{ scope.orgWide == 0 ? ' q' }}">
-            <span class="l">Org-wide</span>
-            <span class="t">{% if scope.orgWide > 0 %}<i class="f" style="width:100%"></i>{% endif %}</span>
-            <span class="n"><b>{{ scope.orgWide }}</b> &middot; every area</span>
-        </div>
-        {% for area in scope.areas %}
-            <div class="sxbar">
-                <span class="l">{{ area.name }}</span>
-                <span class="t"><i class="b" style="width:{{ scope.areaLevel > 0 ? (area.areaLevel / scope.areaLevel * 100)|round(1) : 0 }}%"></i></span>
-                <span class="n"><b>{{ area.areaLevel }}</b> &middot; its own</span>
-            </div>
-        {% endfor %}
-    </div>
-    <div class="sxmxkey">
-        <span><i class="sxdot"></i>Org-wide &mdash; every area reads it</span>
-        <span><i class="sxdot" style="background:color-mix(in srgb,var(--acc) 42%,transparent)"></i>Area-level &mdash; one area only</span>
-    </div>
+    {{ atlas_bars(scope.bars) }}
     <div class="rln"><span>Read in every area</span><span class="mono d">{{ scope.orgWide }} org-wide</span></div>
     <div class="rln"><span>Read in one area</span><span class="mono d">{{ scope.areaLevel }} area-level</span></div>
     <div class="rln"><span>Confining an org-wide department</span><span class="mono d">costs a reason &middot; narrows its positions, people and figures to that area</span></div>

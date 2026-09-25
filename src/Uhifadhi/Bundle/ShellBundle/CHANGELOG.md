@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * `sxbars`, `sxdot` AND `sxmxkey` ARE NO LONGER THE FRAME'S: the ranked bars, the matrix
+   dot and the dot key are atlas components and their rules are in the atlas's chart.css,
+   which every head carries. `LayoutContract::COMPONENTS` no longer lists them; `.sxmx`, the
+   matrix's table, stays. Noted in docs/changing-the-contract.md
+
  * THE ORGANIZATION IS NAMED IN THE TOP BAR — the brand's accent rule, the
    organization's full name, a hairline and the short name, in the bar's left
    half, on every page. The chrome said UHIFADHI and never said whose

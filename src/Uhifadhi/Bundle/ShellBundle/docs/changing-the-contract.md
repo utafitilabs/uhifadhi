@@ -8,6 +8,7 @@ vocabulary](components.md).
 ## Contents
 
 - [The policy](#the-policy)
+- [Removed from the list](#removed-from-the-list)
 
 ## The policy
 
@@ -32,3 +33,11 @@ that needs `.kpi` from the frame requires `^0.6`.
 
 Editing a frozen list to make a build pass is the failure mode the lists exist to
 catch.
+
+## Removed from the list
+
+- **`sxbars`, `sxdot`, `sxmxkey`** — the ranked bars, the matrix dot and the
+  dot key are atlas components (`atlas_bars()`, `atlas_key()`), and their rules
+  are in the atlas's `chart.css`, which the head carries on every page. The names
+  and the rules are unchanged, so markup that writes them still renders; a
+  module draws them through the atlas rather than writing the rows itself.

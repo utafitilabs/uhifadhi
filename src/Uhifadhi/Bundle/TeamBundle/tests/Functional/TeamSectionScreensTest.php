@@ -133,6 +133,33 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
     }
 
     /**
+     * THE TWO RANKINGS ARE THE ATLAS'S BARS, served as the design's rows: a
+     * group that is not a department is dimmed, the widths arrive worked out,
+     * the positions card counts its positions in its tab, and its key wears
+     * the bar's own marks rather than a colour written on the page.
+     */
+    public function testTheTwoRankingsAreTheAtlasBars(): void
+    {
+        $this->installation();
+        $crawler = $this->visit('/team/overview');
+
+        $people = $crawler->filter('.c')->reduce(static fn (Crawler $c): bool => str_starts_with($c->filter('.tab')->count() > 0 ? $c->filter('.tab')->first()->text() : '', 'People by department'));
+        self::assertCount(1, $people);
+        $unplaced = $people->filter('.sxbar')->reduce(static fn (Crawler $c): bool => 'No department' === $c->filter('.l')->text());
+        self::assertCount(1, $unplaced);
+        self::assertStringContainsString('q', (string) $unplaced->attr('class'), 'A group that is not a department is dimmed.');
+        self::assertMatchesRegularExpression('/^width:\d+(\.\d)?%$/', (string) $people->filter('.sxbar .t i.f')->first()->attr('style'));
+        self::assertCount(1, $people->filter('.sxbar .n b')->first());
+
+        $seats = $crawler->filter('.c')->reduce(static fn (Crawler $c): bool => str_starts_with($c->filter('.tab')->count() > 0 ? $c->filter('.tab')->first()->text() : '', 'Positions held and unheld'));
+        self::assertCount(1, $seats);
+        self::assertMatchesRegularExpression('/· \d+ · by department/', $seats->filter('.tab .src')->text());
+        self::assertSame(['somebody holds it', 'nobody holds it'], $seats->filter('.sxmxkey span')->each(static fn (Crawler $c): string => $c->text()));
+        self::assertCount(1, $seats->filter('.sxmxkey i.sxdot.v'));
+        self::assertCount(0, $seats->filter('.sxmxkey [style]'), 'The key names no colour of its own.');
+    }
+
+    /**
      * ASSIGNMENTS BY AREA IS THE ATLAS'S COLUMN CHART: one accent series,
      * the area names under the columns, the axis a round number above the
      * tallest with its half, and an area with none keeping its column as a

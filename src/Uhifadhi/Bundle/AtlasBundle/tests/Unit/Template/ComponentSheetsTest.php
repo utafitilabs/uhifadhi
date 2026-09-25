@@ -83,6 +83,28 @@ final class ComponentSheetsTest extends TestCase
     }
 
     /**
+     * THE RANKED BARS AND THEIR DOT KEY are in the chart's sheet, at the
+     * design's measures: a 162px label column, a 14px track, 7px between
+     * rows; the key in 9.5px mono with 16px between entries — and the shell
+     * keeps no copy, because a second copy is the one that drifts.
+     */
+    public function testTheChartsSheetCarriesTheBarsAndTheKeyAndTheShellNoCopy(): void
+    {
+        $chart = self::sheet('chart.css');
+
+        self::assertMatchesRegularExpression('/\.sxbars\s*\{[^}]*gap:\s*7px;\s*margin:\s*12px 0 2px/', $chart);
+        self::assertMatchesRegularExpression('/\.sxbar\s*\{[^}]*grid-template-columns:\s*minmax\(0, 162px\) minmax\(0, 1fr\) auto/', $chart);
+        self::assertMatchesRegularExpression('/\.sxbar \.t\s*\{[^}]*height:\s*14px/', $chart);
+        self::assertMatchesRegularExpression('/\.sxmxkey\s*\{[^}]*gap:\s*16px[^}]*font-size:\s*9\.5px/', $chart);
+        foreach (['.sxdot.v', '.sxdot.b', '.sxdot.inh', '.sxdot.no'] as $mark) {
+            self::assertStringContainsString($mark.' {', $chart);
+        }
+
+        $shell = (string) file_get_contents(\dirname(new \ReflectionClass(\Uhifadhi\Bundle\ShellBundle\ShellBundle::class)->getFileName() ?: '').'/public/shell.css');
+        self::assertDoesNotMatchRegularExpression('/\.(sxbars?|sxmxkey|sxdot)\b/', $shell);
+    }
+
+    /**
      * ALL THREE ARE PUBLISHED TO THE SHELL, THE MAP INCLUDED.
      *
      * THE DEFECT THIS CLOSES, and it had recurred for a year: "a page that

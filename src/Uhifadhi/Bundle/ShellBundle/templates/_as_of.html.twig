@@ -1,0 +1,11 @@
+{#- When a stored figure is true as of — see Twig/AsOfRuntime.php. `instant`
+    is the figure's time, or null when no figure has been computed yet;
+    `shape` is `clock` for a figure computed within the day, `stamp` for an
+    older one. The text inside <time> is the UTC fallback the frame rewrites. -#}
+{%- if instant is null -%}
+<span class="muted">not computed yet</span>
+{%- elseif shape == 'clock' -%}
+<span class="muted">as of <time datetime="{{ instant|date('c') }}" data-localtime-format="clock">{{ instant|date('H:i') }}</time></span>
+{%- else -%}
+<span class="muted">as of <time datetime="{{ instant|date('c') }}" data-localtime-format="stamp">{{ instant|date('j M')|lower }} · {{ instant|date('H:i') }}</time></span>
+{%- endif -%}

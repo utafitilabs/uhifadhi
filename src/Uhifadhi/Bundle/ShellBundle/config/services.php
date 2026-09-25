@@ -34,6 +34,7 @@ use Uhifadhi\Bundle\ShellBundle\Service\Stylesheets;
 use Uhifadhi\Bundle\ShellBundle\Service\Theme;
 use Uhifadhi\Bundle\ShellBundle\Service\UserBadgeReader;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
+use Uhifadhi\Bundle\ShellBundle\Twig\AsOfRuntime;
 use Uhifadhi\Bundle\ShellBundle\Twig\ShellExtension;
 use Uhifadhi\Bundle\ShellBundle\Twig\ShellRuntime;
 use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
@@ -324,6 +325,10 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set('shell.twig.extension', ShellExtension::class)
         ->tag('twig.extension');
+
+    $services->set('shell.twig.as_of', AsOfRuntime::class)
+        ->args([service('clock')])
+        ->tag('twig.runtime');
 
     $services->set('shell.twig.runtime', ShellRuntime::class)
         ->args([

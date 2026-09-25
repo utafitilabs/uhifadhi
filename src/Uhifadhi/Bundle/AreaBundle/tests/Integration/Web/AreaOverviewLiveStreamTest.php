@@ -70,6 +70,25 @@ final class AreaOverviewLiveStreamTest extends WebTestCase
         self::assertNull($this->liveStream());
     }
 
+    /**
+     * The recipe's placeholder hub, or any hub on another origin: the page
+     * answers, sets no cookie and streams nothing. A subscriber cookie is
+     * scoped to the hub's domain, and a domain that is not this page's is
+     * one this page cannot authorize anybody against.
+     */
+    public function testAHubOnAnotherOriginGetsNoCookieAndNoStreamAndThePageStillAnswers(): void
+    {
+        $this->boot(hubUrl: 'https://example.com/.well-known/mercure');
+        $this->signIn();
+        $area = $this->anArea();
+
+        $this->browser()->request('GET', '/areas/'.$area->getUuidString());
+
+        self::assertSame(Response::HTTP_OK, $this->browser()->getResponse()->getStatusCode());
+        self::assertNull($this->cookie(), 'a hub on another origin is not ours to authorize a subscriber against');
+        self::assertNull($this->liveStream());
+    }
+
     /** The pair the page asks is the pair the stream asks: no `areas.read`, no page and no cookie. */
     public function testSomebodyWithoutTheReadPairGetsNeitherThePageNorACookie(): void
     {

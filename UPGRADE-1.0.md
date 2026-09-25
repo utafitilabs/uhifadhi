@@ -866,6 +866,8 @@ its plate (`$map->liveStream($subscription->stream)`) and set
 `$subscription->cookie` on its response, both from
 `PresenceStreamService::forArea()`; the marks then move on its page too.
 
+The hub must sit at the application's own origin. An installation whose `.env` still carries the Mercure recipe's placeholder (`https://example.com/.well-known/mercure`) gets no stream and no cookie, and every page keeps answering; set `MERCURE_URL` and `MERCURE_PUBLIC_URL` to the hub the deployment serves, or to nothing.
+
 ## `/favicon.ico` is answered, where the application asks for it
 
 **What changed.** The shell ships a fourth route resource, and it serves the

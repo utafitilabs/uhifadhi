@@ -396,6 +396,8 @@ same `LiveStream` to `AtlasMap::liveStream()` and sets the cookie the same way.
 hub as the browser reaches it) and `MERCURE_JWT_SECRET`. All three empty is a
 working deployment whose plates are drawn once per page.
 
+The hub has to be at the page's own origin, the way every deployment carries it inside the app's server. A hub address on another origin — the Mercure recipe's placeholder, for one — is read as no hub: the page draws as before, sets no cookie and streams nothing.
+
 ## The screens
 
 Seven, mounted from `config/routes/area.yaml` and yours to prefix, restrict or

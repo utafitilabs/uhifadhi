@@ -85,7 +85,7 @@ final readonly class PresenceStreamService
     private function open(Request $request, iterable $areas): ?PresenceSubscription
     {
         $hub = $this->hub->getPublicUrl();
-        if ('' === $hub) {
+        if ('' === $hub || !self::sameOrigin($hub, $request)) {
             return null;
         }
 
@@ -103,5 +103,23 @@ final readonly class PresenceStreamService
             new LiveStream($hub, $topics),
             $this->authorization->createCookie($request, $topics),
         );
+    }
+
+    /**
+     * THE HUB IS AT THE PAGE'S OWN ORIGIN, OR THERE IS NO STREAM. The
+     * subscriber cookie is scoped to the hub's host, and the component refuses
+     * a hub on another second-level domain outright
+     * (`Authorization::getCookieDomain()` in vendor/symfony/mercure/src/Authorization.php
+     * throws for it) — which is what an installation carrying the Mercure
+     * recipe's placeholder address would hit on every area page. Same origin
+     * is the platform's rule for the hub (it sits inside the app's own server),
+     * so anything else is read as "no hub": the page draws as before, streams
+     * nothing and never fails on it.
+     */
+    private static function sameOrigin(string $hub, Request $request): bool
+    {
+        $host = parse_url($hub, \PHP_URL_HOST);
+
+        return \is_string($host) && 0 === strcasecmp($host, $request->getHost());
     }
 }

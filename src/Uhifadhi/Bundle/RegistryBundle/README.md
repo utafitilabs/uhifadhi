@@ -128,6 +128,11 @@ shows the last figure and its time; it never computes and it never fails.
   at 02:00 in the installation's zone, queues `RecomputeOpenFacts`; the worker
   recomputes the month, quarter and year open now, and once more a period
   that has just ended. A closed period is otherwise never recomputed.
+- **A module.** A module's worker handler queues `Uhifadhi\Contracts\Facts\RecomputeFacts`
+  (module slug, month keys, optionally one subject) the moment an event changes a figure;
+  the worker files that module's figures for those months and the quarters and years they
+  fall in, closed months included, so a record uploaded late into last month is counted
+  without waiting for an operator.
 - **The operator.** `bin/console uhifadhi:facts:rebuild [--module=] [--subject=]
   [--from=2026-01] [--until=2026-09]`, after the deploy that brings a module's
   facts and after a rule they depend on changes. Idempotent.

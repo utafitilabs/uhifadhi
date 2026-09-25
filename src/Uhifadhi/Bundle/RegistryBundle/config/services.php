@@ -24,6 +24,7 @@ use Uhifadhi\Bundle\RegistryBundle\EventListener\QueueTableSchemaListener;
 use Uhifadhi\Bundle\RegistryBundle\Facts\FactProviders;
 use Uhifadhi\Bundle\RegistryBundle\Facts\FactReader;
 use Uhifadhi\Bundle\RegistryBundle\Message\RecomputeOpenFacts;
+use Uhifadhi\Bundle\RegistryBundle\MessageHandler\RecomputeFactsHandler;
 use Uhifadhi\Bundle\RegistryBundle\MessageHandler\RecomputeOpenFactsHandler;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
@@ -42,6 +43,7 @@ use Uhifadhi\Bundle\RegistryBundle\Version\DependencyOrderComparator;
 use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Facts\FactProviderInterface;
 use Uhifadhi\Contracts\Facts\FactReaderInterface;
+use Uhifadhi\Contracts\Facts\RecomputeFacts;
 use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
 
 /*
@@ -78,6 +80,7 @@ use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
  *   registry.facts.reader          the facts ledger, read (aliased from FactReaderInterface)
  *   registry.facts.rebuild         asks the modules for their figures and files them
  *   registry.facts.recompute_handler  the worker's side of the schedule
+ *   registry.facts.recompute_module_handler  the worker's side of a module's own RecomputeFacts
  *   registry.command.facts_rebuild `uhifadhi:facts:rebuild`, the operator's recompute over a range
  */
 return static function (ContainerConfigurator $container): void {
@@ -144,6 +147,12 @@ return static function (ContainerConfigurator $container): void {
     $services->set('registry.facts.recompute_handler', RecomputeOpenFactsHandler::class)
         ->args([service('registry.facts.rebuild')])
         ->tag('messenger.message_handler', ['handles' => RecomputeOpenFacts::class]);
+
+    // A module's own recompute: the worker files that module's figures for
+    // the months it named, closed ones included (a late upload).
+    $services->set('registry.facts.recompute_module_handler', RecomputeFactsHandler::class)
+        ->args([service('registry.facts.rebuild')])
+        ->tag('messenger.message_handler', ['handles' => RecomputeFacts::class]);
 
     $services->set('registry.provider_mapper', ProviderCatalogueMapper::class)
         ->args([param('registry.default_category')]);

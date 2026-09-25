@@ -1884,6 +1884,12 @@ by reading a year of tracks.
    figures in one read. Print the time beside a figure with `shell_as_of()`.
 5. After the deploy that brings the provider, fill the past once:
    `php bin/console uhifadhi:facts:rebuild --module=<slug> --from=<first month>`.
+6. When an event changes a figure before the schedule's next run — a record completed, a late
+   upload into last month — the worker handler that stored it queues
+   `Uhifadhi\Contracts\Facts\RecomputeFacts` with your slug and the month keys concerned
+   (`RecomputeFacts::forMonthOf($slug, $when)` for one instant). The core recomputes those
+   months, and the quarters and years they fall in, for your provider alone, closed months
+   included. Never compute the figure in the handler yourself; ask.
 
 ```php
 // src/Facts/SightingFactProvider.php

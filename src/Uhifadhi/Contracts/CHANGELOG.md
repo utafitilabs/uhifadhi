@@ -17,6 +17,8 @@ Not released yet.
    value and the instant it is true as of. `FactPeriod` mints the period keys
    (`2026-09`, `2026-Q3`, `2026`) the ledger and the performance history share;
    `FactSubject` names the subject kinds the core's pages read
+ * `Facts\RecomputeFacts` — the queued message a module's worker handler sends to have
+   its own figures filed again for the months it names, closed ones included
  * `Queue\AsyncMessageInterface` — the marker the core's recipe routes to the
    installation's `async` transport; a message that implements it is handled
    by the worker

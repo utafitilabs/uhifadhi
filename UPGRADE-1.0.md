@@ -55,6 +55,7 @@ page shows the last figure and its time; it never computes and it never fails.
 | the queue marker | `Uhifadhi\Contracts\Queue\AsyncMessageInterface` — every core and module message that must run in the worker implements it |
 | the schedule | a task on the `default` schedule: hourly 06:00–20:00 and at 02:00, installation time (`registry.facts.schedule`, `registry.facts.timezone`) |
 | the operator's command | `uhifadhi:facts:rebuild [--module=] [--subject=] [--from=] [--until=]` |
+| a module's own recompute | queues `Uhifadhi\Contracts\Facts\RecomputeFacts(slug, months, subject?)`; the worker files those months, closed ones included |
 | installing a module | queues its six-month history backfill (`BackfillModuleHistory`) instead of computing it in the click |
 | a new Twig function | `shell_as_of(fact)` — "as of 13:00" beside a stored figure |
 

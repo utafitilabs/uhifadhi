@@ -16,6 +16,8 @@ Not released yet.
    declared by two is refused
  * `uhifadhi:facts:rebuild [--module=] [--subject=] [--from=] [--until=]` —
    the operator's idempotent recompute over a range of months
+ * `RecomputeFacts` (a contract message) — a module's own recompute for the months it
+   names, handled by the worker through the same writer; closed months included
  * the recompute of the open periods is a task on the `default` schedule,
    hourly 06:00–20:00 and at 02:00 (`registry.facts.schedule`,
    `registry.facts.timezone`); the task queues `RecomputeOpenFacts` for the

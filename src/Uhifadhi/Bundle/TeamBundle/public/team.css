@@ -3628,6 +3628,7 @@ form.c { display: block; margin-bottom: 20px; }
 .c.off .rkl .fld,.c.off .rkl-grip,.c.off .rkl-x,.c.off .rkl-mv,.c.off .frow .fld{opacity:.45;pointer-events:none}
 .c.off .rkl-grip{cursor:default}
 .rkl-kept{padding:10px 0 2px;font-size:11.5px;color:var(--fog)}
+.rkl-drop[disabled]{opacity:.45;cursor:not-allowed}
 .btn.dn:not([disabled]):hover{color:var(--fail);border-color:var(--fail)}
 .rkl-add.noladder{grid-template-columns:minmax(0,1fr) 96px auto}
 .frow .fld.ln{width:300px;max-width:100%;height:34px;box-sizing:border-box;padding:0 11px;font-size:12.5px}

@@ -398,6 +398,37 @@ them: the roster, one person's record, the permission matrix and the
 departments. There is no delete route and there will not be one — an account is
 deactivated, never removed, so everything it recorded keeps its author.
 
+### The People register's bar, and what a module adds to it
+
+`/team` is one table with a search, the tier chips and a row of grouped
+dropdowns — position, department, **station**, rank, whatever a module
+contributes, account — each counting the whole roster and writing its choice
+into the address, so a filtered register is a link. The rows and the CSV
+export (`/team/people.csv`, under `directory.export`) follow the same filter;
+the CSV's columns are the table's.
+
+Two of the dropdowns come through a seam, because the facts behind them are
+not this bundle's. **Station** lists where people stand, read from every
+`Contracts\People\PersonPostingProviderInterface` (tag `uhifadhi.person_postings`):
+grouped by area once postings span several, **Not stationed** last. After Rank
+come the dropdowns modules contribute through
+`Contracts\People\PeopleFacetProviderInterface` (tag `uhifadhi.people_facets`),
+one per provider, in the order the container yields them; the area's is
+**Status**, today's check-in status in the areas' own words. A contributed
+facet's options carry the people they apply to, so the count under an option
+and the rows it leaves are one fact, and its key is a query parameter this
+register does not already own — one that is, is refused when the container
+compiles. `Service\PeopleFacetService` reads both seams once per request.
+
+**The rank is set on the Position card** of a person's configure page: the
+rank select and its From date post with the seat, the placement and the
+departments in the card's one save (`POST /team/{uuid}/position`, fields
+`rank` and `since`). A save that names no `rank` field keeps the rank held.
+
+**The Ranks register** (`/team/ranks`) sorts by rank and by holders through the
+house in-column caret — the same `sort`/`dir` address and the same `.sorted`
+header the Positions register wears — seniority by default.
+
 ### One matrix, one grammar
 
 Every topic on the performance page is drawn by one renderer, the host's own

@@ -140,9 +140,15 @@ Ranks — drag, or focus it and use the arrow keys — and the row numbers that
 follow it. The order is posted as the form's own field order; without the
 controller the rows still save, but nothing moves.
 
-**All four arrive through `assets/controllers.json`**, the file the starter
-ships and the installation owns; no recipe writes it. An installation
-upgrading in place adds each entry itself, under `@uhifadhi/uhifadhi`:
+**All four arrive through `assets/controllers.json`**, and Flex keeps that
+file: on every `composer install` and `composer update` it reads each
+package's `assets/package.json` and adds, under `@uhifadhi/uhifadhi`, any
+controller the file does not yet name, with the `enabled` and `fetch` the
+package declares (`Symfony\Flex\PackageJsonSynchronizer::updateControllersJsonFile()`,
+run from `Flex::finish()` after install and update). An installation that
+updates the core through Composer therefore has nothing to do. Only a
+working copy that reaches the core through a link, where Composer never ran
+for the new controller, adds the entries itself:
 
 ```json
 "yes-no":     { "enabled": true, "fetch": "lazy" },

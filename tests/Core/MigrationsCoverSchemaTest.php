@@ -97,6 +97,8 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 // creates — not the core's, and not something a diff will ever
                 // offer to drop: the schema filter hides it.
                 'posting',
+                'registry_schedule_lock',
+                'registry_schedule_state',
                 'spatial_ref_sys',
                 'station',
                 'station_event',
@@ -199,6 +201,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260925200000',
                 'Uhifadhi\\Bundle\\RegistryBundle\\Migrations\\Version20260925210000',
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260925220000',
+                'Uhifadhi\\Bundle\\RegistryBundle\\Migrations\\Version20260925220000',
             ],
             $this->plannedVersions(),
         );

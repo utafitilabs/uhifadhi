@@ -34,9 +34,12 @@ Not released yet.
    `symfony/doctrine-messenger`
  * the `default` schedule needs no class of the installation's: the Scheduler
    builds it, and its `scheduler_default` transport, from the core's tasks;
-   it is stateful on `cache.app`, runs only the last missed run — a recompute
-   missed while the worker was down runs once on restart — and holds the
-   framework's default lock; requires `symfony/lock`
+   it runs only the last missed run — a recompute missed while the worker was
+   down runs once on restart — and keeps its state and its lock in the
+   database: `registry.schedule.state`, a cache pool on the Doctrine DBAL
+   adapter, and `registry.schedule.lock_factory` over the Doctrine DBAL lock
+   store, in `registry_schedule_state` and `registry_schedule_lock`
+   (`Version20260925220000`, `IF NOT EXISTS`); requires `symfony/lock`
 
  * A MODULE SAYS WHAT IT IS, in one line: `ModuleProviderInterface::description()`
    (null by the trait's default), kept on the catalogue row and printed under

@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Facts;
 
 use PHPUnit\Framework\Attributes\CoversClass;
-use Symfony\Component\Lock\LockInterface;
+use Symfony\Component\Cache\Adapter\DoctrineDbalAdapter;
+use Symfony\Component\Lock\Lock;
+use Symfony\Component\Lock\Store\DoctrineDbalStore;
 use Symfony\Component\Scheduler\RecurringMessage;
 use Symfony\Component\Scheduler\Schedule;
 use Symfony\Component\Scheduler\ScheduleProviderInterface;
@@ -83,24 +85,36 @@ final class FactsScheduleTest extends FactsTestCase
     /**
      * THE CORE'S SCHEDULE REMEMBERS ITS LAST RUN, and a worker that was down
      * runs a missed recompute once when it starts again, not once per missed
-     * hour — on the framework's `cache.app` pool and its default lock, so an
-     * installation configures nothing:
+     * hour. Its state and its lock are rows in the installation's database —
+     * the registry's own cache pool on the Doctrine DBAL adapter and its own
+     * lock store on the Doctrine DBAL store — so they outlive a redeploy and a
+     * second worker container shares them; an installation configures nothing:
      *
      *   "->stateful($this->cache) // ensure missed tasks are executed"
      *   "->processOnlyLastMissedRun(true) // ensure only last missed task is run"
      *   "->lock($this->lockFactory->createLock('my-lock')) // ensure only one worker"
      *   — https://symfony.com/doc/current/scheduler.html#efficient-management-with-symfony-scheduler
      */
-    public function testTheCoreAloneScheduleIsStatefulAndRunsOnlyTheLastMissedRun(): void
+    public function testTheCoreAloneScheduleIsStatefulInTheDatabaseAndRunsOnlyTheLastMissedRun(): void
     {
         $schedule = $this->defaultSchedule();
 
         self::assertTrue($schedule->shouldProcessOnlyLastMissedRun());
-        self::assertSame(self::getContainer()->get('cache.app'), $schedule->getState());
-        self::assertInstanceOf(LockInterface::class, $schedule->getLock());
+        self::assertInstanceOf(DoctrineDbalAdapter::class, $schedule->getState());
+        self::assertNotSame(self::getContainer()->get('cache.app'), $schedule->getState());
+
+        $lock = $schedule->getLock();
+        self::assertInstanceOf(Lock::class, $lock);
+        self::assertInstanceOf(DoctrineDbalStore::class, new \ReflectionProperty(Lock::class, 'store')->getValue($lock));
     }
 
-    public function testTheScheduleStateSurvivesAKernelReboot(): void
+    /**
+     * A reboot keeps the container; a cleared `var/cache` — a deploy's new
+     * image — compiles a fresh one. The state survives both, because it is not
+     * in `var/cache`. The second kernel here compiles into a directory of its
+     * own, which is what a cleared cache is to the container.
+     */
+    public function testTheScheduleStateSurvivesARebootAndAClearedCache(): void
     {
         $state = $this->defaultSchedule()->getState();
         self::assertNotNull($state);
@@ -112,9 +126,19 @@ final class FactsScheduleTest extends FactsTestCase
 
         $rebooted = $this->defaultSchedule()->getState();
         self::assertNotNull($rebooted);
-        self::assertSame('before', $rebooted->get('registry.test.schedule_probe', static fn (): string => 'after'));
+        self::assertSame('before', $rebooted->get('registry.test.schedule_probe', static fn (): string => 'after a reboot'));
 
-        $rebooted->delete('registry.test.schedule_probe');
+        self::ensureKernelShutdown();
+        FactsHostKernel::$registry = ['facts' => ['timezone' => 'UTC']];
+        $freshCache = self::bootKernel()->getCacheDir();
+        FactsHostKernel::$registry = [];
+        self::assertNotSame($freshCache, new FactsHostKernel('test', true)->getCacheDir());
+
+        $recompiled = $this->defaultSchedule()->getState();
+        self::assertNotNull($recompiled);
+        self::assertSame('before', $recompiled->get('registry.test.schedule_probe', static fn (): string => 'after a cleared cache'));
+
+        $recompiled->delete('registry.test.schedule_probe');
     }
 
     private function defaultSchedule(): Schedule

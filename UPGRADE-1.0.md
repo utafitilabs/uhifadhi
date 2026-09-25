@@ -11,7 +11,7 @@ core's: the registry's code and migration, and the core's Flex recipe.
 | the queue: `async` and `failed` on the Doctrine transport, `failure_transport: failed`, `Uhifadhi\Contracts\Queue\AsyncMessageInterface` routed to `async`, `in-memory://` under `when@test` | the recipe's `config/packages/registry.yaml`, beside the `registry:` keys |
 | `MESSENGER_TRANSPORT_DSN=doctrine://default?auto_setup=0` | `.env`, from `symfony/messenger`'s own recipe, which Flex applies with the package |
 | the queue's table, `messenger_messages` | the registry's `Version20260925210000`, `CREATE TABLE IF NOT EXISTS` |
-| the `default` schedule and its `scheduler_default` transport | built by the Scheduler from the core's tasks, stateful on `cache.app`, only the last missed run, the framework's default lock; an installation writes no schedule class, and one it writes (`#[AsSchedule]`) is joined and keeps its own state |
+| the `default` schedule and its `scheduler_default` transport | built by the Scheduler from the core's tasks, only the last missed run, its state and lock in the database (`registry_schedule_state`, `registry_schedule_lock`, the registry's `Version20260925220000`), so they outlive a redeploy and a second worker shares them; an installation writes no schedule class, and one it writes (`#[AsSchedule]`) is joined and keeps its own state |
 | the statement timeout of a web request | `registry.statement_timeout_ms`, set by the recipe's `config/packages/registry.yaml` to `%env(int:DATABASE_STATEMENT_TIMEOUT_MS)%`; the recipe's `.env` line is `DATABASE_STATEMENT_TIMEOUT_MS=10000` |
 | new requirements of `uhifadhi/uhifadhi` | `symfony/doctrine-messenger`, `symfony/lock` |
 
@@ -37,7 +37,8 @@ $ fundi deploy
   `config/packages/messenger.yaml` of the installation's own stays, and merges with it.
 - `fundi deploy:init --force` writes the deployment files from the manifest's `deploy:` block
   again, the worker role its `deploy.workers` names included.
-- `fundi deploy` ships it; the web container's start migrates, which creates `messenger_messages`.
+- `fundi deploy` ships it; the web container's start migrates, which creates `messenger_messages`,
+  `registry_schedule_state` and `registry_schedule_lock`.
 
 ## Figures over growing sets are facts the worker computes
 

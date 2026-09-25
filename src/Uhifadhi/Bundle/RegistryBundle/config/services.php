@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Symfony\Component\Console\Application;
+use Symfony\Component\Lock\LockFactory;
+use Symfony\Component\Lock\Store\DoctrineDbalStore;
 use Uhifadhi\Bundle\RegistryBundle\Access\RegistryConcerns;
 use Uhifadhi\Bundle\RegistryBundle\Command\FactsRebuildCommand;
 use Uhifadhi\Bundle\RegistryBundle\Command\RegistrySyncCommand;
@@ -265,4 +267,49 @@ return static function (ContainerConfigurator $container): void {
             ->args([service('registry.facts.rebuild'), service('clock')])
             ->tag('console.command');
     }
+    /*
+     * THE `default` SCHEDULE'S STATE AND LOCK, AS ROWS IN THE INSTALLATION'S
+     * DATABASE, so they outlive a redeploy's fresh `var/cache` and a second
+     * worker container shares them. Both are registered here, so an
+     * installation configures nothing; StatefulDefaultSchedulePass hands them
+     * to the schedule.
+     *
+     * The state is a cache pool of the registry's own on the framework's
+     * Doctrine DBAL adapter — a child of `cache.adapter.doctrine_dbal` tagged
+     * `cache.pool`, which is what a `framework.cache.pools` entry with that
+     * adapter compiles to — on the default connection (the adapter's
+     * `cache.default_doctrine_dbal_provider`). The namespace is fixed, not
+     * derived from the container, so a recompiled container reads the same
+     * rows. https://symfony.com/doc/current/cache.html#creating-custom-namespaced-pools
+     * https://symfony.com/doc/current/components/cache/adapters/doctrine_dbal_adapter.html
+     * @see vendor/symfony/framework-bundle/Resources/config/cache.php — `cache.adapter.doctrine_dbal`
+     * @see vendor/symfony/cache/Adapter/DoctrineDbalAdapter.php — the `db_table` option
+     * @see vendor/symfony/cache/DependencyInjection/CachePoolPass.php — the provider and namespace a `cache.pool` tag sets
+     *
+     * The lock is a factory of the registry's own over the Doctrine DBAL
+     * store, tagged `lock.store` as the framework tags its stores.
+     * https://symfony.com/doc/current/lock.html
+     * https://symfony.com/doc/current/components/lock.html#doctrinedbalstore
+     * @see vendor/symfony/lock/Store/DoctrineDbalStore.php
+     *
+     * Both tables are the registry's migration (Version20260925220000); the
+     * schema listeners DoctrineBundle registers for DBAL cache adapters and
+     * lock stores put them in the schema a diff compares.
+     * @see vendor/doctrine/doctrine-bundle/src/DependencyInjection/Compiler/CacheSchemaSubscriberPass.php
+     * @see vendor/symfony/doctrine-bridge/SchemaListener/LockStoreSchemaListener.php
+     */
+    $services->set('registry.schedule.state')
+        ->parent('cache.adapter.doctrine_dbal')
+        // `index_3`: a child definition replaces a parent's argument by this
+        // key; a bare 3 would be appended after the parent's five.
+        // @see vendor/symfony/dependency-injection/Compiler/ResolveChildDefinitionsPass.php
+        ->arg('index_3', ['db_table' => 'registry_schedule_state'])
+        ->tag('cache.pool', ['namespace' => 'registry.schedule']);
+
+    $services->set('registry.schedule.lock_store', DoctrineDbalStore::class)
+        ->args([service('doctrine.dbal.default_connection'), ['db_table' => 'registry_schedule_lock']])
+        ->tag('lock.store');
+
+    $services->set('registry.schedule.lock_factory', LockFactory::class)
+        ->args([service('registry.schedule.lock_store')]);
 };

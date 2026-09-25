@@ -32,8 +32,12 @@ use Symfony\Component\Lock\LockInterface;
  *   "->lock($this->lockFactory->createLock('my-lock')) // ensure only one worker"
  *   — https://symfony.com/doc/current/scheduler.html#efficient-management-with-symfony-scheduler
  *
- * with the framework's own `cache.app` pool and its default lock factory
- * (`lock.factory`), so an installation configures nothing.
+ * with the registry's own cache pool on the Doctrine DBAL adapter
+ * (`registry.schedule.state`) and its own lock factory over the Doctrine DBAL
+ * store (`registry.schedule.lock_factory`), both in config/services.php: the
+ * state and the lock are rows in the installation's database, so they outlive
+ * a redeploy and a second worker container shares them, and an installation
+ * configures nothing.
  *
  * @see vendor/symfony/scheduler/DependencyInjection/AddScheduleMessengerPass.php — without a provider of the installation's own, it registers `scheduler.provider.<name>` as a Schedule definition tagged `scheduler.schedule_provider`; with one, it decorates that provider
  * @see vendor/symfony/scheduler/ScheduleProviderInterface.php — getSchedule(), which the worker's message generator reads the state, lock and missed-run rule from
@@ -64,16 +68,16 @@ final class StatefulDefaultSchedulePass implements CompilerPassInterface
             return;
         }
 
-        if ($container->has('cache.app')) {
-            $schedule->addMethodCall('stateful', [new Reference('cache.app')], true);
+        if ($container->has('registry.schedule.state')) {
+            $schedule->addMethodCall('stateful', [new Reference('registry.schedule.state')], true);
         }
 
         $schedule->addMethodCall('processOnlyLastMissedRun', [true], true);
 
-        if ($container->has('lock.factory')) {
+        if ($container->has('registry.schedule.lock_factory')) {
             $schedule->addMethodCall('lock', [
                 new Definition(LockInterface::class)
-                    ->setFactory([new Reference('lock.factory'), 'createLock'])
+                    ->setFactory([new Reference('registry.schedule.lock_factory'), 'createLock'])
                     ->setArguments([self::LOCK_KEY]),
             ], true);
         }

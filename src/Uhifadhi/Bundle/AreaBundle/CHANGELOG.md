@@ -13,6 +13,19 @@ Not released yet.
    on the page. `Model\AreaThumbnail` is the atlas's `Model\Thumbnail`, and `.ax-sat` and
    `.ax-outline` left area.css for the atlas's map.css. No area template writes either
    (`VisualsAreTheAtlasTest`)
+ * THE LIVE MARKS MOVE OVER MERCURE. `Service\PresencePublisher` publishes
+   one private `Update` to `area/{areaUuid}/presence` after every handset
+   write `Service\CheckInService` stores — a claim, a check-out or
+   correction, a batch of pings — carrying that one person's mark exactly as
+   the plate draws it (`AtlasBundle\Model\LiveMarks::frame()`), or the same
+   key as gone. `Service\PresenceStreamService` gives a page the plate's
+   stream and the subscriber cookie for the areas the viewer holds
+   `areas.read` on; the area overview and the organization dashboard set
+   the cookie and hand their plates the stream. `symfony/mercure` and
+   `symfony/mercure-bundle` are requirements; a deployment with no hub
+   address publishes nothing, sets no cookie, and draws every plate as
+   before. `AreaMapService::overview()` and `::organization()` take an
+   optional `LiveStream`. Documented in README, "Where everybody is, live"
 
  * the overview plate hands the area's boundary and zones to the atlas as a
    `Ground`, so every plate of the area — the overview's and a module's —

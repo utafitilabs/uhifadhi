@@ -31,6 +31,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\CheckInService;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
 use Uhifadhi\Bundle\AreaBundle\Service\DutyRosterService;
 use Uhifadhi\Bundle\AreaBundle\Service\DutyStationService;
+use Uhifadhi\Bundle\AreaBundle\Service\PresencePublisher;
 use Uhifadhi\Contracts\Roster\WatchProviderInterface;
 
 /*
@@ -52,6 +53,7 @@ use Uhifadhi\Contracts\Roster\WatchProviderInterface;
  *   area.api.areas_provider    the areas the bearer account may work in
  *   area.api.duty              request, token and area, resolved once per call
  *   area.checkins              the writes behind the duty surface
+ *   area.presence_publisher    one mark on the wire after each of them
  *   area.api.checkin_create    POST   /areas/{areaUuid}/checkins
  *   area.api.checkin_update    PATCH  /areas/{areaUuid}/checkins/{clientRef}
  *   area.api.positions_upload  POST   /areas/{areaUuid}/positions
@@ -109,6 +111,26 @@ return static function (ContainerConfigurator $container): void {
      * Each processor is tagged BY HAND with the `key` attribute, for the reason
      * spelt out above the provider.
      */
+    /*
+     * THE WIRE — one person's mark published to the area's private Mercure
+     * topic after each write. The hub bundle is a requirement of this bundle,
+     * so `mercure.hub.default` is simply there and is injected straight; what
+     * a deployment still decides is the hub's ADDRESS, and an empty one the
+     * publisher reads off the hub itself and treats as "publish nothing".
+     * The clock is the same one the presence reading uses, so the frame and
+     * the plate agree about now.
+     *
+     * @see vendor/symfony/mercure-bundle/src/DependencyInjection/MercureExtension.php — `mercure.hub.<name>`
+     */
+    $services->set('area.presence_publisher', PresencePublisher::class)
+        ->args([
+            service('mercure.hub.default'),
+            service('area.presence'),
+            service('clock'),
+            service('logger'),
+        ]);
+    $services->alias(PresencePublisher::class, 'area.presence_publisher');
+
     $services->set('area.checkins', CheckInService::class)
         ->args([
             service('doctrine.orm.entity_manager'),
@@ -117,6 +139,7 @@ return static function (ContainerConfigurator $container): void {
             service(PersonPositionRepository::class),
             service(StationRepository::class),
             service(CheckInStatusService::class),
+            service('area.presence_publisher'),
         ]);
     $services->alias(CheckInService::class, 'area.checkins');
 

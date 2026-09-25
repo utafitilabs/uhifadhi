@@ -15,6 +15,7 @@ use ApiPlatform\Symfony\Bundle\ApiPlatformBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
+use Symfony\Bundle\MercureBundle\MercureBundle;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\UX\Icons\UXIconsBundle;
@@ -43,6 +44,7 @@ return [
     UXMapBundle::class => ['all' => true],
     SecurityBundle::class => ['all' => true],
     ApiPlatformBundle::class => ['all' => true],
+    MercureBundle::class => ['all' => true],
     RegistryBundle::class => ['all' => true],
     ShellBundle::class => ['all' => true],
     AtlasBundle::class => ['all' => true],

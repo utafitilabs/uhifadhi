@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Controller;
 
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
@@ -34,6 +35,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaOverview;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaOverviewCatalogue;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
+use Uhifadhi\Bundle\AreaBundle\Service\PresenceStreamService;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
@@ -79,6 +81,8 @@ final readonly class AreaController
         private ModuleCatalogue $modules,
         private WidgetService $widgets,
         private TokenStorageInterface $tokens,
+        /** The leave to watch the live marks move: the plate's stream and the cookie. */
+        private PresenceStreamService $streams,
     ) {
     }
 
@@ -119,6 +123,7 @@ final readonly class AreaController
     #[Route('/areas/{uuid}', name: 'area_show', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
     #[IsGranted('areas.read', subject: 'area')]
     public function show(
+        Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
         // Handed in once rather than read per widget, so every card on the page
@@ -148,7 +153,15 @@ final readonly class AreaController
          * once, and handed to every cell alike — the page cannot then give
          * a module something it did not ask for, or withhold what it did.
          */
-        $plate = $this->areaMap->overview($this->mapPayload->forArea($area), $mapLayers);
+        /*
+         * THE LIVE MARKS KEEP MOVING. The plate is handed the hub and this
+         * area's topic, and the response carries the subscriber cookie for
+         * it — both under the pair this page enforces, both null where the
+         * deployment has no hub. A module's cell on this page that draws
+         * the same area's marks rides on the same cookie.
+         */
+        $subscription = $this->streams->forArea($request, $area);
+        $plate = $this->areaMap->overview($this->mapPayload->forArea($area), $mapLayers, $subscription?->stream);
         $tiles = $this->overview->nowTilesFor($area, $now);
         $attention = $this->overview->attentionFor($area, $now);
 
@@ -191,7 +204,7 @@ final readonly class AreaController
             'latest' => self::ATTENTION_SHOWN,
         ];
 
-        return new Response($this->twig->render('@Area/area/overview.html.twig', [
+        $response = new Response($this->twig->render('@Area/area/overview.html.twig', [
             ...$cellContext,
             'cells' => $cells,
             'cellContext' => $cellContext,
@@ -200,6 +213,11 @@ final readonly class AreaController
             // module's own sheet, linked after this bundle's.
             'moduleStylesheets' => $this->catalogue->stylesheetsFor($area),
         ]));
+        if (null !== $subscription) {
+            $response->headers->setCookie($subscription->cookie);
+        }
+
+        return $response;
     }
 
     /**

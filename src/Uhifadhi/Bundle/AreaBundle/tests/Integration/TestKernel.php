@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
+use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
+use Symfony\Bundle\MercureBundle\MercureBundle;
 use Symfony\Component\Clock\MockClock;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel;
@@ -74,6 +76,8 @@ class TestKernel extends Kernel
         yield new DoctrineBundle();
         yield new UtafitiLabsPostGISBundle();
         yield new RegistryBundle();
+        // The live-presence wire's hub: a requirement of the area bundle.
+        yield new MercureBundle();
         yield new AreaBundle();
     }
 
@@ -116,6 +120,29 @@ class TestKernel extends Kernel
                 ],
             ],
         ]);
+
+        /*
+         * THE HUB BUNDLE, WITH NO ADDRESS. The area bundle requires it and
+         * injects `mercure.hub.default` straight, so every kernel carrying the
+         * bundle registers it; what a deployment still decides is the ADDRESS,
+         * and this kernel is the deployment that configured none — the
+         * documented empty `MERCURE_URL` — so nothing here ever reaches a hub.
+         *
+         * @see https://symfony.com/doc/current/mercure.html — "Configuration"
+         * @see vendor/symfony/mercure-bundle/src/DependencyInjection/MercureExtension.php
+         */
+        $container->extension('mercure', [
+            'hubs' => [
+                'default' => [
+                    'url' => '',
+                    'public_url' => '',
+                    'jwt' => ['secret' => 'test-mercure-jwt-secret-at-least-256-bits-long'],
+                ],
+            ],
+        ]);
+
+        // The host provides monolog's `logger`; this kernel provides a NullLogger.
+        $container->services()->set('logger', NullLogger::class);
 
         $services = $container->services();
 

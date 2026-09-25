@@ -14,8 +14,10 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
+use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
+use Symfony\Bundle\MercureBundle\MercureBundle;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Component\Clock\MockClock;
@@ -80,6 +82,15 @@ final class WebKernel extends Kernel
     /** The instant this suite's pages are read at, unless a test says otherwise. */
     public const string CLOCK = '2026-09-19 11:42:00';
 
+    /**
+     * THE HUB, AS A DEPLOYMENT CONFIGURES IT. Its address and secret are what
+     * an installation supplies; the suite supplies them literally so the
+     * pages set their subscriber cookie and hand their plates a stream.
+     * Nothing in this suite publishes, so the address is never reached. A
+     * test standing for the deployment that configured none passes ''.
+     */
+    public const string HUB_URL = 'http://localhost:3000/.well-known/mercure';
+
     /** @var list<string> */
     public array $grants = [];
 
@@ -97,16 +108,18 @@ final class WebKernel extends Kernel
      *                                about is read from the clock now, so a
      *                                month boundary is a thing a test can
      *                                stand on
+     * @param string       $hubUrl    the hub's address, or '' for the deployment
+     *                                that configured none
      */
-    public function __construct(array $grants = [], private int $attention = 2, private string $clock = self::CLOCK, private int $figures = 1)
+    public function __construct(array $grants = [], private int $attention = 2, private string $clock = self::CLOCK, private int $figures = 1, private string $hubUrl = self::HUB_URL)
     {
         $this->grants = $grants;
         // The cache is keyed by what the viewer holds AND by what the
         // stand-in contributes: two kernels with different grants or
         // different fixtures must not share a compiled container. The clock
         // joins them for the same reason — a container built at one instant
-        // must not answer for another.
-        parent::__construct('test'.md5(implode(',', $grants).'|'.$attention.'|'.$this->clock.'|'.$this->figures), true);
+        // must not answer for another — and so does the hub's address.
+        parent::__construct('test'.md5(implode(',', $grants).'|'.$attention.'|'.$this->clock.'|'.$this->figures.'|'.$this->hubUrl), true);
     }
 
     public function registerBundles(): iterable
@@ -129,6 +142,8 @@ final class WebKernel extends Kernel
         // publishes and render their plates through it, so an installation that
         // draws an area's boundary has it and so does this kernel.
         yield new AtlasBundle();
+        // The live-presence wire's hub: a requirement of the area bundle.
+        yield new MercureBundle();
         yield new AreaBundle();
     }
 
@@ -211,7 +226,35 @@ final class WebKernel extends Kernel
             'firewalls' => ['main' => ['pattern' => '^/', 'security' => false]],
         ]);
 
+        /*
+         * THE HUB — one hub named "default", its address and the secret the
+         * subscriber cookie is signed with. The documented minimum:
+         *
+         *     mercure:
+         *         hubs:
+         *             default:
+         *                 url: '%env(MERCURE_URL)%'
+         *                 public_url: '%env(MERCURE_PUBLIC_URL)%'
+         *                 jwt:
+         *                     secret: '%env(MERCURE_JWT_SECRET)%'
+         *
+         * @see https://symfony.com/doc/current/mercure.html — "Configuration"
+         * @see vendor/symfony/mercure-bundle/src/DependencyInjection/MercureExtension.php
+         */
+        $container->extension('mercure', [
+            'hubs' => [
+                'default' => [
+                    'url' => $this->hubUrl,
+                    'public_url' => $this->hubUrl,
+                    'jwt' => ['secret' => 'test-mercure-jwt-secret-at-least-256-bits-long'],
+                ],
+            ],
+        ]);
+
         $services = $container->services();
+
+        // The host provides monolog's `logger`; this kernel provides a NullLogger.
+        $services->set('logger', NullLogger::class);
 
         /*
          * A CATALOGUE WITH BUNDLES BEHIND IT. The registry's catalogue is the

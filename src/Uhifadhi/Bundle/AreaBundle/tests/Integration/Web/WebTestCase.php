@@ -62,15 +62,15 @@ abstract class WebTestCase extends KernelTestCase
         'areas.read', 'zones.read', 'stations.read', 'assignments.read', 'duty.read',
     ];
 
-    /** @param list<string> $grants */
     /**
      * @param list<string> $grants
      * @param int          $attention how many items the stand-in module raises
+     * @param string       $hubUrl    the hub's address, or '' for the deployment that configured none
      */
-    protected function boot(array $grants = self::ALL_AREA_PERMISSIONS, int $attention = 2, string $clock = WebKernel::CLOCK, int $figures = 1): void
+    protected function boot(array $grants = self::ALL_AREA_PERMISSIONS, int $attention = 2, string $clock = WebKernel::CLOCK, int $figures = 1, string $hubUrl = WebKernel::HUB_URL): void
     {
         self::ensureKernelShutdown();
-        $kernel = new WebKernel($grants, $attention, $clock, $figures);
+        $kernel = new WebKernel($grants, $attention, $clock, $figures, $hubUrl);
         $kernel->boot();
         self::$kernel = $kernel;
         self::$booted = true;

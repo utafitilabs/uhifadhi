@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Symfony\Component\Mercure\Authorization;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaCreateController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaEditController;
@@ -38,6 +39,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\OrgOverviewCatalogue;
+use Uhifadhi\Bundle\AreaBundle\Service\PresenceStreamService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationNoticeStore;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaFigure;
@@ -116,9 +118,27 @@ return static function (ContainerConfigurator $container): void {
             service('registry.catalogue'),
             service('shell.widget.service'),
             service('security.token_storage'),
+            // The leave to watch the live marks move: the plate's stream and
+            // the subscriber cookie, both under the page's own pair.
+            service('area.presence_stream'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaController::class, 'area.controller.area')->public();
+
+    /*
+     * WHAT A PAGE NEEDS TO LET ITS PLATE SUBSCRIBE. The hub and the subscriber
+     * authorization are the hub bundle's, registered under their own ids and
+     * class name (@see vendor/symfony/mercure-bundle/src/DependencyInjection/MercureExtension.php);
+     * the checker is what the pair is asked of, per area.
+     */
+    $services->set('area.presence_stream', PresenceStreamService::class)
+        ->args([
+            service('mercure.hub.default'),
+            service(Authorization::class),
+            service('security.authorization_checker'),
+            service(AreaOfInterestRepository::class),
+        ]);
+    $services->alias(PresenceStreamService::class, 'area.presence_stream');
 
     /*
      * THE AREAS-INDEX WIDGET LIBRARY. Reads what the five layouts draw from the
@@ -169,6 +189,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.map'),
             service('area.preset_library'),
             service('area.presence'),
+            service('area.presence_stream'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(OrgDashboardController::class, 'area.controller.dashboard')->public();

@@ -57,6 +57,12 @@ final readonly class CheckInService
         private PersonPositionRepository $positions,
         private StationRepository $stations,
         private CheckInStatusService $statuses,
+        /**
+         * THE WIRE, ASKED SECOND. Every write here flushes first and then
+         * publishes the one mark it changed; the publisher never throws, so
+         * a hub that is down or absent cannot fail a ping.
+         */
+        private PresencePublisher $publisher,
     ) {
     }
 
@@ -105,6 +111,7 @@ final readonly class CheckInService
 
         $this->entityManager->persist($checkIn);
         $this->entityManager->flush();
+        $this->publisher->publish((string) $area->getUuidString(), (string) $ranger->getUuidString());
 
         return [$checkIn, false];
     }
@@ -160,6 +167,14 @@ final readonly class CheckInService
 
         $this->entityManager->flush();
 
+        // A check-out or a correction moves the mark or takes it off; the
+        // reading is derived after the flush, so what goes out is what is
+        // stored.
+        $person = $checkIn->getPerson();
+        if (null !== $area && null !== $person) {
+            $this->publisher->publish((string) $area->getUuidString(), (string) $person->getUuidString());
+        }
+
         return $checkIn;
     }
 
@@ -191,6 +206,7 @@ final readonly class CheckInService
         $known = $this->positions->knownRefs($area, $refs);
         $accepted = [];
         $duplicate = false;
+        $stored = 0;
 
         foreach ($rows as $row) {
             $ref = DutyPayload::requiredString($row, 'clientRef');
@@ -224,9 +240,16 @@ final readonly class CheckInService
                 ->setSource(PositionSourceEnum::tryFrom(DutyPayload::string($row, 'source') ?? '') ?? PositionSourceEnum::Gps));
 
             $accepted[] = $ref;
+            ++$stored;
         }
 
         $this->entityManager->flush();
+
+        // ONE FRAME PER BATCH, carrying the latest fix, and only where the
+        // batch stored something: a batch the area already held moved nobody.
+        if ($stored > 0) {
+            $this->publisher->publish((string) $area->getUuidString(), (string) $ranger->getUuidString());
+        }
 
         return ['accepted' => $accepted, 'duplicate' => $duplicate];
     }

@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\Resolution;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
+use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
+use Symfony\Bundle\MercureBundle\MercureBundle;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
@@ -59,6 +61,7 @@ final class ResolutionKernel extends Kernel
         yield new DoctrineBundle();
         yield new UtafitiLabsPostGISBundle();
         yield new RegistryBundle();
+        yield new MercureBundle();
         yield new AreaBundle();
     }
 
@@ -96,6 +99,18 @@ final class ResolutionKernel extends Kernel
             'dbal' => ['url' => '%env(UHIFADHI_TEST_DATABASE_URL)%'],
             'orm' => $orm,
         ]);
+
+        // The hub the area bundle requires, with no address — see TestKernel.
+        $container->extension('mercure', [
+            'hubs' => [
+                'default' => [
+                    'url' => '',
+                    'public_url' => '',
+                    'jwt' => ['secret' => 'test-mercure-jwt-secret-at-least-256-bits-long'],
+                ],
+            ],
+        ]);
+        $container->services()->set('logger', NullLogger::class);
     }
 
     protected function configureRoutes(RoutingConfigurator $routes): void

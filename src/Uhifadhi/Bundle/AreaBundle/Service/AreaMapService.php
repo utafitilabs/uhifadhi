@@ -23,6 +23,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
 use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
 use Uhifadhi\Bundle\AtlasBundle\Model\Ground;
 use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
+use Uhifadhi\Bundle\AtlasBundle\Model\LiveStream;
 use Uhifadhi\Contracts\Area\LivePresence;
 use Uhifadhi\Contracts\Atlas\PlatePalette;
 
@@ -74,8 +75,11 @@ final readonly class AreaMapService
      *
      * @param array{boundary: string|null, zones: list<array{name: string|null, geom: string|null}>} $payload
      * @param list<MapLayer>                                                                         $layers
+     * @param LiveStream|null                                                                        $stream  where the plate's live marks keep
+     *                                                                                                        coming from, or null on a deployment
+     *                                                                                                        with no hub
      */
-    public function overview(array $payload, array $layers = []): AtlasMap
+    public function overview(array $payload, array $layers = [], ?LiveStream $stream = null): AtlasMap
     {
         $map = $this->maps->createMap();
 
@@ -105,6 +109,10 @@ final readonly class AreaMapService
             ));
         }
 
+        if (null !== $stream) {
+            $map->liveStream($stream);
+        }
+
         return $map;
     }
 
@@ -119,10 +127,17 @@ final readonly class AreaMapService
      *
      * @param list<array{name: string, live: bool, href: string, boundary: string|null}> $areas
      * @param int                                                                        $withoutPosition how many on duty have reported no fix, for the key
+     * @param LiveStream|null                                                            $stream          where the marks keep coming from, or null
+     *                                                                                                    on a deployment with no hub
      */
-    public function organization(array $areas, LivePresence $presence, int $withoutPosition = 0): AtlasMap
+    public function organization(array $areas, LivePresence $presence, int $withoutPosition = 0, ?LiveStream $stream = null): AtlasMap
     {
-        return $this->register($areas)->livePositions($presence, $withoutPosition);
+        $map = $this->register($areas)->livePositions($presence, $withoutPosition);
+        if (null !== $stream) {
+            $map->liveStream($stream);
+        }
+
+        return $map;
     }
 
     /**

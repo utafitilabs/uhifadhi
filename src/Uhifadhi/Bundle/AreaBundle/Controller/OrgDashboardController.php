@@ -30,6 +30,8 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaOverview;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\OrgOverviewCatalogue;
+use Uhifadhi\Bundle\AreaBundle\Service\PresenceStreamService;
+use Uhifadhi\Bundle\AtlasBundle\Model\LiveStream;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Contracts\Area\LivePositionsInterface;
@@ -87,17 +89,22 @@ final readonly class OrgDashboardController
         private AreaPresetLibrary $library,
         /** Where everybody is, asked one scope wider. */
         private LivePositionsInterface $positions,
+        /** And the leave to watch them move: the plate's stream and the cookie. */
+        private PresenceStreamService $streams,
     ) {
     }
 
     #[Route('/', name: self::ROUTE, methods: ['GET'])]
     #[IsGranted(self::READ)]
-    public function dashboard(): Response
+    public function dashboard(Request $request): Response
     {
         // ONE MOMENT FOR THE WHOLE PAGE, handed to every cell, so two figures
         // are never measured a second apart and then read side by side.
         $now = new \DateTimeImmutable();
-        $context = $this->read($now);
+        // THE LIVE MARKS KEEP MOVING: every area the viewer may read, in one
+        // stream and one cookie; null where the deployment has no hub.
+        $subscription = $this->streams->forOrganization($request);
+        $context = $this->read($now, $subscription?->stream);
 
         $catalog = $this->catalogue->catalog();
         $cells = array_values(array_filter(
@@ -105,7 +112,7 @@ final readonly class OrgDashboardController
             static fn (array $cell): bool => $cell['on'],
         ));
 
-        return new Response($this->twig->render('@Area/org/dashboard.html.twig', [
+        $response = new Response($this->twig->render('@Area/org/dashboard.html.twig', [
             ...$context,
             'cells' => $cells,
             'cellContext' => $context,
@@ -113,6 +120,11 @@ final readonly class OrgDashboardController
             'moduleStylesheets' => $this->catalogue->stylesheets(),
             'libraryUrl' => $this->router->generate(self::WIDGETS_ROUTE),
         ]));
+        if (null !== $subscription) {
+            $response->headers->setCookie($subscription->cookie);
+        }
+
+        return $response;
     }
 
     #[Route('/widgets', name: self::WIDGETS_ROUTE, methods: ['GET'])]
@@ -245,7 +257,7 @@ final readonly class OrgDashboardController
      *
      * @return array<string, mixed>
      */
-    private function read(\DateTimeImmutable $now): array
+    private function read(\DateTimeImmutable $now, ?LiveStream $stream = null): array
     {
         $scope = Scope::organization();
         $rows = $this->register->rows($now);
@@ -270,6 +282,7 @@ final readonly class OrgDashboardController
             'map' => [] === $rows ? null : $this->areaMap->organization(
                 $this->library->mapAreas($rows),
                 $this->positions->forScope($scope, $now),
+                stream: $stream,
             ),
             'moduleTable' => $this->catalogue->widgetCounts(),
             // THE WAY TO THE REGISTER OF WHAT IS INSTALLED, where the

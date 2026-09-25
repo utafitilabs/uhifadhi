@@ -17,6 +17,7 @@ installed on its own as `uhifadhi/area-bundle`.
 - [Modules point at your ground](#modules-point-at-your-ground)
 - [What a module contributes to an area](#what-a-module-contributes-to-an-area)
 - [What a field client caches](#what-a-field-client-caches)
+- [Where everybody is, live](#where-everybody-is-live)
 - [The screens](#the-screens)
 - [Where you are, and what is in the sidebar](#where-you-are-and-what-is-in-the-sidebar)
 - [An area is not a module of itself](#an-area-is-not-a-module-of-itself)
@@ -321,6 +322,63 @@ The endpoint is registered **only where both ApiPlatformBundle and SecurityBundl
 are in the kernel**. Without api-platform there is no `/api` to attach to; without
 security there is no authorization checker, and a list of the areas somebody may
 work in must never widen because the thing that narrows it was missing.
+
+## Where everybody is, live
+
+`Contracts\Area\LivePositionsInterface` (implemented by `Service\PresenceService`)
+answers where everybody on an open watch is at one instant, and the atlas draws
+the answer as the live layer of a plate. The marks then **keep moving over
+Mercure**, on the same-origin hub the deployment runs.
+
+**The topic.** One per area, `area/{areaUuid}/presence`, spelt once in
+`Service\PresencePublisher::topicFor()`. It is private: only a browser holding
+the subscriber cookie for it receives a frame.
+
+**The publisher.** After every write `Service\CheckInService` stores — a claim, a
+check-out or correction, a batch of pings — `PresencePublisher::publish()` puts
+ONE private `Update` on the area's topic. Its data is the person's mark exactly
+as `AtlasBundle\Model\LiveMarks::frame()` draws it at page load, and nothing more:
+
+```jsonc
+{
+  "type": "Feature",
+  "id": "<personUuid>",
+  "geometry": { "type": "Point", "coordinates": [<lon>, <lat>] },
+  "properties": {
+    "name": "A. Mollel",          // what the mark's title shows
+    "initials": "AM",             // what the mark prints
+    "age": "4 min",               // how old the fix is, in the mark's words
+    "stale": false,               // past two ping intervals
+    "at": "2026-09-19T06:56:00+03:00",   // the instant of the fix
+    "staleAfterSeconds": 1800     // this area's two intervals, so the plate's clock agrees
+  }
+}
+```
+
+Somebody who left the ground — checked out, or their watch ended — is the same
+key with `"geometry": null` and `"properties": {"gone": true}`, and the plate
+takes the mark off. No email, no station, no claim reference, no battery: a
+subscriber sees what a viewer of the plate already sees.
+
+**The write never waits on the hub.** The row is flushed first and the frame
+published second; a hub with no address (`MERCURE_URL` empty) publishes
+nothing, and a hub that fails is logged and swallowed.
+
+**The page.** `Service\PresenceStreamService::forArea()` and
+`::forOrganization()` return a `Model\PresenceSubscription` — the
+`AtlasBundle\Model\LiveStream` (hub public address + topics) the builder hands
+the plate, and the `mercureAuthorization` cookie the response sets — or null
+where the hub has no address or the viewer holds no area. **The cookie and the
+layer ask the same pair**, `areas.read` on each area: the area overview
+subscribes to its one topic, the organization dashboard to every area the
+viewer may read, in one cookie. A module's cell on the same page that draws the
+same area's marks rides on that cookie; a module page of its own passes the
+same `LiveStream` to `AtlasMap::liveStream()` and sets the cookie the same way.
+
+**What an installation configures**, per the Mercure bundle's documented minimum:
+`MERCURE_URL` (the hub as the application reaches it), `MERCURE_PUBLIC_URL` (the
+hub as the browser reaches it) and `MERCURE_JWT_SECRET`. All three empty is a
+working deployment whose plates are drawn once per page.
 
 ## The screens
 

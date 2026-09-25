@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Core\Tests\Application;
 
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpFoundation\Response;
@@ -213,6 +214,29 @@ class Kernel extends BaseKernel
                 'DoctrineMigrations' => $this->installationMigrationsDir(),
             ],
         ]);
+
+        /*
+         * THE HUB THE AREA BUNDLE REQUIRES, with no address: this application
+         * is the installation that configured none (the documented empty
+         * `MERCURE_URL`), so the live-presence publisher publishes nothing,
+         * no page sets a subscriber cookie, and every plate reads as the page
+         * drew it. The bundle is registered because the services are injected
+         * straight; the address is what a deployment adds.
+         *
+         * @see https://symfony.com/doc/current/mercure.html — "Configuration"
+         */
+        $container->extension('mercure', [
+            'hubs' => [
+                'default' => [
+                    'url' => '',
+                    'public_url' => '',
+                    'jwt' => ['secret' => 'test-mercure-jwt-secret-at-least-256-bits-long'],
+                ],
+            ],
+        ]);
+
+        // The host provides monolog's `logger`; this application provides a NullLogger.
+        $container->services()->set('logger', NullLogger::class);
 
         // A PRIVATE SERVICE A SPECIFICATION HAS TO REACH. Nothing in an
         // application references the devkit declarations — devkit does, and it

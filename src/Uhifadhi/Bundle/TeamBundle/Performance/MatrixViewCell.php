@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Performance;
 
+use Uhifadhi\Bundle\AtlasBundle\Model\Sparkline;
+
 /**
  * ONE CELL, WITH EVERY DECISION ALREADY MADE — the template writes it
  * down and works nothing out.
@@ -21,7 +23,6 @@ final readonly class MatrixViewCell
 {
     /**
      * @param list<CellChip> $marks the states, where this cell counts states
-     * @param list<string>   $spark one polyline's points per unbroken run of history
      */
     public function __construct(
         public CellKind $kind,
@@ -31,9 +32,8 @@ final readonly class MatrixViewCell
         public string $delta = '',
         /** 'good', 'bad', 'flat', or '' where the column makes no claim. */
         public string $deltaTone = '',
-        public array $spark = [],
-        /** 'up', 'dn' or 'fl' — the line's tone, never a colour. */
-        public string $sparkTone = 'fl',
+        /** The history as the atlas draws it at the cell's size; null where there is no line to draw. */
+        public ?Sparkline $spark = null,
         public array $marks = [],
         /** What a blank cell says in the reader's own language. */
         public string $word = '',

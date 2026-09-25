@@ -15,9 +15,9 @@ namespace Uhifadhi\Bundle\AtlasBundle\Tests\Unit\Model;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Uhifadhi\Bundle\AtlasBundle\Model\Sparkline;
 use Uhifadhi\Bundle\AtlasBundle\Model\SparkSize;
 use Uhifadhi\Bundle\AtlasBundle\Model\SparkTone;
-use Uhifadhi\Bundle\AtlasBundle\Model\Sparkline;
 
 /**
  * THE SPARKLINE'S GEOMETRY, stated once for every surface that draws one.
@@ -82,7 +82,7 @@ final class SparklineTest extends TestCase
         self::assertFalse(new Sparkline([3.0, 4.0])->isEmpty());
     }
 
-    /** The tone is a class the sheet paints, never a colour. */
+    /** The tone is a class the sheet paints, never a color. */
     public function testTheToneIsTheClassItsPolylineWears(): void
     {
         self::assertSame('up', SparkTone::Good->value);

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Unit\Template;
 
+use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\ShellBundle\Test\VocabularyConformanceTestCase;
 
@@ -41,11 +42,17 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
         return ['team.css', 'performance.css'];
     }
 
+    /**
+     * THE ATLAS'S SHEETS ARE IN EVERY HEAD — published to the shell through
+     * AtlasStylesheets — so a class an atlas component draws on a team page
+     * is shipped by the chain the page actually loads.
+     */
     protected static function linkedStylesheets(): array
     {
         $shell = \dirname(new \ReflectionClass(ShellBundle::class)->getFileName() ?: '').'/public';
+        $atlas = \dirname(new \ReflectionClass(AtlasBundle::class)->getFileName() ?: '').'/public';
 
-        return [$shell.'/shell.css', $shell.'/widget.css'];
+        return [$shell.'/shell.css', $shell.'/widget.css', $atlas.'/map.css', $atlas.'/chart.css', $atlas.'/calendar.css'];
     }
 
     /**

@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Performance;
 
+use Uhifadhi\Bundle\AtlasBundle\Model\Sparkline;
+use Uhifadhi\Bundle\AtlasBundle\Model\SparkSize;
+use Uhifadhi\Bundle\AtlasBundle\Model\SparkTone;
 use Uhifadhi\Contracts\Performance\ColumnPolarity;
 
 /**
@@ -96,6 +99,20 @@ final readonly class Figures
             'bad' => 'dn',
             default => 'fl',
         };
+    }
+
+    /**
+     * THE HISTORY AS THE ATLAS DRAWS IT, or nothing where there is no line:
+     * fewer than two readings is not a line, and a box with nothing in it
+     * reads as a flat run.
+     *
+     * @param list<float|null> $history
+     */
+    public static function line(array $history, SparkTone $tone, SparkSize $size): ?Sparkline
+    {
+        $line = new Sparkline($history, $tone, $size);
+
+        return $line->isEmpty() ? null : $line;
     }
 
     /**

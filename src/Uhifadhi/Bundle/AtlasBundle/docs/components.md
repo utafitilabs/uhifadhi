@@ -35,6 +35,7 @@ their API once it settles.
   - [The chip legend](#the-chip-legend)
   - [How tall a chart is](#how-tall-a-chart-is)
   - [What each statement becomes in Chart.js](#what-each-statement-becomes-in-chartjs)
+- [The sparkline](#the-sparkline)
 - [What a module must not do](#what-a-module-must-not-do)
 
 ## How a module gets a map
@@ -643,6 +644,35 @@ design rules one number for every chart.
 | `ChartLegend::Chips` / `None` | `options.plugins.legend.display: false`, plus the plate's own `.chart-legend` markup | [configuration/legend](https://www.chartjs.org/docs/latest/configuration/legend.html) |
 | `ChartSeries::$cat` | `backgroundColor`/`borderColor` as `var(--cat-n)`, resolved by the plate at mount and on theme flip | [ux-chartjs `chartjs:pre-connect`](https://symfony.com/bundles/ux-chartjs/current/index.html) |
 
+## The sparkline
+
+A figure's recent history, drawn as a line under it. The caller hands the history — oldest
+first, one per period, `null` where nobody wrote one down — and says what the movement MEANS;
+where each point lands in the box is the atlas's.
+
+```php
+use Uhifadhi\Bundle\AtlasBundle\Model\SparkSize;
+use Uhifadhi\Bundle\AtlasBundle\Model\SparkTone;
+use Uhifadhi\Bundle\AtlasBundle\Model\Sparkline;
+
+new Sparkline([4.0, 5.0, null, 6.0, 7.0], SparkTone::Good, SparkSize::Cell);
+```
+
+```twig
+{{ atlas_sparkline(spark) }}
+```
+
+| Statement | What it draws |
+|---|---|
+| `SparkSize::Card` | the line under a card's figure: 100×26, stretched to the card's width |
+| `SparkSize::Cell` | the line beside a matrix cell's movement: 70×18 |
+| `SparkTone::Good` / `Bad` / `Flat` | the stroke, as a class — what the movement means, never which way it points |
+
+A period nobody wrote down breaks the line into two polylines rather than dipping it to nought,
+and every run is scaled against the whole history. Fewer than two readings is not a line, and
+`atlas_sparkline()` then prints nothing. It is drawn on the server, on Twig alone: a handful of
+coordinates needs no chart engine per cell.
+
 ## What a module must not do
 
 - **Do not create a map yourself.** `new Map()` from UX Map skips the imagery, the control stack
@@ -653,6 +683,6 @@ design rules one number for every chart.
 - **Do not style the plate.** `.map-plate`, `.map-body`, `.viewer`, `.map-filters`, `.map-legend` and the
   chrome classes are the atlas's vocabulary; a module that restyles them makes its own map the
   odd one out, and a module that clamps a height around one breaks its fullscreen.
-- **Do not draw a chart of your own.** No `<svg>` bar in a template, no Chart.js plugin, no chart
+- **Do not draw a chart of your own.** No `<svg>` bar or `<polyline>` in a template, no Chart.js plugin, no chart
   options: if a design draws something `AtlasChart` cannot state, the gap is in the atlas and is
   filled here for every module at once.

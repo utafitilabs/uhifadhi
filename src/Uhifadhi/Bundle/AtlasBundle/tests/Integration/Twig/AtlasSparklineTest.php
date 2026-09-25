@@ -16,9 +16,9 @@ namespace Uhifadhi\Bundle\AtlasBundle\Tests\Integration\Twig;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Twig\Environment;
+use Uhifadhi\Bundle\AtlasBundle\Model\Sparkline;
 use Uhifadhi\Bundle\AtlasBundle\Model\SparkSize;
 use Uhifadhi\Bundle\AtlasBundle\Model\SparkTone;
-use Uhifadhi\Bundle\AtlasBundle\Model\Sparkline;
 use Uhifadhi\Bundle\AtlasBundle\Tests\Integration\TestKernel;
 use Uhifadhi\Bundle\AtlasBundle\Twig\SparklineRuntime;
 
@@ -58,8 +58,8 @@ final class AtlasSparklineTest extends TestCase
         self::assertSame('', trim(self::render(new Sparkline([null, 4.0]))));
     }
 
-    /** A line is never a colour: the tone is a class, and no stroke crosses the wire. */
-    public function testTheLineCarriesNoColourOfItsOwn(): void
+    /** A line is never a color: the tone is a class, and no stroke crosses the wire. */
+    public function testTheLineCarriesNoColorOfItsOwn(): void
     {
         $html = self::render(new Sparkline([1.0, 2.0], SparkTone::Flat));
 

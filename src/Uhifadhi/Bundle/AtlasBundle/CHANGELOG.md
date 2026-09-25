@@ -8,6 +8,14 @@
 
 Not released yet.
 
+ * A FIGURE'S HISTORY IS AN ATLAS COMPONENT: `atlas_sparkline(Sparkline)`
+   draws the line under a KPI or topic card's figure (`SparkSize::Card`,
+   100×26) and beside a matrix cell's movement (`SparkSize::Cell`, 70×18) —
+   one polyline per unbroken run, a period nobody wrote down a break rather
+   than a dip, the tone (`SparkTone`: good, bad, flat) a class the chart sheet
+   paints. Server-drawn, on Twig alone. The rules are in chart.css, which
+   reaches every head. Documented in docs/components.md, "The sparkline"
+
  * A CHART CAN BE A RANKING, FIGURED, SCALED AND KEYED IN CHIPS — the four
    things a module's design drew that `atlas_chart()` could not: `ChartKind::Ranked`
    (bars sideways, the name on the left — Chart.js `indexAxis: 'y'`),

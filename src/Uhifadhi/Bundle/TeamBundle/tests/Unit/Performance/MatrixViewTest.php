@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Unit\Performance;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Uhifadhi\Bundle\AtlasBundle\Model\SparkSize;
 use Uhifadhi\Bundle\TeamBundle\Performance\CellKind;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixView;
@@ -220,7 +221,11 @@ final class MatrixViewTest extends TestCase
             [new MatrixRow('x', 'X', ['p' => new MatrixCell(4.0, history: [1.0, 2.0, null, 3.0, 4.0])], 'Org-wide')],
         ));
 
-        self::assertCount(2, $view->bands[0]->rows[0]->cells[0]->spark);
+        $spark = $view->bands[0]->rows[0]->cells[0]->spark;
+        self::assertNotNull($spark);
+        self::assertCount(2, $spark->runs());
+        // The atlas's line, at the matrix cell's size.
+        self::assertSame(SparkSize::Cell, $spark->size);
     }
 
     /** One reading cannot draw a line, so it draws none. */
@@ -231,7 +236,7 @@ final class MatrixViewTest extends TestCase
             [new MatrixRow('x', 'X', ['p' => new MatrixCell(4.0, history: [4.0])], 'Org-wide')],
         ));
 
-        self::assertSame([], $view->bands[0]->rows[0]->cells[0]->spark);
+        self::assertNull($view->bands[0]->rows[0]->cells[0]->spark);
     }
 
     /**

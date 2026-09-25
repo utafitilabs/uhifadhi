@@ -67,6 +67,22 @@ final class ComponentSheetsTest extends TestCase
     }
 
     /**
+     * THE SPARKLINE'S TWO BOXES AND ITS THREE TONES are in the chart's sheet,
+     * which reaches every head: a line drawn on a page whose own sheet does
+     * not know it is a line still has a size and a stroke.
+     */
+    public function testTheChartsSheetCarriesTheSparklinesBoxesAndTones(): void
+    {
+        $chart = self::sheet('chart.css');
+
+        self::assertMatchesRegularExpression('/\.sk\s*\{[^}]*height:\s*26px/', $chart);
+        self::assertMatchesRegularExpression('/\.spark\s*\{[^}]*height:\s*18px;\s*width:\s*70px/', $chart);
+        foreach (['up' => '--c-ok', 'dn' => '--c-fail', 'fl' => '--c-fog'] as $tone => $token) {
+            self::assertMatchesRegularExpression('/\.spark polyline\.'.$tone.'\s*\{[^}]*'.$token.'/', $chart);
+        }
+    }
+
+    /**
      * ALL THREE ARE PUBLISHED TO THE SHELL, THE MAP INCLUDED.
      *
      * THE DEFECT THIS CLOSES, and it had recurred for a year: "a page that

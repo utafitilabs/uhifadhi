@@ -118,11 +118,7 @@
             {%- if cell.delta or cell.spark %}
                 <div class="r2">
                     {%- if cell.delta %}<span class="delta{{ cell.deltaTone ? ' ' ~ cell.deltaTone }}">{{ cell.delta }}</span>{% endif %}
-                    {%- if cell.spark %}
-                        <svg class="spark" width="70" height="18" viewBox="0 0 70 18" preserveAspectRatio="none" aria-hidden="true">
-                            {%- for points in cell.spark %}<polyline class="{{ cell.sparkTone }}" points="{{ points }}"/>{% endfor -%}
-                        </svg>
-                    {%- endif %}
+                    {%- if cell.spark %}{{ atlas_sparkline(cell.spark) }}{% endif %}
                 </div>
             {%- endif %}
         </div>

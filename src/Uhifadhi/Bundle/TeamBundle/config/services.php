@@ -412,6 +412,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.performance_history'),
             service('team.access.catalogue'),
             service(PositionRepository::class),
+            service(DepartmentRepository::class),
         ])
         ->tag('uhifadhi.devkit.content_provider');
 

@@ -14,9 +14,12 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
 use Symfony\Component\DomCrawler\Crawler;
+use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing;
 use Uhifadhi\Bundle\TeamBundle\Performance\OrganizationBand;
+use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
+use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 
 /**
@@ -200,6 +203,28 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
             '/^i (good|bad|attention|quiet)$/',
             (string) $crawler->filter('.tpcard .mv .i')->first()->attr('class'),
         );
+    }
+
+    /**
+     * THE CARD'S LINE IS THE ATLAS'S: a figure with a written history carries
+     * the sparkline `atlas_sparkline()` draws — the card's box, one polyline a
+     * run, the tone a class — on the overview's strip and on the register.
+     */
+    public function testATopicCardsHistoryIsTheAtlasSparklineOnBothPages(): void
+    {
+        $this->seed();
+        $this->history();
+
+        foreach (['/departments/performance' => '.tpk .c.kpi', '/departments/performance/topics' => '.tpcard'] as $url => $card) {
+            $crawler = $this->client->request('GET', $url);
+            $line = $crawler->filter($card.' svg.sk');
+
+            self::assertGreaterThan(0, $line->count(), $url.' draws no sparkline under a figure with a history.');
+            self::assertSame('0 0 100 26', $line->first()->attr('viewBox'));
+            self::assertSame('none', $line->first()->attr('preserveAspectRatio'));
+            self::assertMatchesRegularExpression('/^(up|dn|fl)$/', (string) $line->first()->filter('polyline')->attr('class'));
+            self::assertNull($line->first()->filter('polyline')->attr('stroke'), 'A line is a class the sheet paints, never a stroke.');
+        }
     }
 
     /** Every card opens its own record, carrying the scope and the period. */
@@ -419,6 +444,27 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
         $this->client->request('GET', '/departments/performance');
 
         self::assertResponseStatusCodeSame(403);
+    }
+
+    /**
+     * TWO CLOSED MONTHS BEHIND THIS ONE, written for every department the
+     * seed places somebody in — enough readings for a line.
+     */
+    private function history(): void
+    {
+        /** @var PerformanceHistory $history */
+        $history = static::getContainer()->get(PerformanceHistory::class);
+        $months = PerformanceHistory::monthsEndingAt(new \DateTimeImmutable('first day of this month'), 3);
+
+        foreach ($this->em->getRepository(Department::class)->findAll() as $department) {
+            foreach ($months as $position => $month) {
+                foreach ([StaffingFigures::POSITIONS, StaffingFigures::FILLED, StaffingFigures::PEOPLE] as $figure) {
+                    $history->record($department, $month, $figure, 1.0 + $position);
+                }
+                $history->record($department, $month, StaffingFigures::VACANT, 2.0 - $position);
+            }
+        }
+        $this->em->flush();
     }
 
     private function page(): Crawler

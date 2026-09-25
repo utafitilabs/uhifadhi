@@ -1,0 +1,11 @@
+{# A FIGURE'S HISTORY, AS A LINE UNDER IT.
+
+   One polyline per unbroken run: a period nobody wrote down is the gap
+   between two of them. The tone is a class the sheet paints — never a
+   stroke written here — so the line turns over with the theme.
+
+   Rendered by Twig\SparklineRuntime, never included by hand — a surface
+   writes {{ atlas_sparkline(spark) }}. #}
+<svg class="{{ box }}" width="{{ width }}" height="{{ height }}" viewBox="0 0 {{ width }} {{ height }}" preserveAspectRatio="none" aria-hidden="true">
+    {%- for points in runs %}<polyline class="{{ tone }}" points="{{ points }}"/>{% endfor -%}
+</svg>

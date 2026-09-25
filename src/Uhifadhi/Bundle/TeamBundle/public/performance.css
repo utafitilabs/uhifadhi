@@ -188,20 +188,6 @@
 .hcell .delta.bad { color: rgb(var(--c-fail)); }
 .hcell .delta.flat { color: rgb(var(--c-dim)); }
 
-/* ── the sparkline ───────────────────────────────────────────────────────── */
-/* SIX PERIODS BEHIND THE FIGURE, AND ITS HOLES LEFT OPEN. A month nobody
-   wrote down is a break in the line rather than a dip somebody measured —
-   the renderer emits one polyline per unbroken run, and the gap is the
-   point. */
-.spark { display: block; height: 18px; width: 70px; overflow: visible; flex: none; }
-.spark polyline {
-    fill: none; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round;
-    vector-effect: non-scaling-stroke;
-}
-.spark polyline.up { stroke: rgb(var(--c-ok)); }
-.spark polyline.dn { stroke: rgb(var(--c-fail)); }
-.spark polyline.fl { stroke: color-mix(in srgb, rgb(var(--c-fog)) 62%, transparent); }
-
 /* ── a cell that counts states ───────────────────────────────────────────── */
 /* THE WORD IS THE PUBLISHER'S AND THE TONE IS THE PLATFORM'S — the same
    bargain a calendar pill strikes. A topic says "met" and that it reads well;
@@ -304,17 +290,6 @@
 .tpk .c.kpi .sub .delta.good { color: rgb(var(--c-ok)); }
 .tpk .c.kpi .sub .delta.bad { color: rgb(var(--c-fail)); }
 .tpk .c.kpi .sub .delta.flat { color: rgb(var(--c-dim)); }
-
-/* ── the card's own sparkline ────────────────────────────────────────────── */
-/* THE SAME LINE AT ITS OWN SIZE. A card is wider than a matrix cell and its
-   line is drawn over the same six periods with the same holes; only the box
-   differs, which is why the size is stated in both places and the rule that
-   breaks the line is stated in neither. */
-.sk { display: block; width: 100%; height: 26px; margin-top: 9px; overflow: visible; }
-.sk polyline { fill: none; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.sk polyline.up { stroke: rgb(var(--c-ok)); }
-.sk polyline.dn { stroke: rgb(var(--c-fail)); }
-.sk polyline.fl { stroke: color-mix(in srgb, rgb(var(--c-fog)) 62%, transparent); }
 
 /* ── the topics register ─────────────────────────────────────────────────── */
 /* RULED 09-20: an index, not tabs and not an accordion. A card answers "is

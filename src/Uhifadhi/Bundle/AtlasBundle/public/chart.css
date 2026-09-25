@@ -62,3 +62,26 @@
 }
 .chart-none b { font-size: 13px; color: rgb(var(--c-tx)); }
 .chart-none span { font-family: var(--font-mono); font-size: 10.5px; color: rgb(var(--c-dim)); }
+
+/* ════════════════════════════════════════════════════════════════════════
+   THE SPARKLINE — a figure's recent history, drawn as a line under it.
+
+   Two boxes and one rule. Under a card's figure the line is 100×26 and
+   stretches to the card's width; beside a matrix cell's movement it is
+   70×18. A period nobody wrote down is a break between two polylines, never
+   a dip, and the tone is a class — what the movement MEANS, never which way
+   it points.
+
+   Design: departments/performance.html (the card) and
+   departments/performance/*.html (the cell).
+   ════════════════════════════════════════════════════════════════════════ */
+.sk { display: block; width: 100%; height: 26px; margin-top: 9px; overflow: visible; }
+.spark { display: block; height: 18px; width: 70px; overflow: visible; flex: none; }
+.sk polyline,
+.spark polyline {
+    fill: none; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+}
+.sk polyline.up, .spark polyline.up { stroke: rgb(var(--c-ok)); }
+.sk polyline.dn, .spark polyline.dn { stroke: rgb(var(--c-fail)); }
+.sk polyline.fl, .spark polyline.fl { stroke: color-mix(in srgb, rgb(var(--c-fog)) 62%, transparent); }

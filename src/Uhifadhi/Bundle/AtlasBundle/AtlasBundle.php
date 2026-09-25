@@ -27,6 +27,7 @@ use Uhifadhi\Bundle\AtlasBundle\Twig\CalendarRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\ChartRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapExtension;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
+use Uhifadhi\Bundle\AtlasBundle\Twig\SparklineRuntime;
 use Uhifadhi\Bundle\ShellBundle\Contract\StylesheetSourceInterface;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -294,6 +295,11 @@ final class AtlasBundle extends AbstractBundle
 
             $services->set('atlas.twig_calendar_runtime', CalendarRuntime::class)
                 ->args([service('twig'), service('atlas.calendars')])
+                ->tag('twig.runtime');
+
+            // The sparkline stands on Twig alone too: a polyline needs no library.
+            $services->set('atlas.twig_sparkline_runtime', SparklineRuntime::class)
+                ->args([service('twig')])
                 ->tag('twig.runtime');
         }
 

@@ -91,6 +91,12 @@ final class MapExtension extends AbstractExtension
              * decide, not the caller's.
              */
             new TwigFunction('atlas_calendar', [CalendarRuntime::class, 'renderCalendar'], ['is_safe' => ['html']]),
+
+            /*
+             * AND A FIGURE'S HISTORY, THE SMALLEST OF THEM: the line under a
+             * KPI card's figure and beside a matrix cell's movement.
+             */
+            new TwigFunction('atlas_sparkline', [SparklineRuntime::class, 'renderSparkline'], ['is_safe' => ['html']]),
         ];
     }
 

@@ -19,6 +19,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
@@ -180,6 +181,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         private PerformanceHistory $history,
         private ConcernCatalogue $catalogue,
         private PositionRepository $positionRows,
+        private DepartmentRepository $departmentRows,
     ) {
     }
 
@@ -220,24 +222,28 @@ final readonly class TeamContentProvider implements ContentProviderInterface
             return;
         }
 
-        $protection = $this->departments->create('Protection Service', null);
-        $ecology = $this->departments->create('Ecology', null);
-        $operations = $this->departments->create('Operations', null);
+        // THE DEMO'S WORDS ARE FOUND BEFORE THEY ARE MADE. An installation that
+        // already keeps a department or a position under one of these names
+        // — recorded by hand, or imported — keeps its own record, and the demo
+        // files its people under that one rather than failing on the name.
+        $protection = $this->departmentNamed('Protection Service');
+        $ecology = $this->departmentNamed('Ecology');
+        $operations = $this->departmentNamed('Operations');
 
         // A POSITION BELONGS TO NO DEPARTMENT: it is named once, across the
         // organization, and where its holders work is written against each of
         // them below.
-        $coordinator = $this->positions->create('Coordinator');
+        $coordinator = $this->positionNamed('Coordinator');
         // ADMINISTERING THE TEAM, in pairs: writing the positions and the
         // departments, and reading the people they are about.
         $this->grant($coordinator, self::GRANTS['coordinator']);
 
-        $headRanger = $this->positions->create('Head Ranger');
-        $ranger = $this->positions->create('Ranger');
-        $analyst = $this->positions->create('Analyst');
+        $headRanger = $this->positionNamed('Head Ranger');
+        $ranger = $this->positionNamed('Ranger');
+        $analyst = $this->positionNamed('Analyst');
         // A POSITION NOBODY HOLDS, and the register has to draw one: it is the
         // only state in which retiring is offered rather than refused.
-        $sergeant = $this->positions->create('Sergeant');
+        $sergeant = $this->positionNamed('Sergeant');
 
         $this->grant($headRanger, self::GRANTS['head_ranger']);
         $this->grant($ranger, self::GRANTS['ranger']);
@@ -368,6 +374,16 @@ final readonly class TeamContentProvider implements ContentProviderInterface
      * of that is still "this has been here" — the departments it would start
      * with are the ones that refuse a second write.
      */
+    private function departmentNamed(string $name): Department
+    {
+        return $this->departmentRows->findOneByName($name) ?? $this->departments->create($name, null);
+    }
+
+    private function positionNamed(string $name): Position
+    {
+        return $this->positionRows->findOneByName($name) ?? $this->positions->create($name);
+    }
+
     private function alreadySeeded(): bool
     {
         foreach (self::ACCOUNTS as $email) {

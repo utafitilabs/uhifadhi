@@ -1,0 +1,80 @@
+{# THE HEAT TABLE — a sortable head, bands of rows, one heat cell per column.
+
+   THIS TEMPLATE DECIDES NOTHING: every tint, every word for an absence and
+   every tone arrived on the model. ONE RULE FOR BOTH KINDS OF CELL: a figure
+   and a run of states are the same `.hcell` with different contents.
+
+   Rendered by Twig\HeatmapRuntime — a surface writes
+   {{ atlas_heatmap(table, openLabel, openMark) }}. #}
+{% import _self as heat %}
+<table class="tbl heat">
+    <thead>
+        <tr>
+            <th class="sortable" data-sort="name" aria-sort="none" tabindex="0" role="columnheader"
+                title="Sort by department name">Department<i class="sortmark"></i></th>
+            {% for column in table.columns %}
+                <th class="num sortable" data-sort="{{ column.key }}" aria-sort="none" tabindex="0" role="columnheader"
+                    title="Sort by {{ column.label|lower }}{{ column.caption ? ' — ' ~ column.caption }}">{{ column.label }}<i class="sortmark"></i>
+                    {%- if column.total %}
+                        <span class="thtot">{{ column.total }}
+                            {%- if column.unit %}<em>{{ column.unit }}</em>{% endif %}
+                            {%- if column.totalDelta %}<span class="d{{ column.totalTone ? ' ' ~ column.totalTone }}">{{ column.totalDelta }}</span>{% endif %}
+                        </span>
+                    {%- endif %}
+                </th>
+            {% endfor %}
+            <th class="perf-openhead"></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for band in table.bands %}
+            <tr class="pfscope">
+                <td colspan="{{ table.columns|length + 2 }}">
+                    <span class="sg">{{ band.name }}<span class="n">{{ band.count }}</span>{% if band.note %}<em>{{ band.note }}</em>{% endif %}</span>
+                </td>
+            </tr>
+            {% for row in band.rows %}
+                <tr class="perf-row">
+                    <td data-v="{{ row.name|lower }}">
+                        <div class="dept">
+                            <span class="mk">{{ row.mark }}</span>
+                            <div><b>{{ row.name }}</b>{% if row.note %}<span>{{ row.note }}</span>{% endif %}</div>
+                        </div>
+                    </td>
+                    {% for cell in row.cells %}
+                        <td class="hc"{% if cell.sort is not null %} data-v="{{ cell.sort }}"{% endif %}>{{ heat.cell(cell) }}</td>
+                    {% endfor %}
+                    <td class="num perf-open">
+                        {% if row.url %}
+                            <a class="open-btn" href="{{ row.url }}">{{ openLabel }} {{ openMark|raw }}</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+    </tbody>
+</table>
+
+{% macro cell(cell) %}
+    {%- if cell.isBlank() -%}
+        <div class="hcell h0 blank"{% if cell.title %} title="{{ cell.title }}"{% endif %}><span class="mono d">{{ cell.word }}</span></div>
+    {%- elseif cell.isMarks() -%}
+        <div class="hcell"{% if cell.title %} title="{{ cell.title }}"{% endif %}>
+            <div class="r2 marks">
+                {%- for mark in cell.marks -%}
+                    <span class="cmark{{ mark.tone ? ' ' ~ mark.tone }}"{% if mark.title %} title="{{ mark.title }}"{% endif %}>{{ mark.label }}</span>
+                {%- endfor -%}
+            </div>
+        </div>
+    {%- else -%}
+        <div class="hcell{{ cell.tint ? ' ' ~ cell.tint.value }}"{% if cell.title %} title="{{ cell.title }}"{% endif %}>
+            <b>{{ cell.figure }}{% if cell.unit %}<em>{{ cell.unit }}</em>{% endif %}</b>
+            {%- if cell.delta or cell.spark %}
+                <div class="r2">
+                    {%- if cell.delta %}<span class="delta{{ cell.deltaTone ? ' ' ~ cell.deltaTone }}">{{ cell.delta }}</span>{% endif %}
+                    {%- if cell.spark %}{{ atlas_sparkline(cell.spark) }}{% endif %}
+                </div>
+            {%- endif %}
+        </div>
+    {%- endif -%}
+{% endmacro %}

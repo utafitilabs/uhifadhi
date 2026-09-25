@@ -15,6 +15,9 @@ namespace Uhifadhi\Bundle\TeamBundle\Twig;
 
 use Twig\Environment;
 use Twig\Extension\RuntimeExtensionInterface;
+use Uhifadhi\Bundle\AtlasBundle\Model\Heatmap\HeatLegend;
+use Uhifadhi\Bundle\AtlasBundle\Model\Heatmap\HeatLegendEntry;
+use Uhifadhi\Bundle\AtlasBundle\Model\Heatmap\HeatTint;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixViewBuilder;
 use Uhifadhi\Contracts\Performance\TopicMatrix;
@@ -22,7 +25,8 @@ use Uhifadhi\Contracts\Performance\TopicMatrix;
 /**
  * THE DP·01 GRAMMAR, drawn from a published matrix.
  *
- * The arithmetic and every word are the builder's
+ * The arithmetic and every word are the builder's, the table and its
+ * legend are the atlas's (`atlas_heatmap()`, `atlas_heat_legend()`)
  * ({@see MatrixViewBuilder}); this settles the card around the table and
  * what the caller is allowed to say about it — its title, the line under
  * the title, and who published it. Nothing else: a caller cannot hand in
@@ -66,8 +70,26 @@ final readonly class MatrixRuntime implements RuntimeExtensionInterface
             'byModule' => $options['byModule'] ?? false,
             'id' => $options['id'] ?? '',
             'openLabel' => $options['openLabel'] ?? 'Open',
-            // The legend says the rule, and the rule has exactly one home.
-            'fewest' => MatrixPlacing::FEWEST,
+            'legend' => self::legend(),
         ]);
+    }
+
+    /**
+     * THE LEGEND IS PART OF THE MATRIX: a shade nobody explained is a verdict
+     * the reader invents. It says what a tint is AND what it is not, because
+     * the second is the half that gets misread — and it says the rule, which
+     * has exactly one home.
+     */
+    private static function legend(): HeatLegend
+    {
+        return new HeatLegend(
+            [
+                new HeatLegendEntry(HeatTint::Leads, 'leads the column'),
+                new HeatLegendEntry(HeatTint::Mid, 'mid'),
+                new HeatLegendEntry(HeatTint::Trails, 'trails the column'),
+                new HeatLegendEntry(HeatTint::None, "no figure yet \u{2014} not a zero"),
+            ],
+            \sprintf("A placing inside one column and one band \u{2014} never a verdict on a department, and not drawn where fewer than %d in the band have a figure.", MatrixPlacing::FEWEST),
+        );
     }
 }

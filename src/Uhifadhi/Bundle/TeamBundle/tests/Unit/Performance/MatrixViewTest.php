@@ -15,10 +15,10 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Unit\Performance;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Uhifadhi\Bundle\AtlasBundle\Model\Heatmap\HeatCellKind;
+use Uhifadhi\Bundle\AtlasBundle\Model\Heatmap\HeatTable;
 use Uhifadhi\Bundle\AtlasBundle\Model\SparkSize;
-use Uhifadhi\Bundle\TeamBundle\Performance\CellKind;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing;
-use Uhifadhi\Bundle\TeamBundle\Performance\MatrixView;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixViewBuilder;
 use Uhifadhi\Contracts\Performance\CellMark;
 use Uhifadhi\Contracts\Performance\ColumnPolarity;
@@ -36,7 +36,6 @@ use Uhifadhi\Contracts\Performance\TopicMatrix;
  * writes them down.
  */
 #[CoversClass(MatrixViewBuilder::class)]
-#[CoversClass(MatrixView::class)]
 final class MatrixViewTest extends TestCase
 {
     /**
@@ -94,8 +93,8 @@ final class MatrixViewTest extends TestCase
 
         $cells = $view->bands[0]->rows[0]->cells;
         self::assertCount(2, $cells);
-        self::assertSame(CellKind::Blank, $cells[0]->kind);
-        self::assertSame(CellKind::Figure, $cells[1]->kind);
+        self::assertSame(HeatCellKind::Blank, $cells[0]->kind);
+        self::assertSame(HeatCellKind::Figure, $cells[1]->kind);
     }
 
     /**
@@ -123,7 +122,7 @@ final class MatrixViewTest extends TestCase
         self::assertNotSame($notMine->cells[0]->title, $noFigure->cells[0]->title);
 
         // A real nought is a measurement, and it is drawn as one.
-        self::assertSame(CellKind::Figure, $nought->cells[0]->kind);
+        self::assertSame(HeatCellKind::Figure, $nought->cells[0]->kind);
         self::assertSame('0', $nought->cells[0]->figure);
     }
 
@@ -258,7 +257,7 @@ final class MatrixViewTest extends TestCase
         ));
 
         $cell = $view->bands[0]->rows[0]->cells[0];
-        self::assertSame(CellKind::Marks, $cell->kind);
+        self::assertSame(HeatCellKind::Marks, $cell->kind);
         self::assertSame('', $cell->figure);
         self::assertSame(
             [['met', 'good', 'period closed'], ['missed', 'bad', ''], ['cannot be paced', '', '']],
@@ -281,8 +280,8 @@ final class MatrixViewTest extends TestCase
             ],
         ));
 
-        self::assertSame('h5', $view->bands[0]->rows[0]->cells[0]->tint);
-        self::assertSame('h1', $view->bands[0]->rows[2]->cells[0]->tint);
+        self::assertSame('h5', $view->bands[0]->rows[0]->cells[0]->tint?->value);
+        self::assertSame('h1', $view->bands[0]->rows[2]->cells[0]->tint?->value);
     }
 
     /** A matrix with no rows knows it, so a page can say so in its own words. */
@@ -291,7 +290,7 @@ final class MatrixViewTest extends TestCase
         self::assertTrue(self::view(new TopicMatrix([], []))->isEmpty());
     }
 
-    private static function view(TopicMatrix $matrix): MatrixView
+    private static function view(TopicMatrix $matrix): HeatTable
     {
         return new MatrixViewBuilder(new MatrixPlacing())->build($matrix);
     }

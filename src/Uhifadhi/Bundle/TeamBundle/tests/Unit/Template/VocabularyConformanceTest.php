@@ -52,7 +52,7 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
         $shell = \dirname(new \ReflectionClass(ShellBundle::class)->getFileName() ?: '').'/public';
         $atlas = \dirname(new \ReflectionClass(AtlasBundle::class)->getFileName() ?: '').'/public';
 
-        return [$shell.'/shell.css', $shell.'/widget.css', $atlas.'/map.css', $atlas.'/chart.css', $atlas.'/calendar.css'];
+        return [$shell.'/shell.css', $shell.'/widget.css', $atlas.'/map.css', $atlas.'/chart.css', $atlas.'/calendar.css', $atlas.'/heat.css'];
     }
 
     /**

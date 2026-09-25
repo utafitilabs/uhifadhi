@@ -26,6 +26,7 @@ use Uhifadhi\Bundle\AtlasBundle\Shell\AtlasStylesheets;
 use Uhifadhi\Bundle\AtlasBundle\Twig\BarsRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\CalendarRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\ChartRuntime;
+use Uhifadhi\Bundle\AtlasBundle\Twig\HeatmapRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapExtension;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\SparklineRuntime;
@@ -106,6 +107,9 @@ final class AtlasBundle extends AbstractBundle
      */
     public const string CHART_STYLESHEET = 'bundles/atlas/chart.css';
     public const string CALENDAR_STYLESHEET = 'bundles/atlas/calendar.css';
+
+    /** The heat table's own sheet: a component of its own, sharing no rule with the others. */
+    public const string HEAT_STYLESHEET = 'bundles/atlas/heat.css';
 
     /**
      * The AssetMapper namespace this bundle's JavaScript is served under, and
@@ -305,6 +309,11 @@ final class AtlasBundle extends AbstractBundle
 
             // And the ranked bars and their key: three spans a row, on Twig alone.
             $services->set('atlas.twig_bars_runtime', BarsRuntime::class)
+                ->args([service('twig')])
+                ->tag('twig.runtime');
+
+            // And the heat table and its legend: a table of divs, on Twig alone.
+            $services->set('atlas.twig_heatmap_runtime', HeatmapRuntime::class)
                 ->args([service('twig')])
                 ->tag('twig.runtime');
         }

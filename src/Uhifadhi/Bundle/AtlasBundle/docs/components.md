@@ -39,6 +39,7 @@ their API once it settles.
   - [What each statement becomes in Chart.js](#what-each-statement-becomes-in-chartjs)
 - [The sparkline](#the-sparkline)
 - [Ranked bars and the dot key](#ranked-bars-and-the-dot-key)
+- [The heat table and its legend](#the-heat-table-and-its-legend)
 - [What a module must not do](#what-a-module-must-not-do)
 
 ## How a module gets a map
@@ -786,6 +787,48 @@ new RankedBars(
 Drawn on the server, on Twig alone, as the design's own rows (`.sxbars > .sxbar > .l, .t, .n`);
 the rules are in chart.css. A matrix cell writes the same dot as `<span class="sxdot">`, with
 `inh` or `no` beside it, and the key under the matrix is `atlas_key()`.
+
+## The heat table and its legend
+
+A table of things against measures, each cell tinted by where its figure stands in its column,
+in bands that say what it was placed among. A component of its own: its models are
+`Model\Heatmap\*`, its sheet is `heat.css`, and it shares nothing with the other components
+but the sparkline a figure cell draws.
+
+```php
+use Uhifadhi\Bundle\AtlasBundle\Model\Heatmap\{HeatBand, HeatCell, HeatColumn, HeatLegend, HeatLegendEntry, HeatRow, HeatTable, HeatTint};
+
+$table = new HeatTable(
+    [new HeatColumn('pace', 'Pace', unit: 'd', total: '12')],
+    [new HeatBand('Org-wide', [
+        new HeatRow('North', 'NO', [HeatCell::figure('4', HeatTint::Leads, unit: 'd', sort: 4.0)], url: '/d/north'),
+        new HeatRow('South', 'SO', [HeatCell::blank('no figure', 'No figure to read')]),
+    ], note: 'each reads every area')],
+);
+$legend = new HeatLegend([new HeatLegendEntry(HeatTint::Leads, 'leads the column')], 'A placing, not a verdict.');
+```
+
+```twig
+<div class="hscroll" data-controller="…your sort controller…">
+    {{ atlas_heatmap(table, 'Open', ux_icon('shell:chevron-right')) }}
+</div>
+{{ atlas_heat_legend(legend) }}
+```
+
+| Statement | What it draws |
+|---|---|
+| `HeatTint::Leads`…`Trails` | `.hcell.h5`…`.h1`: jade for the top of a column, amber and red for the bottom |
+| `HeatTint::None` | `.h0`, dashed rather than pale: an absence, never a small figure |
+| `HeatCell::figure()` | the figure, its unit, its movement toned by the column, the cell's sparkline |
+| `HeatCell::marks()` | a run of state chips (`.cmark`), never placed |
+| `HeatCell::blank($word)` | a dashed cell that says which absence it is |
+| `HeatColumn(total: …)` | the column's own published total under its name, never summed by the page |
+| `HeatBand` | the rule a placing was made inside, with its count and note |
+
+The table and the legend are two calls because a card puts them in two places. The frame, the
+sideways scroll and the sort are the caller's: the table carries what a sort controller reads
+(`th.sortable[data-sort]`, `td[data-v]`, `tr.pfscope`). The open door's mark is the caller's
+markup, since the atlas ships no icons.
 
 ## What a module must not do
 

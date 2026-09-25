@@ -1,0 +1,11 @@
+{# THE HEAT LEGEND — a swatch per place and what it means, then the sentence
+   that says what a tint is not. Rendered by Twig\HeatmapRuntime — a surface
+   writes {{ atlas_heat_legend(legend) }}. #}
+<div class="legend">
+    {%- for entry in legend.entries %}
+        <span><i class="sw {{ entry.tint.value }}"></i>{{ entry.label }}</span>
+    {%- endfor %}
+    {%- if legend.note %}
+        <span class="d">{{ legend.note }}</span>
+    {%- endif %}
+</div>

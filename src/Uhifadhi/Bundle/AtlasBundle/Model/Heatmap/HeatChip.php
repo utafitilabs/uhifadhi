@@ -11,21 +11,15 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Bundle\TeamBundle\Performance;
+namespace Uhifadhi\Bundle\AtlasBundle\Model\Heatmap;
 
-/**
- * ONE STATE CHIP, with the tone this platform gives it.
- *
- * The publisher's word and the platform's tone: a topic says "met" and
- * that it reads well, and what "reads well" looks like is settled once,
- * here, so two topics cannot ship two greens.
- */
-final readonly class CellChip
+/** ONE STATE IN A CELL THAT COUNTS STATES: the publisher's word and the platform's tone. */
+final readonly class HeatChip
 {
     public function __construct(
         public string $label,
         /** 'good', 'bad', or '' where the state makes no claim. */
-        public string $tone,
+        public string $tone = '',
         public string $title = '',
     ) {
     }

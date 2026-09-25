@@ -1,0 +1,181 @@
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+/* THE HEAT TABLE'S OWN SHEET — `atlas_heatmap()` and `atlas_heat_legend()`.
+
+   A COMPONENT OF ITS OWN, with a sheet of its own: it shares no rule with the
+   chart, the month or the map, so it can be lifted out whole. Published to
+   the shell through AtlasStylesheets like the others, because a heat table is
+   drawn inside somebody else's page.
+
+   ONE GRAMMAR. A shade is a PLACING and not a verdict: the five steps say
+   where a figure stands in ONE column of ONE band; the sixth, .h0, is the
+   absence, dashed rather than pale so that "nobody published" cannot be read
+   as "published badly". Every colour is a shell token.
+
+   Design: departments/performance/*.html (DP·01). */
+
+.heat th { white-space: nowrap; vertical-align: bottom; }
+.heat td { vertical-align: middle; }
+
+/* THE CELL THE HEAT BOX SITS IN. The box is the cell as far as a reader is
+   concerned, so the td gives it the room and draws nothing itself. */
+.heat td.hc { padding: 4px 5px; }
+.heat td.hc:first-of-type { padding-left: 10px; }
+
+/* A HEADER THAT SORTS SAYS SO BEFORE IT IS CLICKED. */
+.heat th.sortable { cursor: pointer; user-select: none; }
+.heat th.sortable:hover { color: rgb(var(--c-tx)); }
+.heat th.sortable:focus-visible { outline: 2px solid rgb(var(--c-acc)); outline-offset: -2px; }
+.sortmark {
+    display: inline-block; width: 0; height: 0; margin-left: 6px; vertical-align: 2px;
+    border-left: 4px solid transparent; border-right: 4px solid transparent;
+    border-bottom: 5px solid rgb(var(--c-dim)); opacity: 0;
+}
+.heat th.sortable:hover .sortmark { opacity: .45; }
+.heat th[aria-sort="ascending"] .sortmark { opacity: 1; }
+.heat th[aria-sort="descending"] .sortmark { opacity: 1; transform: rotate(180deg); }
+
+/* WHAT THE WHOLE COLUMN COMES TO, under its name — published by the topic,
+   never summed by the page, because a sum of averages is a number nobody
+   measured. */
+.thtot {
+    display: block; margin-top: 5px; font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 12px; font-weight: 700; color: rgb(var(--c-tx)); letter-spacing: -.01em;
+}
+.thtot em { font-style: normal; font-size: 10px; font-weight: 500; color: rgb(var(--c-fog)); margin-left: 3px; }
+.thtot .d { font-size: 10px; font-weight: 600; color: rgb(var(--c-dim)); margin-left: 6px; }
+.thtot .d.good { color: rgb(var(--c-ok)); }
+.thtot .d.bad { color: rgb(var(--c-fail)); }
+
+/* ── the band ────────────────────────────────────────────────────────────── */
+/* THE BOUNDARY A PLACING WAS MADE INSIDE. Org-wide departments are ranked
+   among org-wide ones and an area's among that area's, so the rule is drawn:
+   a reader who cannot see the boundary cannot see what a shade was measured
+   against. */
+.perf-row + .pfscope td { padding-top: 18px; }
+.pfscope td { border-bottom: 1px solid var(--c-ln); padding: 9px 10px 7px; }
+.sg {
+    display: inline-flex; align-items: baseline; gap: 9px; flex-wrap: wrap;
+    font: 700 8.5px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .14em;
+    text-transform: uppercase; color: rgb(var(--c-dim));
+}
+.sg .n {
+    font-size: 9px; letter-spacing: .04em; color: rgb(var(--c-fog));
+    border: 1px solid var(--c-ln2); border-radius: 5px; padding: 1px 5px;
+}
+.sg em {
+    font-style: normal; font-weight: 500; font-size: 10px; letter-spacing: .02em;
+    text-transform: none; color: rgb(var(--c-dim));
+}
+
+/* ── the department a row is ─────────────────────────────────────────────── */
+.dept { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.dept .mk {
+    width: 28px; height: 28px; border-radius: 9px; flex: none; display: grid; place-items: center;
+    background: rgb(var(--c-raised)); border: 1px solid var(--c-ln2); color: rgb(var(--c-fog));
+    font: 700 10px "JetBrains Mono", ui-monospace, monospace;
+}
+.dept b { font-size: 13.5px; font-weight: 600; color: rgb(var(--c-tx)); display: block; line-height: 1.25; }
+.dept span {
+    font: 500 9.5px "JetBrains Mono", ui-monospace, monospace; color: rgb(var(--c-dim));
+    letter-spacing: .05em;
+}
+.perf-open { width: 1%; white-space: nowrap; }
+.perf-openhead { width: 1%; }
+
+/* ── the cell ────────────────────────────────────────────────────────────── */
+/* ONE RULE FOR BOTH KINDS OF CELL. A figure and a run of states are the same
+   box with different contents, so the grid cannot drift between them and a
+   pace column lines up with the columns beside it. */
+.hcell {
+    border-radius: 8px; padding: 8px 10px 7px; display: flex; flex-direction: column; gap: 6px;
+    border: 1px solid transparent; min-width: 74px;
+}
+.hcell b {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 13px; font-weight: 700;
+    color: rgb(var(--c-tx)); font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.hcell b em { font-style: normal; font-size: 10px; color: rgb(var(--c-fog)); font-weight: 500; margin-left: 2px; }
+.hcell .r2 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+/* The states row starts at the left and wraps, because chips are read in
+   order and a run of four is not a figure with something beside it. */
+.hcell .r2.marks { justify-content: flex-start; flex-wrap: wrap; gap: 5px; }
+.hcell.blank { align-items: center; justify-content: center; min-height: 34px; }
+.hcell.blank .mono { font-size: 10px; letter-spacing: .08em; color: rgb(var(--c-dim)); }
+
+/* THE FIVE PLACES, AND THE ABSENCE. Jade for the top of a column, amber and
+   then red for the bottom of it: a scale a reader learns once. */
+.hcell.h5 {
+    background: color-mix(in srgb, rgb(var(--c-acc)) 22%, transparent);
+    border-color: color-mix(in srgb, rgb(var(--c-acc)) 40%, transparent);
+}
+.hcell.h4 { background: color-mix(in srgb, rgb(var(--c-acc)) 14%, transparent); }
+.hcell.h3 { background: color-mix(in srgb, rgb(var(--c-acc)) 8%, transparent); }
+.hcell.h2 { background: color-mix(in srgb, rgb(var(--c-warn)) 10%, transparent); }
+.hcell.h1 { background: color-mix(in srgb, rgb(var(--c-fail)) 11%, transparent); }
+/* DASHED, NOT PALE. An absence drawn as a faint version of a figure reads as
+   a small figure; drawn as an outline with nothing in it, it reads as the
+   nothing it is. */
+.hcell.h0 { background: none; border-style: dashed; border-color: var(--c-ln2); }
+
+/* ── the movement ────────────────────────────────────────────────────────── */
+/* TONED BY THE COLUMN AND NEVER BY THE SIGN: more days to settle is a worse
+   month, and a page that painted every rise green would congratulate a
+   department for it. */
+.hcell .delta {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; font-weight: 600;
+    color: rgb(var(--c-dim)); white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.hcell .delta.good { color: rgb(var(--c-ok)); }
+.hcell .delta.bad { color: rgb(var(--c-fail)); }
+.hcell .delta.flat { color: rgb(var(--c-dim)); }
+
+/* ── a cell that counts states ───────────────────────────────────────────── */
+/* THE WORD IS THE PUBLISHER'S AND THE TONE IS THE PLATFORM'S — the same
+   bargain a calendar pill strikes. A topic says "met" and that it reads well;
+   what "reads well" looks like is settled here, once. */
+.cmark {
+    display: inline-flex; align-items: center; border-radius: 6px; padding: 3px 8px 2px;
+    border: 1px solid var(--c-ln2); background: rgb(var(--c-raised));
+    font: 600 9.5px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .04em;
+    color: rgb(var(--c-fog)); white-space: nowrap;
+}
+.cmark.good {
+    color: rgb(var(--c-ok)); border-color: color-mix(in srgb, rgb(var(--c-ok)) 42%, transparent);
+    background: color-mix(in srgb, rgb(var(--c-ok)) 9%, transparent);
+}
+.cmark.bad {
+    color: rgb(var(--c-fail)); border-color: color-mix(in srgb, rgb(var(--c-fail)) 42%, transparent);
+    background: color-mix(in srgb, rgb(var(--c-fail)) 9%, transparent);
+}
+
+/* ── the legend ──────────────────────────────────────────────────────────── */
+/* A SHADE NOBODY EXPLAINED IS A VERDICT THE READER INVENTS. The foot says
+   what the tints are and, in the sentence that matters more, what they are
+   not. */
+.legend {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    font: 600 8.5px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .1em;
+    text-transform: uppercase; color: rgb(var(--c-dim));
+}
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .sw { width: 10px; height: 10px; border-radius: 3px; flex: none; border: 1px solid transparent; }
+.legend .sw.h5 {
+    background: color-mix(in srgb, rgb(var(--c-acc)) 22%, transparent);
+    border-color: color-mix(in srgb, rgb(var(--c-acc)) 40%, transparent);
+}
+.legend .sw.h3 { background: color-mix(in srgb, rgb(var(--c-acc)) 8%, transparent); }
+.legend .sw.h1 { background: color-mix(in srgb, rgb(var(--c-fail)) 11%, transparent); }
+.legend .sw.h0 { background: none; border: 1px dashed var(--c-ln2); }
+.legend .d {
+    flex-basis: 100%; letter-spacing: .02em; text-transform: none; font-weight: 500; font-size: 10.5px;
+    line-height: 1.5; color: rgb(var(--c-dim));
+}
+

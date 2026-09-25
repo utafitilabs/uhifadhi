@@ -13,6 +13,13 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Performance;
 
+use Uhifadhi\Bundle\AtlasBundle\Model\Heatmap\HeatBand;
+use Uhifadhi\Bundle\AtlasBundle\Model\Heatmap\HeatCell;
+use Uhifadhi\Bundle\AtlasBundle\Model\Heatmap\HeatChip;
+use Uhifadhi\Bundle\AtlasBundle\Model\Heatmap\HeatColumn;
+use Uhifadhi\Bundle\AtlasBundle\Model\Heatmap\HeatRow;
+use Uhifadhi\Bundle\AtlasBundle\Model\Heatmap\HeatTable;
+use Uhifadhi\Bundle\AtlasBundle\Model\Heatmap\HeatTint;
 use Uhifadhi\Bundle\AtlasBundle\Model\SparkSize;
 use Uhifadhi\Contracts\Performance\CellMark;
 use Uhifadhi\Contracts\Performance\ColumnPolarity;
@@ -22,8 +29,8 @@ use Uhifadhi\Contracts\Performance\MatrixRow;
 use Uhifadhi\Contracts\Performance\TopicMatrix;
 
 /**
- * A PUBLISHED MATRIX, TURNED INTO SOMETHING A TEMPLATE CAN ONLY WRITE
- * DOWN.
+ * A PUBLISHED MATRIX, TURNED INTO THE ATLAS'S HEAT TABLE — something a
+ * template can only write down.
  *
  * EVERY DECISION IS MADE HERE. What a figure looks like printed, which
  * of the three absences a cell is and what it says, whether a movement
@@ -32,10 +39,9 @@ use Uhifadhi\Contracts\Performance\TopicMatrix;
  * next page, and a module that decided it would decide it differently
  * from the host.
  *
- * ONE SHAPE FOR BOTH KINDS OF CELL. A figure and a run of states are the
- * same {@see MatrixViewCell} with a different {@see CellKind}, so the
- * template has one rule for a cell and the grid cannot drift between the
- * two.
+ * WHAT A TINT IS, WHICH ABSENCE A CELL IS AND WHAT IT SAYS are Team's
+ * decisions, made here; what a heat table looks like is the atlas's
+ * ({@see HeatTable}, drawn by `atlas_heatmap()`).
  */
 final readonly class MatrixViewBuilder
 {
@@ -44,11 +50,11 @@ final readonly class MatrixViewBuilder
     ) {
     }
 
-    public function build(TopicMatrix $matrix): MatrixView
+    public function build(TopicMatrix $matrix): HeatTable
     {
         $tints = $this->placing->forMatrix($matrix);
 
-        /** @var array<string, list<MatrixViewRow>> $bands */
+        /** @var array<string, list<HeatRow>> $bands */
         $bands = [];
         foreach ($matrix->rows as $row) {
             $bands[$row->band][] = $this->row($row, $matrix->columns, $tints[$row->departmentUuid] ?? []);
@@ -56,15 +62,15 @@ final readonly class MatrixViewBuilder
 
         $built = [];
         foreach ($bands as $name => $rows) {
-            $built[] = new MatrixBand((string) $name, $rows, $matrix->bandNotes[(string) $name] ?? '');
+            $built[] = new HeatBand((string) $name, $rows, $matrix->bandNotes[(string) $name] ?? '');
         }
 
-        return new MatrixView(array_map(self::column(...), $matrix->columns), $built, $matrix->caption);
+        return new HeatTable(array_map(self::column(...), $matrix->columns), $built);
     }
 
-    private static function column(MatrixColumn $column): MatrixViewColumn
+    private static function column(MatrixColumn $column): HeatColumn
     {
-        return new MatrixViewColumn(
+        return new HeatColumn(
             $column->key,
             $column->label,
             $column->unit,
@@ -79,7 +85,7 @@ final readonly class MatrixViewBuilder
      * @param list<MatrixColumn>    $columns
      * @param array<string, string> $tints
      */
-    private function row(MatrixRow $row, array $columns, array $tints): MatrixViewRow
+    private function row(MatrixRow $row, array $columns, array $tints): HeatRow
     {
         $cells = [];
         foreach ($columns as $column) {
@@ -87,8 +93,7 @@ final readonly class MatrixViewBuilder
             $cells[] = $this->cell($cell, $column, $tints[$column->key] ?? '');
         }
 
-        return new MatrixViewRow(
-            $row->departmentUuid,
+        return new HeatRow(
             $row->departmentName,
             $row->mark,
             $cells,
@@ -97,40 +102,30 @@ final readonly class MatrixViewBuilder
         );
     }
 
-    private function cell(MatrixCell $cell, MatrixColumn $column, string $tint): MatrixViewCell
+    private function cell(MatrixCell $cell, MatrixColumn $column, string $tint): HeatCell
     {
         // A COLUMN THAT IS NOT THIS DEPARTMENT'S. Not a nought, not a
         // silence — a question this department was never asked.
         if ($cell->notMine) {
-            return new MatrixViewCell(
-                CellKind::Blank,
-                word: 'not its topic',
+            return HeatCell::blank(
+                'not its topic',
                 title: \sprintf("%s is not one of this department\u{2019}s topics", $column->label),
             );
         }
 
         if ($cell->isMarked()) {
-            return new MatrixViewCell(
-                CellKind::Marks,
-                marks: array_map(self::chip(...), $cell->marks),
-                title: $column->caption,
-            );
+            return HeatCell::marks(array_map(self::chip(...), $cell->marks), $column->caption);
         }
 
         // A MODULE THAT HAS PUBLISHED NOTHING. There is a module and it
         // is silent, which is not the same as a nought it measured.
         if (null === $cell->value) {
-            return new MatrixViewCell(
-                CellKind::Blank,
-                word: 'no figure',
-                title: 'No figure to read',
-            );
+            return HeatCell::blank('no figure', 'No figure to read');
         }
 
-        return new MatrixViewCell(
-            CellKind::Figure,
-            tint: $tint,
-            figure: Figures::figure($cell->value),
+        return HeatCell::figure(
+            Figures::figure($cell->value),
+            tint: HeatTint::tryFrom($tint),
             unit: $column->unit,
             delta: Figures::delta($cell->delta),
             deltaTone: Figures::tone($cell->delta, $column->polarity),
@@ -140,9 +135,9 @@ final readonly class MatrixViewBuilder
         );
     }
 
-    private static function chip(CellMark $mark): CellChip
+    private static function chip(CellMark $mark): HeatChip
     {
-        return new CellChip(
+        return new HeatChip(
             $mark->label,
             match ($mark->reads) {
                 ColumnPolarity::Up => 'good',

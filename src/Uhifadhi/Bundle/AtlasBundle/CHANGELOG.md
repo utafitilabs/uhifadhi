@@ -8,6 +8,14 @@
 
 Not released yet.
 
+ * THE HEAT TABLE IS AN ATLAS COMPONENT: `atlas_heatmap(HeatTable, openLabel, openMark)` draws
+   the sortable head with each column's published total, the band rules, a row per thing and a
+   heat cell per column — five tints and the dashed absence, a figure with its movement and
+   sparkline, a run of state chips, or a blank in words — and `atlas_heat_legend(HeatLegend)`
+   the legend under it. Its models are `Model\Heatmap\*` and its rules are its own sheet,
+   `heat.css` (`AtlasBundle::HEAT_STYLESHEET`), published to every head beside the other three.
+   Documented in docs/components.md, "The heat table and its legend"
+
  * RANKED BARS ARE AN ATLAS COMPONENT: `atlas_bars(RankedBars)` draws the design's rows — a
    162px label, a 14px track, the bold figure and its note, a quiet row dimmed, the optional
    rest beside the fill and the dot key under them — with every width worked out by

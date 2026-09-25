@@ -43,6 +43,6 @@ final readonly class AtlasStylesheets implements StylesheetSourceInterface
     /** @return list<string> */
     public function stylesheets(): array
     {
-        return [AtlasBundle::STYLESHEET, AtlasBundle::CHART_STYLESHEET, AtlasBundle::CALENDAR_STYLESHEET];
+        return [AtlasBundle::STYLESHEET, AtlasBundle::CHART_STYLESHEET, AtlasBundle::CALENDAR_STYLESHEET, AtlasBundle::HEAT_STYLESHEET];
     }
 }

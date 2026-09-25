@@ -105,6 +105,24 @@ final class ComponentSheetsTest extends TestCase
     }
 
     /**
+     * THE HEAT TABLE'S TINTS AND ITS LEGEND are in its own sheet, the five
+     * places and the dashed absence — and the performance sheet that drew
+     * them keeps no copy.
+     */
+    public function testTheHeatSheetCarriesTheTintsAndTheLegendAndTeamNoCopy(): void
+    {
+        $heat = self::sheet('heat.css');
+
+        self::assertMatchesRegularExpression('/\.hcell\.h5\s*\{[^}]*--c-acc\)\) 22%/', $heat);
+        self::assertMatchesRegularExpression('/\.hcell\.h1\s*\{[^}]*--c-fail\)\) 11%/', $heat);
+        self::assertMatchesRegularExpression('/\.hcell\.h0\s*\{[^}]*border-style:\s*dashed/', $heat);
+        self::assertMatchesRegularExpression('/\.legend \.sw\.h0\s*\{[^}]*dashed/', $heat);
+
+        $performance = (string) file_get_contents(\dirname(new \ReflectionClass(\Uhifadhi\Bundle\TeamBundle\TeamBundle::class)->getFileName() ?: '').'/public/performance.css');
+        self::assertDoesNotMatchRegularExpression('/^\.(hcell|legend|cmark|heat|dept|sg)\b/m', $performance);
+    }
+
+    /**
      * ALL THREE ARE PUBLISHED TO THE SHELL, THE MAP INCLUDED.
      *
      * THE DEFECT THIS CLOSES, and it had recurred for a year: "a page that
@@ -121,7 +139,7 @@ final class ComponentSheetsTest extends TestCase
         $published = new AtlasStylesheets()->stylesheets();
 
         self::assertSame(
-            [AtlasBundle::STYLESHEET, AtlasBundle::CHART_STYLESHEET, AtlasBundle::CALENDAR_STYLESHEET],
+            [AtlasBundle::STYLESHEET, AtlasBundle::CHART_STYLESHEET, AtlasBundle::CALENDAR_STYLESHEET, AtlasBundle::HEAT_STYLESHEET],
             $published,
         );
     }

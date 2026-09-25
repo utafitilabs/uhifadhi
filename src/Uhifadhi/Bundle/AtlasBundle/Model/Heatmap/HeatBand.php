@@ -11,22 +11,19 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Bundle\TeamBundle\Performance;
+namespace Uhifadhi\Bundle\AtlasBundle\Model\Heatmap;
 
 /**
- * THE DEPARTMENTS A PLACING IS MADE AMONG: org-wide ones, or one area's.
- *
- * It is a band and not a heading: the rows under it are ranked against
- * each other and against nobody else, and the page draws the boundary so
+ * THE ROWS A PLACING IS MADE AMONG. A band and not a heading: the rows under
+ * it are placed against each other and nobody else, and the rule is drawn so
  * a reader can see what a tint was measured against.
  */
-final readonly class MatrixBand
+final readonly class HeatBand
 {
-    /** @param list<MatrixViewRow> $rows */
+    /** @param list<HeatRow> $rows */
     public function __construct(
         public string $name,
         public array $rows,
-        /** What the band says about itself — "each reads every area". */
         public string $note = '',
     ) {
     }

@@ -156,6 +156,22 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
         self::assertContains('Staffing', array_map(static fn (string $c): string => trim(explode("\n", $c)[0]), $columns));
     }
 
+    /**
+     * THE TABLE AND ITS LEGEND ARE THE ATLAS'S HEAT TABLE, served inside the
+     * card's scroll and sort: four swatches, the dashed absence last, the
+     * sentence that says what a tint is not, and the way into a row wearing
+     * its chevron.
+     */
+    public function testTheBoardsTableAndLegendAreTheAtlasHeatTable(): void
+    {
+        $crawler = $this->page();
+
+        self::assertCount(1, $crawler->filter('#tp-heat .hscroll[data-controller="uhifadhi--team-bundle--matrix"] > table.tbl.heat'));
+        self::assertSame(['h5', 'h3', 'h1', 'h0'], $crawler->filter('#tp-heat .pfc-ft .legend .sw')->each(static fn (Crawler $c): string => trim(str_replace('sw', '', (string) $c->attr('class')))));
+        self::assertStringContainsString('not drawn where fewer than', $crawler->filter('#tp-heat .pfc-ft .legend .d')->text());
+        self::assertGreaterThan(0, $crawler->filter('#tp-heat td.perf-open a.open-btn svg')->count());
+    }
+
     /** Every department is a row, in its own band, with the way into it. */
     public function testEveryDepartmentIsARowWithTheWayIntoIt(): void
     {

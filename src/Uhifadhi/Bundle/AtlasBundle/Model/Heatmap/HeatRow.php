@@ -11,19 +11,18 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Bundle\TeamBundle\Performance;
+namespace Uhifadhi\Bundle\AtlasBundle\Model\Heatmap;
 
-/** ONE DEPARTMENT'S ROW, drawn. */
-final readonly class MatrixViewRow
+/** ONE ROW: the thing, its mark, a cell per column in the columns' order, and the way into it. */
+final readonly class HeatRow
 {
-    /** @param list<MatrixViewCell> $cells in the columns' order, one per column */
+    /** @param list<HeatCell> $cells */
     public function __construct(
-        public string $uuid,
         public string $name,
         public string $mark,
         public array $cells,
         public ?string $url = null,
-        /** What the row says under its name — "3 positions · org-wide". */
+        /** What the row says under its name. */
         public string $note = '',
     ) {
     }

@@ -37,7 +37,7 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
 
     protected static function ownStylesheets(): array
     {
-        return ['map.css', 'chart.css', 'calendar.css'];
+        return ['map.css', 'chart.css', 'calendar.css', 'heat.css'];
     }
 
     /**

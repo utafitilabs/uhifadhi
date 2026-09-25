@@ -8,6 +8,14 @@
 
 Not released yet.
 
+ * A TOPIC'S MATRIX IS THE ATLAS'S HEAT TABLE: `render_matrix()` keeps the card, the scroll
+   and the sort and draws the table with `atlas_heatmap()` and the legend with
+   `atlas_heat_legend()`. `MatrixViewBuilder::build()` returns the atlas's `HeatTable`;
+   `MatrixView`, `MatrixViewCell`, `MatrixViewColumn`, `MatrixViewRow`, `MatrixBand`,
+   `CellChip` and `CellKind` are removed, and the table, cell and legend rules left
+   performance.css for the atlas's heat.css. No team template writes a heat cell or a legend
+   (`VisualsAreTheAtlasTest`)
+
  * THE FIVE RANKINGS ARE THE ATLAS'S BARS: People by department and Positions held and
    unheld on the Team overview, and the staffing, scope and modules widgets on the
    Departments overview, are `atlas_bars()`. People by department keeps a department nobody

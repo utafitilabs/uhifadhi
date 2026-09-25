@@ -105,6 +105,14 @@ final class MapExtension extends AbstractExtension
              */
             new TwigFunction('atlas_bars', [BarsRuntime::class, 'renderBars'], ['is_safe' => ['html']]),
             new TwigFunction('atlas_key', [BarsRuntime::class, 'renderKey'], ['is_safe' => ['html']]),
+
+            /*
+             * AND A HEAT TABLE, with the legend it is read by: two calls,
+             * because a card puts the table in its body and the legend in
+             * its foot.
+             */
+            new TwigFunction('atlas_heatmap', [HeatmapRuntime::class, 'renderTable'], ['is_safe' => ['html']]),
+            new TwigFunction('atlas_heat_legend', [HeatmapRuntime::class, 'renderLegend'], ['is_safe' => ['html']]),
         ];
     }
 

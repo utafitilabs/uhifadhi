@@ -1310,3 +1310,18 @@ and the rules are unchanged. Draw them through the atlas instead: build `Bar` ro
 shell's sheets under `linkedStylesheets()` adds the atlas's `chart.css` there, or the class
 sweep reports `.sxbar` as shipped by nobody — **storage-module** writes the rows on its Files
 overview and storage page and is in that position.
+
+## A topic's matrix is the atlas's heat table
+
+**What changed.** `render_matrix()` draws its table with `atlas_heatmap()` and its legend with
+`atlas_heat_legend()`. `Uhifadhi\Bundle\TeamBundle\Performance\MatrixViewBuilder::build()`
+returns `Uhifadhi\Bundle\AtlasBundle\Model\Heatmap\HeatTable`, and these Team classes are
+removed: `MatrixView`, `MatrixViewCell`, `MatrixViewColumn`, `MatrixViewRow`, `MatrixBand`,
+`CellChip`, `CellKind` (read `HeatTable`, `HeatCell`, `HeatColumn`, `HeatRow`, `HeatBand`,
+`HeatChip`, `HeatCellKind`). `.heat`, `.hcell`, `.cmark`, `.legend`, `.sg`, `.dept`,
+`.thtot` and `.sortmark` moved from `bundles/team/performance.css` to
+`bundles/atlas/heat.css`, which every head carries.
+
+**What to change in a module.** A module that publishes a `TopicMatrix` changes nothing. One
+that linked `heat.css` by hand deletes the link: the conformance rule refuses it, as it does the
+other atlas sheets.

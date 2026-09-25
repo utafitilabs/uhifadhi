@@ -11,19 +11,22 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Bundle\TeamBundle\Performance;
+namespace Uhifadhi\Bundle\AtlasBundle\Model\Heatmap;
 
-/** A WHOLE MATRIX, ready to draw. */
-final readonly class MatrixView
+/**
+ * A HEAT TABLE, ready to draw: a sortable head, bands of rows, a heat cell per
+ * column. Drawn by `atlas_heatmap()`; the legend that reads it is
+ * {@see HeatLegend}.
+ */
+final readonly class HeatTable
 {
     /**
-     * @param list<MatrixViewColumn> $columns
-     * @param list<MatrixBand>       $bands
+     * @param list<HeatColumn> $columns
+     * @param list<HeatBand>   $bands
      */
     public function __construct(
         public array $columns,
         public array $bands,
-        public string $caption = '',
     ) {
     }
 
@@ -32,7 +35,6 @@ final readonly class MatrixView
         return [] === $this->bands;
     }
 
-    /** How many departments the matrix draws, across every band. */
     public function rowCount(): int
     {
         $rows = 0;

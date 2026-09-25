@@ -628,6 +628,7 @@ abstract class VocabularyConformanceTestCase extends TestCase
             'the map sheet' => ['bundles/atlas/map.css', 'AtlasBundle::STYLESHEET'],
             'the chart sheet' => ['bundles/atlas/chart.css', 'AtlasBundle::CHART_STYLESHEET'],
             'the calendar sheet' => ['bundles/atlas/calendar.css', 'AtlasBundle::CALENDAR_STYLESHEET'],
+            'the heat sheet' => ['bundles/atlas/heat.css', 'AtlasBundle::HEAT_STYLESHEET'],
         ];
     }
 

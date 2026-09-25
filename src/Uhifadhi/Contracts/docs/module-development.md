@@ -1404,6 +1404,7 @@ valid.
 | `People\PersonFacetProviderInterface` | `uhifadhi.person_facets` | a person's position and department, for a list somewhere else |
 | `People\PersonPostingProviderInterface` | `uhifadhi.person_postings` | where a person works, for their own page |
 | `People\PersonRecordCellProviderInterface` | `team.record.cells` | a card on a person's record, after the grants ledger |
+| `People\PeopleFacetProviderInterface` | `uhifadhi.people_facets` | one dropdown on the People register, its options carrying the people they apply to |
 | `Area\StationDirectoryInterface` | `uhifadhi.station_directory` | every station and who stands at each, across every area |
 | `Storage\FileSourceInterface` | `uhifadhi.file_source` | that this module stores files, and its word for one |
 
@@ -1490,6 +1491,52 @@ The card is your **whole** markup — one house card, `.c` with its `.tab`, writ
 shell's sheet and your own — and the page adds nothing around it and reads nothing out of it. It
 does not ask whether the viewer may see your fact: a card that said "you may not see this" would be
 a card about the viewer, not about the person, so the gate is yours and the answer is null.
+
+### A dropdown on the People register
+
+The People register — `/team` — filters by position, department, station, rank and account, all
+facts whoever owns people can read. A module that holds a fact about people the register cannot
+read (whether each is at their post today, whether each is out on patrol) contributes **one
+dropdown** through `People\PeopleFacetProviderInterface`, tagged `uhifadhi.people_facets`. The
+register draws every contributed dropdown in the bar, in the order the container yields the
+providers, and every one filters the rows and the CSV export exactly as the register's own do.
+
+```php
+final readonly class PatrolPeopleFacet implements PeopleFacetProviderInterface
+{
+    public function __construct(private PatrolRepository $patrols)
+    {
+    }
+
+    public function facetFor(array $userUuids): ?PeopleFacet
+    {
+        // THE OPTIONS CARRY THE PEOPLE THEY APPLY TO: the count the register
+        // draws and the rows the option leaves are one derivation.
+        $out = $this->patrols->personUuidsOutNow($userUuids);
+
+        return new PeopleFacet('patrol', 'patrol', [
+            new PeopleFacetGroup(null, [
+                new PeopleFacetOption('out', 'On patrol', $out),
+                new PeopleFacetOption('in', 'Not on patrol', array_values(array_diff($userUuids, $out))),
+            ]),
+        ]);
+    }
+}
+```
+
+```php
+// config/services.php — tagged by hand, because a reusable bundle is not autoconfigured
+$services->set('patrol.people_facet', PatrolPeopleFacet::class)
+    ->args([service(PatrolRepository::class)])
+    ->tag(PeopleFacetProviderInterface::TAG);
+```
+
+The facet's `key` is the query parameter the register writes (`?patrol=out`), so it is spelt like
+one and must not be a key the register already owns — `q`, `tier`, `position`, `department`,
+`station`, `rank`, `state` and `page` are refused. The `label` heads the menu and reads in the
+closed chip as "any <label>". A run gets a `head` when the menu needs one over it; one run wants
+none. Null from `facetFor()` draws no dropdown at all — a provider with no ground to read yet says
+so rather than offering an empty menu.
 
 ### Publishing a topic on the performance page
 

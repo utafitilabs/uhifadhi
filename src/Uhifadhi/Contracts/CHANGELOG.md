@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * `People\PeopleFacetProviderInterface` — one dropdown a module puts on the
+   People register, tagged `uhifadhi.people_facets`. Its `PeopleFacet` carries
+   the query key, the menu's word and option runs (`PeopleFacetGroup`) whose
+   options (`PeopleFacetOption`) carry the people they apply to, so the count
+   the register draws and the rows the option leaves are one fact. Null is
+   "nothing to filter by", and draws nothing
  * `ModuleProviderInterface::description()` — what the module is, in one
    sentence a stranger understands, or null for a module that says nothing
    beyond its name. `ModuleProviderTrait` answers null, so a provider that

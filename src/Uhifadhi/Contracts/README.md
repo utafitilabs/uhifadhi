@@ -103,6 +103,10 @@ composer check   # cs:check -> phpstan (max) -> require-check -> the suite
 - **[`Entity\AreaInterface`](docs/area-contract.md)** — the three questions it asks (id, name, uuid),
   how `resolve_target_entities` maps a relation to the real area at runtime, and how to enumerate
   areas through the ORM without depending on AreaBundle.
+- **[A dropdown on the People register](docs/module-development.md#a-dropdown-on-the-people-register)** —
+  `People\PeopleFacetProviderInterface`, tagged `uhifadhi.people_facets`: the one dropdown a module
+  adds to the People register, its options carrying the people they apply to so the count and the
+  filter are one fact.
 - **[The devkit contracts](docs/devkit-contracts.md)** — `Devkit\ContentProviderInterface` and
   `Devkit\CommandProviderInterface`: the require-dev firewall, why they live here and not in devkit,
   why a command is a descriptor-plus-closure rather than a `symfony/console` `Command`, and why that

@@ -119,7 +119,7 @@
                     </div>
                 </div>
                 {% if usesRanks and ranks is not empty %}{{ _self.rank_history(ranks) }}{% endif %}
-                <div class="pcard-foot">reaches <b>{{ reach }}</b> {{ reach == 1 ? 'person' : 'people' }}<span>&middot;</span><b>{{ placement and not placement.allDepartments ? placement.departments|length : departmentsTotal }}</b> of {{ departmentsTotal }} departments<span class="sp"></span>{% if door('directory.manage') %}<a class="ov-open" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}">Change the position{% if usesRanks %} or rank{% endif %} {{ ux_icon('shell:chevron-right') }}</a>{% endif %}</div>
+                <div class="pcard-foot">reaches <b>{{ reach }}</b> {{ reach == 1 ? 'person' : 'people' }}<span>&middot;</span><b>{{ placement and not placement.allDepartments ? placement.departments|length : departmentsTotal }}</b> of {{ departmentsTotal }} departments<span class="sp"></span>{% if door('directory.manage') %}<a class="ov-open" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}#position">Change the position{% if usesRanks %} or rank{% endif %} {{ ux_icon('shell:chevron-right') }}</a>{% endif %}</div>
             {% else %}
                 <div class="pcard"><div class="pmx-zero"><span><b>Holds no position.</b> Sign-in only &middot; nothing granted, read included</span></div>{% if usesRanks %}{{ _self.rank_line(rankNow) }}{% endif %}</div>
                 {% if usesRanks and ranks is not empty %}{{ _self.rank_history(ranks) }}{% endif %}

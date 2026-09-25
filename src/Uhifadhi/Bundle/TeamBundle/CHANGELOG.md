@@ -27,6 +27,14 @@ Not released yet.
    positions in its tab and keeps a department with no position as a dimmed row; modules per
    department are read against the department that reads the most. `Model\SectionBar` is
    removed. No team template writes a `.sxbar` row (`VisualsAreTheAtlasTest`)
+ * THE RANK IS SET INSIDE THE POSITION CARD (ruled 2026-09-25): on a person's
+   configure page the rank select and its From date sit under the assigned
+   position, and `POST /team/{uuid}/position` writes the seat, the placement
+   and the rank in one save (`rank`, `since`; a request naming no `rank`
+   keeps the one held). The Rank card and `POST /team/{uuid}/rank` are gone.
+   The card is `#position`, and the record's "Change the position or rank"
+   door opens it.
+
  * THE PEOPLE REGISTER FILTERS BY STATION AND BY WHAT A MODULE CONTRIBUTES
    (ruled 2026-09-25). The Station dropdown lists where people stand,
    read through the posting seam, grouped by area once postings span

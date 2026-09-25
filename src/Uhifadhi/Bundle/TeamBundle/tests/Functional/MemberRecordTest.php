@@ -481,7 +481,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         self::assertContains('Kilimani Crater', $pills);
         self::assertContains('Ecology', $pills);
         self::assertStringContainsString('Change the position', $position->filter('.pcard-foot a.ov-open')->text());
-        self::assertStringEndsWith('/configure', (string) $position->filter('.pcard-foot a.ov-open')->attr('href'));
+        self::assertStringEndsWith('/configure#position', (string) $position->filter('.pcard-foot a.ov-open')->attr('href'));
 
         // THE LEDGER: verbs, where, and through which position — per concern.
         $ledger = $crawler->filter('.recgrid .col')->first()->filter('.c')->eq(1);

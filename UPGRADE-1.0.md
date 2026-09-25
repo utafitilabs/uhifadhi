@@ -158,6 +158,47 @@ for the new controller, adds the entries itself:
 A controller a host never enables is a file nobody loads, and the button is
 drawn and dead.
 
+## The rank is set on the Position card
+
+**What changed** (ruled 2026-09-25). A person's rank is written on their
+configure page inside the **Position** card, under the assigned position: the
+rank select and its **From** date post with the seat, the placement and the
+departments in the card's one save. The card is `#position` and reads
+"Position and rank" while the organization uses ranks; the record's "Change
+the position or rank" door opens it.
+
+| Route | What it is now |
+| --- | --- |
+| `POST /team/{uuid}/position` (`team_member_position`) | the one write. Two more fields: `rank` (a rank's uuid, or empty for "no rank") and `since` (`Y-m-d`). A request that names no `rank` field keeps the rank that stands; a retired rank, or a date before the day the current rank started, refuses the whole save and writes nothing. |
+| `POST /team/{uuid}/rank` (`team_member_rank`) | **gone.** There is no rank card and no rank route; the address answers 404. |
+
+`MemberController::rank()` is gone with it. An installation that posted to the
+rank route by hand posts `rank` and `since` to the position route instead.
+
+## The People register filters by station and by what a module contributes
+
+**What changed** (ruled 2026-09-25). The bar at `/team` has two more grouped
+dropdowns. **Station** lists where people stand, read through
+`Contracts\People\PersonPostingProviderInterface` — grouped by area once
+postings span several, with **Not stationed** last — and writes `?station=`.
+After Rank come the dropdowns modules contribute through the new seam
+`Contracts\People\PeopleFacetProviderInterface`, tag `uhifadhi.people_facets`;
+each writes its own key (the area's is **Status**, `?status=`). Both narrow the
+rows and the CSV export; the CSV's columns are the table's and gain none.
+
+**For a module.** Implement `PeopleFacetProviderInterface::facetFor(array
+$userUuids): ?PeopleFacet` and tag the service `uhifadhi.people_facets` by
+hand. The facet's `key` is a query parameter name and may not be one the
+register owns (`q`, `tier`, `position`, `department`, `station`, `rank`,
+`state`, `page`) — the register refuses the container with a `LogicException`
+naming the key. Every option carries the people it applies to, so the count
+and the filter are one fact; null draws no dropdown.
+
+**`RosterQuery`** carries `station`, `facets` (the contributed choices, key →
+value), and `only` (the people a seam choice leaves; null when none is chosen);
+`fromRequest()` takes the contributed keys as its second argument. The area
+bundle's `People\AreaPeopleStatus` is the first provider.
+
 ## A department is a placement, not an owner
 
 **What changed** (ruled 2026-09-21). A position used to look as though it

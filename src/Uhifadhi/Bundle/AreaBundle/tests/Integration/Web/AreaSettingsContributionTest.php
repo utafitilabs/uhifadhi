@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaFigure;
@@ -22,6 +23,7 @@ use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetup;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetupCheck;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetupDecision;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaSteps;
+use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Contracts\Settings\CheckVerdict;
 use Uhifadhi\Contracts\Settings\SettingsStep;
 
@@ -64,6 +66,55 @@ final class AreaSettingsContributionTest extends WebTestCase
         self::assertSame(1, $matrix->rows[0]->zones, 'The row carries the area\'s own zone count.');
         self::assertTrue($matrix->rows[0]->isLive());
         self::assertFalse($matrix->rows[1]->isLive(), 'Registered and empty is a row, not an absence.');
+    }
+
+    /**
+     * A COLUMN SAYS WHAT ITS MODULE IS in the module's own line; a module that
+     * says nothing beyond its name is quoted by what it reads from instead.
+     */
+    public function testAColumnSaysWhatTheModuleIsInItsOwnLine(): void
+    {
+        $this->boot();
+        $this->aLiveArea();
+
+        self::assertSame('GPS field tracks', $this->matrix()->moduleMatrix()->columns[0]->description);
+
+        $patrols = $this->em->getRepository(Module::class)->findOneBy(['slug' => 'patrols']);
+        self::assertNotNull($patrols);
+        $patrols->setDescription('Ranger patrols: tracks, observations and station duty.');
+        $this->em->flush();
+
+        self::assertSame(
+            'Ranger patrols: tracks, observations and station duty.',
+            $this->matrix()->moduleMatrix()->columns[0]->description,
+        );
+    }
+
+    /**
+     * THE SETTINGS OVERVIEW'S "WHAT A MODULE ADDS" CARD quotes each module in
+     * its own line, over HTTP; a module that says nothing beyond its name is
+     * quoted by what it reads from, and no row is left with an empty cell.
+     */
+    public function testTheSettingsOverviewSaysWhatEachModuleAdds(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->aLiveArea();
+        $this->switchOn($area, 'incidents', 'Incidents');
+        $patrols = $this->em->getRepository(Module::class)->findOneBy(['slug' => 'patrols']);
+        self::assertNotNull($patrols);
+        $patrols->setDescription('Ranger patrols: tracks, observations and station duty.');
+        $this->em->flush();
+
+        $this->browser()->request('GET', '/settings');
+        self::assertSame(200, $this->browser()->getResponse()->getStatusCode());
+        $card = $this->browser()->getCrawler()->filter('div.pgbody .grid.g3 > .c')->eq(1);
+
+        $cells = $card->filter('table.tbl tr')->each(
+            static fn (Crawler $row): array => $row->filter('td')->each(static fn (Crawler $td): string => trim($td->text())),
+        );
+        self::assertSame(['Patrols', 'Ranger patrols: tracks, observations and station duty.'], \array_slice($cells[0], 0, 2));
+        self::assertSame(['Incidents', 'GPS field tracks'], \array_slice($cells[1], 0, 2));
     }
 
     /** The figure is the matrix read as one card, never counted a second time. */

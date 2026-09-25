@@ -40,10 +40,11 @@ interface ModuleProviderInterface
     public function name(): string;
 
     /**
-     * WHAT THE MODULE IS, in one line a stranger understands — "Ranger patrols:
-     * tracks, observations and station duty." — or null for a module that says
-     * nothing beyond its name. The area's modules register prints it under the
-     * name; the tile and the sub-nav never do.
+     * WHAT THE MODULE IS, in one sentence a stranger understands — "Ranger
+     * patrols: tracks, observations and station duty." — or null for a module
+     * that says nothing beyond its name. The area's modules register prints it
+     * under the name, and the settings overview quotes it for what the module
+     * adds; the tile and the sub-nav never do.
      */
     public function description(): ?string;
 

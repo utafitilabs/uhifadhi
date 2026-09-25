@@ -448,6 +448,13 @@ final class WebKernel extends Kernel
         $routes->import(ShellBundle::CONFIGURE_ROUTES);
 
         /*
+         * THE SHELL'S SETTINGS SECTION, mounted as an installation mounts it.
+         * Its what-runs-where matrix is this bundle's contribution, so the
+         * suite reads it on the page that prints it.
+         */
+        $routes->import(ShellBundle::SETTINGS_ROUTES);
+
+        /*
          * A MODULE'S OWN PAGE, STOOD IN FOR. A tile links where the registry's entry
          * resolver names a route the application actually mounted; in a real
          * installation that is the patrol module's dashboard. This suite mounts

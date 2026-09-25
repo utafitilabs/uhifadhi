@@ -507,6 +507,7 @@ final class SightingsModuleProvider implements ModuleProviderInterface
 
     public function slug(): string        { return 'sightings'; }
     public function name(): string        { return 'Sightings'; }
+    public function description(): ?string { return 'Every animal seen in the field, and where.'; }
     public function category(): string    { return $this->category; }
     public function icon(): string        { return 'binoculars'; }  // a Lucide name
     public function entryRoute(): ?string { return 'sightings_area'; }
@@ -528,6 +529,14 @@ By convention a bundle provides exactly **one** module, named after itself. What
 the module — Sightings' surveys, its species list, its exports — is the module's own concern and
 never appears in this contract. If you find yourself wanting two providers, you probably want two
 bundles.
+
+### Say what the module is, in one sentence
+
+`description()` is one sentence a stranger understands, such as "Every animal seen in the field,
+and where." It is printed under the module's name on the area's **Configure › Modules** section and
+on the settings overview. Keep it under 160 characters, do not repeat the name, and do not restate
+`dataSource()`. The trait answers null, which draws no line at all. The rules and examples are in
+[`ModuleProviderInterface`](module-provider.md#the-one-sentence-that-says-what-the-module-is).
 
 ### The catalogue and per-area install
 

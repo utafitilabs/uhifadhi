@@ -66,17 +66,19 @@ final readonly class AreaModuleMatrix implements ModuleMatrixSourceInterface
                 continue;
             }
 
-            // WHAT IT SAYS IT IS ABOUT, IN ITS OWN WORDS. A module declares
-            // what it reads from when it registers, and quoting that is the
-            // only description of a module anything here may print: the
-            // alternative is a sentence somebody typed about somebody else's
-            // package, wrong the release after it was written.
-            $source = trim($module->getDataSource());
+            // WHAT IT SAYS IT IS, IN ITS OWN WORDS: the one line the module
+            // declares, else what it declares it reads from. Only the module's
+            // own words may be printed here; a sentence typed about somebody
+            // else's package is wrong the release after it was written.
+            $said = trim($module->getDescription() ?? '');
+            if ('' === $said) {
+                $said = trim($module->getDataSource());
+            }
 
             $columns[] = new ModuleColumn(
                 $slug,
                 $module->getName() ?? $slug,
-                description: '' === $source ? null : $source,
+                description: '' === $said ? null : $said,
             );
         }
 

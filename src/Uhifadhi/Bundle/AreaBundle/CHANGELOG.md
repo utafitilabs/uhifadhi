@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * the what-runs-where matrix quotes each module by the sentence it says it
+   is, `ModuleProviderInterface::description()`, and by what it reads from
+   where it says none, so the settings overview's "What a module adds" card
+   prints what a module adds
+
  * THE MODULES SECTION OF THE AREA'S CONFIGURE PAGE, at
    `/areas/{uuid}/configure/modules`: a register of the catalogue as the area
    holds it — one row per module, running rows first in the area's order,

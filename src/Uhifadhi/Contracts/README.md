@@ -53,6 +53,7 @@ final class SightingsModuleProvider implements ModuleProviderInterface
 
     public function slug(): string     { return 'sightings'; }
     public function name(): string     { return 'Sightings'; }
+    public function description(): ?string { return 'Every animal seen in the field, and where.'; }
     public function category(): string { return 'biodiversity'; }
     public function entryRoute(): ?string { return 'sightings_area'; }
 }

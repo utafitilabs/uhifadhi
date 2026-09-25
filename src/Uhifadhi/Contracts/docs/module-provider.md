@@ -6,14 +6,15 @@ distinction the platform draws between modules.
 ## Contents
 
 - [What the interface asks for](#what-the-interface-asks-for)
+- [The one sentence that says what the module is](#the-one-sentence-that-says-what-the-module-is)
 - [First, the tier: capability or infrastructure](#first-the-tier-capability-or-infrastructure)
 - [Installable and base (capability modules)](#installable-and-base-capability-modules)
 - [Why "base" and not "core"](#why-base-and-not-core)
 
 ## What the interface asks for
 
-Catalogue metadata (`slug`, `name`, `category`, `status`, `dataSource`, `pinned`, `position`,
-`icon`, `core`) plus the one capability beyond the legacy catalogue: **`entryRoute()`** — return `null`
+Catalogue metadata (`slug`, `name`, `description`, `category`, `status`, `dataSource`, `pinned`,
+`position`, `icon`, `base`) plus the one capability beyond the legacy catalogue: **`entryRoute()`** — return `null`
 to render through the host's generic module page (what every built-in does today), or a route
 name to own your pages (the host links with the area's uuid).
 
@@ -33,6 +34,7 @@ final class SightingsModuleProvider implements ModuleProviderInterface
 
     public function slug(): string     { return 'sightings'; }
     public function name(): string     { return 'Sightings'; }
+    public function description(): ?string { return 'Every animal seen in the field, and where.'; }
     public function category(): string { return 'biodiversity'; }
     public function entryRoute(): ?string { return 'sightings_area'; }
 }
@@ -41,6 +43,32 @@ final class SightingsModuleProvider implements ModuleProviderInterface
 The host autoconfigures every implementation (tag `uhifadhi.module`) and RegistryBundle's registry
 sync ingests them on the next cache warm-up. A module shipped as a *reusable bundle* is **not**
 autoconfigured — tag `uhifadhi.module` explicitly in your extension.
+
+## The one sentence that says what the module is
+
+`description()` is what the module is, in one sentence a stranger understands: somebody who has
+never used the module reads it and knows what switching it on gives an area. Write it in plain
+words, for that reader, not for the module's own team:
+
+| Reads well | Reads badly |
+|---|---|
+| Ranger patrols: tracks, observations and station duty. | Patrol module. |
+| Every photograph, document and track the area holds. | S3-backed file storage with retention policies. |
+| Who is on duty, where, and who checked in. | Roster v2 (see docs). |
+
+- **One sentence, at most 160 characters**, ending with a full stop. The catalogue row keeps it in a
+  column of that length.
+- **Not the name again.** The name stands beside it; a line that only repeats the name is no line.
+- **Not the data source.** `dataSource()` says what the module reads from; the description says
+  what it is.
+- **Null is allowed** and is what `ModuleProviderTrait` answers. A module that returns null says
+  nothing beyond its name, and no screen draws an empty line for it.
+
+`registry:sync` keeps the sentence on the module's catalogue row and refreshes it on every run, so
+a reworded sentence replaces the old one and a removed one is cleared. Two screens print it: the
+area's **Configure › Modules** section, under the module's name in its row, and the settings
+overview's **What a module adds** card, which falls back to `dataSource()` for a module that
+returns null. The tile and the sidebar never print it.
 
 ## First, the tier: capability or infrastructure
 

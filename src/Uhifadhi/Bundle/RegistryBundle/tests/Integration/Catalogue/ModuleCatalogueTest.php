@@ -102,6 +102,7 @@ final class ModuleCatalogueTest extends InstallationTestCase
         self::assertFalse($row->isPinned());
         self::assertSame('', $row->getDataSource(), 'no provenance line is an empty one, never a null in the tile');
         self::assertNull($row->getIcon(), 'no icon means the host default, decided at render time');
+        self::assertNull($row->getDescription(), 'a module that says nothing beyond its name has no line, not an empty one');
     }
 
     /**
@@ -116,5 +117,22 @@ final class ModuleCatalogueTest extends InstallationTestCase
         $this->install(['sightings' => ['name' => 'Wildlife sightings']], freshDatabase: false);
 
         self::assertSame('Wildlife sightings', $this->catalogue()->find('sightings')?->getName());
+    }
+
+    /**
+     * WHAT A MODULE IS, IN ONE LINE, is the provider's to say and the sync's to
+     * keep: a reworded line replaces the old one on the next sync, and a line
+     * the module stops saying is cleared rather than left behind.
+     */
+    public function testTheCatalogueRowKeepsTheLineTheModuleSaysItIs(): void
+    {
+        $this->install(['sightings' => ['description' => 'Every animal somebody saw, and where.']]);
+        self::assertSame('Every animal somebody saw, and where.', $this->catalogue()->find('sightings')?->getDescription());
+
+        $this->install(['sightings' => ['description' => 'Every animal seen in the field, and where.']], freshDatabase: false);
+        self::assertSame('Every animal seen in the field, and where.', $this->catalogue()->find('sightings')?->getDescription());
+
+        $this->install(['sightings'], freshDatabase: false);
+        self::assertNull($this->catalogue()->find('sightings')?->getDescription());
     }
 }

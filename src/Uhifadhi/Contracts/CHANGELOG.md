@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * `ModuleProviderInterface::description()` — what the module is, in one
+   sentence a stranger understands, or null for a module that says nothing
+   beyond its name. `ModuleProviderTrait` answers null, so a provider that
+   uses the trait keeps working unchanged
  * `Shell\NavGroup` — the four sidebar groups the shell draws, their meaning
    and their order, published as constants: Observatory (what the
    organization watches), Organization (what it is and holds), System (what

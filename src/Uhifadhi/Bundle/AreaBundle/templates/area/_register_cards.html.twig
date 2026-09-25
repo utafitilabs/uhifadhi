@@ -11,7 +11,7 @@
 
    THE CARD FACE is the area's real boundary outlined over a real Esri World
    Imagery snippet (a keyless `<img>`, rendered on demand — see
-   src/Model/AreaThumbnail.php). A boundary-less area shows the neutral ground.
+   the atlas's Model/Thumbnail.php, drawn by atlas_thumbnail()). A boundary-less area shows the neutral ground.
 
    Search, the filter pills with live counts and the fixed activity sort narrow
    the SAME rendered cards on the client — the register reads the same at four
@@ -40,12 +40,8 @@
                data-alerts="{{ row.hasAlerts ? '1' : '0' }}"
                data-activity="{{ row.activityRank }}">
                 <div class="ax-thumb{{ row.thumbnail.hasBoundary ? '' : ' none' }}">
-                    {% if row.thumbnail.hasBoundary %}
-                        {# The satellite ground — a keyless Esri export for the boundary bbox,
-                           rendered on demand — with the real gazetted outline over it. #}
-                        <img class="ax-sat" src="{{ row.thumbnail.imageUrl }}" alt="" loading="lazy" decoding="async">
-                        <svg class="ax-outline" viewBox="{{ constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\AreaThumbnail::VIEW_BOX') }}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="{{ row.thumbnail.path }}"/></svg>
-                    {% endif %}
+                    {# The satellite ground with the real gazetted outline over it — the atlas's. #}
+                    {{ atlas_thumbnail(row.thumbnail) }}
                     {% if row.isLive %}
                         <span class="ax-live"><i></i>live</span>
                         {% if row.hasAlerts %}

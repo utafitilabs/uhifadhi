@@ -186,6 +186,22 @@ final class AreaWidgetsTest extends WebTestCase
         self::assertStringContainsString('<path d="M', $body);
     }
 
+    /**
+     * THE FLAGSHIP'S FACE IS THE SAME ATLAS THUMBNAIL as a card's: the
+     * snippet as an image and the outline over it, not a background written
+     * on the page.
+     */
+    public function testTheFlagshipFaceIsTheAtlasThumbnail(): void
+    {
+        $this->boot();
+        $this->aLiveArea();
+
+        $body = $this->body('/areas/widgets');
+
+        self::assertMatchesRegularExpression('/<div class="ax-hero-map">\s*<img class="ax-sat" src="[^"]*World_Imagery[^"]*"[^>]*><svg class="ax-outline"/', $body);
+        self::assertDoesNotMatchRegularExpression('/class="ax-hero-map[^"]*" style=/', $body);
+    }
+
     /** A boundary-less area gets the neutral ground — no satellite snippet. */
     public function testABoundarylessAreaHasNoSatelliteSnippet(): void
     {

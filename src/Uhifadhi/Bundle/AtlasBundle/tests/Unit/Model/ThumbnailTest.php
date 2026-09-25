@@ -11,26 +11,26 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Bundle\AreaBundle\Tests\Unit\Model;
+namespace Uhifadhi\Bundle\AtlasBundle\Tests\Unit\Model;
 
 use PHPUnit\Framework\TestCase;
-use Uhifadhi\Bundle\AreaBundle\Model\AreaThumbnail;
+use Uhifadhi\Bundle\AtlasBundle\Model\Thumbnail;
 
 /**
  * THE CARD FACE, PROJECTED. Two halves are pinned here: the boundary outline,
  * projected into the face's viewBox, and the real Esri World Imagery snippet the
  * outline is drawn over — a keyless `<img>` export for the boundary's bbox, no
- * static-tile stitch and no cache (see {@see AreaThumbnail} and
+ * static-tile stitch and no cache (see {@see Thumbnail} and
  * {@see \Uhifadhi\Bundle\AreaBundle\Service\AreaThumbnailer}). Both, plus their honest
  * fallbacks for an area with no drawable geometry.
  */
-final class AreaThumbnailTest extends TestCase
+final class ThumbnailTest extends TestCase
 {
     private const string A_POLYGON = '{"type":"Polygon","coordinates":[[[-30.0,-3.6],[-29.0,-3.6],[-29.0,-2.8],[-30.0,-2.8],[-30.0,-3.6]]]}';
 
     public function testAnAreaWithNoBoundaryFallsBackToTheNeutralGround(): void
     {
-        $thumb = AreaThumbnail::neutral();
+        $thumb = Thumbnail::neutral();
 
         self::assertFalse($thumb->hasBoundary);
         self::assertNull($thumb->path);
@@ -41,9 +41,9 @@ final class AreaThumbnailTest extends TestCase
 
     public function testNullOrEmptyGeometryIsTheNeutralGround(): void
     {
-        self::assertFalse(AreaThumbnail::fromGeoJson(null)->hasBoundary);
-        self::assertFalse(AreaThumbnail::fromGeoJson('')->hasBoundary);
-        self::assertNull(AreaThumbnail::fromGeoJson(null)->imageUrl);
+        self::assertFalse(Thumbnail::fromGeoJson(null)->hasBoundary);
+        self::assertFalse(Thumbnail::fromGeoJson('')->hasBoundary);
+        self::assertNull(Thumbnail::fromGeoJson(null)->imageUrl);
     }
 
     /**
@@ -54,10 +54,10 @@ final class AreaThumbnailTest extends TestCase
      */
     public function testABoundaryCarriesAnEsriSatelliteUrlForItsBbox(): void
     {
-        $thumb = AreaThumbnail::fromGeoJson(self::A_POLYGON);
+        $thumb = Thumbnail::fromGeoJson(self::A_POLYGON);
 
         self::assertNotNull($thumb->imageUrl);
-        self::assertStringStartsWith(AreaThumbnail::ESRI_EXPORT, $thumb->imageUrl);
+        self::assertStringStartsWith(Thumbnail::ESRI_EXPORT, $thumb->imageUrl);
         // The World Imagery export, asked for as an image of the boundary's bbox.
         self::assertStringContainsString('World_Imagery', $thumb->imageUrl);
         self::assertStringContainsString('bbox=', $thumb->imageUrl);
@@ -68,18 +68,18 @@ final class AreaThumbnailTest extends TestCase
 
     public function testUnparseableGeometryFallsBackRatherThanThrows(): void
     {
-        self::assertFalse(AreaThumbnail::fromGeoJson('not json')->hasBoundary);
+        self::assertFalse(Thumbnail::fromGeoJson('not json')->hasBoundary);
     }
 
     /** A point and a line have no shape to frame — the card shows the neutral ground. */
     public function testAGeometryWithNoAreaIsTheNeutralGround(): void
     {
-        self::assertFalse(AreaThumbnail::fromGeoJson('{"type":"Point","coordinates":[-30.0,-3.6]}')->hasBoundary);
+        self::assertFalse(Thumbnail::fromGeoJson('{"type":"Point","coordinates":[-30.0,-3.6]}')->hasBoundary);
     }
 
     public function testABoundaryBecomesAClosedSvgPath(): void
     {
-        $thumb = AreaThumbnail::fromGeoJson(self::A_POLYGON);
+        $thumb = Thumbnail::fromGeoJson(self::A_POLYGON);
 
         self::assertTrue($thumb->hasBoundary);
         self::assertNotNull($thumb->path);
@@ -95,7 +95,7 @@ final class AreaThumbnailTest extends TestCase
      */
     public function testTheProjectedOutlineStaysInsideTheViewBox(): void
     {
-        $path = AreaThumbnail::fromGeoJson(self::A_POLYGON)->path;
+        $path = Thumbnail::fromGeoJson(self::A_POLYGON)->path;
         self::assertNotNull($path);
 
         preg_match_all('/-?\d+(?:\.\d+)?/', $path, $matches);
@@ -104,7 +104,7 @@ final class AreaThumbnailTest extends TestCase
 
         // The pairs alternate x, y; both stay within the box on their own axis.
         foreach ($numbers as $i => $n) {
-            $limit = 0 === $i % 2 ? AreaThumbnail::WIDTH : AreaThumbnail::HEIGHT;
+            $limit = 0 === $i % 2 ? Thumbnail::WIDTH : Thumbnail::HEIGHT;
             self::assertGreaterThanOrEqual(0, $n);
             self::assertLessThanOrEqual($limit, $n);
         }
@@ -118,7 +118,7 @@ final class AreaThumbnailTest extends TestCase
             .'[[[-29.7,-3.3],[-29.5,-3.3],[-29.5,-3.1],[-29.7,-3.1],[-29.7,-3.3]]]'
             .']}';
 
-        $path = AreaThumbnail::fromGeoJson($twoRings)->path;
+        $path = Thumbnail::fromGeoJson($twoRings)->path;
         self::assertNotNull($path);
         // Two rings means two move commands and two closes.
         self::assertSame(2, substr_count($path, 'M'));

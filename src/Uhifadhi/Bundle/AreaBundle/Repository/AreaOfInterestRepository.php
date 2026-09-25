@@ -59,7 +59,7 @@ class AreaOfInterestRepository extends SpatialEntityRepository
      * crossing outline by the coarseness.
      *
      * The geometry travels as GeoJSON text exactly as everywhere else in this
-     * bundle; {@see \Uhifadhi\Bundle\AreaBundle\Model\AreaThumbnail} projects it into the
+     * bundle; {@see \Uhifadhi\Bundle\AtlasBundle\Model\Thumbnail} projects it into the
      * card's viewBox.
      */
     public function stSimplifiedBoundary(int $id, float $tolerance): ?string

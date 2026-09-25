@@ -25,10 +25,8 @@
 {% if flagship %}
     {% set row = flagship.row %}
     <div class="c ax-hero">
-        <div class="ax-hero-map{{ row.thumbnail.hasBoundary ? '' : ' none' }}"{% if row.thumbnail.hasBoundary %} style="background-image:url('{{ row.thumbnail.imageUrl }}')"{% endif %}>
-            {% if row.thumbnail.hasBoundary %}
-                <svg class="ax-outline" viewBox="{{ constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\AreaThumbnail::VIEW_BOX') }}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="{{ row.thumbnail.path }}"/></svg>
-            {% endif %}
+        <div class="ax-hero-map{{ row.thumbnail.hasBoundary ? '' : ' none' }}">
+            {{ atlas_thumbnail(row.thumbnail) }}
             <span class="ax-live"><i></i>live now</span>
         </div>
         <div class="ax-hero-main">

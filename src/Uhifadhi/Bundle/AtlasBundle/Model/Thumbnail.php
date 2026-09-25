@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Bundle\AreaBundle\Model;
+namespace Uhifadhi\Bundle\AtlasBundle\Model;
 
 /**
  * THE FACE OF A REGISTER CARD — the area's boundary, framed to its own bounding
@@ -39,7 +39,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Model;
  * grows upward) so the shape is not drawn upside down. The Esri bbox, by
  * contrast, is in plain lon/lat degrees — the export projects it itself.
  */
-final readonly class AreaThumbnail
+final readonly class Thumbnail
 {
     /** The card face's coordinate space — a shallow landscape strip, the height of `.ax-thumb`. */
     public const int WIDTH = 320;

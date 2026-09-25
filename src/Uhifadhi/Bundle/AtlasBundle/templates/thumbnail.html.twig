@@ -1,0 +1,4 @@
+{# AN AREA'S FACE — the satellite snippet, and the boundary outline over it.
+   Rendered by Twig\ThumbnailRuntime — a surface writes {{ atlas_thumbnail(t) }}
+   inside a positioned frame of its own. #}
+<img class="ax-sat" src="{{ thumbnail.imageUrl }}" alt="" loading="lazy" decoding="async"><svg class="ax-outline" viewBox="{{ viewBox }}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="{{ thumbnail.path }}"/></svg>

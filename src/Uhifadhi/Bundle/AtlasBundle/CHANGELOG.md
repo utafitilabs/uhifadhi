@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * AN AREA'S FACE IS AN ATLAS COMPONENT: `atlas_thumbnail(Thumbnail)` draws the satellite
+   snippet for the boundary's box and the boundary outline over it, filling the caller's
+   frame; `Model\Thumbnail` projects the outline and builds the image address, and `.ax-sat`
+   and `.ax-outline` are map.css's. Documented in docs/components.md, "An area's face"
+
  * THE HEAT TABLE IS AN ATLAS COMPONENT: `atlas_heatmap(HeatTable, openLabel, openMark)` draws
    the sortable head with each column's published total, the band rules, a row per thing and a
    heat cell per column — five tints and the dashed absence, a figure with its movement and

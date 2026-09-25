@@ -1325,3 +1325,13 @@ removed: `MatrixView`, `MatrixViewCell`, `MatrixViewColumn`, `MatrixViewRow`, `M
 **What to change in a module.** A module that publishes a `TopicMatrix` changes nothing. One
 that linked `heat.css` by hand deletes the link: the conformance rule refuses it, as it does the
 other atlas sheets.
+
+## An area's face is the atlas's thumbnail
+
+**What changed.** `Uhifadhi\Bundle\AreaBundle\Model\AreaThumbnail` is
+`Uhifadhi\Bundle\AtlasBundle\Model\Thumbnail`, same constructors and properties, and a face
+is drawn with `atlas_thumbnail(thumbnail)` inside a positioned frame. `.ax-sat` and
+`.ax-outline` moved from `bundles/area/area.css` to `bundles/atlas/map.css`.
+
+**What to change.** Replace the class name in any `use` statement; replace a hand-written
+`<img class="ax-sat">` and `<svg class="ax-outline">` pair with the one call.

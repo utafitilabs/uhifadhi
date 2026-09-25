@@ -113,6 +113,9 @@ final class MapExtension extends AbstractExtension
              */
             new TwigFunction('atlas_heatmap', [HeatmapRuntime::class, 'renderTable'], ['is_safe' => ['html']]),
             new TwigFunction('atlas_heat_legend', [HeatmapRuntime::class, 'renderLegend'], ['is_safe' => ['html']]),
+
+            // AND AN AREA'S FACE: the satellite snippet and its boundary, static.
+            new TwigFunction('atlas_thumbnail', [ThumbnailRuntime::class, 'renderThumbnail'], ['is_safe' => ['html']]),
         ];
     }
 

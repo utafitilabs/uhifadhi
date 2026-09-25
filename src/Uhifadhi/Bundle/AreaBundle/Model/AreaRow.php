@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Model;
 
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AtlasBundle\Model\Thumbnail;
 
 /**
  * ONE AREA AS THE REGISTER DRAWS IT — a card: the entity's identity, the two
@@ -46,7 +47,7 @@ final readonly class AreaRow
         public AreaOfInterest $area,
         public int $areaKm2,
         public int $liveModules,
-        public AreaThumbnail $thumbnail,
+        public Thumbnail $thumbnail,
         public array $stats = [],
         public ?CardStat $liveNow = null,
         public int $alertCount = 0,

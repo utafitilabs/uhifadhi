@@ -40,6 +40,7 @@ their API once it settles.
 - [The sparkline](#the-sparkline)
 - [Ranked bars and the dot key](#ranked-bars-and-the-dot-key)
 - [The heat table and its legend](#the-heat-table-and-its-legend)
+- [An area's face](#an-areas-face)
 - [What a module must not do](#what-a-module-must-not-do)
 
 ## How a module gets a map
@@ -829,6 +830,27 @@ The table and the legend are two calls because a card puts them in two places. T
 sideways scroll and the sort are the caller's: the table carries what a sort controller reads
 (`th.sortable[data-sort]`, `td[data-v]`, `tr.pfscope`). The open door's mark is the caller's
 markup, since the atlas ships no icons.
+
+## An area's face
+
+The satellite snippet for a boundary's box with the boundary outlined over it — a register
+card's face, a flagship's ground. Static: one keyless image and one pre-projected path, no map.
+
+```php
+use Uhifadhi\Bundle\AtlasBundle\Model\Thumbnail;
+
+$face = Thumbnail::fromGeoJson($boundaryGeoJson);   // Thumbnail::neutral() where there is none
+```
+
+```twig
+<div class="my-frame">{{ atlas_thumbnail(face) }}</div>
+```
+
+The frame is the caller's and must be positioned: the image and the outline fill it
+(`.ax-sat`, `.ax-outline`, in map.css). The outline is projected into a 320×118 box
+(`Thumbnail::VIEW_BOX`), longitudes compressed by the cosine of the mid-latitude and the y axis
+flipped; the image is Esri's World Imagery export for the padded box. A face with no boundary
+draws nothing, and the frame's own neutral ground shows.
 
 ## What a module must not do
 

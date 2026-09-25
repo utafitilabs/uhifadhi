@@ -285,3 +285,19 @@
 /* A card that goes fullscreen with a bare frame inside it — a consumer that
    frames imagery without the plate — still fills the screen. */
 .c:fullscreen .viewer { height: auto; flex: 1; min-height: 0; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   AN AREA'S FACE — `atlas_thumbnail()`: the satellite snippet for the
+   boundary's box, and the boundary outline over it, both filling the
+   caller's positioned frame. Static: one image and one path, no map.
+   Design: areas.html (the register's card face and the flagship).
+   ════════════════════════════════════════════════════════════════════════ */
+.ax-sat { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.ax-outline { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ax-outline path {
+    fill: color-mix(in srgb, rgb(var(--c-acc)) 14%, transparent);
+    stroke: rgb(var(--c-acc));
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}

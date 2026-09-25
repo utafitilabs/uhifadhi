@@ -30,6 +30,7 @@ use Uhifadhi\Bundle\AtlasBundle\Twig\HeatmapRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapExtension;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\SparklineRuntime;
+use Uhifadhi\Bundle\AtlasBundle\Twig\ThumbnailRuntime;
 use Uhifadhi\Bundle\ShellBundle\Contract\StylesheetSourceInterface;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -314,6 +315,11 @@ final class AtlasBundle extends AbstractBundle
 
             // And the heat table and its legend: a table of divs, on Twig alone.
             $services->set('atlas.twig_heatmap_runtime', HeatmapRuntime::class)
+                ->args([service('twig')])
+                ->tag('twig.runtime');
+
+            // And an area's face: one image and one path, on Twig alone.
+            $services->set('atlas.twig_thumbnail_runtime', ThumbnailRuntime::class)
                 ->args([service('twig')])
                 ->tag('twig.runtime');
         }

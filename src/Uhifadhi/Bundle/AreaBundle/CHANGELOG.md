@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * AN AREA'S FACE IS THE ATLAS'S THUMBNAIL: the register's cards and the flagship draw
+   `atlas_thumbnail()`, the flagship's snippet an image like a card's rather than a background
+   on the page. `Model\AreaThumbnail` is the atlas's `Model\Thumbnail`, and `.ax-sat` and
+   `.ax-outline` left area.css for the atlas's map.css. No area template writes either
+   (`VisualsAreTheAtlasTest`)
+
  * the overview plate hands the area's boundary and zones to the atlas as a
    `Ground`, so every plate of the area — the overview's and a module's —
    draws the zones row and layer the same way; `AreaMapPayload::forArea()`

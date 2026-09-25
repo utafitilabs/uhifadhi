@@ -122,6 +122,18 @@ final class ComponentSheetsTest extends TestCase
         self::assertDoesNotMatchRegularExpression('/^\.(hcell|legend|cmark|heat|dept|sg)\b/m', $performance);
     }
 
+    /** AN AREA'S FACE is the map sheet's, and the area's sheet keeps no copy. */
+    public function testTheMapSheetCarriesTheThumbnailAndTheAreaNoCopy(): void
+    {
+        $map = self::sheet('map.css');
+
+        self::assertMatchesRegularExpression('/\.ax-sat\s*\{[^}]*object-fit:\s*cover/', $map);
+        self::assertMatchesRegularExpression('/\.ax-outline path\s*\{[^}]*stroke:\s*rgb\(var\(--c-acc\)\)/', $map);
+
+        $area = (string) file_get_contents(\dirname(new \ReflectionClass(\Uhifadhi\Bundle\AreaBundle\AreaBundle::class)->getFileName() ?: '').'/public/area.css');
+        self::assertDoesNotMatchRegularExpression('/^\.ax-(sat|outline)\b/m', $area);
+    }
+
     /**
      * ALL THREE ARE PUBLISHED TO THE SHELL, THE MAP INCLUDED.
      *

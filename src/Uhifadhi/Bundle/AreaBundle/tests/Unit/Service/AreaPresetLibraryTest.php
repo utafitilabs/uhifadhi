@@ -17,8 +17,8 @@ use PHPUnit\Framework\TestCase;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Model\AreaPresetRow;
 use Uhifadhi\Bundle\AreaBundle\Model\AreaRow;
-use Uhifadhi\Bundle\AreaBundle\Model\AreaThumbnail;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
+use Uhifadhi\Bundle\AtlasBundle\Model\Thumbnail;
 
 /**
  * HOW THE ATTENTION BOARD AND THE FLAGSHIP SORT AREAS — the pure grouping the
@@ -42,7 +42,7 @@ final class AreaPresetLibraryTest extends TestCase
             area: $area,
             areaKm2: 1000,
             liveModules: $liveModules,
-            thumbnail: AreaThumbnail::neutral(),
+            thumbnail: Thumbnail::neutral(),
             alertCount: $alertCount,
             lastActivity: $lastActivity,
         ));

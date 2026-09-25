@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Service;
 
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
-use Uhifadhi\Bundle\AreaBundle\Model\AreaThumbnail;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
+use Uhifadhi\Bundle\AtlasBundle\Model\Thumbnail;
 
 /**
  * THE REGISTER CARD'S FACE, PER AREA — the boundary framed to its own bounding
@@ -28,11 +28,11 @@ use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
  *
  *   - THE BOUNDARY OUTLINE. The stored geometry is simplified in the database (a
  *     card face resolves nothing finer) and projected into the card's viewBox in
- *     {@see AreaThumbnail}. It is the actual gazetted shape, so it already changes
+ *     {@see Thumbnail}. It is the actual gazetted shape, so it already changes
  *     the day the boundary is replaced.
  *   - THE SATELLITE RASTER GROUND. Not a static-tile stitch and not a cache — the
  *     bbox of the same simplified boundary becomes a keyless Esri World Imagery
- *     export URL ({@see AreaThumbnail::ESRI_EXPORT}), which the browser renders as
+ *     export URL ({@see Thumbnail::ESRI_EXPORT}), which the browser renders as
  *     a plain `<img>` on demand. This is the area page's own AreaCardService technique,
  *     ported: no server round-trip, no imagery service needed.
  *
@@ -52,13 +52,13 @@ final readonly class AreaThumbnailer
     {
     }
 
-    public function forArea(AreaOfInterest $area): AreaThumbnail
+    public function forArea(AreaOfInterest $area): Thumbnail
     {
         $id = $area->getId();
         if (!$area->hasBoundary() || null === $id) {
-            return AreaThumbnail::neutral();
+            return Thumbnail::neutral();
         }
 
-        return AreaThumbnail::fromGeoJson($this->areas->stSimplifiedBoundary($id, self::TOLERANCE));
+        return Thumbnail::fromGeoJson($this->areas->stSimplifiedBoundary($id, self::TOLERANCE));
     }
 }

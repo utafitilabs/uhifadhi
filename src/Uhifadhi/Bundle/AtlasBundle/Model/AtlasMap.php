@@ -101,6 +101,12 @@ final class AtlasMap
     /** How close the plate may come to a subject with no extent of its own. */
     private ?int $subjectZoom = null;
 
+    /**
+     * WHERE THE LIVE MARKS KEEP COMING FROM after the page is drawn — the
+     * hub and the topics, or nothing, which is the ordinary plate.
+     */
+    private ?LiveStream $live = null;
+
     /** @var array<string, mixed> */
     private array $extra = [];
 
@@ -168,6 +174,23 @@ final class AtlasMap
         foreach (LiveMarks::key($presence, $withoutPosition) as $row) {
             $this->addLegendItem($row);
         }
+
+        return $this;
+    }
+
+    /**
+     * KEEP THE LIVE MARKS MOVING: the hub the browser can reach and the topics
+     * to hold open on it. The plate subscribes with credentials and each
+     * frame moves, adds or removes one mark of the live layer; the legend's
+     * counts follow.
+     *
+     * The builder that knows the area states this; the atlas carries two
+     * strings and asks nothing about what a topic means. One stream per
+     * plate: a second call replaces the first.
+     */
+    public function liveStream(LiveStream $stream): self
+    {
+        $this->live = $stream;
 
         return $this;
     }
@@ -294,6 +317,7 @@ final class AtlasMap
      *     fullscreen: bool,
      *     fit: bool,
      *     subject: array{geojson: array<string, mixed>, zoom: int|null}|null,
+     *     live: array{hub: string, topics: list<string>}|null,
      * }
      */
     public function toArray(): array
@@ -310,6 +334,7 @@ final class AtlasMap
             'subject' => null === $this->subject
                 ? null
                 : ['geojson' => $this->subject, 'zoom' => $this->subjectZoom],
+            'live' => $this->live?->toArray(),
         ];
     }
 

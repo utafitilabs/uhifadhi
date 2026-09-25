@@ -29,6 +29,16 @@ Not released yet.
    chart.css's, and the key's dots wear classes (`.sxdot.v`, `.sxdot.b`) rather than a colour
    on the page. Server-drawn, on Twig alone. Documented in docs/components.md, "Ranked bars
    and the dot key"
+ * THE LIVE MARKS KEEP MOVING: `AtlasMap::liveStream(LiveStream)` hands the
+   plate a Mercure hub's public address and the topics to hold open
+   (`extra.atlas.live`), and the plate opens one credentialed `EventSource`
+   on them; each frame — `LiveMarks::frame()`, the live layer's own feature
+   with `at` and `staleAfterSeconds` added, or `LiveMarks::gone()` — moves,
+   adds or removes one mark and recounts the legend; the age labels and the
+   stale state are re-read every thirty seconds while a stream is open. A
+   key row in the legend wears `data-atlas-shape`. Without a stream the plate
+   reads as the page drew it. Documented in docs/components.md, "The live
+   stream"
 
  * THE AREA'S GROUND IS AN ATLAS COMPONENT: `AtlasMap::ground(Ground)` takes
    the boundary geometry and the zone geometries (`Ground::fromGeoJson()` for

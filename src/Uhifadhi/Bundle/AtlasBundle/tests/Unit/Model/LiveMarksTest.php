@@ -207,4 +207,56 @@ final class LiveMarksTest extends TestCase
         self::assertNull(LayerShape::Fill->liveDot());
         self::assertNull(LayerShape::Point->liveDot());
     }
+
+    /**
+     * ONE POSITION AS ONE FRAME — the feature the layer already draws, so a
+     * mark that arrives over the wire is the mark that arrived with the page.
+     * It carries what a plate needs to keep the age and the staleness moving
+     * on its own clock: the instant of the fix and the silence that makes it
+     * stale, in seconds, from the position's own interval where it states one.
+     */
+    public function testAFrameIsTheLayersOwnFeatureWithWhatKeepsItsClockRunning(): void
+    {
+        $presence = self::presence(self::position('J. Mollel', 4));
+
+        $frame = LiveMarks::frame($presence, $presence->positions[0]);
+
+        self::assertSame('Feature', $frame['type']);
+        self::assertSame('j.-mollel', $frame['id']);
+        self::assertSame(self::features(LiveMarks::layer($presence))[0], $frame, 'the same feature the layer draws');
+        $properties = self::arr($frame['properties']);
+        self::assertSame(['name', 'initials', 'age', 'stale', 'at', 'staleAfterSeconds'], array_keys($properties));
+        self::assertSame(new \DateTimeImmutable(self::NOW.' -4 minutes')->format(\DateTimeInterface::ATOM), $properties['at']);
+        self::assertSame(15 * 60 * LivePresence::STALE_AFTER_INTERVALS, $properties['staleAfterSeconds']);
+    }
+
+    /** A position that states its own interval is judged by it, on the wire as on the plate. */
+    public function testAFrameKeepsItsOwnAreasInterval(): void
+    {
+        $own = new LivePosition(
+            personUuid: 'p-5',
+            personName: 'K. Parmuat',
+            clientRef: 'w-1',
+            state: DayState::AtPostVerified,
+            latitude: -3.2,
+            longitude: -29.5,
+            recordedAt: new \DateTimeImmutable(self::NOW.' -4 minutes'),
+            pingIntervalMinutes: 5,
+        );
+        $presence = self::presence($own);
+
+        self::assertSame(600, self::arr(LiveMarks::frame($presence, $own)['properties'])['staleAfterSeconds']);
+    }
+
+    /**
+     * SOMEBODY WHO LEFT THE GROUND is a frame with no point: the same key,
+     * nothing to draw, and one word saying why.
+     */
+    public function testAGoneFrameNamesThePersonAndDrawsNothing(): void
+    {
+        self::assertSame(
+            ['type' => 'Feature', 'id' => 'p-5', 'geometry' => null, 'properties' => ['gone' => true]],
+            LiveMarks::gone('p-5'),
+        );
+    }
 }

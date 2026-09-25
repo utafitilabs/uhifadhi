@@ -58,7 +58,7 @@ final class LiveMarks
         foreach ($presence->positions as $position) {
             $stale = $presence->isStale($position);
             $live += $stale ? 0 : 1;
-            $features[] = self::feature($position, $stale, $presence->asOf);
+            $features[] = self::feature($position, $stale, $presence);
         }
 
         return new GeoJsonLayer(
@@ -109,13 +109,47 @@ final class LiveMarks
     }
 
     /**
-     * One position as a feature the plate can draw: where it is, who it is,
-     * and how old the fix is in words the marker prints beside itself.
+     * ONE POSITION AS ONE FRAME ON THE WIRE — and it is the very feature the
+     * layer draws at page load, so a mark that arrives live is the mark that
+     * arrived with the page. Whoever publishes a person's movement builds the
+     * frame here rather than restating the vocabulary.
+     *
+     * The frame carries what a plate needs to keep the age and the staleness
+     * moving on its own clock once the server is out of the picture: the
+     * instant of the fix, and the silence that makes it stale — the position's
+     * own interval where it states one, the set's otherwise, two of them, in
+     * seconds ({@see LivePresence::isStale()} drawn once).
      *
      * @return array<string, mixed>
      */
-    private static function feature(LivePosition $position, bool $stale, \DateTimeImmutable $asOf): array
+    public static function frame(LivePresence $presence, LivePosition $position): array
     {
+        return self::feature($position, $presence->isStale($position), $presence);
+    }
+
+    /**
+     * SOMEBODY WHO LEFT THE GROUND — checked out, or their watch ended — as a
+     * frame with no point: the same key, nothing to draw, one word saying
+     * why. The plate takes the mark off.
+     *
+     * @return array{type: string, id: string, geometry: null, properties: array{gone: true}}
+     */
+    public static function gone(string $personUuid): array
+    {
+        return ['type' => 'Feature', 'id' => $personUuid, 'geometry' => null, 'properties' => ['gone' => true]];
+    }
+
+    /**
+     * One position as a feature the plate can draw: where it is, who it is,
+     * how old the fix is in words the marker prints beside itself, and what
+     * the plate needs to keep that reading current on its own.
+     *
+     * @return array<string, mixed>
+     */
+    private static function feature(LivePosition $position, bool $stale, LivePresence $presence): array
+    {
+        $interval = $position->pingIntervalMinutes ?? $presence->pingIntervalMinutes;
+
         return [
             'type' => 'Feature',
             'id' => $position->personUuid,
@@ -123,8 +157,10 @@ final class LiveMarks
             'properties' => [
                 'name' => $position->personName,
                 'initials' => self::initials($position->personName),
-                'age' => self::age($position->ageSeconds($asOf)),
+                'age' => self::age($position->ageSeconds($presence->asOf)),
                 'stale' => $stale,
+                'at' => $position->recordedAt->format(\DateTimeInterface::ATOM),
+                'staleAfterSeconds' => $interval * 60 * LivePresence::STALE_AFTER_INTERVALS,
             ],
         ];
     }

@@ -112,6 +112,20 @@ const LIVE_MARK = {
 };
 
 /*
+ * HOW OFTEN A STREAMING PLATE RE-READS ITS LIVE MARKS' AGES. The mark prints
+ * "4 min" beside itself and dims past two ping intervals; once the page is
+ * drawn and the marks move on their own, that reading has to move too, or a
+ * ranger whose phone went quiet stays bright for ever. Half a minute is
+ * finer than the label ("4 min") can show and far coarser than the wire.
+ * This clock runs ONLY while a stream is open: a plate given no stream reads
+ * exactly as the page drew it.
+ */
+const CLOCK_TICK_MS = 30000;
+
+/** The attribute a key row wears saying which shape it is the key for. */
+const KEY_SHAPE = 'data-atlas-shape';
+
+/*
  * THE SPOTLIGHT, ONE ANSWER FOR THE WHOLE PLATFORM. Hovering a row in a list
  * beside a map lifts the feature that row is about and pushes the rest back. How
  * far it is lifted and how far the rest fall back is the plate's, not a
@@ -276,6 +290,7 @@ export default class extends Controller {
     }
 
     disconnect() {
+        this.unsubscribe();
         document.removeEventListener('click', this.onSwapClick);
         this.element.removeEventListener('ux:map:pre-connect', this.onPreConnect);
         this.element.removeEventListener('ux:map:connect', this.onConnect);
@@ -339,6 +354,9 @@ export default class extends Controller {
         const { map, L, extra } = event.detail;
         const atlas = extra?.[ATLAS] ?? {};
 
+        // A second map is a second subscription; the first is closed with the
+        // map it fed.
+        this.unsubscribe();
         this.chrome?.destroy();
         this.chrome = null;
         this.layers.clear();
@@ -387,6 +405,15 @@ export default class extends Controller {
          * is taken again, here and whenever the frame changes size after.
          */
         this.watchFrame();
+
+        // AND THE MARKS KEEP MOVING, where the builder said where from. A
+        // stream that cannot be opened is a plate drawn once, never a broken
+        // plate: the map, the chrome and the legend are all standing by now.
+        try {
+            this.subscribe(atlas.live);
+        } catch (error) {
+            console.error('[atlas] the plate could not open its live stream', error);
+        }
 
         this.dispatch('connect', {
             prefix: 'atlas:map',
@@ -1015,6 +1042,7 @@ export default class extends Controller {
          * disconnect, so an orphaned map would keep its document listeners and
          * its tile requests. https://leafletjs.com/reference.html#map-remove
          */
+        this.unsubscribe();
         this.chrome?.destroy();
         this.chrome = null;
         this.map?.remove();
@@ -1237,6 +1265,228 @@ export default class extends Controller {
             this.bounds.extend(bounds);
         }
     }
+
+    /*
+     * THE LIVE STREAM — how the marks keep moving after the page is drawn.
+     *
+     * The builder that knows the area handed the plate two facts under
+     * `extra.atlas.live`: the hub's PUBLIC address and the topics to hold
+     * open. This opens ONE credentialed EventSource on it and nothing else:
+     * no polling, no second request, no map maths. The page set a subscriber
+     * cookie for those topics before this ran, which is what `withCredentials`
+     * hands the hub.
+     *
+     * Patterned on the documented subscription — "To subscribe to private
+     * updates, subscribers must provide to the Hub a JWT containing a topic
+     * selector matching the topic of the update. To provide this JWT, the
+     * subscriber can use a cookie, or an `Authorization` HTTP header" — whose
+     * example connects with `new EventSource(url, { withCredentials: true })`.
+     *   https://symfony.com/doc/current/mercure.html — "Authorization"
+     *
+     * Each frame is ONE live mark: the very feature the live layer was drawn
+     * from at page load (its person key as the feature id, the point, the
+     * name, the initials, the age, whether it is stale and what makes it so),
+     * or the same key with no geometry and `gone: true` for somebody who left
+     * the ground. A frame that is not that is dropped, never a broken plate.
+     *
+     * RECONNECTION IS THE BROWSER'S. An EventSource that loses the hub retries
+     * on its own with the same credentials; `onerror` has nothing to add.
+     *
+     * A PLATE WITH NO LIVE LAYER OPENS NOTHING, whatever it was handed: a
+     * frame could move no mark and the legend has no row to count.
+     */
+    subscribe(stream) {
+        if (!stream?.hub || !(stream.topics ?? []).length) {
+            return;
+        }
+        if (!this.liveLayer()) {
+            return;
+        }
+
+        const url = new URL(stream.hub);
+        for (const topic of stream.topics) {
+            url.searchParams.append('topic', topic);
+        }
+
+        this.stream = new EventSource(url, { withCredentials: true });
+        this.stream.onmessage = (event) => {
+            let frame;
+            try {
+                frame = JSON.parse(event.data);
+            } catch (error) {
+                return;
+            }
+            this.receiveFrame(frame);
+        };
+
+        this.startClock();
+    }
+
+    /** The connection and the clock go with the plate, the map, or the swap that replaced them. */
+    unsubscribe() {
+        this.stream?.close();
+        this.stream = null;
+        this.stopClock();
+    }
+
+    /**
+     * The live layer this plate draws — its id, the drawn layer and what the
+     * map said about it — or null on a plate that has none. Found by SHAPE,
+     * the way the marks are drawn, so the builder's layer id is its own.
+     */
+    liveLayer() {
+        for (const [id, spec] of this.specs) {
+            const drawn = this.layers.get(id);
+            if ('live' === spec.shape && drawn) {
+                return { id, spec, drawn };
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * ONE FRAME, ONE MARK: the mark with the same key comes off, the new one
+     * goes on unless the frame says the person is gone, and the legend's
+     * counts follow. Anything that is not a point feature with a string id is
+     * dropped here — the wire is somebody else's and the plate checks what it
+     * is handed before it draws it.
+     */
+    receiveFrame(frame) {
+        const live = this.liveLayer();
+        if (!live || 'Feature' !== frame?.type || 'string' !== typeof frame.id) {
+            return;
+        }
+
+        const gone = true === frame.properties?.gone;
+        if (!gone && !isPointFeature(frame)) {
+            return;
+        }
+
+        const previous = [];
+        live.drawn.eachLayer((mark) => {
+            if (mark.feature?.id === frame.id) {
+                previous.push(mark);
+            }
+        });
+        for (const mark of previous) {
+            live.drawn.removeLayer(mark);
+        }
+
+        if (!gone) {
+            live.drawn.addData(frame);
+        }
+
+        this.recountLive();
+    }
+
+    startClock() {
+        this.stopClock();
+        this.clock = setInterval(() => this.tick(), CLOCK_TICK_MS);
+    }
+
+    stopClock() {
+        if (this.clock) {
+            clearInterval(this.clock);
+            this.clock = null;
+        }
+    }
+
+    /**
+     * EVERY LIVE MARK RE-READ AGAINST NOW: the age it prints and whether it
+     * has gone stale, from the instant of its fix and the silence its own
+     * area calls stale — both stated on the feature by whoever drew it, so the
+     * plate re-decides nothing about what "current" means. A mark whose
+     * reading did not change is left alone.
+     */
+    tick() {
+        const live = this.liveLayer();
+        if (!live) {
+            return;
+        }
+
+        const now = Date.now();
+        live.drawn.eachLayer((mark) => {
+            const feature = mark.feature;
+            const properties = feature?.properties;
+            const at = properties ? Date.parse(properties.at) : NaN;
+            if (!Number.isFinite(at)) {
+                return;
+            }
+
+            const seconds = Math.max(0, Math.round((now - at) / 1000));
+            const age = ageLabel(seconds);
+            const stale = Number.isFinite(properties.staleAfterSeconds)
+                ? seconds > properties.staleAfterSeconds
+                : true === properties.stale;
+            if (age === properties.age && stale === properties.stale) {
+                return;
+            }
+
+            properties.age = age;
+            properties.stale = stale;
+            mark.setIcon?.(this.liveIcon(feature));
+        });
+
+        this.recountLive();
+    }
+
+    /**
+     * THE LEGEND SAYS WHAT THE PLATE SHOWS: the live row counts the marks
+     * nobody should doubt, the stale key counts the rest. Both are read off
+     * the drawn marks, so the numbers under the plate and the dots on it
+     * cannot disagree.
+     */
+    recountLive() {
+        const live = this.liveLayer();
+        if (!live || !this.hasLegendTarget) {
+            return;
+        }
+
+        let current = 0;
+        let stale = 0;
+        live.drawn.eachLayer((mark) => {
+            if (true === mark.feature?.properties?.stale) {
+                stale += 1;
+            } else {
+                current += 1;
+            }
+        });
+
+        const row = this.legendTarget.querySelector(`[data-${this.identifier}-layer-param="${live.id}"] em`);
+        if (row) {
+            row.textContent = String(current);
+        }
+        const key = this.legendTarget.querySelector(`[${KEY_SHAPE}="live-stale"] em`);
+        if (key) {
+            key.textContent = String(stale);
+        }
+    }
+}
+
+/** A GeoJSON point feature with two finite coordinates: the one shape a live mark is. */
+function isPointFeature(feature) {
+    const coordinates = feature?.geometry?.coordinates;
+
+    return 'Point' === feature?.geometry?.type
+        && Array.isArray(coordinates)
+        && coordinates.length >= 2
+        && Number.isFinite(coordinates[0])
+        && Number.isFinite(coordinates[1]);
+}
+
+/**
+ * HOW OLD A FIX IS, in the words the mark prints: "4 min" up to an hour, then
+ * "4 h 21" — the same shape Model\LiveMarks::age() prints at page load, so a
+ * mark re-read here reads as the mark that arrived.
+ */
+function ageLabel(seconds) {
+    const minutes = Math.floor(Math.max(0, seconds) / 60);
+    if (minutes < 60) {
+        return `${minutes} min`;
+    }
+
+    return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')}`;
 }
 
 /**

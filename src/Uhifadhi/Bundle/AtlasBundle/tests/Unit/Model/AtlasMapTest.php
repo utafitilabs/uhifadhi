@@ -23,6 +23,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\Boundary;
 use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
 use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
 use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
+use Uhifadhi\Bundle\AtlasBundle\Model\LiveStream;
 use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
@@ -53,7 +54,26 @@ final class AtlasMapTest extends TestCase
             // everything it drew — which is right for a map whose content
             // IS its subject, and stated as a null rather than left out.
             'subject' => null,
+            // NO STREAM WAS STATED, so the marks stay where the page put them
+            // — stated as a null rather than left out, like the subject.
+            'live' => null,
         ], $atlas->toArray());
+    }
+
+    /**
+     * A PLATE GIVEN A HUB AND TOPICS CARRIES THEM TO THE BROWSER, under the
+     * atlas key like everything else the plate reads. The atlas knows no
+     * area and no topic vocabulary: two facts in, the same two facts out.
+     */
+    public function testAPlateGivenAHubAndTopicsHandsThemToTheBrowser(): void
+    {
+        $stream = new LiveStream('https://hub.example.test/.well-known/mercure', ['area/a/presence']);
+        $atlas = new AtlasMap(self::uxMap())->liveStream($stream);
+
+        self::assertSame(
+            ['hub' => 'https://hub.example.test/.well-known/mercure', 'topics' => ['area/a/presence']],
+            $atlas->toArray()['live'],
+        );
     }
 
     /**

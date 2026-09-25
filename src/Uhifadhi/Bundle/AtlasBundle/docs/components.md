@@ -22,6 +22,7 @@ their API once it settles.
 - [The ground](#the-ground)
 - [The legend](#the-legend)
   - [Where it is drawn](#where-it-is-drawn)
+- [The live stream](#the-live-stream)
 - [Base layers, fullscreen and fitting](#base-layers-fullscreen-and-fitting)
 - [What UX Map already models](#what-ux-map-already-models)
 - [render_map()](#render_map)
@@ -395,6 +396,42 @@ rail, a thumbnail — it covers most of it.
 control stack's z-index so the controls stay clickable: there the screen is all map, so the legend
 has imagery to spare and nothing on a page to sit beside. It is the same element and the same
 switches in both — only the stylesheet changes, and a module says nothing about either.
+
+## The live stream
+
+A plate that draws live positions (`AtlasMap::livePositions()`) can keep them moving after the
+page is drawn. The builder states two facts and the atlas asks nothing about them:
+
+```php
+use Uhifadhi\Bundle\AtlasBundle\Model\LiveStream;
+
+$map->liveStream(new LiveStream(
+    $hub->getPublicUrl(),          // the Mercure hub as the BROWSER reaches it
+    ['area/…/presence'],           // the topics to hold open — at least one
+));
+```
+
+They travel as `extra.atlas.live` (`{hub, topics}`, or `null`). The plate then opens **one
+credentialed `EventSource`** on the hub with every topic as a `topic` query parameter
+(`withCredentials: true`, so the subscriber cookie the page set reaches the hub) — no polling,
+no second request. The browser reconnects on its own when the hub drops.
+
+**A frame is one live mark**: the same feature `LiveMarks::frame()` builds — the person key as
+the feature `id`, a `Point`, and `properties` with `name`, `initials`, `age`, `stale`, `at`
+(the instant of the fix) and `staleAfterSeconds` (the silence its own area calls stale). The
+plate takes the mark with that key off, draws the new one, and updates the legend's live and
+stale counts. A frame with `"geometry": null` and `"properties": {"gone": true}` takes the mark
+off and draws nothing. A frame that is not that shape — not JSON, no string id, no point — is
+dropped; the plate stands.
+
+**The clock runs only while a stream is open.** Every thirty seconds each mark's age label and
+its stale state are re-read from `at` and `staleAfterSeconds`, so a phone that goes quiet dims
+without a reload. A plate with no stream reads exactly as the page drew it.
+
+**Who sets the cookie is the builder's business.** The atlas carries the hub and the topics; the
+page that draws the plate authorizes the browser for those topics on its own response (the area
+bundle's `PresenceStreamService` does this for its pages). A plate given a stream and no cookie
+connects and is refused, and draws what the page gave it.
 
 ## Base layers, fullscreen and fitting
 

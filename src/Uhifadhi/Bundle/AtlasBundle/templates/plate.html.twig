@@ -80,7 +80,9 @@
                             {# A KEY CAN BE DRAWN OFF TOO — the row for a mark the plate shows
                                nowhere ("no position") is not a control, but it is not on
                                either, and reading as on would claim the ground shows it. #}
-                            <span class="lay{{ item.visible ? '' : ' off' }}">{{- swatch -}}{{ item.label }}{% if item.count is not null %}<em>{{ item.count }}</em>{% endif %}</span>
+                            {# `data-atlas-shape` names the shape the key is for, so a plate whose
+                               marks move after the page is drawn can find the row to recount. #}
+                            <span class="lay{{ item.visible ? '' : ' off' }}" data-atlas-shape="{{ item.shape.value }}">{{- swatch -}}{{ item.label }}{% if item.count is not null %}<em>{{ item.count }}</em>{% endif %}</span>
                         {% endif %}
                     {% endfor %}
                 </div>

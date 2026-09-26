@@ -20,11 +20,13 @@ use Symfony\Component\Clock\MockClock;
 use Symfony\Component\Mercure\Jwt\StaticTokenProvider;
 use Symfony\Component\Mercure\MockHub;
 use Symfony\Component\Mercure\Update;
+use Uhifadhi\Bundle\AreaBundle\Service\LiveVisibility;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonLivePositionsInterface;
 use Uhifadhi\Bundle\AreaBundle\Service\PresencePublisher;
 use Uhifadhi\Contracts\Area\DayState;
 use Uhifadhi\Contracts\Area\LivePosition;
 use Uhifadhi\Contracts\Area\LivePresence;
+use Uhifadhi\Contracts\People\RankLadderInterface;
 
 /**
  * ONE PERSON'S MARK ON THE WIRE, the moment their handset spoke.
@@ -56,7 +58,7 @@ final class PresencePublisherTest extends TestCase
         self::assertCount(1, $updates);
         $update = $updates[0];
         self::assertTrue($update->isPrivate(), 'the topic is private: subscriber-authorized on the page');
-        self::assertSame(['area/'.self::AREA.'/presence'], $update->getTopics());
+        self::assertSame(['area/'.self::AREA.'/presence/all'], $update->getTopics(), 'without the rank rule wired, the control room\'s topic alone');
         self::assertSame('area/'.self::AREA.'/presence', PresencePublisher::topicFor(self::AREA));
 
         $frame = self::decoded($update->getData());
@@ -143,13 +145,78 @@ final class PresencePublisherTest extends TestCase
         self::assertSame('error', $logger->records[0]['level']);
     }
 
-    private static function publisher(MockHub $hub, PersonLivePositionsInterface $positions): PresencePublisher
+    /**
+     * THE HUB ENFORCES THE RANK RULE: a position goes out on the control
+     * room's topic and on the topic of every place senior to its owner — and
+     * on no other, so a peer or a junior subscribed to their own place never
+     * receives it.
+     */
+    public function testARankedPersonsMarkGoesOutToTheControlRoomAndEveryPlaceAboveThem(): void
+    {
+        $updates = [];
+        $publisher = self::publisher(self::hub($updates), self::presence(self::aPosition(minutesAgo: 4)), self::ranked(4));
+
+        $publisher->publish(self::AREA, self::PERSON);
+
+        $base = 'area/'.self::AREA.'/presence';
+        self::assertSame([$base.'/all', $base.'/for/1', $base.'/for/2', $base.'/for/3'], $updates[0]->getTopics());
+    }
+
+    public function testTheMostSeniorPersonsMarkGoesOutToTheControlRoomAlone(): void
+    {
+        $updates = [];
+        self::publisher(self::hub($updates), self::presence(self::aPosition(minutesAgo: 4)), self::ranked(1))->publish(self::AREA, self::PERSON);
+
+        self::assertSame(['area/'.self::AREA.'/presence/all'], $updates[0]->getTopics());
+    }
+
+    public function testARanklessPersonsMarkGoesOutToTheControlRoomAlone(): void
+    {
+        $updates = [];
+        self::publisher(self::hub($updates), self::presence(self::aPosition(minutesAgo: 4)), self::ranked(null))->publish(self::AREA, self::PERSON);
+
+        self::assertSame(['area/'.self::AREA.'/presence/all'], $updates[0]->getTopics());
+    }
+
+    /** "Gone" takes the same topics as the mark, so everybody who saw it sees it leave, and nobody else learns of it. */
+    public function testAGoneFrameTakesTheSameTopicsAsTheMark(): void
+    {
+        $updates = [];
+        self::publisher(self::hub($updates), self::presence(), self::ranked(3))->publish(self::AREA, self::PERSON);
+
+        $base = 'area/'.self::AREA.'/presence';
+        self::assertSame([$base.'/all', $base.'/for/1', $base.'/for/2'], $updates[0]->getTopics());
+        self::assertSame(['gone' => true], self::decoded($updates[0]->getData())['properties'] ?? null);
+    }
+
+    private static function ranked(?int $place): LiveVisibility
+    {
+        $ladder = new class($place) implements RankLadderInterface {
+            public function __construct(private readonly ?int $place)
+            {
+            }
+
+            public function placesOf(array $personUuids): array
+            {
+                return null === $this->place ? [] : array_fill_keys($personUuids, $this->place);
+            }
+
+            public function length(): int
+            {
+                return 12;
+            }
+        };
+
+        return new LiveVisibility(null, null, $ladder);
+    }
+
+    private static function publisher(MockHub $hub, PersonLivePositionsInterface $positions, ?LiveVisibility $visibility = null): PresencePublisher
     {
         return new PresencePublisher($hub, $positions, new MockClock(self::NOW), new class extends AbstractLogger {
             public function log($level, string|\Stringable $message, array $context = []): void
             {
             }
-        });
+        }, $visibility);
     }
 
     /**

@@ -74,12 +74,29 @@ final readonly class PresencePublisher
         private PersonLivePositionsInterface $positions,
         private ClockInterface $clock,
         private LoggerInterface $logger,
+        // WHICH TOPICS A POSITION GOES OUT ON: the rank rule, enforced by the hub.
+        private ?LiveVisibility $visibility = null,
     ) {
     }
 
     public static function topicFor(string $areaUuid): string
     {
         return \sprintf(self::TOPIC, $areaUuid);
+    }
+
+    /**
+     * THE TOPICS ONE PERSON'S POSITION GOES OUT ON: the control room's, and
+     * one per rank place senior to theirs ({@see LiveVisibility}). One publish
+     * carries them all; the hub delivers it to a subscriber following any.
+     *
+     * @return list<string>
+     */
+    private function topicsFor(string $areaUuid, string $personUuid): array
+    {
+        $base = self::topicFor($areaUuid);
+        $suffixes = null === $this->visibility ? [LiveVisibility::EVERYONE] : $this->visibility->publishedTopicsFor($personUuid);
+
+        return array_map(static fn (string $suffix): string => $base.'/'.$suffix, $suffixes);
     }
 
     /**
@@ -95,7 +112,7 @@ final readonly class PresencePublisher
 
         try {
             $this->hub->publish(new Update(
-                self::topicFor($areaUuid),
+                $this->topicsFor($areaUuid, $personUuid),
                 self::frame($areaUuid, $personUuid),
                 private: true,
             ));

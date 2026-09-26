@@ -21,6 +21,7 @@ use Uhifadhi\Bundle\AreaBundle\Controller\AreaController;
 use Uhifadhi\Bundle\AreaBundle\Controller\OrgDashboardController;
 use Uhifadhi\Bundle\AreaBundle\Service\PresencePublisher;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceStreamService;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\FakeRankLadder;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
 
 /**
@@ -40,21 +41,67 @@ final class AreaOverviewLiveStreamTest extends WebTestCase
 {
     private const string COOKIE = 'mercureAuthorization';
 
-    public function testTheOverviewSetsTheSubscriberCookieForTheAreasTopicAndHandsThePlateTheStream(): void
+    /** The control room's grant follows the one topic every position goes out on. */
+    public function testTheControlRoomFollowsTheAreasEveryoneTopicAndThePlateStreamsIt(): void
     {
-        $this->boot();
+        $this->boot([...self::ALL_AREA_PERMISSIONS, 'locations.read']);
         $this->signIn();
         $area = $this->anArea();
-        $topic = PresencePublisher::topicFor((string) $area->getUuidString());
+        $topic = PresencePublisher::topicFor((string) $area->getUuidString()).'/all';
 
         $this->browser()->request('GET', '/areas/'.$area->getUuidString());
 
         self::assertSame(Response::HTTP_OK, $this->browser()->getResponse()->getStatusCode());
         self::assertSame([$topic], $this->subscribedTopics());
-        self::assertSame(
-            ['hub' => WebKernel::HUB_URL, 'topics' => [$topic]],
-            $this->liveStream(),
-        );
+        self::assertSame(['hub' => WebKernel::HUB_URL, 'topics' => [$topic]], $this->liveStream());
+    }
+
+    /**
+     * A RANKED PERSON FOLLOWS THEIR OWN PLACE'S TOPIC and nothing else: every
+     * position of somebody junior goes out on it, and a peer's or a senior's
+     * never does. The cookie is the hub's own authorization, so this is the
+     * guarantee, not the page's good manners.
+     */
+    public function testARankedPersonFollowsOnlyTheirOwnPlacesTopic(): void
+    {
+        $this->boot();
+        $area = $this->anArea();
+        $person = $this->signInAsPerson();
+        $this->ladder()->place((string) $person->getUuidString(), 5);
+
+        $this->browser()->request('GET', '/areas/'.$area->getUuidString());
+
+        $topic = PresencePublisher::topicFor((string) $area->getUuidString()).'/for/5';
+        self::assertSame(Response::HTTP_OK, $this->browser()->getResponse()->getStatusCode());
+        self::assertSame([$topic], $this->subscribedTopics());
+        self::assertSame(['hub' => WebKernel::HUB_URL, 'topics' => [$topic]], $this->liveStream());
+    }
+
+    /** A person without a rank sees nobody: the page answers, and there is nothing to follow. */
+    public function testAPersonWithoutARankFollowsNothing(): void
+    {
+        $this->boot();
+        $area = $this->anArea();
+        $this->signInAsPerson();
+
+        $this->browser()->request('GET', '/areas/'.$area->getUuidString());
+
+        self::assertSame(Response::HTTP_OK, $this->browser()->getResponse()->getStatusCode());
+        self::assertNull($this->cookie(), 'no rank, no grant: no topic to authorize');
+        self::assertNull($this->liveStream());
+    }
+
+    /** A signed-in principal that is not a person record has no rank either. */
+    public function testAViewerWhoIsNoPersonFollowsNothingWithoutTheGrant(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea();
+
+        $this->browser()->request('GET', '/areas/'.$area->getUuidString());
+
+        self::assertSame(Response::HTTP_OK, $this->browser()->getResponse()->getStatusCode());
+        self::assertNull($this->cookie());
     }
 
     public function testWithoutAHubThePageSetsNoCookieAndThePlateStreamsNothing(): void
@@ -102,16 +149,16 @@ final class AreaOverviewLiveStreamTest extends WebTestCase
         self::assertNull($this->cookie());
     }
 
-    /** The dashboard draws everybody, so it subscribes to every area's topic in one cookie. */
-    public function testTheDashboardSubscribesToEveryAreasTopic(): void
+    /** The dashboard draws every area, so the control room follows every area's everyone topic in one cookie. */
+    public function testTheDashboardSubscribesTheControlRoomToEveryAreasEveryoneTopic(): void
     {
-        $this->boot();
+        $this->boot([...self::ALL_AREA_PERMISSIONS, 'locations.read']);
         $this->signIn();
         $one = $this->anArea('Northern Conservation Reserve');
         $two = $this->anArea('Southern Conservation Reserve');
         $topics = [
-            PresencePublisher::topicFor((string) $one->getUuidString()),
-            PresencePublisher::topicFor((string) $two->getUuidString()),
+            PresencePublisher::topicFor((string) $one->getUuidString()).'/all',
+            PresencePublisher::topicFor((string) $two->getUuidString()).'/all',
         ];
 
         $this->browser()->request('GET', '/');
@@ -119,6 +166,31 @@ final class AreaOverviewLiveStreamTest extends WebTestCase
         self::assertSame(Response::HTTP_OK, $this->browser()->getResponse()->getStatusCode());
         self::assertSame($topics, $this->subscribedTopics());
         self::assertSame(['hub' => WebKernel::HUB_URL, 'topics' => $topics], $this->liveStream());
+    }
+
+    /** And a ranked person follows their place in every area, one topic each. */
+    public function testTheDashboardSubscribesARankedPersonToTheirPlaceInEveryArea(): void
+    {
+        $this->boot();
+        $one = $this->anArea('Northern Conservation Reserve');
+        $two = $this->anArea('Southern Conservation Reserve');
+        $person = $this->signInAsPerson();
+        $this->ladder()->place((string) $person->getUuidString(), 3);
+
+        $this->browser()->request('GET', '/');
+
+        self::assertSame([
+            PresencePublisher::topicFor((string) $one->getUuidString()).'/for/3',
+            PresencePublisher::topicFor((string) $two->getUuidString()).'/for/3',
+        ], $this->subscribedTopics());
+    }
+
+    private function ladder(): FakeRankLadder
+    {
+        $ladder = static::getContainer()->get(FakeRankLadder::class);
+        self::assertInstanceOf(FakeRankLadder::class, $ladder);
+
+        return $ladder;
     }
 
     private function cookie(): ?Cookie

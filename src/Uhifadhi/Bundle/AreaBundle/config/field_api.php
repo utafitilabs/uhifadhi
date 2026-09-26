@@ -133,6 +133,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.presence'),
             service('clock'),
             service('logger'),
+            service('area.live_visibility'),
         ]);
     $services->alias(PresencePublisher::class, 'area.presence_publisher');
 

@@ -45,6 +45,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaThumbnailer;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
+use Uhifadhi\Bundle\AreaBundle\Service\LiveVisibility;
 use Uhifadhi\Bundle\AreaBundle\Service\ModuleSettingsDoors;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonDirectoryService;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonFacetService;
@@ -85,6 +86,7 @@ use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Contracts\People\PeopleFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
+use Uhifadhi\Contracts\People\RankLadderInterface;
 use Uhifadhi\Contracts\Roster\WatchProviderInterface;
 use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
 
@@ -492,8 +494,23 @@ return static function (ContainerConfigurator $container): void {
             // has not written yet; an installation without one answers
             // nothing, and a day with no watch is a rest day.
             tagged_iterator(WatchProviderInterface::TAG),
+            service('area.live_visibility'),
         ]);
     $services->alias(PresenceService::class, 'area.presence');
+
+    /*
+     * WHO SEES WHOSE LIVE POSITION — strictly downward by rank, the control
+     * room's grant sees all (ruled 2026-09-26). The ladder is the team's;
+     * the token storage is absent in a kernel without security, and the
+     * system then reads unfiltered.
+     */
+    $services->set('area.live_visibility', LiveVisibility::class)
+        ->args([
+            service('security.token_storage')->nullOnInvalid(),
+            service('security.authorization_checker')->nullOnInvalid(),
+            service(RankLadderInterface::class)->nullOnInvalid(),
+        ]);
+    $services->alias(LiveVisibility::class, 'area.live_visibility');
     /* A module type-hints the contract, never this class. */
     $services->alias(PresenceProviderInterface::class, 'area.presence');
     /*

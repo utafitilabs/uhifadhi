@@ -101,6 +101,9 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
         private PingInterval $pingInterval,
         /** @var iterable<WatchProviderInterface> */
         private iterable $rosters = [],
+        // WHO MAY SEE WHOM: the rank rule, applied to every live read a
+        // viewer is handed. Absent in a kernel without security.
+        private ?LiveVisibility $visibility = null,
     ) {
     }
 
@@ -187,7 +190,7 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
             return new LivePresence([], PingInterval::DEFAULT_MINUTES, $asOf);
         }
 
-        return new LivePresence($this->positionsIn($area, $this->checkIns->findOpenIn($area), $asOf), $this->intervalOf($area), $asOf);
+        return new LivePresence($this->visible($area, $this->positionsIn($area, $this->checkIns->findOpenIn($area), $asOf)), $this->intervalOf($area), $asOf);
     }
 
     /**
@@ -239,7 +242,7 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
 
         $positions = [];
         foreach ($this->areas->findAllOrdered() as $area) {
-            foreach ($this->positionsIn($area, $this->checkIns->findOpenIn($area), $asOf, $this->intervalOf($area)) as $position) {
+            foreach ($this->visible($area, $this->positionsIn($area, $this->checkIns->findOpenIn($area), $asOf, $this->intervalOf($area))) as $position) {
                 $positions[] = $position;
             }
         }
@@ -250,6 +253,19 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
         );
 
         return new LivePresence($positions, PingInterval::DEFAULT_MINUTES, $asOf);
+    }
+
+    /**
+     * The positions the signed-in viewer may see ({@see LiveVisibility}). The
+     * one-person read the publisher uses is not a viewer's and is not narrowed.
+     *
+     * @param list<LivePosition> $positions
+     *
+     * @return list<LivePosition>
+     */
+    private function visible(AreaOfInterest $area, array $positions): array
+    {
+        return null === $this->visibility ? $positions : $this->visibility->visibleIn($area, $positions);
     }
 
     /** How often this area tells its handsets to report, defaulted and floored. */

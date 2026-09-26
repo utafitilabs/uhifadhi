@@ -47,6 +47,7 @@ final readonly class AreaConcerns implements ConcernSourceInterface
     public const string STATIONS = 'stations';
     public const string ASSIGNMENTS = 'assignments';
     public const string DUTY = 'duty';
+    public const string LOCATIONS = 'locations';
 
     public function declaredBy(): string
     {
@@ -112,6 +113,23 @@ final readonly class AreaConcerns implements ConcernSourceInterface
             // either. Splitting them is a change to the handset, not to a
             // declaration.
             verbs: [Verb::Record],
+            scopeKinds: $ground,
+        );
+
+        /*
+         * THE CONTROL ROOM'S SIGHT. Without it a person sees the live
+         * position of those junior to them in rank and nobody else - no
+         * peer, no senior, and nobody at all without a rank. With it, the
+         * seat sees everybody on the ground it may read, because the seat
+         * carries the reason: coordinating a rescue, answering a radio call.
+         * Enforced by {@see \Uhifadhi\Bundle\AreaBundle\Service\LiveVisibility}
+         * on every drawn plate and on the hub's own subscription.
+         */
+        yield new Concern(
+            key: self::LOCATIONS,
+            label: 'Live locations',
+            description: 'See the live position of everybody on the ground, whatever their rank - the control room. Without it a person sees only those junior to them.',
+            verbs: [Verb::Read],
             scopeKinds: $ground,
         );
     }

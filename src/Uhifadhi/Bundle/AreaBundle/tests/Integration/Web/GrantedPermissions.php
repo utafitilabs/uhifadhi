@@ -60,7 +60,7 @@ final readonly class GrantedPermissions implements VoterInterface
      * screens ask about. Anything else — a role, another module's concern — is
      * somebody else's question and gets an abstention, never a refusal.
      */
-    private const array OURS = ['areas.', 'zones.', 'stations.', 'assignments.', 'duty.', 'modules.'];
+    private const array OURS = ['areas.', 'zones.', 'stations.', 'assignments.', 'duty.', 'locations.', 'modules.'];
 
     private function ours(string $attribute): bool
     {

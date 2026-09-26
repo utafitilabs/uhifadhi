@@ -71,7 +71,7 @@ final class PingPublishesPresenceTest extends IntegrationTestCase
         $this->service()->claim($area, $person, $this->claim($station, lat: -3.2001, lon: -29.7501));
 
         $update = $this->theOneUpdate();
-        self::assertSame([PresencePublisher::topicFor((string) $area->getUuidString())], $update->getTopics());
+        self::assertSame([PresencePublisher::topicFor((string) $area->getUuidString()).'/all'], $update->getTopics());
         self::assertTrue($update->isPrivate());
         $frame = self::frame($update);
         self::assertSame($person->getUuidString(), $frame['id']);

@@ -150,6 +150,7 @@ return static function (ContainerConfigurator $container): void {
             service(Authorization::class)->nullOnInvalid(),
             service('security.authorization_checker'),
             service(AreaOfInterestRepository::class),
+            service('area.live_visibility'),
         ]);
     $services->alias(PresenceStreamService::class, 'area.presence_stream');
 

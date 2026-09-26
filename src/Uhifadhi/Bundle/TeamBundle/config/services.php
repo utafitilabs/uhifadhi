@@ -52,6 +52,7 @@ use Uhifadhi\Bundle\TeamBundle\Message\BackfillModuleHistory;
 use Uhifadhi\Bundle\TeamBundle\MessageHandler\BackfillModuleHistoryHandler;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonDirectory;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonFacets;
+use Uhifadhi\Bundle\TeamBundle\People\TeamRankLadder;
 use Uhifadhi\Bundle\TeamBundle\Performance\AcrossTopicsMatrix;
 use Uhifadhi\Bundle\TeamBundle\Performance\AttentionTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\DepartmentsBand;
@@ -139,6 +140,7 @@ use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 use Uhifadhi\Contracts\People\PersonRecordCellProviderInterface;
+use Uhifadhi\Contracts\People\RankLadderInterface;
 use Uhifadhi\Contracts\People\StationPlateProviderInterface;
 use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
@@ -216,6 +218,18 @@ return static function (ContainerConfigurator $container): void {
      * product. Tagged BY HAND: a reusable bundle is not autoconfigured, and an
      * attribute on the contract's interface would be silently dead.
      */
+    /*
+     * THE RANK LADDER, for whoever compares two people by rank without
+     * knowing this bundle: the live map decides who sees whom from it.
+     */
+    $services->set('team.rank_ladder', TeamRankLadder::class)
+        ->args([
+            service(RankRepository::class),
+            service(UserRepository::class),
+            service(RankHoldingRepository::class),
+        ]);
+    $services->alias(RankLadderInterface::class, 'team.rank_ladder');
+
     $services->set('team.person_facets', TeamPersonFacets::class)
         ->args([service(UserRepository::class)])
         ->tag(PersonFacetProviderInterface::TAG);

@@ -399,6 +399,7 @@ final class TestKernel extends Kernel
             \Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService::class => 'team.password_reset',
             \Uhifadhi\Bundle\TeamBundle\Service\TeamSettingsService::class => 'team.settings',
             \Uhifadhi\Bundle\TeamBundle\Service\RankService::class => 'team.ranks',
+            \Uhifadhi\Contracts\People\RankLadderInterface::class => 'team.rank_ladder',
             \Uhifadhi\Bundle\TeamBundle\Repository\RankRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\RankRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\RankHoldingRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\RankHoldingRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\TeamSettingsRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\TeamSettingsRepository::class,

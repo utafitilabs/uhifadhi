@@ -43,10 +43,10 @@ final class TheCoreDeclaresItsConcernsTest extends TestCase
         return [new AreaConcerns(), new TeamConcerns(), new RegistryConcerns()];
     }
 
-    public function testTheGroundDeclaresAreasZonesStationsAssignmentsAndDuty(): void
+    public function testTheGroundDeclaresAreasZonesStationsAssignmentsDutyAndLocations(): void
     {
         self::assertSame(
-            ['areas', 'zones', 'stations', 'assignments', 'duty'],
+            ['areas', 'zones', 'stations', 'assignments', 'duty', 'locations'],
             array_map(static fn (ConcernInterface $c): string => $c->key(), self::iterate(new AreaConcerns())),
         );
     }
@@ -116,7 +116,7 @@ final class TheCoreDeclaresItsConcernsTest extends TestCase
             }
         }
 
-        self::assertCount(11, $seen);
+        self::assertCount(12, $seen);
     }
 
     public function testEverySourceSaysWhoItIs(): void

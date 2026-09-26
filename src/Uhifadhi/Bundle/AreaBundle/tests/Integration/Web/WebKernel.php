@@ -35,6 +35,7 @@ use Uhifadhi\Bundle\AreaBundle\Overview\OrgOverviewContributorInterface;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\CheckoutTempDirTrait;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\ChattyFigureProvider;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\FakeRankLadder;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostDirectory;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\OrgModule;
@@ -47,6 +48,7 @@ use Uhifadhi\Contracts\Area\StationSectionsInterface;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
+use Uhifadhi\Contracts\People\RankLadderInterface;
 use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
 use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
 use UtafitiLabs\PostGISBundle\UtafitiLabsPostGISBundle;
@@ -430,6 +432,12 @@ final class WebKernel extends Kernel
             ->args([$this->grants])
             ->tag('security.voter')
             ->public();
+
+        // THE RANK LADDER the live-position rule reads, stood in for the
+        // team's: a test places people on it. Public, because the test says
+        // who holds which rank.
+        $services->set(FakeRankLadder::class)->public();
+        $services->alias(RankLadderInterface::class, FakeRankLadder::class);
 
         // And the `door()` helper the templates ask with, standing in for
         // TeamBundle's extension for the same reason the voter does.

@@ -72,7 +72,10 @@ final class PresencePagesReadTheSameTest extends WebTestCase
     /** @return array{0: AreaOfInterest, 1: Station} */
     private function aGroundWithSixPeopleOnIt(): array
     {
-        $this->boot();
+        // THE CONTROL ROOM'S VIEW: every mark, whatever the rank, so these
+        // recordings hold the whole reading. Who sees less is proven in
+        // RankFilteredPresenceTest.
+        $this->boot([...self::ALL_AREA_PERMISSIONS, 'locations.read']);
         $this->signIn();
 
         $area = $this->aLiveArea('Sample Reserve');

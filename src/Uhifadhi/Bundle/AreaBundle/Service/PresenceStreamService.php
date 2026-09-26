@@ -67,6 +67,8 @@ final readonly class PresenceStreamService
         private ?Authorization $authorization,
         private AuthorizationCheckerInterface $checker,
         private AreaOfInterestRepository $areas,
+        // WHICH ONE TOPIC A VIEWER MAY FOLLOW per area: the rank rule.
+        private ?LiveVisibility $visibility = null,
     ) {
     }
 
@@ -98,8 +100,15 @@ final readonly class PresenceStreamService
 
         $topics = [];
         foreach ($areas as $area) {
-            if ($this->checker->isGranted(self::PAIR, $area)) {
-                $topics[] = PresencePublisher::topicFor((string) $area->getUuidString());
+            if (!$this->checker->isGranted(self::PAIR, $area)) {
+                continue;
+            }
+            // ONE TOPIC PER AREA, the viewer's own rank place's (or the
+            // control room's): the hub then delivers only the positions of
+            // those junior to them, and nothing of anybody else.
+            $suffix = null === $this->visibility ? LiveVisibility::EVERYONE : $this->visibility->streamTopicFor($area);
+            if (null !== $suffix) {
+                $topics[] = PresencePublisher::topicFor((string) $area->getUuidString()).'/'.$suffix;
             }
         }
         if ([] === $topics) {

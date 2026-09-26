@@ -40,7 +40,7 @@
 {# THE CONFIGURE CARD. #}
 {% macro edit(card, mayGive, csrfToken, reasonMinLength) %}
     {% if card.exceptions is not empty %}
-    <div class="c">
+    <div class="c{{ card.exceptions|filter(r => r.held) is not empty ? ' xgiven' }}">
         <span class="tab">{{ _self.title(card.exceptions) }}<span class="src">&middot; Super Admin only &middot; kept with a reason</span></span>
         {% for row in card.exceptions %}
             {#- SHUT UNTIL GIVEN, OPEN ONCE GIVEN: the reason is read by
@@ -73,7 +73,8 @@
 {# THE RECORD CARD, read-only, with every giving and taking. #}
 {% macro record(rows) %}
     {% if rows is not empty %}
-    <div class="c">
+    {#- GIVEN, THE CARD SPEAKS UP; not given, it stays quiet. -#}
+    <div class="c{{ rows|filter(r => r.held) is not empty ? ' xgiven' }}">
         <span class="tab">{{ _self.title(rows) }}<span class="src">&middot; {{ rows|filter(r => r.held)|length }} given &middot; read-only</span></span>
         {% for row in rows %}
             <div class="mb-drow">

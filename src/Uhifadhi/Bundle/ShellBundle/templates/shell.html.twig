@@ -213,7 +213,9 @@
                         <div class="impband" role="status">
                             {{ ux_icon('shell:eye', {width: 15, height: 15}) }}
                             <span class="who">Signed in as <b>{{ _imp.borrowed }}</b> <em>&middot; you are {{ _imp.real }}</em></span>
-                            <a class="impx" href="{{ _home }}?_switch_user=_exit">{{ ux_icon('shell:power', {width: 13, height: 13}) }} Exit</a>
+                            {#- BACK TO WHERE THE SWITCH WAS MADE, else the dashboard. -#}
+                            {%- set _back = _imp.returnTo ?? _home -%}
+                            <a class="impx" href="{{ _back }}{{ '?' in _back ? '&' : '?' }}_switch_user=_exit">{{ ux_icon('shell:power', {width: 13, height: 13}) }} Exit</a>
                         </div>
                     {%- endif -%}
                 {% endblock %}

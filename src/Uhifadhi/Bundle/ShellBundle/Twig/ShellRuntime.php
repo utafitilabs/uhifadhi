@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\ShellBundle\Twig;
 
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\SwitchUserToken;
@@ -24,6 +25,7 @@ use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\ShellBundle\Model\OrgFrame;
 use Uhifadhi\Bundle\ShellBundle\Model\OrgLockup;
+use Uhifadhi\Bundle\ShellBundle\Security\ImpersonationReturn;
 use Uhifadhi\Bundle\ShellBundle\Service\AreaShell;
 use Uhifadhi\Bundle\ShellBundle\Service\Navigation;
 use Uhifadhi\Bundle\ShellBundle\Service\OrgShell;
@@ -60,6 +62,8 @@ final class ShellRuntime implements RuntimeExtensionInterface
         private readonly string $homeRoute,
         /** Absent on an installation with no security at all; then nobody is ever impersonated. */
         private readonly ?TokenStorageInterface $tokens = null,
+        /** Where the page the Switch was made from is remembered. */
+        private readonly ?RequestStack $requests = null,
     ) {
     }
 
@@ -69,7 +73,11 @@ final class ShellRuntime implements RuntimeExtensionInterface
      * session, and null where the installation has no security — the band
      * that reads this is then simply absent, never an error.
      *
-     * @return array{borrowed: string, real: string}|null
+     * THE EXIT GOES BACK TO WHERE THE SWITCH WAS MADE — the page a Switch
+     * link named ({@see ImpersonationReturn}), or null when none was
+     * remembered and the band falls back to the dashboard.
+     *
+     * @return array{borrowed: string, real: string, returnTo: string|null}|null
      */
     public function impersonation(): ?array
     {
@@ -78,9 +86,13 @@ final class ShellRuntime implements RuntimeExtensionInterface
             return null;
         }
 
+        $session = $this->requests?->getCurrentRequest()?->hasSession() ? $this->requests->getCurrentRequest()->getSession() : null;
+        $returnTo = $session?->get(ImpersonationReturn::SESSION_KEY);
+
         return [
             'borrowed' => self::nameOf($token->getUser()),
             'real' => self::nameOf($token->getOriginalToken()->getUser()),
+            'returnTo' => ImpersonationReturn::isLocalPath($returnTo) && \is_string($returnTo) ? $returnTo : null,
         ];
     }
 

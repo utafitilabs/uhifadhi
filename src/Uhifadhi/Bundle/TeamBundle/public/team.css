@@ -3729,3 +3729,8 @@ form.c { display: block; margin-bottom: 20px; }
 .xform .xact .sp { flex: 1; }
 .xhist { display: flex; flex-direction: column; gap: 2px; }
 .xhist .rln { font-size: 12px; }
+/* GIVEN, THE CARD SPEAKS UP: while a seat holds an exception the card wears
+   the warn border, a faint warm ground and a warn tab; not given, it stays
+   the ordinary quiet card. No left bar. */
+.c.xgiven { border-color: color-mix(in srgb, var(--warn) 55%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--warn) 7%, rgb(var(--c-p1))), rgb(var(--c-p2))); }
+.c.xgiven > .tab { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 55%, transparent); }

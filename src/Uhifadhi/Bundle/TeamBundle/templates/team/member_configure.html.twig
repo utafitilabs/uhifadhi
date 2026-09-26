@@ -250,7 +250,7 @@
                 {% if mayImpersonate and not isSelf %}
                     <div class="mb-drow">
                         <div class="dt"><b>Sign in as this person</b><em>Super Admin only &middot; absent for anybody else</em></div>
-                        <a class="softbtn warn" href="{{ shell_brand().url }}?_switch_user={{ member.email|url_encode }}">{{ bits.icon_eye() }} Switch</a>
+                        <a class="softbtn warn" href="{{ shell_brand().url }}?_switch_user={{ member.email|url_encode }}&amp;{{ constant('Uhifadhi\\Bundle\\ShellBundle\\Security\\ImpersonationReturn::PARAMETER') }}={{ app.request.requestUri|url_encode }}">{{ bits.icon_eye() }} Switch</a>
                     </div>
                 {% endif %}
                 {% if member.isActive %}

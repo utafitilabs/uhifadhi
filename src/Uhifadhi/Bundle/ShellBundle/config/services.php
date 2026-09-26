@@ -21,6 +21,7 @@ use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
 use Uhifadhi\Bundle\ShellBundle\Frame\Registry\ConfigurationSectionsRegistry;
 use Uhifadhi\Bundle\ShellBundle\Frame\Registry\ModuleTabsRegistry;
 use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
+use Uhifadhi\Bundle\ShellBundle\Security\ImpersonationReturn;
 use Uhifadhi\Bundle\ShellBundle\Service\AreaShell;
 use Uhifadhi\Bundle\ShellBundle\Service\Installation;
 use Uhifadhi\Bundle\ShellBundle\Service\Navigation;
@@ -348,6 +349,13 @@ return static function (ContainerConfigurator $container): void {
             '%shell.brand_name%',
             '%shell.home_route%',
             service('security.token_storage')->nullOnInvalid(),
+            service('request_stack')->nullOnInvalid(),
         ])
         ->tag('twig.runtime');
+
+    // EXIT TAKES YOU BACK TO WHERE YOU SWITCHED FROM: the page a Switch link
+    // names is remembered for the band's Exit. Listens on the firewall's own
+    // dispatcher, the application's `event_dispatcher`.
+    $services->set('shell.impersonation_return', ImpersonationReturn::class)
+        ->tag('kernel.event_subscriber');
 };

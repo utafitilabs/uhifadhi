@@ -242,6 +242,53 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
         self::assertSame('/?_switch_user=_exit', $band->filter('a.impx')->attr('href'));
     }
 
+    /**
+     * EXIT TAKES YOU BACK TO WHERE YOU SWITCHED FROM. The Switch link names
+     * the page it sits on; the landing page never shows it, and the band's
+     * Exit returns there, as yourself.
+     */
+    public function testExitReturnsToThePageTheSwitchWasMadeFrom(): void
+    {
+        $this->signedInAdministrator();
+        $grace = $this->person('Grace', 'Ndosi');
+        $grace->setPosition($this->position('Reader', [TeamConcerns::DIRECTORY.'.read']));
+        $this->place($grace);
+        $this->em->flush();
+        $configure = $this->configureUrl($grace);
+
+        $switch = (string) $this->client->request('GET', $configure)->filter('.mb-drow a.softbtn.warn')->attr('href');
+        $this->client->request('GET', $switch);
+        self::assertResponseRedirects('/', null, 'the landing page carries neither the switch nor the return');
+
+        $this->client->followRedirect();
+        $exit = (string) $this->client->request('GET', '/team')->filter('.impband a.impx')->attr('href');
+        self::assertSame($configure.'?_switch_user=_exit', $exit);
+
+        $this->client->request('GET', $exit);
+        self::assertResponseRedirects($configure);
+        $crawler = $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $crawler->filter('.impband'), 'back as yourself');
+    }
+
+    /** A return that leaves the site is not remembered: Exit falls back to the dashboard. */
+    public function testAReturnOffTheSiteIsRefused(): void
+    {
+        $this->signedInAdministrator();
+        $grace = $this->person('Grace', 'Ndosi');
+        $grace->setPosition($this->position('Reader', [TeamConcerns::DIRECTORY.'.read']));
+        $this->place($grace);
+        $this->em->flush();
+
+        foreach (['//evil.example/x', 'https://evil.example/x', 'team/x', '/\\evil.example'] as $return) {
+            $this->client->request('GET', '/?_switch_user='.urlencode((string) $grace->getEmail()).'&_return='.urlencode($return));
+            $this->client->followRedirect();
+            self::assertSame('/?_switch_user=_exit', $this->client->request('GET', '/team')->filter('.impband a.impx')->attr('href'), $return);
+            $this->client->request('GET', '/?_switch_user=_exit');
+            $this->client->followRedirect();
+        }
+    }
+
     /** THE DETAILS CARD SAVES THE FOUR COLUMNS and comes back to this page. */
     public function testTheDetailsCardSavesAndReturnsHere(): void
     {

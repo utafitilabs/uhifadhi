@@ -48,6 +48,7 @@ final class PositionExceptionTest extends WebTestCaseWithSchema
         self::assertStringContainsString('Live locations', $card->text());
         self::assertStringContainsString('lifts the rank rule', $card->text());
         self::assertSame('not given', $card->filter('.xst')->text());
+        self::assertCount(0, $crawler->filter('.c.xgiven'), 'not given, the card stays quiet');
         self::assertCount(1, $card->filter('details.xrule:not([open])'), 'folded shut');
         self::assertStringEndsWith('/exceptions/locations.read', (string) $card->filter('form')->attr('action'));
         self::assertCount(1, $card->filter('textarea[name="reason"][required]'));
@@ -156,6 +157,7 @@ final class PositionExceptionTest extends WebTestCaseWithSchema
         $record = $this->client->request('GET', $this->url($room, ''));
 
         self::assertStringContainsString(self::REASON, $record->filter('.xwhy')->text());
+        self::assertCount(1, $record->filter('.c.xgiven'), 'given, the card speaks up');
         self::assertStringContainsString('given by Naomi Kileo', $record->filter('.xby')->text());
     }
 

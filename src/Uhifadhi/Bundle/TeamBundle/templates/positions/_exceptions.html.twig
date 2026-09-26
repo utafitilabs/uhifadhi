@@ -7,7 +7,7 @@
    source: DesignsProjects/team-module/team/positions/configure.html + show.html
    | design element                            | type    | source                           | status |
    | card tab "Exceptions to the rank rule"    | chrome  | the lifted rule                  | done   |
-   | fold (details.xrule), shut by default     | state   | static                           | done   |
+   | fold: shut until given, open once given   | state   | RuleExceptionRow::held           | done   |
    | label + sensitive mark + "lifts …"        | data    | RuleExceptionRow                 | done   |
    | state chip: not given / given             | state   | RuleExceptionRow::held           | done   |
    | reason field + Give the exception         | control | POST team_position_exception_give| done   |
@@ -43,7 +43,9 @@
     <div class="c">
         <span class="tab">{{ _self.title(card.exceptions) }}<span class="src">&middot; Super Admin only &middot; kept with a reason</span></span>
         {% for row in card.exceptions %}
-            <details class="xrule">
+            {#- SHUT UNTIL GIVEN, OPEN ONCE GIVEN: the reason is read by
+                whoever opens the page, not only by whoever unfolds it. -#}
+            <details class="xrule"{{ row.held ? ' open' }}>
                 <summary>{{ _self.row_head(row) }}</summary>
                 <div class="xbody">
                     {{ _self.given(row) }}

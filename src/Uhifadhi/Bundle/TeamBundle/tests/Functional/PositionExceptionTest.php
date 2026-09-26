@@ -72,6 +72,7 @@ final class PositionExceptionTest extends WebTestCaseWithSchema
         self::assertSame($naomi->getId(), $row->getGrantedBy()?->getId());
 
         $card = $crawler->filter('details.xrule');
+        self::assertNotNull($card->attr('open'), 'given, the card opens so the reason is read by whoever looks');
         self::assertSame('given', $card->filter('.xst')->text());
         self::assertStringContainsString(self::REASON, $card->filter('.xwhy')->text());
         self::assertStringContainsString('Take it away', $card->text());

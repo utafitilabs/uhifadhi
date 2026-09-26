@@ -110,6 +110,7 @@
        review. #}
     {% set xr = exceptionReview %}
     {% if xr and xr.lifts %}
+    <div class="grid">
     <div class="c">
         <span class="tab">Sees every live position<span class="src">&middot; {{ xr.seats|length }} seat{{ xr.seats|length == 1 ? '' : 's' }} &middot; {{ xr.people }} {{ xr.people == 1 ? 'person' : 'people' }} &middot; review</span></span>
         {% for seat in xr.seats %}
@@ -121,6 +122,7 @@
             <div class="rln"><span>{{ tier.label }} <span class="chip">by tier</span></span><span class="mono d">{{ tier.people|length }} {{ tier.people|length == 1 ? 'person' : 'people' }}{% if tier.people is not empty %} &middot; {{ tier.people|join(', ') }}{% endif %}</span></div>
         {% endfor %}
         <div class="sxfoot"><span>given and taken on the position, by a Super Admin</span><span class="sp"></span><a class="tgl" href="{{ path('team_positions') }}">The positions</a></div>
+    </div>
     </div>
     {% endif %}
 

@@ -65,6 +65,7 @@ final class ShellExtension extends AbstractExtension
             // The wordmark beside the brand tile, and where the tile links.
             new TwigFunction('shell_brand', [ShellRuntime::class, 'brand']),
             new TwigFunction('shell_impersonation', [ShellRuntime::class, 'impersonation']),
+            new TwigFunction('shell_sign_out_url', [ShellRuntime::class, 'signOutUrl']),
             // WHEN A STORED FIGURE IS TRUE AS OF — "as of 13:00" beside a
             // figure read from the facts ledger. Renders the shell's <time>.
             new TwigFunction('shell_as_of', [AsOfRuntime::class, 'asOf'], ['needs_environment' => true, 'is_safe' => ['html']]),

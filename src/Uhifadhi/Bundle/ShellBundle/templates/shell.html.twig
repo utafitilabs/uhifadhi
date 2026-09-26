@@ -188,12 +188,28 @@
                                        then the other one, or absent. #}
                                     {%- set _chip_org = shell_organization() -%}
                                     {%- set _line = [_chip_org is null ? null : _chip_org.shortName, _badge.context]|filter(part => part is not null and part is not empty)|join(' · ') -%}
+                                    {%- set _card -%}
                                     <span class="user">
                                         <span class="avatar">{{ _badge.initials }}</span>
                                         <span class="uinfo"><b>{{ _badge.name }}</b>
                                             {%- if _line is not empty %}<em>{{ _line }}</em>{% endif -%}
                                         </span>
                                     </span>
+                                    {%- endset -%}
+                                    {#- SIGN OUT IS ON THE NAME: the card opens a menu whose
+                                        item is the firewall's own logout path. With no
+                                        firewall it stays a plain card. -#}
+                                    {%- set _out = shell_sign_out_url() -%}
+                                    {%- if _out -%}
+                                        <details class="umenu">
+                                            <summary aria-label="Account menu">{{ _card }}</summary>
+                                            <div class="umenu-pop" role="menu">
+                                                <a class="umenu-i" role="menuitem" href="{{ _out }}">{{ ux_icon('shell:power', {width: 14, height: 14}) }} Sign out</a>
+                                            </div>
+                                        </details>
+                                    {%- else -%}
+                                        {{ _card }}
+                                    {%- endif -%}
                                 {%- endif -%}
                             {% endblock %}
                             </span>

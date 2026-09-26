@@ -20,6 +20,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\TestKernel;
 
 /**
@@ -129,6 +130,34 @@ final class SignInTest extends WebTestCase
         // the redirect would be asking a fresh request what the last one knew.
         $this->client->request('GET', '/_guarded');
         self::assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * SIGN OUT IS ON THE NAME, top right: the viewer's card opens a menu
+     * whose one item is the firewall's own logout path, and it ends the session.
+     */
+    public function testTheNameInTheTopBarOpensSignOutAndItEndsTheSession(): void
+    {
+        $this->seedWarden();
+        $warden = $this->em->getRepository(User::class)->findOneBy(['email' => 'warden@example.test']);
+        self::assertInstanceOf(User::class, $warden);
+        $warden->setTeamRole(TeamRoleEnum::SuperAdmin);
+        $this->em->flush();
+        $crawler = $this->client->request('GET', '/login');
+        $this->client->submit($crawler->selectButton('Sign in')->form(['_username' => 'warden@example.test', '_password' => 'correct horse']));
+
+        $page = $this->client->request('GET', '/team');
+        $menu = $page->filter('header.topbar details.umenu');
+        self::assertCount(1, $menu);
+        self::assertCount(1, $menu->filter('summary span.user'), 'the name is what opens it');
+        $out = $menu->filter('a.umenu-i');
+        self::assertSame('/logout', $out->attr('href'));
+        self::assertStringContainsString('Sign out', $out->text());
+
+        $this->client->request('GET', '/logout');
+        $this->client->request('GET', '/_guarded');
+        self::assertResponseRedirects();
+        self::assertStringContainsString('/login', (string) $this->client->getResponse()->headers->get('Location'));
     }
 
     public function testTheWrongPasswordIsRefusedAndSaidSoOnThePage(): void

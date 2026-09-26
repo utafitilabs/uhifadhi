@@ -18,6 +18,7 @@ use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\SwitchUserToken;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Http\Logout\LogoutUrlGenerator;
 use Twig\Extension\RuntimeExtensionInterface;
 use Uhifadhi\Bundle\ShellBundle\Frame\Model\ConfigureAction;
 use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
@@ -64,7 +65,30 @@ final class ShellRuntime implements RuntimeExtensionInterface
         private readonly ?TokenStorageInterface $tokens = null,
         /** Where the page the Switch was made from is remembered. */
         private readonly ?RequestStack $requests = null,
+        /** The firewall's own logout path; absent with no security at all. */
+        private readonly ?LogoutUrlGenerator $logout = null,
     ) {
+    }
+
+    /**
+     * WHERE SIGN OUT GOES — the current firewall's own logout path, so the
+     * shell names no bundle's route. Null where there is no firewall, or one
+     * with no logout: then the name in the top bar is a plain card.
+     *
+     * @see https://symfony.com/doc/current/security.html#logging-out — "logout_path() … generate the logout URL"
+     * @see vendor/symfony/security-http/Logout/LogoutUrlGenerator.php — getLogoutPath() throws InvalidArgumentException off a firewall or without a logout listener
+     */
+    public function signOutUrl(): ?string
+    {
+        if (null === $this->logout) {
+            return null;
+        }
+
+        try {
+            return $this->logout->getLogoutPath();
+        } catch (\InvalidArgumentException|\LogicException) {
+            return null;
+        }
     }
 
     /**

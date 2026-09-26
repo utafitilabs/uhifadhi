@@ -350,6 +350,7 @@ return static function (ContainerConfigurator $container): void {
             '%shell.home_route%',
             service('security.token_storage')->nullOnInvalid(),
             service('request_stack')->nullOnInvalid(),
+            service('security.logout_url_generator')->nullOnInvalid(),
         ])
         ->tag('twig.runtime');
 

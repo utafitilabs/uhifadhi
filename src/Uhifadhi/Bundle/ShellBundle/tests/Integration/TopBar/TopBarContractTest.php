@@ -102,6 +102,17 @@ final class TopBarContractTest extends ContractTestCase
         self::assertSame('UCA · operator', trim($card->filter('.uinfo em')->text()));
     }
 
+    /** WITH NO FIREWALL THERE IS NOTHING TO SIGN OUT OF: the card stays a plain card. */
+    public function testWithoutSecurityTheCardOffersNoSignOut(): void
+    {
+        HostKernel::$userBadge = new UserBadge('N. Kileo', 'NK', 'UCA · operator');
+
+        $crawler = $this->crawl(self::PAGE);
+
+        self::assertCount(1, $crawler->filter('header.topbar span.user'));
+        self::assertCount(0, $crawler->filter('header.topbar details.umenu'));
+    }
+
     /**
      * A MINIMAL BADGE HAS A NAME AND NO CONTEXT LINE — the fallback a bare host
      * gets by handing over only a name. The card draws the name and the derived

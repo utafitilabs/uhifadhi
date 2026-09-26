@@ -25,6 +25,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Security\GrantVoter;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 
@@ -118,6 +119,111 @@ final class GrantVoterTest extends IntegrationTestCase
             ->setPlacement(new Placement()->acrossTheOrganization()->acrossAllDepartments());
 
         self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($person, ['directory.read'], $kilimani));
+    }
+
+    // --- an exception to a rule: held only with a reason in force ---------
+
+    /**
+     * A GRANT THAT LIFTS A RULE IS HELD ONLY WHILE A SUPER ADMIN'S REASON IS
+     * IN FORCE. A pair written onto a seat any other way — an import, a seed,
+     * a hand-edited row — is refused, because nobody said why.
+     */
+    public function testAnExceptionWrittenWithoutAReasonIsRefused(): void
+    {
+        $kilimani = $this->area('Kilimani Crater');
+        $room = $this->positionGranting('Radio Operator', ['locations.read']);
+        $this->em->persist($room);
+        $person = $this->persistedStaff($room, new Placement()->acrossTheOrganization()->acrossAllDepartments());
+
+        self::assertContains('locations.read', $room->getGrantValues(), 'the pair is on the seat');
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($person, ['locations.read'], $kilimani));
+    }
+
+    public function testAnExceptionGivenWithAReasonIsHeldAndTakingItAwayEndsIt(): void
+    {
+        $kilimani = $this->area('Kilimani Crater');
+        $room = $this->positionGranting('Radio Operator', []);
+        $this->em->persist($room);
+        $person = $this->persistedStaff($room, new Placement()->acrossTheOrganization()->acrossAllDepartments());
+        $naomi = $this->superAdmin();
+
+        $this->positions()->grantException($room, 'locations.read', 'The radio room coordinates every rescue.', $naomi);
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($person, ['locations.read'], $kilimani));
+
+        $this->positions()->revokeException($room, 'locations.read', $naomi);
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($person, ['locations.read'], $kilimani));
+    }
+
+    /** The exception lifts the rank rule, not the ground: the placement is still asked. */
+    public function testAnExceptionStillAsksWhereThePersonIsPlaced(): void
+    {
+        $kilimani = $this->area('Kilimani Crater');
+        $mbuyu = $this->area('Mbuyu');
+        $room = $this->positionGranting('Radio Operator', []);
+        $this->em->persist($room);
+        $person = $this->persistedStaff($room, new Placement()->inAreas([$kilimani])->acrossAllDepartments());
+        $this->positions()->grantException($room, 'locations.read', 'The radio room coordinates every rescue.', $this->superAdmin());
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($person, ['locations.read'], $kilimani));
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($person, ['locations.read'], $mbuyu));
+    }
+
+    /** It belongs to the seat: the moment somebody leaves it, they no longer hold it. */
+    public function testLeavingTheSeatLeavesTheException(): void
+    {
+        $kilimani = $this->area('Kilimani Crater');
+        $room = $this->positionGranting('Radio Operator', []);
+        $ranger = $this->positionGranting('Ranger', ['directory.read']);
+        $this->em->persist($room);
+        $this->em->persist($ranger);
+        $person = $this->persistedStaff($room, new Placement()->acrossTheOrganization()->acrossAllDepartments());
+        $this->positions()->grantException($room, 'locations.read', 'The radio room coordinates every rescue.', $this->superAdmin());
+
+        $person->setPosition($ranger);
+        $this->em->flush();
+
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($person, ['locations.read'], $kilimani));
+    }
+
+    /**
+     * THE TWO TIERS STAND ABOVE THE MATRIX, the exception included. That is
+     * not hidden: the review list names them as seeing everybody by tier.
+     */
+    public function testTheTiersHoldTheExceptionByTier(): void
+    {
+        $kilimani = $this->area('Kilimani Crater');
+
+        foreach ([TeamRoleEnum::SuperAdmin, TeamRoleEnum::Admin] as $tier) {
+            $person = (new User())->setEmail($tier->value.'@example.test')->setFirstName('T')->setLastName('A')
+                ->setPassword('x')->setTeamRole($tier);
+
+            self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($person, ['locations.read'], $kilimani), $tier->label());
+        }
+    }
+
+    private function persistedStaff(Position $position, Placement $placement): User
+    {
+        $this->em->persist($placement);
+        $person = $this->staff($position, $placement)->setEmail(bin2hex(random_bytes(4)).'@example.test');
+        $this->em->persist($person);
+        $this->em->flush();
+
+        return $person;
+    }
+
+    private function superAdmin(): User
+    {
+        $naomi = (new User())->setEmail('naomi.'.bin2hex(random_bytes(3)).'@example.test')->setFirstName('Naomi')->setLastName('Kileo')
+            ->setPassword('x')->setTeamRole(TeamRoleEnum::SuperAdmin);
+        $this->em->persist($naomi);
+        $this->em->flush();
+
+        return $naomi;
+    }
+
+    private function positions(): PositionService
+    {
+        return $this->service(PositionService::class);
     }
 
     // --- question two: does the placement cover the area? -----------------

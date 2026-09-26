@@ -92,6 +92,19 @@ interface ConcernInterface
      */
     public function moduleSlug(): ?string;
 
+    /**
+     * THE RULE A GRANT ON THIS CONCERN LIFTS, in the declarer's words ("the
+     * rank rule"), or null for an ordinary concern.
+     *
+     * A concern that lifts a rule is an EXCEPTION: the product applies that
+     * rule to everybody, and holding the grant takes a seat out of it. The
+     * core draws an exception apart from the matrix, lets only a Super Admin
+     * give or take it, keeps a written reason with who gave it and when, and
+     * lists every seat holding one for review. An exception is always
+     * sensitive.
+     */
+    public function lifts(): ?string;
+
     public function supports(Verb $verb): bool;
 
     public function offers(ScopeKind $kind): bool;

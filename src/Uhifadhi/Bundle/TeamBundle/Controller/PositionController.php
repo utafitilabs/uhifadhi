@@ -30,8 +30,11 @@ use Twig\Environment;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
+use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PositionHeldException;
+use Uhifadhi\Bundle\TeamBundle\Exception\RuleExceptionRefusedException;
 use Uhifadhi\Bundle\TeamBundle\Exception\SeatsBelowHoldersException;
 use Uhifadhi\Bundle\TeamBundle\Exception\UnknownGrantException;
 use Uhifadhi\Bundle\TeamBundle\Model\PositionCard;
@@ -100,6 +103,9 @@ final readonly class PositionController
     public const string CONFIGURE = TeamConcerns::POSITIONS.'.'.Verb::Configure->value;
 
     public const string CSRF_ID = 'team_position';
+
+    /** A pair as a route names it: `<concern>.<verb>`. */
+    private const string PAIR_PATTERN = '[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z]+';
 
     /** How many lines of a position's history a bounded card shows. */
     private const int HISTORY_SHOWN = 8;
@@ -182,6 +188,7 @@ final readonly class PositionController
             'history' => \array_slice($history, 0, self::HISTORY_SHOWN),
             'historyTotal' => \count($history),
             'orphans' => $this->board->orphans($position),
+            'exceptions' => $this->board->exceptionsWithHistory($position),
         ]));
     }
 
@@ -205,6 +212,10 @@ final readonly class PositionController
             'grantable' => $this->authority->grantableGrants(),
             'placeableKinds' => [ScopeKind::Organization, ScopeKind::Area],
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
+            // Only a Super Admin gives or takes an exception to a rule; anybody
+            // else who configures positions reads the card without controls.
+            'mayGiveExceptions' => TeamRoleEnum::SuperAdmin === $this->authority->actor()?->getTeamRole(),
+            'reasonMinLength' => PositionService::REASON_MIN_LENGTH,
         ]));
     }
 
@@ -311,7 +322,7 @@ final readonly class PositionController
 
         try {
             $this->positionWrites->setGrants($position, $granted);
-        } catch (UnknownGrantException $refusal) {
+        } catch (UnknownGrantException|RuleExceptionRefusedException $refusal) {
             return $this->back($request, $refusal->getMessage(), 'error', $position);
         }
 
@@ -324,6 +335,59 @@ final readonly class PositionController
             1 === \count($granted) ? '' : 's',
             $reaches,
             1 === $reaches ? 'person' : 'people',
+        ), 'success', $position);
+    }
+
+    /**
+     * GIVING AN EXCEPTION TO A RULE — its own card, a Super Admin, a written
+     * reason (ruled 2026-09-26). Anybody else is refused before the service
+     * is asked, and the service refuses again, so no later screen can forget.
+     */
+    #[Route('/team/positions/{uuid}/exceptions/{pair}', name: 'team_position_exception_give', requirements: ['uuid' => Requirement::UUID, 'pair' => self::PAIR_PATTERN], methods: ['POST'])]
+    #[IsGranted(self::CONFIGURE)]
+    public function giveException(Request $request, string $uuid, string $pair): Response
+    {
+        $position = $this->position($uuid);
+        $this->assertCsrf($request);
+        $actor = $this->superAdmin();
+
+        try {
+            $given = $this->positionWrites->grantException($position, $pair, (string) $request->request->get('reason', ''), $actor);
+        } catch (RuleExceptionRefusedException $refusal) {
+            return $this->back($request, $refusal->getMessage(), 'error', $position);
+        }
+
+        $reaches = $this->users->countActiveHoldingAnyPosition([$position]);
+
+        return $this->back($request, \sprintf(
+            '“%s” now holds “%s” — an exception to %s, given by %s. It reaches %d %s.',
+            (string) $position->getName(),
+            $this->catalogue->concern(explode('.', $pair)[0])?->label() ?? $pair,
+            $this->catalogue->lifts(explode('.', $pair)[0]) ?? 'a rule',
+            $given->getGrantedByName(),
+            $reaches,
+            1 === $reaches ? 'person' : 'people',
+        ), 'success', $position);
+    }
+
+    #[Route('/team/positions/{uuid}/exceptions/{pair}/revoke', name: 'team_position_exception_revoke', requirements: ['uuid' => Requirement::UUID, 'pair' => self::PAIR_PATTERN], methods: ['POST'])]
+    #[IsGranted(self::CONFIGURE)]
+    public function revokeException(Request $request, string $uuid, string $pair): Response
+    {
+        $position = $this->position($uuid);
+        $this->assertCsrf($request);
+        $actor = $this->superAdmin();
+
+        try {
+            $this->positionWrites->revokeException($position, $pair, $actor);
+        } catch (RuleExceptionRefusedException $refusal) {
+            return $this->back($request, $refusal->getMessage(), 'error', $position);
+        }
+
+        return $this->back($request, \sprintf(
+            '“%s” no longer holds “%s”. The reason it was given stays on its record.',
+            (string) $position->getName(),
+            $this->catalogue->concern(explode('.', $pair)[0])?->label() ?? $pair,
         ), 'success', $position);
     }
 
@@ -462,6 +526,17 @@ final readonly class PositionController
         $chosen = array_values(array_filter($granted, static fn (string $value): bool => \in_array($value, $grantable, true)));
 
         return array_values(array_unique([...$chosen, ...$frozen]));
+    }
+
+    /** The signed-in Super Admin, or a refusal: nobody else touches an exception. */
+    private function superAdmin(): User
+    {
+        $actor = $this->authority->actor();
+        if (null === $actor || TeamRoleEnum::SuperAdmin !== $actor->getTeamRole()) {
+            throw new AccessDeniedException('Only a Super Admin may give or take away an exception to a rule.');
+        }
+
+        return $actor;
     }
 
     private function position(string $uuid): Position

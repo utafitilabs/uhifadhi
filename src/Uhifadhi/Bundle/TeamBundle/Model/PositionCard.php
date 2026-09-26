@@ -29,9 +29,10 @@ use Uhifadhi\Contracts\Access\Verb;
 final readonly class PositionCard
 {
     /**
-     * @param list<GrantGroup>  $groups     one per declarer, in declaration order
-     * @param list<HolderRow>   $holders    everybody standing in it, by name
-     * @param array<string,int> $verbTotals verb value => how many concerns hold it
+     * @param list<GrantGroup>       $groups     one per declarer, in declaration order
+     * @param list<HolderRow>        $holders    everybody standing in it, by name
+     * @param array<string,int>      $verbTotals verb value => how many concerns hold it
+     * @param list<RuleExceptionRow> $exceptions the grants that lift a rule, drawn apart from the matrix
      */
     public function __construct(
         public Position $position,
@@ -41,6 +42,7 @@ final readonly class PositionCard
         public int $concernsDeclared,
         public int $sensitiveGranted,
         public array $verbTotals,
+        public array $exceptions = [],
     ) {
     }
 

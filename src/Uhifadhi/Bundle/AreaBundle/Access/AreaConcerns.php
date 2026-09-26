@@ -131,6 +131,11 @@ final readonly class AreaConcerns implements ConcernSourceInterface
             description: 'See the live position of everybody on the ground, whatever their rank - the control room. Without it a person sees only those junior to them.',
             verbs: [Verb::Read],
             scopeKinds: $ground,
+            // A person's position is a fact about them, and this grant takes a
+            // seat out of the rule everybody else is held to: only a Super
+            // Admin gives it, with a written reason, and it is listed for review.
+            sensitive: true,
+            lifts: 'the rank rule',
         );
     }
 }

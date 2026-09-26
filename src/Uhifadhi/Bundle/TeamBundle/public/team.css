@@ -3701,3 +3701,31 @@ form.c { display: block; margin-bottom: 20px; }
   .rkh-hd{display:none}
   .rkh-row{grid-template-columns:minmax(0,1fr);gap:2px}
 }
+
+/* ============================================================================
+   EXCEPTIONS TO A RULE — a grant that lifts a rule everybody else is held to
+   (the control room's "Live locations" lifts the rank rule). Drawn APART from
+   the matrix, folded shut, given only by a Super Admin with a written reason.
+   Ruled 26 Sep 2026; ported from DesignsProjects/team-module/permissions.css.
+   The row is the person record's action row (.mb-drow); these rules add only
+   the fold, the reason and the field.
+   ========================================================================= */
+.xrule { margin-top: 6px; }
+.xrule > summary { list-style: none; cursor: pointer; }
+.xrule > summary::-webkit-details-marker { display: none; }
+.xrule > summary .mb-drow { border-bottom: 0; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; }
+.xrule .xst { flex: none; font: 600 10.5px/1 "JetBrains Mono", ui-monospace, monospace; letter-spacing: .04em; text-transform: uppercase; padding: 5px 8px 4px; border-radius: 999px; border: 1px solid var(--ln); color: var(--fog); }
+.xrule .xst.on { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, var(--ln)); }
+.xrule .xcar { flex: none; width: 12px; height: 12px; color: var(--dim); transition: transform .15s; }
+.xrule[open] .xcar { transform: rotate(180deg); }
+.xbody { padding: 10px 0 4px; border-top: 1px dashed var(--ln); display: flex; flex-direction: column; gap: 10px; }
+.xwhy { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--tx); }
+.xwhy::before { content: "\201C"; color: var(--dim); }
+.xwhy::after { content: "\201D"; color: var(--dim); }
+.xby { font: 11px/1.5 "JetBrains Mono", ui-monospace, monospace; color: var(--fog); }
+.xform { display: flex; flex-direction: column; gap: 8px; }
+.xform textarea.fld { box-sizing: border-box; width: 100%; min-height: 76px; resize: vertical; font: inherit; font-size: 12.5px; line-height: 1.5; padding: 8px 10px; }
+.xform .xact { display: flex; align-items: center; gap: 8px; }
+.xform .xact .sp { flex: 1; }
+.xhist { display: flex; flex-direction: column; gap: 2px; }
+.xhist .rln { font-size: 12px; }

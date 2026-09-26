@@ -14,12 +14,15 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Service;
 
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Entity\GrantJustification;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Model\GrantGroup;
 use Uhifadhi\Bundle\TeamBundle\Model\GrantRow;
 use Uhifadhi\Bundle\TeamBundle\Model\HolderRow;
 use Uhifadhi\Bundle\TeamBundle\Model\PositionCard;
+use Uhifadhi\Bundle\TeamBundle\Model\RuleExceptionRow;
+use Uhifadhi\Bundle\TeamBundle\Repository\GrantJustificationRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Contracts\Access\ConcernInterface;
@@ -48,6 +51,7 @@ final readonly class PositionBoard
         private PositionRepository $positions,
         private UserRepository $users,
         private ConcernCatalogue $catalogue,
+        private ?GrantJustificationRepository $justifications = null,
     ) {
     }
 
@@ -73,12 +77,40 @@ final readonly class PositionBoard
         $sensitive = 0;
         $verbTotals = [];
 
+        $exceptions = [];
+        $current = null;
+
         foreach ($this->catalogue->grouped() as $declarer => $concerns) {
             $rows = [];
             $module = null;
 
             foreach ($concerns as $concern) {
                 $row = $this->row($concern, $position, $held);
+
+                // AN EXCEPTION TO A RULE IS NEVER A ROW OF THE MATRIX. It is
+                // drawn on its own card; it still counts as granted and as
+                // sensitive, because it is both.
+                if (null !== $concern->lifts()) {
+                    $current ??= null === $position->getId() ? [] : ($this->justifications?->findCurrentByPosition($position) ?? []);
+                    foreach ($row->verbs as $verb) {
+                        $pair = (string) Grant::of($concern->key(), $verb);
+                        $exceptions[] = new RuleExceptionRow(
+                            key: $concern->key(),
+                            pair: $pair,
+                            label: $concern->label(),
+                            description: $concern->description(),
+                            lifts: $concern->lifts(),
+                            held: $row->cells[$verb->value] ?? false,
+                            current: $current[$pair] ?? null,
+                        );
+                    }
+                    if ($row->isGranted()) {
+                        ++$granted;
+                        ++$sensitive;
+                    }
+
+                    continue;
+                }
                 $rows[] = $row;
                 $module ??= $concern->moduleSlug();
 
@@ -96,7 +128,9 @@ final readonly class PositionBoard
                 }
             }
 
-            $groups[] = new GrantGroup($declarer, $module, $rows);
+            if ([] !== $rows) {
+                $groups[] = new GrantGroup($declarer, $module, $rows);
+            }
         }
 
         // THE CORE'S GROUPS FIRST, the widest first among them, then every
@@ -117,6 +151,31 @@ final readonly class PositionBoard
             concernsDeclared: \count($this->catalogue->all()),
             sensitiveGranted: $sensitive,
             verbTotals: $verbTotals,
+            exceptions: $exceptions,
+        );
+    }
+
+    /**
+     * THE POSITION'S EXCEPTIONS WITH THEIR WHOLE HISTORY — the record's card.
+     *
+     * @return list<RuleExceptionRow>
+     */
+    public function exceptionsWithHistory(Position $position): array
+    {
+        $history = null === $position->getId() ? [] : ($this->justifications?->findByPositionNewestFirst($position) ?? []);
+
+        return array_map(
+            static fn (RuleExceptionRow $row): RuleExceptionRow => new RuleExceptionRow(
+                key: $row->key,
+                pair: $row->pair,
+                label: $row->label,
+                description: $row->description,
+                lifts: $row->lifts,
+                held: $row->held,
+                current: $row->current,
+                history: array_values(array_filter($history, static fn (GrantJustification $j): bool => $j->getPair() === $row->pair)),
+            ),
+            $this->card($position)->exceptions,
         );
     }
 

@@ -68,6 +68,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentKindRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\GrantJustificationRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\InstallationPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\RankHoldingRepository;
@@ -106,6 +107,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\RankBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\RankService;
 use Uhifadhi\Bundle\TeamBundle\Service\RolesBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\RosterFacets;
+use Uhifadhi\Bundle\TeamBundle\Service\RuleExceptionReview;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
@@ -329,6 +331,10 @@ return static function (ContainerConfigurator $container): void {
         ->tag('doctrine.repository_service');
 
     $services->set(RankHoldingRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    $services->set(GrantJustificationRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
 
@@ -583,7 +589,7 @@ return static function (ContainerConfigurator $container): void {
      * a time rather than in one unreviewable sweep.
      */
     $services->set('team.access.voter', GrantVoter::class)
-        ->args([service('team.access.catalogue'), service(DepartmentRepository::class)])
+        ->args([service('team.access.catalogue'), service(DepartmentRepository::class), service(GrantJustificationRepository::class)])
         ->tag('security.voter');
 
     /*
@@ -969,6 +975,7 @@ return static function (ContainerConfigurator $container): void {
             service('doctrine.orm.entity_manager'),
             service('team.access.catalogue'),
             service(UserRepository::class),
+            service(GrantJustificationRepository::class),
         ]);
 
     /*
@@ -986,6 +993,7 @@ return static function (ContainerConfigurator $container): void {
             service(PositionRepository::class),
             service(UserRepository::class),
             service('team.access.catalogue'),
+            service(GrantJustificationRepository::class),
         ]);
 
     /* What this installation can truthfully say happened to a position. */
@@ -1361,8 +1369,12 @@ return static function (ContainerConfigurator $container): void {
         ]);
     $services->alias(TeamSectionOverview::class, 'team.section_overview');
 
+    // Who stands outside a rule: every seat holding an exception, and the tiers.
+    $services->set('team.rule_exception_review', RuleExceptionReview::class)
+        ->args([service(GrantJustificationRepository::class), service(UserRepository::class), service('team.access.catalogue')]);
+
     $services->set('team.controller.section', TeamSectionController::class)
-        ->args([service('twig'), service('team.section_overview')])
+        ->args([service('twig'), service('team.section_overview'), service('team.rule_exception_review')])
         ->tag('controller.service_arguments');
     $services->alias(TeamSectionController::class, 'team.controller.section')->public();
 

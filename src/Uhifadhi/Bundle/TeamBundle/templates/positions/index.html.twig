@@ -155,7 +155,7 @@
                     {%- if card.grantsNothing -%}Grants nothing
                     {%- else -%}{%- for word, count in card.summary %}{{ loop.first ? '' : ' · ' }}{{ word }} {{ count }}{% endfor -%}{%- endif -%}
                 </span></td>
-                <td>{% if card.sensitiveGranted %}<span class="chip warn">{{ card.sensitiveGranted }} sensitive</span>{% else %}<span class="mono d">&mdash;</span>{% endif %}</td>
+                <td>{% if card.sensitiveGranted %}<span class="chip warn">{{ card.sensitiveGranted }} sensitive</span>{% else %}<span class="mono d">&mdash;</span>{% endif %}{% for x in card.exceptions|filter(x => x.held) %} <span class="chip warn" title="{{ x.label }}: an exception given by a Super Admin, with a reason">lifts {{ x.lifts }}</span>{% endfor %}</td>
                 <td>
                     <span class="avs">
                         {%- for holder in card.holders|slice(0, 4) -%}

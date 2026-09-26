@@ -414,6 +414,27 @@ class UserRepository extends ServiceEntityRepository
         return $users;
     }
 
+    /**
+     * Everybody active in one tier, by name — the review list names the two
+     * tiers that stand above the matrix.
+     *
+     * @return list<User>
+     */
+    public function findActiveInTier(TeamRoleEnum $tier): array
+    {
+        /** @var list<User> $users */
+        $users = $this->createQueryBuilder('u')
+            ->andWhere('u.isActive = true')
+            ->andWhere('u.teamRole = :tier')
+            ->setParameter('tier', $tier->value)
+            ->orderBy('u.firstName', 'ASC')
+            ->addOrderBy('u.lastName', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $users;
+    }
+
     /** The one the standing-risk row names, when there is exactly one. */
     public function findFirstActiveSuperAdmin(): ?User
     {

@@ -104,6 +104,26 @@
         </div>
     </div>
 
+    {# WHO SEES EVERY LIVE POSITION — ruled 2026-09-26. Every seat holding an
+       exception to the rank rule, with its reason, who gave it and when, and
+       the two tiers that see everybody by tier, named openly. One place to
+       review. #}
+    {% set xr = exceptionReview %}
+    {% if xr and xr.lifts %}
+    <div class="c">
+        <span class="tab">Sees every live position<span class="src">&middot; {{ xr.seats|length }} seat{{ xr.seats|length == 1 ? '' : 's' }} &middot; {{ xr.people }} {{ xr.people == 1 ? 'person' : 'people' }} &middot; review</span></span>
+        {% for seat in xr.seats %}
+            <div class="rln"><span><a href="{{ path('team_position_show', {uuid: seat.uuid}) }}">{{ seat.position }}</a> <span class="chip warn">lifts {{ seat.lifts }}</span></span><span class="mono d">{{ seat.holders }} {{ seat.holders == 1 ? 'holds' : 'hold' }} it &middot; {{ seat.by }} &middot; <time datetime="{{ seat.at|date('c') }}" data-localtime-format="day">{{ seat.at|date('j M Y') }}</time> &middot; &ldquo;{{ seat.reason|length > 60 ? seat.reason|slice(0, 60) ~ '…' : seat.reason }}&rdquo;</span></div>
+        {% else %}
+            <div class="rln"><span class="d">No seat holds it.</span><span class="mono d">only the tiers below see everybody</span></div>
+        {% endfor %}
+        {% for tier in xr.tiers %}
+            <div class="rln"><span>{{ tier.label }} <span class="chip">by tier</span></span><span class="mono d">{{ tier.people|length }} {{ tier.people|length == 1 ? 'person' : 'people' }}{% if tier.people is not empty %} &middot; {{ tier.people|join(', ') }}{% endif %}</span></div>
+        {% endfor %}
+        <div class="sxfoot"><span>given and taken on the position, by a Super Admin</span><span class="sp"></span><a class="tgl" href="{{ path('team_positions') }}">The positions</a></div>
+    </div>
+    {% endif %}
+
     <div class="grid g2">
         <div class="c">
             <span class="tab">Holds nothing<span class="src">&middot; {{ holdsNothingTotal }} &middot; needs attention</span></span>

@@ -20,6 +20,7 @@ use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\GrantJustificationRepository;
 use Uhifadhi\Contracts\Access\Grant;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 
@@ -68,6 +69,7 @@ final class GrantVoter extends Voter
     public function __construct(
         private readonly ConcernCatalogue $catalogue,
         private readonly DepartmentRepository $departments,
+        private readonly GrantJustificationRepository $justifications,
     ) {
     }
 
@@ -104,6 +106,15 @@ final class GrantVoter extends Voter
         // 1. Does the position grant it?
         $position = $user->getPosition();
         if (null === $position || !$position->hasGrant($grant)) {
+            return false;
+        }
+
+        // 1a. AN EXCEPTION TO A RULE is held only while a Super Admin's
+        //     written reason for it is in force. A pair that lifts a rule and
+        //     reached the seat any other way - an import, a seed, a hand-made
+        //     row - is refused, because nobody said why.
+        if (null !== $this->catalogue->lifts($grant->concern)
+            && null === $this->justifications->findOneCurrent($position, (string) $grant)) {
             return false;
         }
 

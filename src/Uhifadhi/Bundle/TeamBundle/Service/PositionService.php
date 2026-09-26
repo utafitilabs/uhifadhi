@@ -16,12 +16,18 @@ namespace Uhifadhi\Bundle\TeamBundle\Service;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Entity\GrantJustification;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
+use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PositionHeldException;
+use Uhifadhi\Bundle\TeamBundle\Exception\RuleExceptionRefusedException;
 use Uhifadhi\Bundle\TeamBundle\Exception\SeatsBelowHoldersException;
 use Uhifadhi\Bundle\TeamBundle\Exception\UnknownGrantException;
+use Uhifadhi\Bundle\TeamBundle\Repository\GrantJustificationRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Contracts\Access\Grant;
 use Uhifadhi\Contracts\Access\ScopeKind;
 
 /**
@@ -49,11 +55,17 @@ use Uhifadhi\Contracts\Access\ScopeKind;
  * pruned, not purged. Removing it on the module's way out would silently
  * rewrite what an administrator granted.
  *
- * IT DECIDES NOTHING ABOUT WHO IS ASKING. Whether the administrator on the
- * other end may confer this permission is an area-scope question about the
- * signed-in session
+ * IT DECIDES NOTHING ABOUT WHO IS ASKING — with one exception, on purpose.
+ * Whether the administrator on the other end may confer an ordinary
+ * permission is an area-scope question about the signed-in session
  * ({@see \Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority}), settled by the
  * screen before it calls in here.
+ *
+ * AN EXCEPTION TO A RULE IS THE ONE WRITE THAT ASKS WHO. A concern that lifts
+ * a rule (the control room's "Live locations" lifts the rank rule) is given
+ * and taken only by a Super Admin, only with a written reason, and never
+ * through the matrix — ruled 2026-09-26. That is checked HERE, not on a
+ * screen, so no screen, command or import written later can forget it.
  */
 final readonly class PositionService
 {
@@ -61,6 +73,7 @@ final readonly class PositionService
         private EntityManagerInterface $entityManager,
         private ConcernCatalogue $catalogue,
         private UserRepository $users,
+        private ?GrantJustificationRepository $justifications = null,
     ) {
     }
 
@@ -101,13 +114,110 @@ final readonly class PositionService
      *
      * @param list<string> $pairs each written `<concern>.<verb>`
      *
-     * @throws UnknownGrantException when a pair nothing installed declares is granted
+     * @throws UnknownGrantException         when a pair nothing installed declares is granted
+     * @throws RuleExceptionRefusedException when the save names an exception the seat does not hold
      */
     public function setGrants(Position $position, array $pairs): void
     {
-        $position->setGrantValues($pairs, $this->catalogue->pairs());
+        // AN EXCEPTION IS NEVER THE MATRIX'S TO WRITE. The matrix does not
+        // draw one, so a save that names one it does not already hold is a
+        // forged form, and a save that leaves one out is merely a save of the
+        // boxes it draws: what the seat holds as an exception stays.
+        $exceptions = $this->catalogue->exceptionPairs();
+        $heldExceptions = array_values(array_intersect($position->getGrantValues(), $exceptions));
+        foreach ($pairs as $pair) {
+            if (\in_array($pair, $exceptions, true) && !\in_array($pair, $heldExceptions, true)) {
+                throw RuleExceptionRefusedException::onItsOwnCard($this->labelOf($pair));
+            }
+        }
+
+        $ordinary = array_values(array_filter($pairs, static fn (string $pair): bool => !\in_array($pair, $exceptions, true)));
+        $position->setGrantValues(array_values(array_unique([...$ordinary, ...$heldExceptions])), $this->catalogue->pairs());
 
         $this->entityManager->flush();
+    }
+
+    /** The shortest reason a Super Admin may write: long enough to be a sentence, not a shrug. */
+    public const int REASON_MIN_LENGTH = 12;
+
+    /**
+     * GIVING A SEAT AN EXCEPTION TO A RULE: a Super Admin, a written reason,
+     * and a pair that is an exception — or nothing is written.
+     *
+     * @throws RuleExceptionRefusedException when any of the three is missing, or the seat already holds it
+     */
+    public function grantException(Position $position, string $pair, string $reason, User $actor, ?\DateTimeImmutable $now = null): GrantJustification
+    {
+        $label = $this->exceptionLabel($pair);
+        $this->assertSuperAdmin($actor, $label);
+
+        $reason = trim($reason);
+        if (mb_strlen($reason) < self::REASON_MIN_LENGTH) {
+            throw RuleExceptionRefusedException::noReason($label);
+        }
+
+        if (\in_array($pair, $position->getGrantValues(), true) || null !== $this->justifications?->findOneCurrent($position, $pair)) {
+            throw RuleExceptionRefusedException::alreadyHeld($label, (string) $position->getName());
+        }
+
+        $justification = new GrantJustification($position, $pair, $reason, $actor, $now ?? new \DateTimeImmutable());
+        $this->entityManager->persist($justification);
+        $position->setGrantValues([...$position->getGrantValues(), $pair], $this->catalogue->pairs());
+
+        $this->entityManager->flush();
+
+        return $justification;
+    }
+
+    /**
+     * TAKING IT AWAY: the pair leaves the seat, and its row is stamped with
+     * who and when rather than deleted, so the history still reads true.
+     *
+     * @throws RuleExceptionRefusedException when the actor is not a Super Admin or the seat does not hold it
+     */
+    public function revokeException(Position $position, string $pair, User $actor, ?\DateTimeImmutable $now = null): void
+    {
+        $label = $this->exceptionLabel($pair);
+        $this->assertSuperAdmin($actor, $label);
+
+        $held = \in_array($pair, $position->getGrantValues(), true);
+        $current = $this->justifications?->findOneCurrent($position, $pair);
+        if (!$held && null === $current) {
+            throw RuleExceptionRefusedException::notHeld($label, (string) $position->getName());
+        }
+
+        $current?->revoke($actor, $now ?? new \DateTimeImmutable());
+        $position->setGrantValues(
+            array_values(array_filter($position->getGrantValues(), static fn (string $value): bool => $value !== $pair)),
+            $this->catalogue->pairs(),
+        );
+
+        $this->entityManager->flush();
+    }
+
+    /** @throws RuleExceptionRefusedException when the pair is not an exception */
+    private function exceptionLabel(string $pair): string
+    {
+        if (!\in_array($pair, $this->catalogue->exceptionPairs(), true)) {
+            throw RuleExceptionRefusedException::notAnException($pair);
+        }
+
+        return $this->labelOf($pair);
+    }
+
+    private function labelOf(string $pair): string
+    {
+        $grant = Grant::tryParse($pair);
+
+        return null === $grant ? $pair : ($this->catalogue->concern($grant->concern)?->label() ?? $pair);
+    }
+
+    /** @throws RuleExceptionRefusedException */
+    private function assertSuperAdmin(User $actor, string $label): void
+    {
+        if (TeamRoleEnum::SuperAdmin !== $actor->getTeamRole()) {
+            throw RuleExceptionRefusedException::notASuperAdmin($label);
+        }
     }
 
     /**

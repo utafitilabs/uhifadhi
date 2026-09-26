@@ -75,6 +75,25 @@ final class TheCoreDeclaresItsConcernsTest extends TestCase
         self::assertFalse($team['directory']->isSensitive());
     }
 
+    /**
+     * THE CONTROL ROOM'S GRANT IS AN EXCEPTION TO THE RANK RULE, and the only
+     * one the core declares: every other concern lifts nothing.
+     */
+    public function testLiveLocationsIsTheOneExceptionAndItLiftsTheRankRule(): void
+    {
+        $lifting = [];
+        foreach (self::sources() as $source) {
+            foreach (self::iterate($source) as $concern) {
+                if (null !== $concern->lifts()) {
+                    $lifting[$concern->key()] = $concern->lifts();
+                }
+            }
+        }
+
+        self::assertSame(['locations' => 'the rank rule'], $lifting);
+        self::assertTrue(self::byKey(new AreaConcerns())['locations']->isSensitive());
+    }
+
     public function testGroundConcernsOfferOrganizationOrArea(): void
     {
         foreach (self::iterate(new AreaConcerns()) as $concern) {

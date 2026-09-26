@@ -105,6 +105,12 @@
                         {%- else %}{{ card.seatsFilled }} of {{ card.seats }} seats &middot; {{ card.seatsFree }} free{% endif -%}
                     </span></span></div>
                     {% if usesRanks %}{{ _self.rank_line(rankNow) }}{% endif %}
+                    {#- AN EXCEPTION TO A RULE travels with the seat, and the
+                        person in it is told so on their own record. -#}
+                    {% for x in card.exceptions|filter(x => x.held) %}
+                    <span class="pcol-k">Exception</span>
+                    <div class="pmx-sc"><span class="chip warn">lifts {{ x.lifts }}</span><span class="zfrag">{{ x.label }} &middot; {% if x.current %}given to {{ card.name }} by {{ x.current.grantedByName }}{% else %}no reason on record &middot; not in force{% endif %}</span></div>
+                    {% endfor %}
                     <span class="pcol-k">Where</span>
                     <div class="pmx-sc">
                         {%- if placement is null %}<span class="pmx-sk none">&mdash;</span><span class="zfrag">placed nowhere yet</span>

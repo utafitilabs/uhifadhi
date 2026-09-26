@@ -194,6 +194,30 @@ final readonly class ConcernCatalogue
         return $this->concern($key)?->moduleSlug();
     }
 
+    /**
+     * THE RULE A GRANT ON THIS CONCERN LIFTS, or null for an ordinary
+     * concern and for one nothing declares.
+     */
+    public function lifts(string $key): ?string
+    {
+        return $this->concern($key)?->lifts();
+    }
+
+    /**
+     * EVERY PAIR THAT IS AN EXCEPTION TO A RULE, in the matrix's order. These
+     * are declared like any other and never drawn in the matrix: a Super
+     * Admin gives them on their own card, with a written reason.
+     *
+     * @return list<string>
+     */
+    public function exceptionPairs(): array
+    {
+        return array_values(array_filter(
+            $this->pairs(),
+            fn (string $pair): bool => null !== $this->lifts(Grant::parse($pair)->concern),
+        ));
+    }
+
     /** Whether the installation declares a concern that is a fact about a person or a case. */
     public function isSensitive(string $key): bool
     {

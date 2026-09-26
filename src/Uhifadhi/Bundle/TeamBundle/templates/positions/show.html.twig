@@ -34,6 +34,7 @@
    and an identifier nobody types is not a fact a reader needs. #}
 {% extends '@Shell/page.html.twig' %}
 {% import '@Team/positions/_matrix.html.twig' as mx %}
+{% import '@Team/positions/_exceptions.html.twig' as ex %}
 
 {# THE SEPARATOR IS THE CHARACTER, NOT THE ENTITY. This block is CAPTURED
    into a string and handed to shell_title(), which escapes it, so `&middot;`
@@ -96,6 +97,7 @@
                     {% if door('positions.configure') %}<a class="ov-open" href="{{ path('team_position_configure', {uuid: card.uuid}) }}">Edit the grants {{ ux_icon('shell:chevron-right') }}</a>{% endif %}
                 </div>
             </div>
+            {{ ex.record(exceptions) }}
         </div>
 
         <div class="col">

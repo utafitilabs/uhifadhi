@@ -127,6 +127,26 @@ final class ConcernCatalogueTest extends TestCase
         self::assertFalse($catalogue->isSensitive('nothing-declares-this'));
     }
 
+    /**
+     * AN EXCEPTION IS KNOWN BY THE RULE IT LIFTS, and its pairs are the ones
+     * the matrix never draws and only a Super Admin writes.
+     */
+    public function testItNamesTheRuleAConcernLiftsAndListsTheExceptionPairs(): void
+    {
+        $catalogue = new ConcernCatalogue([
+            self::source('Areas', [
+                self::concern('zones', [Verb::Read, Verb::Configure]),
+                new Concern('locations', 'Live locations', 'Every live position.', [Verb::Read], [ScopeKind::Area], sensitive: true, lifts: 'the rank rule'),
+            ]),
+        ]);
+
+        self::assertSame('the rank rule', $catalogue->lifts('locations'));
+        self::assertNull($catalogue->lifts('zones'));
+        self::assertNull($catalogue->lifts('nothing-declares-this'));
+        self::assertSame(['locations.read'], $catalogue->exceptionPairs());
+        self::assertContains('locations.read', $catalogue->pairs(), 'an exception is still a pair the installation offers; it is written elsewhere, not undeclared');
+    }
+
     /** An installation with nothing installed declares nothing, rather than failing. */
     public function testAnInstallationThatDeclaresNothingHasNoPairs(): void
     {

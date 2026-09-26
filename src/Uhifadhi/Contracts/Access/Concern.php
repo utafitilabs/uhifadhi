@@ -36,6 +36,8 @@ final readonly class Concern implements ConcernInterface
      * @param string|null     $ownWords   the module's own word for "mine", required
      *                                    when and only when Own is offered
      * @param string|null     $moduleSlug the module that owns it, null for a core bundle
+     * @param string|null     $lifts      the rule a grant on it lifts, for an exception;
+     *                                    an exception must be sensitive
      */
     public function __construct(
         private string $key,
@@ -46,6 +48,7 @@ final readonly class Concern implements ConcernInterface
         private bool $sensitive = false,
         private ?string $ownWords = null,
         private ?string $moduleSlug = null,
+        private ?string $lifts = null,
     ) {
         if (1 !== preg_match('/^[a-z0-9]+(-[a-z0-9]+)*$/', $key)) {
             throw new \InvalidArgumentException(\sprintf('The concern key "%s" is not a slug. Use lowercase letters, digits and hyphens - it is the word a route, a door and a grant all name this concern by.', $key));
@@ -81,6 +84,14 @@ final readonly class Concern implements ConcernInterface
 
         if (!$offersOwn && null !== $ownWords) {
             throw new \InvalidArgumentException(\sprintf('The concern "%s" gives words for "own" but does not offer the "own" scope, so the words would name nothing.', $key));
+        }
+
+        if (null !== $lifts && '' === trim($lifts)) {
+            throw new \InvalidArgumentException(\sprintf('The concern "%s" is declared as an exception without saying which rule it lifts. Name the rule in the product\'s words - "the rank rule" - because the screen that sets it apart prints it.', $key));
+        }
+
+        if (null !== $lifts && !$sensitive) {
+            throw new \InvalidArgumentException(\sprintf('The concern "%s" lifts %s but is not declared sensitive. A grant that takes a seat out of a rule everybody else is held to is always sensitive.', $key, $lifts));
         }
 
         $this->verbs = $verbs;
@@ -125,6 +136,11 @@ final readonly class Concern implements ConcernInterface
     public function moduleSlug(): ?string
     {
         return $this->moduleSlug;
+    }
+
+    public function lifts(): ?string
+    {
+        return $this->lifts;
     }
 
     public function supports(Verb $verb): bool

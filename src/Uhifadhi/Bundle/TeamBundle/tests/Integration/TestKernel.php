@@ -388,6 +388,7 @@ final class TestKernel extends Kernel
             \Uhifadhi\Bundle\TeamBundle\ArgumentResolver\AreaValueResolver::class => 'team.area_value_resolver',
             \Uhifadhi\Bundle\TeamBundle\Repository\UserRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\UserRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository::class,
+            \Uhifadhi\Bundle\TeamBundle\Repository\GrantJustificationRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\GrantJustificationRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager::class => 'team.api_token.manager',

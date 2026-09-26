@@ -53,6 +53,17 @@ final readonly class GroundConcernSource implements ConcernSourceInterface
             scopeKinds: $ground,
         );
 
+        // The control room's grant: the one exception to the rank rule.
+        yield new Concern(
+            key: 'locations',
+            label: 'Live locations',
+            description: 'See the live position of everybody on the ground, whatever their rank.',
+            verbs: [Verb::Read],
+            scopeKinds: $ground,
+            sensitive: true,
+            lifts: 'the rank rule',
+        );
+
         yield new Concern(
             key: 'assignments',
             label: 'Assignments',

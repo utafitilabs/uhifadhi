@@ -23,6 +23,7 @@
    |   while held, naming the count)           |         |                             |        |
    | per-concern scope CHECKBOXES in the matrix| control | —                           | NOT PORTED: a position's allowed kinds are ONE fact, stated on the Identity card; there is nothing on the model to vary them per concern. The chips are read-only, as on the record. Named in the round's report as needing a verdict. |
    | Fold all / Open all                       | control | folds_controller.js         | done   |
+   | Exceptions to the rank rule card          | control | _exceptions.edit()          | done   |
    | the notes section                         | —       | —                           | excluded: design notes are not product |
 
    THE HOLDERS ARE BESIDE THE EDITOR. Read-only, because a person is given a
@@ -30,6 +31,7 @@
    position grants changes what these people may do. #}
 {% extends '@Shell/page.html.twig' %}
 {% import '@Team/positions/_matrix.html.twig' as mx %}
+{% import '@Team/positions/_exceptions.html.twig' as ex %}
 
 {% block title %}Configure {{ card.name }}{% endblock %}
 
@@ -144,6 +146,8 @@
                     </div>
                 </form>
             </div>
+
+            {{ ex.edit(card, mayGiveExceptions, csrfToken, reasonMinLength) }}
         </div>
 
         <div class="col">

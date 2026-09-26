@@ -46,7 +46,7 @@ final class PositionConfigureTest extends WebTestCaseWithSchema
         self::assertSame('Sergeant', $crawler->filter('.dpthead h1.pg')->text());
         self::assertCount(0, $crawler->filter('.atabs'));
         self::assertSame(
-            ['Identity', 'What it grants', 'Holders', 'Actions'],
+            ['Identity', 'What it grants', 'Exceptions to the rank rule', 'Holders', 'Actions'],
             $crawler->filter('.c > .tab')->each(
                 static fn (Crawler $c): string => trim(str_replace($c->filter('.src')->count() ? $c->filter('.src')->text() : '', '', $c->text())),
             ),

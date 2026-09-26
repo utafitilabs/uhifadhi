@@ -40,6 +40,35 @@ $ fundi deploy
 - `fundi deploy` ships it; the web container's start migrates, which creates `messenger_messages`,
   `registry_schedule_state` and `registry_schedule_lock`.
 
+## Live positions follow the rank ladder
+
+**What changed** (ruled 2026-09-26). A person sees the live positions of the people strictly
+junior to them in rank, and nobody else: peers and seniors are hidden, and a person with no rank
+sees nobody. A seat given *Live locations* (`locations.read`) sees everybody in the areas it may
+read. Counts are unchanged; only the marks narrow. The hub enforces it: a ping is published to
+`area/{uuid}/presence/all` and to `…/presence/for/{n}` for every place senior to its owner, and a
+viewer's cookie names one topic per area.
+
+*Live locations* is an **exception to the rank rule**. It is never in the matrix: a Super Admin
+gives it on the position's configure page, with a written reason kept in
+`team_grant_justification` (the team's `Version20260926000100`). The permission check holds it
+only while that reason is in force. The Team overview lists every seat holding it, and the two
+tiers that see everybody by tier.
+
+The area overview's plate now draws the live marks when the page loads, not only after the next
+ping.
+
+| What | Where |
+| --- | --- |
+| the ladder | `Uhifadhi\Contracts\People\RankLadderInterface`, the team's `team.rank_ladder`: the Ranks page's order, place 1 the most senior |
+| the rule | the area's `LiveVisibility` |
+| a concern that lifts a rule | `ConcernInterface::lifts()`; `Concern(..., sensitive: true, lifts: '…')` |
+
+**What an installation does before deploying.** Existing viewers will see fewer marks. Decide which
+seats are the control room, then, after `migrate`, a Super Admin opens each seat's configure page
+and gives *Live locations* with its reason. A module that implements `ConcernInterface` itself,
+rather than constructing `Concern`, adds `lifts(): ?string` returning null.
+
 ## Figures over growing sets are facts the worker computes
 
 **What changed** (ruled 2026-09-25). A request never computes over a set that grows with time or

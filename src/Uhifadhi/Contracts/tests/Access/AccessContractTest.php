@@ -196,6 +196,49 @@ final class AccessContractTest extends TestCase
         self::assertSame('roster', $concern->moduleSlug());
     }
 
+    public function testAnOrdinaryConcernLiftsNoRule(): void
+    {
+        self::assertNull(new Concern('zones', 'Zones', 'The zones an area is divided into.', [Verb::Read], [ScopeKind::Area])->lifts());
+    }
+
+    /**
+     * AN EXCEPTION NAMES THE RULE IT LIFTS. A grant that overrides a rule the
+     * product applies to everybody - the rank rule for live positions - is
+     * not a box among boxes, and the words a screen draws it apart with are
+     * the declarer's.
+     */
+    public function testAConcernThatLiftsARuleNamesTheRule(): void
+    {
+        $concern = new Concern(
+            key: 'locations',
+            label: 'Live locations',
+            description: 'See every live position, whatever the rank.',
+            verbs: [Verb::Read],
+            scopeKinds: [ScopeKind::Organization, ScopeKind::Area],
+            sensitive: true,
+            lifts: 'the rank rule',
+        );
+
+        self::assertSame('the rank rule', $concern->lifts());
+    }
+
+    /** What lifts a rule is by definition a fact somebody may want withheld. */
+    public function testAnExceptionThatIsNotSensitiveIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/sensitive/');
+
+        new Concern('locations', 'Live locations', 'See every live position.', [Verb::Read], [ScopeKind::Area], lifts: 'the rank rule');
+    }
+
+    public function testAnExceptionThatNamesNoRuleIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/which rule/');
+
+        new Concern('locations', 'Live locations', 'See every live position.', [Verb::Read], [ScopeKind::Area], sensitive: true, lifts: '  ');
+    }
+
     public function testTheTagIsTheOneTheCoreCollects(): void
     {
         self::assertSame('uhifadhi.access.concerns', ConcernSourceInterface::TAG);

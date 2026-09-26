@@ -1,0 +1,98 @@
+{# EXCEPTIONS TO A RULE — a grant that lifts a rule everybody else is held to
+   ("Live locations" lifts the rank rule). Ruled 2026-09-26: never a box in
+   the matrix; its own card, folded shut; only a Super Admin gives or takes
+   it, with a written reason kept with who and when.
+
+   DESIGN → CODE COVERAGE
+   source: DesignsProjects/team-module/team/positions/configure.html + show.html
+   | design element                            | type    | source                           | status |
+   | card tab "Exceptions to the rank rule"    | chrome  | the lifted rule                  | done   |
+   | fold (details.xrule), shut by default     | state   | static                           | done   |
+   | label + sensitive mark + "lifts …"        | data    | RuleExceptionRow                 | done   |
+   | state chip: not given / given             | state   | RuleExceptionRow::held           | done   |
+   | reason field + Give the exception         | control | POST team_position_exception_give| done   |
+   | reason in quotes, given by · when         | data    | GrantJustification               | done   |
+   | Take it away                              | control | POST …_revoke                    | done   |
+   | read-only for anybody but a Super Admin   | state   | mayGiveExceptions                | done   |
+   | record: history of giving and taking      | data    | exceptionsWithHistory()          | done   | #}
+
+{% macro title(rows) -%}
+    Exceptions to {{ rows|first.lifts }}
+{%- endmacro %}
+
+{% macro row_head(row) -%}
+    <div class="mb-drow">
+        <div class="dt"><b>{{ row.label }} <span class="pmx-sens">{{ ux_icon('shell:triangle-alert') }} sensitive</span></b><em>lifts {{ row.lifts }} &middot; {{ row.description }}</em></div>
+        <span class="xst{{ row.held ? ' on' : '' }}">{{ row.held ? 'given' : 'not given' }}</span>
+        <svg class="xcar" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+{%- endmacro %}
+
+{% macro given(row) -%}
+    {% if row.current %}
+        <p class="xwhy">{{ row.current.reason }}</p>
+        <span class="xby">given by {{ row.current.grantedByName }} &middot; <time datetime="{{ row.current.grantedAt|date('c') }}" data-localtime-format="daystamp">{{ row.current.grantedAt|date('j M Y H:i') }}</time></span>
+    {% elseif row.held %}
+        <span class="xby">held with no reason on record &middot; refused until a Super Admin gives it again</span>
+    {% endif %}
+{%- endmacro %}
+
+{# THE CONFIGURE CARD. #}
+{% macro edit(card, mayGive, csrfToken, reasonMinLength) %}
+    {% if card.exceptions is not empty %}
+    <div class="c">
+        <span class="tab">{{ _self.title(card.exceptions) }}<span class="src">&middot; Super Admin only &middot; kept with a reason</span></span>
+        {% for row in card.exceptions %}
+            <details class="xrule">
+                <summary>{{ _self.row_head(row) }}</summary>
+                <div class="xbody">
+                    {{ _self.given(row) }}
+                    {% if not mayGive %}
+                        <span class="xby">only a Super Admin changes this</span>
+                    {% elseif row.held %}
+                        <form method="post" action="{{ path('team_position_exception_revoke', {uuid: card.uuid, pair: row.pair}) }}" class="xform">
+                            <input type="hidden" name="_token" value="{{ csrfToken }}">
+                            <div class="xact"><span class="xby">the reason stays on the record</span><span class="sp"></span><button type="submit" class="softbtn danger">Take it away</button></div>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{{ path('team_position_exception_give', {uuid: card.uuid, pair: row.pair}) }}" class="xform">
+                            <input type="hidden" name="_token" value="{{ csrfToken }}">
+                            <textarea class="fld" name="reason" placeholder="Why must this seat see everybody?" aria-label="Reason" required minlength="{{ reasonMinLength }}"></textarea>
+                            <div class="xact"><span class="xby">reaches {{ card.seatsFilled }} holder{{ card.seatsFilled == 1 ? '' : 's' }} &middot; kept with your name and today&rsquo;s date</span><span class="sp"></span><button type="submit" class="cta">Give the exception</button></div>
+                        </form>
+                    {% endif %}
+                </div>
+            </details>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endmacro %}
+
+{# THE RECORD CARD, read-only, with every giving and taking. #}
+{% macro record(rows) %}
+    {% if rows is not empty %}
+    <div class="c">
+        <span class="tab">{{ _self.title(rows) }}<span class="src">&middot; {{ rows|filter(r => r.held)|length }} given &middot; read-only</span></span>
+        {% for row in rows %}
+            <div class="mb-drow">
+                <div class="dt"><b>{{ row.label }} <span class="pmx-sens">{{ ux_icon('shell:triangle-alert') }} sensitive</span></b><em>lifts {{ row.lifts }} &middot; {{ row.description }}</em></div>
+                <span class="chip{{ row.held ? ' warn' : ' idle' }}">{{ row.held ? 'given' : 'not given' }}</span>
+            </div>
+            {% if row.current or row.history is not empty %}
+            <div class="xbody">
+                {{ _self.given(row) }}
+                {% set earlier = row.history|filter(j => j.revokedAt is not null) %}
+                {% if earlier is not empty %}
+                <div class="xhist">
+                    {% for j in earlier %}
+                        <div class="rln"><span>Taken away</span><span class="mono d">{{ j.revokedByName }} &middot; <time datetime="{{ j.revokedAt|date('c') }}" data-localtime-format="day">{{ j.revokedAt|date('j M Y') }}</time></span></div>
+                        <div class="rln"><span>Given &middot; &ldquo;{{ j.reason|length > 60 ? j.reason|slice(0, 60) ~ '…' : j.reason }}&rdquo;</span><span class="mono d">{{ j.grantedByName }} &middot; <time datetime="{{ j.grantedAt|date('c') }}" data-localtime-format="day">{{ j.grantedAt|date('j M Y') }}</time></span></div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endmacro %}

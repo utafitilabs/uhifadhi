@@ -51,4 +51,10 @@ final class TheCoreRunsTheModuleConformanceTest extends AccessConformanceTestCas
     {
         return \dirname((string) (new \ReflectionClass(AreaBundle::class))->getFileName());
     }
+
+    /** A person's live position is a fact about that person. */
+    protected static function sensitiveConcerns(): array
+    {
+        return ['locations'];
+    }
 }

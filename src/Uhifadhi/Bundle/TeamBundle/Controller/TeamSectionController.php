@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
+use Uhifadhi\Bundle\TeamBundle\Service\RuleExceptionReview;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamSectionOverview;
 
 /**
@@ -39,6 +40,7 @@ final readonly class TeamSectionController
     public function __construct(
         private Environment $twig,
         private TeamSectionOverview $overview,
+        private ?RuleExceptionReview $review = null,
     ) {
     }
 
@@ -46,6 +48,9 @@ final readonly class TeamSectionController
     #[IsGranted('directory.read')]
     public function overview(): Response
     {
-        return new Response($this->twig->render('@Team/team/overview.html.twig', $this->overview->read()));
+        return new Response($this->twig->render('@Team/team/overview.html.twig', [
+            ...$this->overview->read(),
+            'exceptionReview' => $this->review?->read(),
+        ]));
     }
 }

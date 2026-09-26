@@ -121,6 +121,8 @@ return static function (ContainerConfigurator $container): void {
             // The leave to watch the live marks move: the plate's stream and
             // the subscriber cookie, both under the page's own pair.
             service('area.presence_stream'),
+            // The marks drawn on load, under the rank rule.
+            service('area.presence'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaController::class, 'area.controller.area')->public();

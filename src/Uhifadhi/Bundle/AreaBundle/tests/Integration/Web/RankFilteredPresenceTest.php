@@ -96,6 +96,27 @@ final class RankFilteredPresenceTest extends WebTestCase
         self::assertSame(['chief', 'sergeant', 'ranger', 'recruit', 'volunteer'], self::drawnOn($this->body('/')));
     }
 
+    /**
+     * THE AREA OVERVIEW DRAWS THE MARKS ON LOAD, not only once a ping
+     * arrives, and under the same rule: the sergeant's plate carries the
+     * ranger and the recruit.
+     */
+    public function testTheAreaOverviewDrawsTheMarksOnLoadUnderTheRule(): void
+    {
+        [$area, $people] = $this->aGroundWithFivePeopleOnIt();
+        $this->viewAs($people['sergeant']);
+
+        self::assertSame(['ranger', 'recruit'], self::drawnOn($this->body('/areas/'.$area->getUuidString())));
+    }
+
+    public function testTheControlRoomsAreaOverviewDrawsEverybodyOnLoad(): void
+    {
+        [$area, $people] = $this->aGroundWithFivePeopleOnIt([...self::ALL_AREA_PERMISSIONS, 'locations.read']);
+        $this->viewAs($people['recruit']);
+
+        self::assertSame(['chief', 'sergeant', 'ranger', 'recruit', 'volunteer'], self::drawnOn($this->body('/areas/'.$area->getUuidString())));
+    }
+
     /** The per-area read every area plate is drawn from follows the same rule. */
     public function testThePerAreaReadHandsTheRangerOnlyTheRecruit(): void
     {

@@ -35,6 +35,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaOverview;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaOverviewCatalogue;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
+use Uhifadhi\Bundle\AreaBundle\Service\PresenceService;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceStreamService;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
@@ -83,6 +84,8 @@ final readonly class AreaController
         private TokenStorageInterface $tokens,
         /** The leave to watch the live marks move: the plate's stream and the cookie. */
         private PresenceStreamService $streams,
+        /** The marks the plate draws on load, narrowed to what the viewer may see. */
+        private ?PresenceService $presence = null,
     ) {
     }
 
@@ -161,7 +164,12 @@ final readonly class AreaController
          * the same area's marks rides on the same cookie.
          */
         $subscription = $this->streams->forArea($request, $area);
-        $plate = $this->areaMap->overview($this->mapPayload->forArea($area), $mapLayers, $subscription?->stream);
+        $plate = $this->areaMap->overview(
+            $this->mapPayload->forArea($area),
+            $mapLayers,
+            $subscription?->stream,
+            $this->presence?->liveIn((string) $area->getUuidString(), $now),
+        );
         $tiles = $this->overview->nowTilesFor($area, $now);
         $attention = $this->overview->attentionFor($area, $now);
 

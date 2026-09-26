@@ -75,11 +75,15 @@ final readonly class AreaMapService
      *
      * @param array{boundary: string|null, zones: list<array{name: string|null, geom: string|null}>} $payload
      * @param list<MapLayer>                                                                         $layers
-     * @param LiveStream|null                                                                        $stream  where the plate's live marks keep
-     *                                                                                                        coming from, or null on a deployment
-     *                                                                                                        with no hub
+     * @param LiveStream|null                                                                        $stream   where the plate's live marks keep
+     *                                                                                                         coming from, or null on a deployment
+     *                                                                                                         with no hub
+     * @param LivePresence|null                                                                      $presence the marks to draw ON LOAD, already
+     *                                                                                                         narrowed to what the viewer may see;
+     *                                                                                                         without it the plate stays empty until
+     *                                                                                                         the first ping arrives
      */
-    public function overview(array $payload, array $layers = [], ?LiveStream $stream = null): AtlasMap
+    public function overview(array $payload, array $layers = [], ?LiveStream $stream = null, ?LivePresence $presence = null): AtlasMap
     {
         $map = $this->maps->createMap();
 
@@ -107,6 +111,14 @@ final readonly class AreaMapService
                 count: $layer->count,
                 group: $layer->groupLabel,
             ));
+        }
+
+        // THE MARKS ARE DRAWN ON LOAD, above every module's layer, and the
+        // stream keeps them moving — the same two halves the organization's
+        // plate has. A stream with nothing drawn first is an empty plate
+        // until somebody's phone next pings.
+        if (null !== $presence) {
+            $map->livePositions($presence);
         }
 
         if (null !== $stream) {

@@ -36,14 +36,14 @@ final class FieldContractKeysTest extends FieldApiTestCase
     private const array RANGER = ['id', 'name', 'role'];
 
     /** `GET /api/areas/mine`: one key, whose list is the offline cache. */
-    private const array AREAS_MINE = ['areas', 'postedAreaId'];
+    private const array AREAS_MINE = ['areas', 'postedAreaId', 'postedStationId'];
 
     private const array AREA = ['id', 'name', 'areaKm2', 'stations', 'team', 'boundary', 'posted'];
 
     private const array TEAM_MEMBER = ['id', 'name'];
 
     /** Pinned on both sides; the handset's `FieldContractTest` holds the same value. */
-    private const string HANDSET_FIXTURE_SHA256 = '432c5a6c9e5575c2344b280bac4fc9736dcb9d1446e60539224528ed8dfcb246';
+    private const string HANDSET_FIXTURE_SHA256 = 'caea4713f8ecfd035a5f678cf0a7ff4396f11283c290c667ebdeaa52954eb589';
 
     public function testTheAccountDocumentCarriesExactlyTheContractsKeys(): void
     {

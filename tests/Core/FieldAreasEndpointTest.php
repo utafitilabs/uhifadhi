@@ -54,7 +54,7 @@ final class FieldAreasEndpointTest extends FieldApiTestCase
         $body = $this->get(self::ENDPOINT, $this->tokenFor($ranger));
 
         self::assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
-        self::assertSame(['areas', 'postedAreaId'], array_keys($body));
+        self::assertSame(['areas', 'postedAreaId', 'postedStationId'], array_keys($body));
         self::assertCount(1, self::nested($body, 'areas'));
 
         $sent = self::nested($body, 'areas', 0);
@@ -129,11 +129,12 @@ final class FieldAreasEndpointTest extends FieldApiTestCase
         $first = $this->area('Aardvark Reserve');
         $second = $this->area('Zebra Reserve');
         $ranger = $this->ranger();
-        $this->postTo($this->station($second, 'Eastgate Post', -29.5, -3.2), $ranger);
+        $this->postTo($eastgate = $this->station($second, 'Eastgate Post', -29.5, -3.2), $ranger);
 
         $body = $this->get(self::ENDPOINT, $this->tokenFor($ranger));
 
         self::assertSame($second->getUuidString(), $body['postedAreaId']);
+        self::assertSame($eastgate->getUuidString(), $body['postedStationId'], 'the station check-in and patrol start use');
         self::assertSame(
             [false, true],
             array_map(static fn (mixed $a): mixed => \is_array($a) ? $a['posted'] : null, self::nested($body, 'areas')),
@@ -154,6 +155,7 @@ final class FieldAreasEndpointTest extends FieldApiTestCase
         $body = $this->get(self::ENDPOINT, $this->tokenFor($this->ranger()));
 
         self::assertNull($body['postedAreaId']);
+        self::assertNull($body['postedStationId']);
         self::assertSame(
             [false],
             array_map(static fn (mixed $a): mixed => \is_array($a) ? $a['posted'] : null, self::nested($body, 'areas')),

@@ -18,6 +18,7 @@ use Symfony\Component\Security\Core\Exception\CustomUserMessageAccountStatusExce
 use Symfony\Component\Security\Core\User\UserCheckerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Service\OneTimePasswordService;
 
 /**
  * A DEACTIVATED ACCOUNT CANNOT SIGN IN, AND IS TOLD SO.
@@ -48,6 +49,11 @@ use Uhifadhi\Bundle\TeamBundle\Entity\User;
  */
 final class ActiveUserChecker implements UserCheckerInterface
 {
+    public function __construct(
+        private readonly ?OneTimePasswordService $oneTimePasswords = null,
+    ) {
+    }
+
     public function checkPreAuth(UserInterface $user): void
     {
         if (!$user instanceof User) {
@@ -59,9 +65,18 @@ final class ActiveUserChecker implements UserCheckerInterface
         }
     }
 
+    /**
+     * ONCE THE PASSWORD IS RIGHT: an unused one-time password older than its
+     * expiry no longer signs in, and one used now stops expiring.
+     */
     public function checkPostAuth(UserInterface $user, ?TokenInterface $token = null): void
     {
-        // Nothing to check once the password is right: everything this bundle
-        // gates on is known before the credentials are.
+        if (!$user instanceof User || null === $this->oneTimePasswords) {
+            return;
+        }
+
+        if (!$this->oneTimePasswords->admit($user)) {
+            throw new CustomUserMessageAccountStatusException('This one-time password has expired: it was not used within 72 hours. Ask an administrator for a new one.');
+        }
     }
 }

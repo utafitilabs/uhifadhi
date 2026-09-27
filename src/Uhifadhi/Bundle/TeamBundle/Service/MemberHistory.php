@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Service;
 use Uhifadhi\Bundle\TeamBundle\Entity\RankHolding;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Model\MemberEvent;
+use Uhifadhi\Bundle\TeamBundle\Repository\OneTimePasswordRepository;
 use Uhifadhi\Contracts\People\PersonPosting;
 
 /**
@@ -37,6 +38,12 @@ use Uhifadhi\Contracts\People\PersonPosting;
  */
 final readonly class MemberHistory
 {
+    public function __construct(
+        /** The one-time passwords issued for a person, where this installation keeps them. */
+        private ?OneTimePasswordRepository $oneTimePasswords = null,
+    ) {
+    }
+
     /**
      * EVERY LINE THE MODEL CAN DATE, newest first.
      *
@@ -87,6 +94,14 @@ final readonly class MemberHistory
             );
         }
 
+        // WHO HANDED THIS PERSON A PASSWORD, and when they first used it.
+        foreach ($this->oneTimePasswords?->findByPerson($person) ?? [] as $issued) {
+            $events[] = new MemberEvent('One-time password issued', \sprintf('by %s', self::shortNameOf($issued->getIssuedByName())), $issued->getIssuedAt());
+            if (null !== $issued->getUsedAt()) {
+                $events[] = new MemberEvent('One-time password used', 'first sign-in with it', $issued->getUsedAt());
+            }
+        }
+
         $disabled = $person->getDisabledAt();
         if (null !== $disabled) {
             $events[] = new MemberEvent('Deactivated', 'record kept · work keeps its author', $disabled);
@@ -112,6 +127,17 @@ final readonly class MemberHistory
     }
 
     /** "N. Kileo" — the by-line a dated row carries. */
+    /** "Asha Mollel" as "A. Mollel", from a name copied at the time. */
+    private static function shortNameOf(string $fullName): string
+    {
+        $parts = preg_split('/\s+/', trim($fullName)) ?: [];
+        if (\count($parts) < 2) {
+            return trim($fullName);
+        }
+
+        return mb_substr($parts[0], 0, 1).'. '.$parts[\count($parts) - 1];
+    }
+
     private static function shortName(User $person): string
     {
         return trim(mb_substr((string) $person->getFirstName(), 0, 1).'. '.$person->getLastName());

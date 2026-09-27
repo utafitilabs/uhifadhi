@@ -110,6 +110,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'team_department_period_figure',
                 'team_department_scope_change',
                 'team_grant_justification',
+                'team_one_time_password',
                 'team_period_figure',
                 'team_placement',
                 'team_placement_area',
@@ -204,6 +205,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260925220000',
                 'Uhifadhi\\Bundle\\RegistryBundle\\Migrations\\Version20260925220000',
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260926000100',
+                'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260927220000',
             ],
             $this->plannedVersions(),
         );

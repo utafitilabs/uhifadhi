@@ -201,6 +201,16 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $passwordResetRequestedAt = null;
 
+    /**
+     * WHEN THE PASSWORD IN FORCE BECAME A ONE-TIME PASSWORD, while nobody has
+     * signed in with it yet. Null once it has been used, or once any other
+     * password replaces it — {@see setPassword()} clears it. An unused code
+     * older than {@see \Uhifadhi\Bundle\TeamBundle\Service\OneTimePasswordService::EXPIRES_AFTER}
+     * no longer signs in.
+     */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $oneTimePasswordIssuedAt = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -517,9 +527,24 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
         return $this->password;
     }
 
+    /** Any password set here replaces a pending one-time password. */
     public function setPassword(string $password): static
     {
         $this->password = $password;
+        $this->oneTimePasswordIssuedAt = null;
+
+        return $this;
+    }
+
+    public function getOneTimePasswordIssuedAt(): ?\DateTimeImmutable
+    {
+        return $this->oneTimePasswordIssuedAt;
+    }
+
+    /** The password just set is a one-time password, issued at that moment; null once it is used. */
+    public function markOneTimePassword(?\DateTimeImmutable $issuedAt): static
+    {
+        $this->oneTimePasswordIssuedAt = $issuedAt;
 
         return $this;
     }

@@ -45,6 +45,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
+use Uhifadhi\Bundle\TeamBundle\Service\OneTimePasswordService;
 use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PersonRankService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionBoard;
@@ -111,6 +112,12 @@ final readonly class MemberController
     /** And the way they chase an invitation nobody opened. */
     public const string INVITE_AGAIN = 'team_member_invite_again';
 
+    /** The way an administrator hands somebody a password they can read out. */
+    public const string ONE_TIME_PASSWORD = 'team_member_one_time_password';
+
+    /** Where a code waits in the session between the issue and the one page that shows it. */
+    private const string SHOWN_CODE = 'team.one_time_password.';
+
     /**
      * How many lines the history card shows before it states the bound. A
      * bounded card never grows to the data and never scrolls inside itself.
@@ -164,6 +171,8 @@ final readonly class MemberController
          * @var iterable<PersonRecordCellProviderInterface>
          */
         private iterable $recordCells = [],
+        /** THE ONE-TIME PASSWORD ROW: who may issue one, and the issuing. */
+        private ?OneTimePasswordService $oneTimePasswords = null,
     ) {
     }
 
@@ -212,9 +221,15 @@ final readonly class MemberController
      */
     #[Route('/team/{uuid}/configure', name: 'team_member_configure', requirements: ['uuid' => Requirement::UUID], defaults: TeamController::SURFACE_RECORD, methods: ['GET'])]
     #[IsGranted('directory.manage')]
-    public function configure(string $uuid): Response
+    public function configure(Request $request, string $uuid): Response
     {
         $member = $this->member($uuid);
+
+        // SHOWN ONCE: the code waits in the session only until this page has
+        // drawn it, and a second visit finds nothing.
+        $session = $request->hasSession() ? $request->getSession() : null;
+        $shownCode = $session?->remove(self::SHOWN_CODE.$member->getUuidString());
+        $viewer = $this->signedIn();
         $postings = $this->postingsFor($member);
         $ranks = $this->personRank->historyOf($member);
         $history = $this->history->of($member, $postings, $ranks);
@@ -237,6 +252,13 @@ final readonly class MemberController
             'allowsArea' => null === $position || \in_array(ScopeKind::Area, $position->getAllowedKinds(), true),
             'isLastSuperAdmin' => $this->invariant->isLastActiveSuperAdmin($member),
             'mayImpersonate' => $this->signedIn()?->getTeamRole()->canSwitch() ?? false,
+            // THE ROW IS FOR THE TIERS ABOVE THE MATRIX, and absent for anybody
+            // else; for an Admin looking at an Admin or a Super Admin it is
+            // drawn refused, with the reason on it.
+            'showsOneTimePassword' => null !== $this->oneTimePasswords && null !== $viewer && $member->isActive() && $viewer->getTeamRole()->canManageContent() && $viewer->getId() !== $member->getId(),
+            'mayIssueOneTimePassword' => $this->oneTimePasswords?->mayIssue($viewer, $member) ?? false,
+            'oneTimePassword' => \is_string($shownCode) ? $shownCode : null,
+            'oneTimePasswordHours' => (int) OneTimePasswordService::EXPIRES_AFTER,
             'isSelf' => $this->signedIn()?->getId() === $member->getId(),
             'mayChangeTier' => $this->authority->isUnbounded(),
             'stationedAt' => $postings[0] ?? null,
@@ -269,6 +291,35 @@ final readonly class MemberController
         ));
 
         return $this->back($request, $member, \sprintf('A reset link is on its way to %s.', $member->getEmail()));
+    }
+
+    /**
+     * A ONE-TIME PASSWORD, ISSUED — {@see OneTimePasswordService} holds the
+     * rules. The code is kept in the session for the one page that shows it,
+     * never in a flash, which the frame would also draw.
+     */
+    #[Route('/team/{uuid}/one-time-password', name: self::ONE_TIME_PASSWORD, requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted('personal-details.manage')]
+    public function issueOneTimePassword(Request $request, string $uuid): RedirectResponse
+    {
+        $member = $this->member($uuid);
+        $this->assertCsrf($request);
+        $issuer = $this->signedIn();
+        if (null === $this->oneTimePasswords || null === $issuer) {
+            throw new AccessDeniedException('No one-time password here.');
+        }
+        $this->assertMayManage($member);
+
+        if (!$member->isActive()) {
+            return $this->back($request, $member, 'No one-time password was issued: the account is deactivated.', 'error');
+        }
+
+        $code = $this->oneTimePasswords->issue($issuer, $member);
+        if ($request->hasSession()) {
+            $request->getSession()->set(self::SHOWN_CODE.$member->getUuidString(), $code);
+        }
+
+        return $this->back($request, $member, \sprintf('A one-time password for %s is on the account card. It is shown once: pass it on now.', $member->getFullName()));
     }
 
     /**

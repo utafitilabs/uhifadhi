@@ -70,6 +70,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\GrantJustificationRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\InstallationPeriodFigureRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\OneTimePasswordRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\RankHoldingRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\RankRepository;
@@ -92,6 +93,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\FieldSignIn;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
+use Uhifadhi\Bundle\TeamBundle\Service\OneTimePasswordService;
 use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PeopleFacetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
@@ -338,6 +340,17 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
 
+    $services->set(OneTimePasswordRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    /*
+     * A ONE-TIME PASSWORD, ISSUED BY AN ADMINISTRATOR: who may issue one, the
+     * code, and the sign-in check that refuses an unused code past its expiry.
+     */
+    $services->set('team.one_time_password', OneTimePasswordService::class)
+        ->args([service('doctrine.orm.entity_manager'), service('security.user_password_hasher'), service(OneTimePasswordRepository::class)]);
+
     /*
      * THE ORGANIZATION'S RANKS — the scales, the ranks on each, and the rank
      * each person holds. Read by the Ranks register, the People register and
@@ -510,7 +523,7 @@ return static function (ContainerConfigurator $container): void {
      * the field door is reached before any firewall.
      */
     $services->set('team.field_sign_in', FieldSignIn::class)
-        ->args([service(UserRepository::class), service('security.user_password_hasher')]);
+        ->args([service(UserRepository::class), service('security.user_password_hasher'), service('team.one_time_password')]);
 
     /*
      * WHERE A FIELD CLIENT SIGNS IN. The one endpoint that answers without a
@@ -1031,7 +1044,9 @@ return static function (ContainerConfigurator $container): void {
      * security block names its id. A tag would have been this bundle deciding
      * a firewall's shape for every installation that has one.
      */
-    $services->set('team.user_checker', ActiveUserChecker::class)->public();
+    $services->set('team.user_checker', ActiveUserChecker::class)
+        ->args([service('team.one_time_password')])
+        ->public();
 
     /*
      * WHAT THE TEAM PAGE KNOWS BEFORE IT DRAWS A ROW — the counts and the
@@ -1118,7 +1133,8 @@ return static function (ContainerConfigurator $container): void {
      * audit trail in this release and a card that invented the rest would be
      * a card nobody could act on.
      */
-    $services->set('team.member_history', MemberHistory::class);
+    $services->set('team.member_history', MemberHistory::class)
+        ->args([service(OneTimePasswordRepository::class)]);
     $services->alias(MemberHistory::class, 'team.member_history');
 
     $services->set('team.person_rank', PersonRankService::class)
@@ -1155,6 +1171,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.person_rank'),
             // A MODULE'S CARD ON A PERSON'S RECORD, from whoever tags the seam.
             tagged_iterator(PersonRecordCellProviderInterface::TAG),
+            service('team.one_time_password'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(MemberController::class, 'team.controller.member')->public();

@@ -227,8 +227,27 @@
 
         {# ACCOUNT: three actions, graded. #}
         <div class="c">
-            <span class="tab">Account<span class="src">&middot; three actions</span></span>
+            <span class="tab">Account<span class="src">&middot; the account&rsquo;s actions</span></span>
             <div class="mb-danger">
+                {% if showsOneTimePassword %}
+                    <div class="mb-drow">
+                        <div class="dt"><b>Issue a one-time password</b><em>{{ constant('Uhifadhi\\Bundle\\TeamBundle\\Service\\OneTimePasswordService::LENGTH') }} characters, shown once &middot; unused for {{ oneTimePasswordHours }} hours, it expires</em></div>
+                        {% if mayIssueOneTimePassword %}
+                            <form method="post" action="{{ path('team_member_one_time_password', {uuid: member.uuidString}) }}">
+                                <input type="hidden" name="_token" value="{{ csrfToken }}"><input type="hidden" name="return" value="configure">
+                                <button class="softbtn" type="submit">{{ bits.icon_shield() }} Issue</button>
+                            </form>
+                        {% else %}
+                            <span class="mb-absent">{{ bits.icon_off() }} Super Admin only for an Admin or a Super Admin</span>
+                        {% endif %}
+                    </div>
+                    {% if oneTimePassword %}
+                        <div class="mb-drow">
+                            <div class="dt"><b>Pass it on now</b><em>Shown once &middot; it is {{ member.firstName }}&rsquo;s password until they change it</em></div>
+                            <code class="mb-otp" data-one-time-password>{{ oneTimePassword }}</code>
+                        </div>
+                    {% endif %}
+                {% endif %}
                 {% if member.isActive and door('personal-details.manage') %}
                     <div class="mb-drow">
                         <div class="dt"><b>Send a password-reset link</b><em>Writes a token, mails a link &middot; does not change the password</em></div>

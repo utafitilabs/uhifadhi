@@ -40,6 +40,8 @@ final readonly class FieldSignIn
     public function __construct(
         private UserRepository $users,
         private UserPasswordHasherInterface $passwordHasher,
+        /** An unused one-time password past its expiry is refused like a wrong passcode. */
+        private ?OneTimePasswordService $oneTimePasswords = null,
     ) {
     }
 
@@ -49,7 +51,11 @@ final readonly class FieldSignIn
 
         $valid = $this->passwordHasher->isPasswordValid($user ?? $this->nobody(), $passcode);
 
-        return $valid && $user instanceof User && $user->isActive() ? $user : null;
+        if (!$valid || !$user instanceof User || !$user->isActive()) {
+            return null;
+        }
+
+        return null === $this->oneTimePasswords || $this->oneTimePasswords->admit($user) ? $user : null;
     }
 
     /**

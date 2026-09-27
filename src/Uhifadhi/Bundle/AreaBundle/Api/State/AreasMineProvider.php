@@ -87,7 +87,7 @@ final readonly class AreasMineProvider implements ProviderInterface
         // Read once, outside the loop: the roster is the same list whichever
         // piece of ground somebody is standing on.
         $team = $this->roster->members();
-        $posted = $this->postedArea();
+        [$posted, $postedStation] = $this->standingPosting();
 
         $areas = [];
         // BY NAME, because a client's picker must not reorder between two syncs;
@@ -146,12 +146,13 @@ final readonly class AreasMineProvider implements ProviderInterface
          */
         $reachable = null !== $posted && [] !== array_filter($areas, static fn (array $one): bool => $one['id'] === $posted);
 
-        return new AreasMine($areas, $reachable ? $posted : null);
+        return new AreasMine($areas, $reachable ? $posted : null, $reachable ? $postedStation : null);
     }
 
     /**
-     * THE AREA THIS PERSON WORKS IN — read through the posting, never by
-     * recorder.
+     * WHERE THIS PERSON WORKS — the area and the station of their standing
+     * posting, never read from what they recorded. The station is what
+     * check-in and patrol start use (ruled 2026-09-27: no station question).
      *
      * A posting is the statement of where somebody works: posting → station →
      * area, one hop each, and somebody stands at one post at a time (ruled),
@@ -163,17 +164,20 @@ final readonly class AreasMineProvider implements ProviderInterface
      * NULL WHERE THEY STAND NOWHERE, which is an ordinary state: an analyst,
      * a coordinator, somebody between postings. The client opens its picker
      * rather than a guess.
+     *
+     * @return array{?string, ?string} the area's uuid and the station's, or two nulls
      */
-    private function postedArea(): ?string
+    private function standingPosting(): array
     {
         $person = $this->tokens->getToken()?->getUser();
         if (!$person instanceof UserInterface) {
-            return null;
+            return [null, null];
         }
 
         $standing = $this->postings->findStandingByPerson($person);
+        $station = [] === $standing ? null : $standing[0]->getStation();
 
-        return [] === $standing ? null : $standing[0]->getStation()?->getArea()?->getUuidString();
+        return [$station?->getArea()?->getUuidString(), $station?->getUuidString()];
     }
 
     /**

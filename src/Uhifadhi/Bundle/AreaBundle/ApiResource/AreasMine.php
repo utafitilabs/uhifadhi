@@ -99,6 +99,12 @@ final class AreasMine
     public function __construct(
         public array $areas = [],
         public ?string $postedAreaId = null,
+        /*
+         * THE STATION OF THE STANDING POSTING, beside its area (ruled
+         * 2026-09-27): check-in and patrol start ask no station — the handset
+         * uses this one. Null exactly when postedAreaId is null.
+         */
+        public ?string $postedStationId = null,
     ) {
     }
 }

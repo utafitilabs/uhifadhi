@@ -30,6 +30,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\Rank;
@@ -200,8 +201,10 @@ final readonly class MemberController
             'member' => $member,
             'card' => $card,
             'placement' => $member->getPlacement(),
-            'figures' => $this->figures($card, $member->getTeamRole()->canManageContent()),
-            'byTier' => $member->getTeamRole()->canManageContent(),
+            // "By tier" names the tier: only to a viewer who sees tiers (ruled
+            // 28 Sep 2026). Anybody else reads the person's position as it is.
+            'figures' => $this->figures($card, $byTier = $member->getTeamRole()->canManageContent() && TierSight::for($this->signedIn())),
+            'byTier' => $byTier,
             'departmentsTotal' => \count($this->departments->findAllActiveOrdered()),
             'stationedAt' => $postings[0] ?? null,
             'stationPlate' => $this->plateFor($postings[0] ?? null),
@@ -251,6 +254,9 @@ final readonly class MemberController
             'allowsOrganization' => null === $position || \in_array(ScopeKind::Organization, $position->getAllowedKinds(), true),
             'allowsArea' => null === $position || \in_array(ScopeKind::Area, $position->getAllowedKinds(), true),
             'isLastSuperAdmin' => $this->invariant->isLastActiveSuperAdmin($member),
+            // Whether this viewer may act on the account at all (see
+            // UserService::mayTouchAccount()); the controls follow the rule.
+            'mayTouchAccount' => UserService::mayTouchAccount($this->signedIn(), $member),
             'mayImpersonate' => $this->signedIn()?->getTeamRole()->canSwitch() ?? false,
             // THE ROW IS FOR THE TIERS ABOVE THE MATRIX, and absent for anybody
             // else; for an Admin looking at an Admin or a Super Admin it is
@@ -605,6 +611,10 @@ final readonly class MemberController
      */
     private function assertMayManage(User $member): void
     {
+        if (!UserService::mayTouchAccount($this->signedIn(), $member)) {
+            throw new AccessDeniedException('Only an Admin or a Super Admin acts on an Admin\'s account, and only a Super Admin on a Super Admin\'s.');
+        }
+
         if ($this->authority->isUnbounded()) {
             return;
         }

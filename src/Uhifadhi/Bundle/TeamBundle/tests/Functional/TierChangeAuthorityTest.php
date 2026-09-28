@@ -144,7 +144,7 @@ final class TierChangeAuthorityTest extends WebTestCaseWithSchema
     /** @return list<string> */
     private static function tiersOn(Crawler $crawler): array
     {
-        return array_values($crawler->filter('.mb-tiers button[name="tier"]')->each(static fn (Crawler $b): string => (string) $b->attr('value')));
+        return $crawler->filter('.mb-tiers button[name="tier"]')->each(static fn (Crawler $b): string => (string) $b->attr('value'));
     }
 
     public function testAnAdminSeesOnlyTheTwoTiersAnAdminGivesAndAWarningOnAdmin(): void
@@ -170,7 +170,8 @@ final class TierChangeAuthorityTest extends WebTestCaseWithSchema
         self::assertSame(['super_admin', 'admin', 'staff'], self::tiersOn($this->tierButtons($naomi, $grace)));
     }
 
-    public function testAnAdminLookingAtASuperAdminSeesNoTierSection(): void
+    /** Not theirs to give, still theirs to know (ruled 28 Sep 2026): the tier is stated, not offered. */
+    public function testAnAdminLookingAtASuperAdminSeesTheTierButNoChoice(): void
     {
         $naomi = $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
         $admin = $this->person('Asha', 'Mollel', TeamRoleEnum::Admin);
@@ -178,7 +179,8 @@ final class TierChangeAuthorityTest extends WebTestCaseWithSchema
 
         $crawler = $this->tierButtons($admin, $naomi);
         self::assertCount(0, $crawler->filter('#signin .mb-tiers'));
-        self::assertSame('Sign-in·email', preg_replace('/\s+/u', '', $crawler->filter('#signin .tab')->text()), 'the card is titled Sign-in · email');
+        self::assertSame('Sign-in·emailandtier', preg_replace('/\s+/u', '', $crawler->filter('#signin .tab')->text()));
+        self::assertStringContainsString('Super Admin', $crawler->filter('#signin')->text());
     }
 
     public function testSomebodyWhoMayChangeNoTierSeesNoTierSection(): void

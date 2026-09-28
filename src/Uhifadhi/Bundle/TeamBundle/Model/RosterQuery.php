@@ -156,6 +156,16 @@ final readonly class RosterQuery
         return new self($this->q, $this->tier, $this->position, $this->state, $this->department, $this->page, $this->rank, $this->station, $this->facets, $uuids);
     }
 
+    /**
+     * THIS QUERY WITH NO TIER — for a viewer who sees no tiers (ruled 28 Sep
+     * 2026): a `?tier=` they typed is ignored, not applied, so the list never
+     * answers "who are the Super Admins" by leaving them alone on it.
+     */
+    public function withoutTier(): self
+    {
+        return new self($this->q, null, $this->position, $this->state, $this->department, $this->page, $this->rank, $this->station, $this->facets, $this->only);
+    }
+
     /** Whether anything is narrowing the list — what the "showing N of M" line turns on. */
     public function isFiltered(): bool
     {

@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Service;
 
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
+use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
@@ -63,6 +64,8 @@ final readonly class RolesBoard
         private PositionRepository $positions,
         private UserRepository $users,
         private iterable $modules = [],
+        /** The tier facts, to a viewer who sees tiers only (ruled 28 Sep 2026). */
+        private ?TierSight $tierSight = null,
     ) {
     }
 
@@ -136,8 +139,10 @@ final readonly class RolesBoard
             }
         }
 
-        return [
-            new SectionFact('Tiers', (string) \count(TeamRoleEnum::cases()), '2 are escape hatches'),
+        $tiers = $this->tierSight?->seesTiers() ?? false;
+
+        return array_values(array_filter([
+            $tiers ? new SectionFact('Tiers', (string) \count(TeamRoleEnum::cases()), '2 are escape hatches') : null,
             new SectionFact('Core grants', (string) $core, 'the platform’s own'),
             new SectionFact(
                 'Module grants',
@@ -148,9 +153,11 @@ final readonly class RolesBoard
             new SectionFact(
                 'May administer',
                 (string) ($byTier + $byGrant),
-                \sprintf('of %d · %d by tier, %d by grant', \count($people), $byTier, $byGrant),
+                $tiers
+                    ? \sprintf('of %d · %d by tier, %d by grant', \count($people), $byTier, $byGrant)
+                    : \sprintf('of %d', \count($people)),
             ),
-        ];
+        ]));
     }
 
     /**

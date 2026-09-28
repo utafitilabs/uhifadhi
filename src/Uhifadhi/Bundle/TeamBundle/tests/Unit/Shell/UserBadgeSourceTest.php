@@ -65,7 +65,7 @@ final class UserBadgeSourceTest extends TestCase
         self::assertSame(TeamRoleEnum::SuperAdmin->label(), $badge->context, 'A tier holder with no position gets the tier label.');
     }
 
-    public function testAStaffMemberWithNoPositionFallsBackToTheTierLabel(): void
+    public function testAStaffMemberWithNoPositionReadsNoPositionNotATier(): void
     {
         $user = new User();
         $user->setFirstName('Juma');
@@ -75,7 +75,7 @@ final class UserBadgeSourceTest extends TestCase
         $badge = new UserBadgeSource($this->tokenStorageHolding($user))->badge();
 
         self::assertInstanceOf(UserBadge::class, $badge);
-        self::assertSame(TeamRoleEnum::Staff->label(), $badge->context, 'No position yet is a name and a tier, not an empty line.');
+        self::assertSame('No position', $badge->context, 'Never an empty line, and never a tier: Staff see none (ruled 28 Sep 2026).');
     }
 
     public function testAnAnonymousRequestNamesNobody(): void

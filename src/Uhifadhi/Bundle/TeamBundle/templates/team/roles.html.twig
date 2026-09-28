@@ -32,6 +32,8 @@
         <span class="sp"></span>
     </div>
 
+    {# The tiers, to a viewer who sees tiers only (ruled 28 Sep 2026). #}
+    {% if sees_tiers() %}
     <div class="c" style="margin-bottom:20px">
         <span class="tab">The three tiers<span class="src">&middot; not a grant</span></span>
         <div class="sxlead">
@@ -61,6 +63,7 @@
             <a class="tgl" href="{{ path('team_index') }}">The people</a>
         </div>
     </div>
+    {% endif %}
 
     <div class="c">
         <span class="tab">Every grant there is<span class="src">&middot; {{ permissions }} &middot; {{ core }} the platform&rsquo;s, {{ fromModules }} from modules</span></span>

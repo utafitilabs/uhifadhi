@@ -68,12 +68,15 @@
     {# ABOVE THE MATRIX, NOT ROWS IN IT. Super admin and Admin are not composed
        of concerns and cannot be, so drawing them as rows would be a lie the
        matrix tells about itself. #}
+    {# …shown to a viewer who sees tiers only (ruled 28 Sep 2026). #}
+    {% if sees_tiers() %}
     <h2 class="zone">The tiers</h2>
     <div class="pmx-above">
         <div class="pmx-tier"><b>Super admin &mdash; above the matrix</b><span>Tiers and impersonation &middot; at least one active</span></div>
         <div class="pmx-tier"><b>Admin &mdash; above the matrix</b><span>Everything the matrix can express &middot; not a row here</span></div>
         <div class="pmx-tier plain"><b>Staff &mdash; the matrix</b><span>Exactly what their position grants &middot; nothing by default</span></div>
     </div>
+    {% endif %}
 
     {# THE REGISTER IS A HOUSE CARD WHOSE TAB NAMES THE TABLE (owner 2026-09-22:
        the frame's header band in the design is the register's own header
@@ -183,7 +186,7 @@
             </div></div></td></tr>
         {% else %}
             <tr class="dempty"><td colspan="7">
-                {% if total == 0 %}<b>No positions yet.</b><span>One Super Admin, nothing else &mdash; add the first one above</span>
+                {% if total == 0 %}<b>No positions yet.</b><span>Add the first one above</span>
                 {% else %}<b>No position matches</b><span>clear the search, or widen a filter</span>{% endif %}
             </td></tr>
         {% endfor %}

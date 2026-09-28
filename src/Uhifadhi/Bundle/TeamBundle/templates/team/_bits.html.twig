@@ -69,7 +69,8 @@
     {%- set position = user.position -%}
     {%- if position is null -%}
         <span class="tm-nopos">{{ bits.icon_info() }}no position</span>
-        {%- if user.teamRole.canManageContent -%}
+        {#- "by tier" names a tier: only to a viewer who sees them (ruled 28 Sep 2026) -#}
+        {%- if user.teamRole.canManageContent and sees_tiers() -%}
             <span class="tm-grants">everything, by tier</span>
         {%- else -%}
             <span class="tm-grants none">holds nothing</span>
@@ -78,7 +79,8 @@
         <a class="tm-pos qual" href="{{ positionsPath }}">
             <span class="n">{{ position.name }}</span>
         </a>
-        {%- if user.teamRole.canManageContent -%}
+        {#- "by tier" names a tier: only to a viewer who sees them (ruled 28 Sep 2026) -#}
+        {%- if user.teamRole.canManageContent and sees_tiers() -%}
             <span class="tm-grants">everything, by tier</span>
         {%- else -%}
             {%- set granted = position.grantValues|length -%}

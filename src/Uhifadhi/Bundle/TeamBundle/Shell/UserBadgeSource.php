@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Shell;
 
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Contracts\Shell\UserBadge;
 use Uhifadhi\Contracts\Shell\UserBadgeSourceInterface;
@@ -64,7 +65,9 @@ final readonly class UserBadgeSource implements UserBadgeSourceInterface
             return null;
         }
 
-        $context = $user->getPosition()?->getName() ?? $user->getTeamRole()->label();
+        // The position; a tier only for somebody who sees tiers — Staff do
+        // not, not even their own (ruled 28 Sep 2026).
+        $context = $user->getPosition()?->getName() ?? (TierSight::for($user) ? $user->getTeamRole()->label() : 'No position');
 
         return UserBadge::fromName($user->getFullName(), $context);
     }

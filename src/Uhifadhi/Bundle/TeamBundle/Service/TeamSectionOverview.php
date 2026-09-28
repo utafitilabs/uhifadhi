@@ -25,6 +25,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\KeyEntry;
 use Uhifadhi\Bundle\AtlasBundle\Model\KeyMark;
 use Uhifadhi\Bundle\AtlasBundle\Model\RankedBars;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
+use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
@@ -83,6 +84,8 @@ final readonly class TeamSectionOverview
         private DepartmentRepository $departments,
         private PostingBoard $board,
         private PerformanceHistory $history,
+        /** A person's tier goes on their line only for a viewer who sees tiers (ruled 28 Sep 2026). */
+        private TierSight $tierSight,
     ) {
     }
 
@@ -165,8 +168,8 @@ final readonly class TeamSectionOverview
             }
         }
 
-        $holdsNothing = self::linesFor($this->users->findActiveWithoutPosition());
-        $neverSignedIn = self::linesFor(array_filter($people, static fn (User $u): bool => !$u->isVerified()));
+        $holdsNothing = $this->linesFor($this->users->findActiveWithoutPosition());
+        $neverSignedIn = $this->linesFor(array_filter($people, static fn (User $u): bool => !$u->isVerified()));
 
         return [
             'facts' => $this->facts($people, $positions, $held, $stations, $postings),
@@ -514,15 +517,16 @@ final readonly class TeamSectionOverview
      *
      * @return list<SectionLine>
      */
-    private static function linesFor(iterable $people): array
+    private function linesFor(iterable $people): array
     {
+        $tiers = $this->tierSight->seesTiers();
         $lines = [];
         foreach ($people as $person) {
             $lines[] = new SectionLine(
                 label: $person->getFullName(),
                 uuid: $person->getUuidString(),
                 note: implode(' · ', array_filter([
-                    $person->getTeamRole()->label(),
+                    $tiers ? $person->getTeamRole()->label() : null,
                     $person->isVerified() ? 'verified' : 'never signed in',
                     $person->isActive() ? null : 'deactivated',
                     null === $person->getPosition() ? 'no position' : null,

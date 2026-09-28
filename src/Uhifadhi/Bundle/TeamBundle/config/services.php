@@ -21,6 +21,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Access\Door;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
+use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
 use Uhifadhi\Bundle\TeamBundle\Api\State\MeProvider;
 use Uhifadhi\Bundle\TeamBundle\ArgumentResolver\AreaValueResolver;
 use Uhifadhi\Bundle\TeamBundle\Command\CreateUserCommand;
@@ -649,8 +650,12 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('security.authorization_checker')]);
     $services->alias(Door::class, 'team.access.door');
 
+    $services->set('team.access.tier_sight', TierSight::class)
+        ->args([service('security.token_storage')]);
+    $services->alias(TierSight::class, 'team.access.tier_sight');
+
     $services->set('team.twig.door', DoorExtension::class)
-        ->args([service('team.access.door')])
+        ->args([service('team.access.door'), service('team.access.tier_sight')])
         ->tag('twig.extension');
 
     /*
@@ -1111,6 +1116,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.roster_facets'),
             service('team.csv_export'),
             service('team.people_facets'),
+            service('team.access.tier_sight'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(TeamController::class, 'team.controller.team')->public();
@@ -1361,6 +1367,7 @@ return static function (ContainerConfigurator $container): void {
             // rather than imported, because this bundle must boot in an
             // installation that has no registry at all.
             tagged_iterator('uhifadhi.module'),
+            service('team.access.tier_sight'),
         ]);
     $services->alias(RolesBoard::class, 'team.roles_board');
 
@@ -1383,6 +1390,7 @@ return static function (ContainerConfigurator $container): void {
             // cannot be recomputed, so a movement is read and never worked
             // out again.
             service('team.performance_history'),
+            service('team.access.tier_sight'),
         ]);
     $services->alias(TeamSectionOverview::class, 'team.section_overview');
 

@@ -93,7 +93,7 @@
            card which accounts are Super Admins. #}
         {% set givable = tiers|filter(t => tierAllowed[t.value] ?? false) %}
         <div class="c" id="signin">
-            <span class="tab">Sign-in<span class="src">&middot; email{{ givable is empty ? '' : ' and tier' }}</span></span>
+            <span class="tab">Sign-in<span class="src">&middot; email{{ givable is empty and not sees_tiers() ? '' : ' and tier' }}</span></span>
             <form id="signin-form" method="post" action="{{ path('team_member_update', {uuid: member.uuidString}) }}">
                 <input type="hidden" name="_token" value="{{ csrfToken }}">
                 <input type="hidden" name="return" value="configure">
@@ -102,7 +102,7 @@
                 <input type="hidden" name="rangerCode" value="{{ member.rangerCode }}">
                 {% if door('personal-details.read') %}
                     <div class="crgrid">
-                        <div class="crfield grow"><span class="crlab">Email</span><input type="email" class="fld" name="email" value="{{ member.email }}" required maxlength="180"><span class="zfrag">The sign-in identifier &middot; unique &middot; lowercased on save</span></div>
+                        <div class="crfield grow"><span class="crlab">Email</span><input type="email" class="fld" name="email" value="{{ member.email }}" required maxlength="180"{{ mayTouchAccount ? '' : ' readonly' }}><span class="zfrag">The sign-in identifier &middot; unique &middot; lowercased on save</span></div>
                     </div>
                     {# THE SIGN-IN STATE IS A FACT UNDER THE ADDRESS: whether they have
                        ever signed in, and who invited them. #}
@@ -141,17 +141,28 @@
                 {% if warnsPeer %}
                     <div class="mb-grant">{{ bits.icon_warn() }}<div><b>An Admin is your equal.</b> They will hold every permission you hold, across the whole organization, and could remove you as an Admin.</div></div>
                 {% endif %}
+                {# The warning lives at the grant: wherever Super Admin is on offer to
+                   somebody who is not one yet. #}
+                {% if (tierAllowed['super_admin'] ?? false) and member.teamRole.value != 'super_admin' %}
+                    <div class="mb-grant">{{ bits.icon_warn() }}<div><b>Grants every permission you hold</b> &middot; including this one</div></div>
+                {% endif %}
                 {% if isLastSuperAdmin %}
                     <div class="mb-refuse"><span><b>Refused &mdash; last active Super Admin.</b> {{ member.fullName }} is the only one</span></div>
                 {% endif %}
             </form>
+            {# A tier the viewer may not give is still stated to a viewer who
+               sees tiers — an Admin on a Super Admin's page (ruled 28 Sep 2026). #}
+            {% elseif sees_tiers() %}
+                <div class="pms-row mb-tierhead"><span class="k">tier</span><span class="v"><b>{{ member.teamRole.label }}</b> <span class="zfrag">changed by a Super Admin only</span></span></div>
             {% endif %}
+            {% if mayTouchAccount %}
             <div class="staddrow">
                 <span class="chg"><b>no changes</b></span>
                 <span class="sp"></span>
                 <button type="reset" class="btn" form="signin-form">Discard</button>
                 <button type="submit" class="cta" form="signin-form">Save the sign-in</button>
             </div>
+            {% endif %}
         </div>
 
         {# POSITION AND RANK: the seat, the rank held from a day, where it
@@ -264,7 +275,7 @@
                         </div>
                     {% endif %}
                 {% endif %}
-                {% if member.isActive and door('personal-details.manage') %}
+                {% if mayTouchAccount and member.isActive and door('personal-details.manage') %}
                     <div class="mb-drow">
                         <div class="dt"><b>Send a password-reset link</b><em>Writes a token, mails a link &middot; does not change the password</em></div>
                         <form method="post" action="{{ path('team_member_reset_link', {uuid: member.uuidString}) }}">
@@ -273,7 +284,7 @@
                         </form>
                     </div>
                 {% endif %}
-                {% if member.isActive and not member.isVerified and member.wasInvited and door('personal-details.manage') %}
+                {% if mayTouchAccount and member.isActive and not member.isVerified and member.wasInvited and door('personal-details.manage') %}
                     <div class="mb-drow">
                         <div class="dt"><b>Resend the invitation</b><em>A new link &middot; the previous one stops working</em></div>
                         <form method="post" action="{{ path('team_member_invite_again', {uuid: member.uuidString}) }}">
@@ -288,9 +299,9 @@
                         <a class="softbtn warn" href="{{ shell_brand().url }}?_switch_user={{ member.email|url_encode }}&amp;{{ constant('Uhifadhi\\Bundle\\ShellBundle\\Security\\ImpersonationReturn::PARAMETER') }}={{ app.request.requestUri|url_encode }}">{{ bits.icon_eye() }} Switch</a>
                     </div>
                 {% endif %}
-                {% if member.isActive %}
+                {% if mayTouchAccount and member.isActive %}
                     <div class="mb-drow">
-                        <div class="dt"><b>Deactivate the account</b><em>Record kept &middot; reversible &middot; not the last Super Admin</em></div>
+                        <div class="dt"><b>Deactivate the account</b><em>Record kept &middot; reversible{{ sees_tiers() ? ' · not the last Super Admin' : '' }}</em></div>
                         {% if isLastSuperAdmin %}
                             <span class="mb-absent">{{ bits.icon_off() }} refused &mdash; the last active Super Admin</span>
                         {% else %}
@@ -300,7 +311,7 @@
                             </form>
                         {% endif %}
                     </div>
-                {% else %}
+                {% elseif mayTouchAccount %}
                     <div class="mb-drow">
                         <div class="dt"><b>Reactivate the account</b><em>Clears the flag and drops the date</em></div>
                         <form method="post" action="{{ path('team_member_reactivate', {uuid: member.uuidString}) }}">

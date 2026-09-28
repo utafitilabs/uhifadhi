@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Twig;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 use Uhifadhi\Bundle\TeamBundle\Access\Door;
+use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
 
 /**
  * `{% if door('zones.configure', area) %}` — the one way a template asks
@@ -40,6 +41,7 @@ final class DoorExtension extends AbstractExtension
 {
     public function __construct(
         private readonly Door $door,
+        private readonly TierSight $tiers,
     ) {
     }
 
@@ -47,6 +49,8 @@ final class DoorExtension extends AbstractExtension
     {
         return [
             new TwigFunction('door', $this->door->opens(...)),
+            // Whether this viewer sees a person's tier at all (ruled 28 Sep 2026).
+            new TwigFunction('sees_tiers', $this->tiers->seesTiers(...)),
         ];
     }
 }

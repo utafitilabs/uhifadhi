@@ -116,12 +116,13 @@
         {% for seat in xr.seats %}
             <div class="rln"><span><a href="{{ path('team_position_show', {uuid: seat.uuid}) }}">{{ seat.position }}</a> <span class="chip warn">lifts {{ seat.lifts }}</span></span><span class="mono d">{{ seat.holders }} {{ seat.holders == 1 ? 'holds' : 'hold' }} it &middot; {{ seat.by }} &middot; <time datetime="{{ seat.at|date('c') }}" data-localtime-format="day">{{ seat.at|date('j M Y') }}</time> &middot; &ldquo;{{ seat.reason|length > 60 ? seat.reason|slice(0, 60) ~ '…' : seat.reason }}&rdquo;</span></div>
         {% else %}
-            <div class="rln"><span class="d">No seat holds it.</span><span class="mono d">only the tiers below see everybody</span></div>
+            <div class="rln"><span class="d">No seat holds it.</span><span class="mono d">{{ sees_tiers() ? 'only the tiers below see everybody' : 'no seat lifts the rank rule' }}</span></div>
         {% endfor %}
-        {% for tier in xr.tiers %}
+        {# The tiers, to a viewer who sees tiers only (ruled 28 Sep 2026). #}
+        {% for tier in sees_tiers() ? xr.tiers : [] %}
             <div class="rln"><span>{{ tier.label }} <span class="chip">by tier</span></span><span class="mono d">{{ tier.people|length }} {{ tier.people|length == 1 ? 'person' : 'people' }}{% if tier.people is not empty %} &middot; {{ tier.people|join(', ') }}{% endif %}</span></div>
         {% endfor %}
-        <div class="sxfoot"><span>given and taken on the position, by a Super Admin</span><span class="sp"></span><a class="tgl" href="{{ path('team_positions') }}">The positions</a></div>
+        <div class="sxfoot"><span>given and taken on the position, with a reason</span><span class="sp"></span><a class="tgl" href="{{ path('team_positions') }}">The positions</a></div>
     </div>
     </div>
     {% endif %}

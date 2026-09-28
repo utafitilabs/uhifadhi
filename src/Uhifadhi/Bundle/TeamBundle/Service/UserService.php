@@ -230,6 +230,23 @@ final readonly class UserService
      * Admin's tier; and a position never grants a tier, whatever it holds.
      * Checked here, not only on the screen, so no door can skip it.
      */
+    /**
+     * WHO ACTS ON AN ACCOUNT — its name and email, a reset link or a resent
+     * invitation, deactivating and reactivating it (28 Sep 2026). A Super
+     * Admin acts on anybody; an Admin on Admins and Staff, never a Super
+     * Admin; Staff on Staff alone, whatever their position grants — so no
+     * directory grant is a way to change an administrator's email and send
+     * the reset link to it.
+     */
+    public static function mayTouchAccount(?User $by, User $user): bool
+    {
+        return match ($user->getTeamRole()) {
+            TeamRoleEnum::Staff => null !== $by,
+            TeamRoleEnum::Admin => $by?->getTeamRole()->canManageContent() ?? false,
+            TeamRoleEnum::SuperAdmin => TeamRoleEnum::SuperAdmin === $by?->getTeamRole(),
+        };
+    }
+
     public static function mayChangeTier(?User $by, User $user, TeamRoleEnum $tier): bool
     {
         return match ($by?->getTeamRole()) {

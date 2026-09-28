@@ -77,16 +77,17 @@ final class FieldAccountEndpointTest extends FieldApiTestCase
     /**
      * `ranger.role` is load-bearing rather than cosmetic: a refusal screen names
      * the POSITION that lacks the permission, because that is what an
-     * administrator has to change. Somebody with no position still has a role —
-     * their tier — so the field is never blank.
+     * administrator has to change. Somebody with no position still has a role,
+     * so the field is never blank: "No position", which is what there is to
+     * change — never a tier, which Staff do not see (ruled 28 Sep 2026).
      */
-    public function testSomebodyWithNoPositionIsNamedByTheirTier(): void
+    public function testSomebodyWithNoPositionIsNamedAsHavingNone(): void
     {
         $office = $this->officeStaff('Naomi', 'Kileo');
 
         $body = $this->get(self::ENDPOINT, $this->tokenFor($office));
 
-        self::assertSame(TeamRoleEnum::Staff->label(), self::leaf($body, 'ranger', 'role'));
+        self::assertSame('No position', self::leaf($body, 'ranger', 'role'));
     }
 
     /**

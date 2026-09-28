@@ -73,8 +73,12 @@ final class ContractFormatTest extends TestCase
         );
     }
 
-    /** NEVER BLANK. Somebody with no position is named by their tier, which they always have. */
-    public function testTheTierNamesSomebodyWithNoPosition(): void
+    /**
+     * NEVER BLANK, AND NEVER A TIER TO STAFF (ruled 28 Sep 2026). An Admin or
+     * a Super Admin with no position is named by their tier, which they see;
+     * a staff member with none reads "No position".
+     */
+    public function testSomebodyWithNoPositionIsNamedWithoutATierUnlessTheySeeTiers(): void
     {
         $user = new User()
             ->setEmail('n.kileo@example.test')
@@ -82,6 +86,7 @@ final class ContractFormatTest extends TestCase
             ->setLastName('Kileo')
             ->setTeamRole(TeamRoleEnum::Staff);
 
-        self::assertSame(TeamRoleEnum::Staff->label(), ContractFormat::ranger($user)['role']);
+        self::assertSame('No position', ContractFormat::ranger($user)['role']);
+        self::assertSame('Admin', ContractFormat::ranger($user->setTeamRole(TeamRoleEnum::Admin))['role']);
     }
 }

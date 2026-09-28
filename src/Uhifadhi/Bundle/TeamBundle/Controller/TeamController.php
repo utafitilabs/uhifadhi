@@ -20,6 +20,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
+use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
 use Uhifadhi\Bundle\TeamBundle\Entity\RankHolding;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\RosterStateEnum;
@@ -106,6 +107,8 @@ final readonly class TeamController
         private CsvExportService $csv,
         /** THE STATION AND THE MODULES' DROPDOWNS, through their seams. */
         private PeopleFacetService $seamFacets,
+        /** WHO SEES A TIER — Admins and Super Admins only (ruled 28 Sep 2026). */
+        private TierSight $tierSight,
     ) {
     }
 
@@ -133,7 +136,9 @@ final readonly class TeamController
         $usesRanks = $this->settings->current()->usesRanks();
         $held = $usesRanks ? $this->holdings->findCurrentByPeople($people) : [];
 
-        $header = ['Person', 'Email', 'Tier', 'Position'];
+        // The Tier column only for a viewer who sees tiers (ruled 28 Sep 2026).
+        $tiers = $this->tierSight->seesTiers();
+        $header = $tiers ? ['Person', 'Email', 'Tier', 'Position'] : ['Person', 'Email', 'Position'];
         if ($usesRanks) {
             array_push($header, 'Rank', 'Rank name', 'Scale');
         }
@@ -141,7 +146,9 @@ final readonly class TeamController
 
         $rows = [];
         foreach ($people as $person) {
-            $row = [$person->getFullName(), $person->getEmail(), $person->getTeamRole()->label(), $person->getPosition()?->getName()];
+            $row = $tiers
+                ? [$person->getFullName(), $person->getEmail(), $person->getTeamRole()->label(), $person->getPosition()?->getName()]
+                : [$person->getFullName(), $person->getEmail(), $person->getPosition()?->getName()];
             if ($usesRanks) {
                 $holding = $held[(int) $person->getId()] ?? null;
                 array_push($row, $holding?->getRank()->getShortCode(), $holding?->getRank()->getName(), self::scaleOf($holding));
@@ -220,7 +227,7 @@ final readonly class TeamController
             // half by a pager is a band that lies about its own count.
             'everybody' => $everybody,
             'overview' => $this->overview->build(),
-            'tierCounts' => $this->users->countByTier(),
+            'tierCounts' => $this->tierSight->seesTiers() ? $this->users->countByTier() : [],
             'tiers' => TeamRoleEnum::cases(),
             'states' => RosterStateEnum::cases(),
             'departments' => $departments,
@@ -256,7 +263,12 @@ final readonly class TeamController
         }
         $seam = $this->seamFacets->read($uuids);
 
-        return [$seam->narrow(RosterQuery::fromRequest($request, $seam->keys())), $seam];
+        $query = RosterQuery::fromRequest($request, $seam->keys());
+        if (!$this->tierSight->seesTiers()) {
+            $query = $query->withoutTier();
+        }
+
+        return [$seam->narrow($query), $seam];
     }
 
     /*

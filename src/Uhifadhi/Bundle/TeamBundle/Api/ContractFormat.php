@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Api;
 
+use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Contracts\Entity\UserInterface;
 
@@ -74,7 +75,9 @@ final class ContractFormat
         return [
             'id' => self::rangerId($user),
             'name' => $user->getFullName(),
-            'role' => $user->getPosition()?->getName() ?? $user->getTeamRole()->label(),
+            // The position; a tier only for somebody who sees tiers — Staff do
+            // not, not even their own (ruled 28 Sep 2026).
+            'role' => $user->getPosition()?->getName() ?? (TierSight::for($user) ? $user->getTeamRole()->label() : 'No position'),
         ];
     }
 }

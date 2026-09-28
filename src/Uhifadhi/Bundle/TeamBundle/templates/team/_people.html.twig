@@ -31,10 +31,13 @@
             {# THE TIER CHIPS COUNT OVER THE WHOLE ROSTER, never the filtered one:
                a chip reading "Admin 0" because somebody is searching for a name
                is a chip lying about the installation. #}
+            {# …and only for a viewer who sees tiers (ruled 28 Sep 2026). #}
+            {% if sees_tiers() %}
             <a class="fchip{{ query.tier is null ? ' on' : '' }}" href="{{ path('team_index', query.toParams({tier: null, page: null})) }}">All <span class="n">{{ overview.people }}</span></a>
             {% for tier in tiers %}
                 <a class="fchip{{ query.tier == tier ? ' on' : '' }}" href="{{ path('team_index', query.toParams({tier: tier.value, page: null})) }}">{{ tier.label }} <span class="n">{{ tierCounts[tier.value] }}</span></a>
             {% endfor %}
+            {% endif %}
 
             {# THE GROUPED DROPDOWNS — position, department, rank (while the
                organization uses ranks) and account. Each counts the whole
@@ -54,12 +57,12 @@
 
     <div class="tm-scroll">
         <table class="tbl">
-            <thead><tr><th>Person</th><th>Tier</th><th>Position</th>{% if usesRanks %}<th>Rank</th>{% endif %}<th>Ranger code</th><th>Account</th><th></th></tr></thead>
+            <thead><tr><th>Person</th>{% if sees_tiers() %}<th>Tier</th>{% endif %}<th>Position</th>{% if usesRanks %}<th>Rank</th>{% endif %}<th>Ranger code</th><th>Account</th><th></th></tr></thead>
             <tbody>
                 {% for person in page.items %}
                     <tr{{ person.isActive ? '' : ' class="tm-off"' }}>
                         <td>{{ bits.person(person, person == app.user) }}</td>
-                        <td>{{ bits.tier_pill(person.teamRole) }}</td>
+                        {% if sees_tiers() %}<td>{{ bits.tier_pill(person.teamRole) }}</td>{% endif %}
                         <td>{{ bits.position_cell(person, path('team_positions')) }}</td>
                         {% if usesRanks %}<td>{{ bits.rank_cell(ranksHeld[person.id] ?? null, severalScales) }}</td>{% endif %}
                         <td>{{ bits.ranger_code(person) }}</td>
@@ -70,7 +73,7 @@
                     {# A FILTER THAT MATCHES NOBODY IS A RESULT, not an error, and
                        it says which filter produced it — otherwise it reads as an
                        installation with nobody in it. #}
-                    <tr><td colspan="{{ usesRanks ? 7 : 6 }}">
+                    <tr><td colspan="{{ (usesRanks ? 7 : 6) - (sees_tiers() ? 0 : 1) }}">
                         <div class="tm-nores">
                             {{ bits.icon_search() }}
                             <span>Nobody matches {% if query.q %}&ldquo;{{ query.q }}&rdquo;{% else %}these filters{% endif %}.

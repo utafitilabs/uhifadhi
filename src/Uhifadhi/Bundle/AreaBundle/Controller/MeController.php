@@ -118,15 +118,24 @@ final readonly class MeController
 
         return new Response($this->twig->render('@Area/me/duty_log.html.twig', [
             'claims' => $claims,
-            'month' => $month,
-            'previous' => $month->modify('-1 month'),
-            'next' => $next <= $now ? $next : null,
+            // A month is a name on the calendar, not an instant: it is read as
+            // text, and the instants inside it each carry a <time>.
+            'monthLabel' => $month->format('F Y'),
+            'monthName' => $month->format('F'),
+            'previous' => self::month($month->modify('-1 month')),
+            'next' => $next <= $now ? self::month($next) : null,
             'now' => $now,
             'hours' => intdiv($minutes, 60),
             'days' => \count($days),
             'watches' => \count($claims),
             'pings' => $pings,
         ]));
+    }
+
+    /** @return array{param: string, name: string} */
+    private static function month(\DateTimeImmutable $month): array
+    {
+        return ['param' => $month->format('Y-m'), 'name' => $month->format('F')];
     }
 
     private function me(): UserInterface

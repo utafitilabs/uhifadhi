@@ -26,15 +26,15 @@
         <div class="md-col">
             <div class="c" data-me="head"><span class="tab">Station head<span class="src">&middot; who leads {{ station.name }}</span></span>
                 {% if lead and lead.person %}
-                    <div class="rln"><span>{{ lead.person.fullName }}</span><span class="mono d">{% if lead.since %}leads since {{ lead.since|date('j M Y') }}{% endif %}</span></div>
-                    <div class="rln"><span>On watch now</span><span class="mono d">{{ onWatch[lead.person.uuidString] is defined ? 'yes · since ' ~ onWatch[lead.person.uuidString].occurredAt|date('H:i') : 'no' }}</span></div>
+                    <div class="rln"><span>{{ lead.person.fullName }}</span><span class="mono d">{% if lead.since %}leads since <time datetime="{{ lead.since|date('c') }}" data-localtime-format="day">{{ lead.since|date('j M Y') }}</time>{% endif %}</span></div>
+                    <div class="rln"><span>On watch now</span><span class="mono d">{% if onWatch[lead.person.uuidString] is defined %}yes &middot; since <time datetime="{{ onWatch[lead.person.uuidString].occurredAt|date('c') }}" data-localtime-format="clock">{{ onWatch[lead.person.uuidString].occurredAt|date('H:i') }}</time>{% else %}no{% endif %}</span></div>
                 {% else %}
                     <div class="rln"><span class="d">Nobody leads it yet.</span><span class="mono d"></span></div>
                 {% endif %}
             </div>
             <div class="c" data-me="posted"><span class="tab">Posted here<span class="src">&middot; {{ posted|length }} &middot; {{ onWatch|length }} on watch now</span></span>
                 {% for posting in posted %}{% set person = posting.person %}{% if person %}
-                    <div class="rln"><span><b>{{ person.fullName }}</b>{% if posting.leader %} <span class="mono d">station head</span>{% endif %}{% if person.uuidString == me.uuidString %} <span class="chip acc">me</span>{% endif %}</span><span class="mono d">{{ onWatch[person.uuidString] is defined ? 'on watch · since ' ~ onWatch[person.uuidString].occurredAt|date('H:i') : 'not on watch' }}</span></div>
+                    <div class="rln"><span><b>{{ person.fullName }}</b>{% if posting.leader %} <span class="mono d">station head</span>{% endif %}{% if person.uuidString == me.uuidString %} <span class="chip acc">me</span>{% endif %}</span><span class="mono d">{% if onWatch[person.uuidString] is defined %}on watch &middot; since <time datetime="{{ onWatch[person.uuidString].occurredAt|date('c') }}" data-localtime-format="clock">{{ onWatch[person.uuidString].occurredAt|date('H:i') }}</time>{% else %}not on watch{% endif %}</span></div>
                 {% endif %}{% endfor %}
             </div>
             {% for band in bands %}

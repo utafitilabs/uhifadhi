@@ -2,9 +2,9 @@
 <div class="c kpi" data-me="watch"><span class="tab">My watch</span>
 {% if open %}
     <b class="disp">{{ area_my_span(open.occurredAt, now) }}</b>
-    <span class="sub">on since {{ open.occurredAt|date('H:i') }}{% if open.lastPingAt %} &middot; last ping {{ open.lastPingAt|date('H:i') }}{% endif %}</span>
+    <span class="sub">on since <time datetime="{{ open.occurredAt|date('c') }}" data-localtime-format="clock">{{ open.occurredAt|date('H:i') }}</time>{% if open.lastPingAt %} &middot; last ping <time datetime="{{ open.lastPingAt|date('c') }}" data-localtime-format="clock">{{ open.lastPingAt|date('H:i') }}</time>{% endif %}</span>
 {% else %}
     <b class="disp">&mdash;</b>
-    <span class="sub">{% if last %}not on watch &middot; last checked in {{ last.occurredAt|date('D j M')|lower }}{% else %}not on watch &middot; never checked in{% endif %}</span>
+    <span class="sub">{% if last %}not on watch &middot; last checked in <time datetime="{{ last.occurredAt|date('c') }}" data-localtime-format="day">{{ last.occurredAt|date('D j M') }}</time>{% else %}not on watch &middot; never checked in{% endif %}</span>
 {% endif %}
 </div>

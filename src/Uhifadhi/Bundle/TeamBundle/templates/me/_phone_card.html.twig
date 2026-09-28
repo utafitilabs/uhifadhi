@@ -2,8 +2,8 @@
 <div class="c" data-me="phone"><span class="tab">My phone<span class="src">&middot; Doria</span></span>
     {% if token %}
         <div class="rln"><span>Phone</span><span class="mono d">{{ token.deviceName ?? 'a phone' }}</span></div>
-        <div class="rln"><span>Last in touch</span><span class="mono d">{{ token.lastUsedAt ? token.lastUsedAt|date('D j M · H:i')|lower : 'not yet' }}</span></div>
-        <div class="rln"><span>Signed in until</span><span class="mono d">{{ token.expiresAt|date('j M Y') }}</span></div>
+        <div class="rln"><span>Last in touch</span><span class="mono d">{% if token.lastUsedAt %}<time datetime="{{ token.lastUsedAt|date('c') }}" data-localtime-format="daystamp">{{ token.lastUsedAt|date('D j M · H:i')|lower }}</time>{% else %}not yet{% endif %}</span></div>
+        <div class="rln"><span>Signed in until</span><span class="mono d"><time datetime="{{ token.expiresAt|date('c') }}" data-localtime-format="day">{{ token.expiresAt|date('j M Y') }}</time></span></div>
     {% else %}
         <div class="rln"><span class="d">Not signed in on a phone.</span><span class="mono d">install Doria and sign in</span></div>
     {% endif %}

@@ -3,6 +3,6 @@
     <div class="rln"><span>Station head</span><span class="mono d">{{ lead ? lead.fullName : 'nobody leads it yet' }}</span></div>
     <div class="rln"><span>Posted here</span><span class="mono d" data-me="posted">{{ posted }}</span></div>
     {% if station.zone %}<div class="rln"><span>Zone</span><span class="mono d">{{ station.zone.name }}</span></div>{% endif %}
-    {% if since %}<div class="rln"><span>I am posted here</span><span class="mono d">since {{ since|date('j M Y') }}</span></div>{% endif %}
+    {% if since %}<div class="rln"><span>I am posted here</span><span class="mono d">since <time datetime="{{ since|date('c') }}" data-localtime-format="day">{{ since|date('j M Y') }}</time></span></div>{% endif %}
     <div class="sxfoot"><span class="sp"></span><a class="tgl" href="{{ door }}">My station &rarr;</a></div>
 </div>

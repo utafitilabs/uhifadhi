@@ -7,25 +7,25 @@
 {% block stylesheets %}{{ parent() }}{{ include('@Area/_stylesheets.html.twig') }}{% endblock %}
 {% block shell_page_tabs %}{% endblock %}
 {% block shell_breadcrumbs %}<a href="{{ path('organization_dashboard') }}">{{ shell_brand().name|lower }}</a> / my duty log{% endblock %}
-{% block shell_page_title %}My duty log <span class="chip acc">{{ month|date('F Y') }}</span>{% endblock %}
+{% block shell_page_title %}My duty log <span class="chip acc">{{ monthLabel }}</span>{% endblock %}
 {% block shell_page_subtitle %}Every check-in I made and the hours on watch — the web copy of the Duty log on my phone.{% endblock %}
 
 {% block shell_page %}
     <div class="grid kstrip ao-kstrip md-figures">
-        <div class="c kpi"><span class="tab">On watch</span><b class="disp">{{ hours }} h</b><span class="sub">{{ month|date('F')|lower }} &middot; {{ watches }} watch{{ watches == 1 ? '' : 'es' }}</span></div>
-        <div class="c kpi"><span class="tab">Days checked in</span><b class="disp">{{ days }}</b><span class="sub">in {{ month|date('F')|lower }}</span></div>
+        <div class="c kpi"><span class="tab">On watch</span><b class="disp">{{ hours }} h</b><span class="sub">{{ monthName|lower }} &middot; {{ watches }} watch{{ watches == 1 ? '' : 'es' }}</span></div>
+        <div class="c kpi"><span class="tab">Days checked in</span><b class="disp">{{ days }}</b><span class="sub">in {{ monthName|lower }}</span></div>
         <div class="c kpi"><span class="tab">Pings</span><b class="disp">{{ pings }}</b><span class="sub">sent on watch</span></div>
     </div>
-    <div class="c" data-me="log"><span class="tab">Every check-in<span class="src">&middot; {{ month|date('F')|lower }} &middot; newest first</span></span>
+    <div class="c" data-me="log"><span class="tab">Every check-in<span class="src">&middot; {{ monthName|lower }} &middot; newest first</span></span>
         <table class="tbl" style="margin-top:10px"><thead><tr><th>Day</th><th>Status</th><th>Post</th><th>In</th><th>Out</th><th>On watch</th></tr></thead><tbody>
         {% for claim in claims %}
-            <tr><td><b>{{ claim.occurredAt|date('D j')|lower }}</b></td><td>{{ claim.status ? claim.status.label : '' }}</td><td>{{ claim.station ? claim.station.name : '—' }}</td>
-            <td class="mono">{{ claim.occurredAt|date('H:i') }}</td><td class="mono">{{ claim.endedAt ? claim.endedAt|date('H:i') : 'on watch' }}</td>
+            <tr><td><b><time datetime="{{ claim.occurredAt|date('c') }}" data-localtime-format="day">{{ claim.occurredAt|date('D j') }}</time></b></td><td>{{ claim.status ? claim.status.label : '' }}</td><td>{{ claim.station ? claim.station.name : '—' }}</td>
+            <td class="mono"><time datetime="{{ claim.occurredAt|date('c') }}" data-localtime-format="clock">{{ claim.occurredAt|date('H:i') }}</time></td><td class="mono">{% if claim.endedAt %}<time datetime="{{ claim.endedAt|date('c') }}" data-localtime-format="clock">{{ claim.endedAt|date('H:i') }}</time>{% else %}on watch{% endif %}</td>
             <td class="mono">{{ area_my_span(claim.occurredAt, claim.endedAt ?? now) }}</td></tr>
         {% else %}
-            <tr><td colspan="6" class="d">No check-ins in {{ month|date('F') }}.</td></tr>
+            <tr><td colspan="6" class="d">No check-ins in {{ monthName }}.</td></tr>
         {% endfor %}
         </tbody></table>
-        <div class="sxfoot"><span>a correction is added, never overwritten</span><span class="sp"></span><a class="tgl" href="{{ path('me_duty_log', {month: previous|date('Y-m')}) }}">&larr; {{ previous|date('F') }}</a>{% if next %}<a class="tgl" href="{{ path('me_duty_log', {month: next|date('Y-m')}) }}">{{ next|date('F') }} &rarr;</a>{% endif %}</div>
+        <div class="sxfoot"><span>a correction is added, never overwritten</span><span class="sp"></span><a class="tgl" href="{{ path('me_duty_log', {month: previous.param}) }}">&larr; {{ previous.name }}</a>{% if next %}<a class="tgl" href="{{ path('me_duty_log', {month: next.param}) }}">{{ next.name }} &rarr;</a>{% endif %}</div>
     </div>
 {% endblock %}

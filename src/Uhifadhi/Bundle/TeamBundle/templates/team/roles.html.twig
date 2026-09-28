@@ -47,7 +47,7 @@
         <table class="tbl">
             <thead><tr><th>Tier</th><th class="num">People</th><th>Who</th><th>What it means</th></tr></thead>
             <tbody>
-            {% for row in tiers %}
+            {% for row in tiers|filter(r => r.tier.value != 'super_admin' or sees_super_admins()) %}
                 <tr>
                     <td><b>{{ row.tier.label() }}</b></td>
                     <td class="num">{{ row.people }}</td>
@@ -58,7 +58,7 @@
             </tbody>
         </table>
         <div class="sxfoot">
-            <span>There is <b>one Super Admin</b>. If that account is lost there is no second owner and no break-glass.</span>
+            {% if sees_super_admins() %}<span>There is <b>one Super Admin</b>. If that account is lost there is no second owner and no break-glass.</span>{% endif %}
             <span class="sp"></span>
             <a class="tgl" href="{{ path('team_index') }}">The people</a>
         </div>

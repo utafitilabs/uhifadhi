@@ -301,7 +301,7 @@
                 {% endif %}
                 {% if mayTouchAccount and member.isActive %}
                     <div class="mb-drow">
-                        <div class="dt"><b>Deactivate the account</b><em>Record kept &middot; reversible{{ sees_tiers() ? ' · not the last Super Admin' : '' }}</em></div>
+                        <div class="dt"><b>Deactivate the account</b><em>Record kept &middot; reversible{{ sees_super_admins() ? ' · not the last Super Admin' : '' }}</em></div>
                         {% if isLastSuperAdmin %}
                             <span class="mb-absent">{{ bits.icon_off() }} refused &mdash; the last active Super Admin</span>
                         {% else %}

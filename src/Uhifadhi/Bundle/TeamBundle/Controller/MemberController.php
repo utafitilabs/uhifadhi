@@ -23,6 +23,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
@@ -44,6 +45,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
+use Uhifadhi\Bundle\TeamBundle\Security\MemberVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\OneTimePasswordService;
@@ -174,6 +176,8 @@ final readonly class MemberController
         private iterable $recordCells = [],
         /** THE ONE-TIME PASSWORD ROW: who may issue one, and the issuing. */
         private ?OneTimePasswordService $oneTimePasswords = null,
+        /** Asks MemberVoter who may configure a person (ruled 28 Sep 2026); without it, nobody may. */
+        private ?AuthorizationCheckerInterface $authorization = null,
     ) {
     }
 
@@ -203,7 +207,8 @@ final readonly class MemberController
             'placement' => $member->getPlacement(),
             // "By tier" names the tier: only to a viewer who sees tiers (ruled
             // 28 Sep 2026). Anybody else reads the person's position as it is.
-            'figures' => $this->figures($card, $byTier = $member->getTeamRole()->canManageContent() && TierSight::for($this->signedIn())),
+            'mayConfigure' => (bool) $this->authorization?->isGranted(MemberVoter::CONFIGURE, $member),
+            'figures' => $this->figures($card, $byTier = $member->getTeamRole()->canManageContent() && TierSight::sees($this->signedIn(), $member)),
             'byTier' => $byTier,
             'departmentsTotal' => \count($this->departments->findAllActiveOrdered()),
             'stationedAt' => $postings[0] ?? null,
@@ -227,6 +232,7 @@ final readonly class MemberController
     public function configure(Request $request, string $uuid): Response
     {
         $member = $this->member($uuid);
+        $this->assertMayConfigure($member);
 
         // SHOWN ONCE: the code waits in the session only until this page has
         // drawn it, and a second visit finds nothing.
@@ -254,9 +260,9 @@ final readonly class MemberController
             'allowsOrganization' => null === $position || \in_array(ScopeKind::Organization, $position->getAllowedKinds(), true),
             'allowsArea' => null === $position || \in_array(ScopeKind::Area, $position->getAllowedKinds(), true),
             'isLastSuperAdmin' => $this->invariant->isLastActiveSuperAdmin($member),
-            // Whether this viewer may act on the account at all (see
-            // UserService::mayTouchAccount()); the controls follow the rule.
-            'mayTouchAccount' => UserService::mayTouchAccount($this->signedIn(), $member),
+            // Whether this viewer may act on the account at all (MemberVoter);
+            // the controls follow the rule.
+            'mayTouchAccount' => (bool) $this->authorization?->isGranted(MemberVoter::CONFIGURE, $member),
             'mayImpersonate' => $this->signedIn()?->getTeamRole()->canSwitch() ?? false,
             // THE ROW IS FOR THE TIERS ABOVE THE MATRIX, and absent for anybody
             // else; for an Admin looking at an Admin or a Super Admin it is
@@ -440,6 +446,7 @@ final readonly class MemberController
     {
         $member = $this->member($uuid);
         $this->assertCsrf($request);
+        $this->assertMayConfigure($member);
 
         // THE RANK IS READ AND REFUSED BEFORE ANYTHING IS WRITTEN, so a
         // refusal leaves the seat as it was too: one save, one verdict.
@@ -609,11 +616,23 @@ final readonly class MemberController
      * {@see AreaAuthority::reachesPerson()} computes the boundary; this is
      * the 403 behind it, the person-record twin of {@see assertMayAssign()}.
      */
+    /**
+     * ONLY A SUPER ADMIN CONFIGURES A SUPER ADMIN, and only an Admin or a
+     * Super Admin an Admin (ruled 28 Sep 2026): everybody else may read the
+     * record and nothing more — no configure page, and every route that
+     * changes the person refuses. The rule is {@see MemberVoter}'s; this is
+     * this controller's `denyAccessUnlessGranted()`, since it extends nothing.
+     */
+    private function assertMayConfigure(User $member): void
+    {
+        if (!(bool) $this->authorization?->isGranted(MemberVoter::CONFIGURE, $member)) {
+            throw new AccessDeniedException('Only a Super Admin configures a Super Admin, and only an Admin or a Super Admin an Admin.');
+        }
+    }
+
     private function assertMayManage(User $member): void
     {
-        if (!UserService::mayTouchAccount($this->signedIn(), $member)) {
-            throw new AccessDeniedException('Only an Admin or a Super Admin acts on an Admin\'s account, and only a Super Admin on a Super Admin\'s.');
-        }
+        $this->assertMayConfigure($member);
 
         if ($this->authority->isUnbounded()) {
             return;
@@ -632,6 +651,8 @@ final readonly class MemberController
      */
     private function assertMayAssign(User $member): void
     {
+        $this->assertMayConfigure($member);
+
         if ($this->authority->isUnbounded()) {
             return;
         }

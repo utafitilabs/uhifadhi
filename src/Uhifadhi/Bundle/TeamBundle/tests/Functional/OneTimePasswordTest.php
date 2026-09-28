@@ -144,10 +144,14 @@ final class OneTimePasswordTest extends WebTestCaseWithSchema
         $superAdmin = $this->em->getRepository(User::class)->findOneBy(['email' => 'n.kileo@example.test']);
         self::assertInstanceOf(User::class, $superAdmin);
 
-        $crawler = $this->client->request('GET', '/team/'.$superAdmin->getUuidString().'/configure');
-        self::assertStringContainsString('Super Admin only for a Super Admin', $crawler->html());
+        // No page to issue it from (only a Super Admin configures a Super Admin),
+        // and the route refuses a token carried from another page.
+        $this->client->request('GET', '/team/'.$superAdmin->getUuidString().'/configure');
+        self::assertResponseStatusCodeSame(403);
 
-        $token = $this->tokenFrom('/team/'.$superAdmin->getUuidString().'/configure');
+        $admin = $this->em->getRepository(User::class)->findOneBy(['email' => 'a.mollel@example.test']);
+        self::assertInstanceOf(User::class, $admin);
+        $token = $this->tokenFrom('/team/'.$admin->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$superAdmin->getUuidString().'/one-time-password', ['_token' => $token]);
         self::assertResponseStatusCodeSame(403);
     }

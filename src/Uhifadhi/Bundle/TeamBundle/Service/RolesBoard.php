@@ -139,7 +139,8 @@ final readonly class RolesBoard
             }
         }
 
-        $tiers = $this->tierSight?->seesTiers() ?? false;
+        // The tier facts name the Super Admins' number: for a Super Admin only (ruled 28 Sep 2026).
+        $tiers = $this->tierSight?->seesSuperAdmins() ?? false;
 
         return array_values(array_filter([
             $tiers ? new SectionFact('Tiers', (string) \count(TeamRoleEnum::cases()), '2 are escape hatches') : null,

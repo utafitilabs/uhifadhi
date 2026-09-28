@@ -51,6 +51,9 @@ final class DoorExtension extends AbstractExtension
             new TwigFunction('door', $this->door->opens(...)),
             // Whether this viewer sees a person's tier at all (ruled 28 Sep 2026).
             new TwigFunction('sees_tiers', $this->tiers->seesTiers(...)),
+            // …this person's tier: never a Super Admin's, but to a Super Admin.
+            new TwigFunction('sees_tier', $this->tiers->seesTierOf(...)),
+            new TwigFunction('sees_super_admins', $this->tiers->seesSuperAdmins(...)),
         ];
     }
 }

@@ -82,6 +82,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\ActiveUserChecker;
 use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Security\GrantVoter;
+use Uhifadhi\Bundle\TeamBundle\Security\MemberVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 use Uhifadhi\Bundle\TeamBundle\Service\CsvExportService;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentDirectory;
@@ -602,6 +603,10 @@ return static function (ContainerConfigurator $container): void {
      * neither can overrule the other, and the gates move over a controller at
      * a time rather than in one unreviewable sweep.
      */
+    // WHO MAY CONFIGURE A PERSON — the tiers on top of the directory grant.
+    $services->set('team.access.member_voter', MemberVoter::class)
+        ->tag('security.voter');
+
     $services->set('team.access.voter', GrantVoter::class)
         ->args([service('team.access.catalogue'), service(DepartmentRepository::class), service(GrantJustificationRepository::class)])
         ->tag('security.voter');
@@ -1178,6 +1183,7 @@ return static function (ContainerConfigurator $container): void {
             // A MODULE'S CARD ON A PERSON'S RECORD, from whoever tags the seam.
             tagged_iterator(PersonRecordCellProviderInterface::TAG),
             service('team.one_time_password'),
+            service('security.authorization_checker'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(MemberController::class, 'team.controller.member')->public();

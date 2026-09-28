@@ -435,6 +435,7 @@ return static function (ContainerConfigurator $container): void {
             service('security.csrf.token_manager'),
             service('router'),
             service('security.token_storage')->nullOnInvalid(),
+            service('security.authorization_checker')->nullOnInvalid(),
         ])
         ->tag('controller.service_arguments');
     $services->alias(StationEditController::class, 'area.controller.station_edit')->public();

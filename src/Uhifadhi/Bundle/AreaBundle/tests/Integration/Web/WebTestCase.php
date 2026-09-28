@@ -51,6 +51,9 @@ abstract class WebTestCase extends KernelTestCase
         'stations.read', 'stations.configure',
         'assignments.read', 'assignments.manage',
         'duty.read', 'duty.record',
+        // The host's answer to "may this viewer change this person" — the
+        // team's voter in an installation (PersonAccess::CONFIGURE).
+        'team.member.configure',
     ];
 
     /**

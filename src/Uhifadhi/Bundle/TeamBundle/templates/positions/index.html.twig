@@ -72,7 +72,7 @@
     {% if sees_tiers() %}
     <h2 class="zone">The tiers</h2>
     <div class="pmx-above">
-        <div class="pmx-tier"><b>Super admin &mdash; above the matrix</b><span>Tiers and impersonation &middot; at least one active</span></div>
+        {% if sees_super_admins() %}<div class="pmx-tier"><b>Super admin &mdash; above the matrix</b><span>Tiers and impersonation &middot; at least one active</span></div>{% endif %}
         <div class="pmx-tier"><b>Admin &mdash; above the matrix</b><span>Everything the matrix can express &middot; not a row here</span></div>
         <div class="pmx-tier plain"><b>Staff &mdash; the matrix</b><span>Exactly what their position grants &middot; nothing by default</span></div>
     </div>

@@ -61,7 +61,7 @@
     </div>
     <div class="pgact w-pgact">
         <a class="tgl w-act" href="{{ path('team_index') }}">{{ ux_icon('shell:chevron-left', {width: 15, height: 15}) }} Back to the team</a>
-        {% if door('directory.manage') %}<a class="tgl w-act" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}">{{ ux_icon('shell:settings', {width: 15, height: 15}) }} Configure</a>{% endif %}
+        {% if door('directory.manage') and mayConfigure %}<a class="tgl w-act" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}">{{ ux_icon('shell:settings', {width: 15, height: 15}) }} Configure</a>{% endif %}
     </div>
 {% endblock %}
 
@@ -125,11 +125,11 @@
                     </div>
                 </div>
                 {% if usesRanks and ranks is not empty %}{{ _self.rank_history(ranks) }}{% endif %}
-                <div class="pcard-foot">reaches <b>{{ reach }}</b> {{ reach == 1 ? 'person' : 'people' }}<span>&middot;</span><b>{{ placement and not placement.allDepartments ? placement.departments|length : departmentsTotal }}</b> of {{ departmentsTotal }} departments<span class="sp"></span>{% if door('directory.manage') %}<a class="ov-open" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}#position">Change the position{% if usesRanks %} or rank{% endif %} {{ ux_icon('shell:chevron-right') }}</a>{% endif %}</div>
+                <div class="pcard-foot">reaches <b>{{ reach }}</b> {{ reach == 1 ? 'person' : 'people' }}<span>&middot;</span><b>{{ placement and not placement.allDepartments ? placement.departments|length : departmentsTotal }}</b> of {{ departmentsTotal }} departments<span class="sp"></span>{% if door('directory.manage') and mayConfigure %}<a class="ov-open" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}#position">Change the position{% if usesRanks %} or rank{% endif %} {{ ux_icon('shell:chevron-right') }}</a>{% endif %}</div>
             {% else %}
                 <div class="pcard"><div class="pmx-zero"><span><b>Holds no position.</b> Sign-in only &middot; nothing granted, read included</span></div>{% if usesRanks %}{{ _self.rank_line(rankNow) }}{% endif %}</div>
                 {% if usesRanks and ranks is not empty %}{{ _self.rank_history(ranks) }}{% endif %}
-                <div class="pcard-foot">no seat, no area, no department<span class="sp"></span>{% if door('directory.manage') %}<a class="ov-open" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}">Give a position{% if usesRanks %} or rank{% endif %} {{ ux_icon('shell:chevron-right') }}</a>{% endif %}</div>
+                <div class="pcard-foot">no seat, no area, no department<span class="sp"></span>{% if door('directory.manage') and mayConfigure %}<a class="ov-open" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}">Give a position{% if usesRanks %} or rank{% endif %} {{ ux_icon('shell:chevron-right') }}</a>{% endif %}</div>
             {% endif %}
         </div>
 

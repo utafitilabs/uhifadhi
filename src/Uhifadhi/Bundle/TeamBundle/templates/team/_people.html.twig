@@ -62,7 +62,7 @@
                 {% for person in page.items %}
                     <tr{{ person.isActive ? '' : ' class="tm-off"' }}>
                         <td>{{ bits.person(person, person == app.user) }}</td>
-                        {% if sees_tiers() %}<td>{{ bits.tier_pill(person.teamRole) }}</td>{% endif %}
+                        {% if sees_tiers() %}<td>{% if sees_tier(person) %}{{ bits.tier_pill(person.teamRole) }}{% endif %}</td>{% endif %}
                         <td>{{ bits.position_cell(person, path('team_positions')) }}</td>
                         {% if usesRanks %}<td>{{ bits.rank_cell(ranksHeld[person.id] ?? null, severalScales) }}</td>{% endif %}
                         <td>{{ bits.ranger_code(person) }}</td>

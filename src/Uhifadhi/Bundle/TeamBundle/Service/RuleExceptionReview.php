@@ -69,7 +69,7 @@ final readonly class RuleExceptionReview
         foreach ([TeamRoleEnum::SuperAdmin, TeamRoleEnum::Admin] as $tier) {
             $names = array_map(static fn (User $u): string => $u->getFullName(), $this->users->findActiveInTier($tier));
             $people += \count($names);
-            $tiers[] = ['label' => $tier->label(), 'people' => $names];
+            $tiers[] = ['tier' => $tier->value, 'label' => $tier->label(), 'people' => $names];
         }
 
         return ['seats' => $seats, 'tiers' => $tiers, 'lifts' => $lifts ?? $this->firstLifted(), 'people' => $people];

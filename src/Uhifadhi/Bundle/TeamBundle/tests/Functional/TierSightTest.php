@@ -104,15 +104,41 @@ final class TierSightTest extends WebTestCaseWithSchema
         self::assertStringNotContainsString('Tier', strtok($csv, "\n") ?: '');
     }
 
-    public function testAnAdminSeesEveryTierIncludingTheSuperAdmins(): void
+    /**
+     * A SUPER ADMIN'S TIER IS FOR SUPER ADMINS (ruled 28 Sep 2026, later the
+     * same day): an Admin sees a Super Admin as a rank and a position — no
+     * pill, chip, count, filter, by-tier line or fact naming the tier.
+     */
+    public function testAnAdminSeesNoSuperAdminTierAnywhere(): void
+    {
+        $this->client->loginUser($this->people['admin']);
+        $super = $this->people['super']->getUuidString();
+
+        foreach (['/team', '/team?tier=super_admin', '/team/overview', '/team/roles', '/team/positions', '/team/'.$super] as $url) {
+            $this->client->request('GET', $url);
+            self::assertResponseIsSuccessful($url);
+            $body = (string) $this->client->getResponse()->getContent();
+            foreach (['Super Admin', 'Super admin', 't-super'] as $tell) {
+                self::assertStringNotContainsString($tell, $body, $url.' names the Super Admin tier ('.$tell.')');
+            }
+        }
+    }
+
+    public function testAnAdminStillSeesAdminAndStaffTiers(): void
     {
         $this->client->loginUser($this->people['admin']);
 
         $crawler = $this->client->request('GET', '/team');
-        self::assertCount(1, $crawler->filter('.tier.t-super'), 'the Super Admin is named');
+        self::assertCount(1, $crawler->filter('.tier.t-admin'), 'the Admin is named');
+        self::assertGreaterThan(0, $crawler->filter('.tier.t-staff')->count(), 'and Staff are');
+    }
 
-        $crawler = $this->client->request('GET', '/team/'.$this->people['super']->getUuidString().'/configure');
-        self::assertCount(0, $crawler->filter('#signin button[name="tier"]'), 'not theirs to change');
-        self::assertStringContainsString('Super Admin', $crawler->filter('#signin')->text(), 'but the tier is stated');
+    public function testASuperAdminSeesEveryTier(): void
+    {
+        $this->client->loginUser($this->people['super']);
+
+        $crawler = $this->client->request('GET', '/team');
+        self::assertCount(1, $crawler->filter('.tier.t-super'));
+        self::assertCount(1, $crawler->filter('.tier.t-admin'));
     }
 }

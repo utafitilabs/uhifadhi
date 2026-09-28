@@ -360,6 +360,25 @@ final class StationConfigureTest extends WebTestCase
     }
 
     /**
+     * A POSTING CHANGES A PERSON, so it asks what the person's own page asks
+     * (ruled 28 Sep 2026: only a Super Admin configures a Super Admin): a viewer
+     * the host will not let change this person cannot post them either.
+     */
+    public function testAPersonTheViewerMayNotChangeIsNotPosted(): void
+    {
+        $this->boot(array_values(array_diff(self::ALL_AREA_PERMISSIONS, ['team.member.configure'])));
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+        $uuid = (string) $station->getUuidString();
+        $protected = $this->aPerson('N.', 'Kileo');
+
+        $this->submit($area, '/stations/'.$uuid.'/postings', ['person' => (string) $protected->getUuidString()], $uuid);
+
+        self::assertSame(403, $this->browser()->getResponse()->getStatusCode());
+        self::assertSame(2, \count($this->postings()->standingAt($station)), 'nobody was posted');
+    }
+
+    /**
      * CLOSED, NOT DELETED: it keeps its point, leaves the active register,
      * stays reachable behind the filter and can be reopened.
      */

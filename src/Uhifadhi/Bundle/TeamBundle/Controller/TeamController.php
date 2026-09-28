@@ -24,7 +24,6 @@ use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
 use Uhifadhi\Bundle\TeamBundle\Entity\RankHolding;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\RosterStateEnum;
-use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\PeopleFacetSet;
 use Uhifadhi\Bundle\TeamBundle\Model\RosterQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
@@ -147,7 +146,7 @@ final readonly class TeamController
         $rows = [];
         foreach ($people as $person) {
             $row = $tiers
-                ? [$person->getFullName(), $person->getEmail(), $person->getTeamRole()->label(), $person->getPosition()?->getName()]
+                ? [$person->getFullName(), $person->getEmail(), $this->tierSight->seesTierOf($person) ? $person->getTeamRole()->label() : null, $person->getPosition()?->getName()]
                 : [$person->getFullName(), $person->getEmail(), $person->getPosition()?->getName()];
             if ($usesRanks) {
                 $holding = $held[(int) $person->getId()] ?? null;
@@ -228,7 +227,8 @@ final readonly class TeamController
             'everybody' => $everybody,
             'overview' => $this->overview->build(),
             'tierCounts' => $this->tierSight->seesTiers() ? $this->users->countByTier() : [],
-            'tiers' => TeamRoleEnum::cases(),
+            // Only the tiers this viewer sees are chips (ruled 28 Sep 2026).
+            'tiers' => $this->tierSight->visibleTiers(),
             'states' => RosterStateEnum::cases(),
             'departments' => $departments,
             'positions' => $positions,
@@ -264,7 +264,8 @@ final readonly class TeamController
         $seam = $this->seamFacets->read($uuids);
 
         $query = RosterQuery::fromRequest($request, $seam->keys());
-        if (!$this->tierSight->seesTiers()) {
+        // A tier the viewer does not see is no filter at all (ruled 28 Sep 2026).
+        if (null !== $query->tier && !\in_array($query->tier, $this->tierSight->visibleTiers(), true)) {
             $query = $query->withoutTier();
         }
 

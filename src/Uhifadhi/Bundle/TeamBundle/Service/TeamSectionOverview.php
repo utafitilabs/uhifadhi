@@ -519,14 +519,13 @@ final readonly class TeamSectionOverview
      */
     private function linesFor(iterable $people): array
     {
-        $tiers = $this->tierSight->seesTiers();
         $lines = [];
         foreach ($people as $person) {
             $lines[] = new SectionLine(
                 label: $person->getFullName(),
                 uuid: $person->getUuidString(),
                 note: implode(' · ', array_filter([
-                    $tiers ? $person->getTeamRole()->label() : null,
+                    $this->tierSight->seesTierOf($person) ? $person->getTeamRole()->label() : null,
                     $person->isVerified() ? 'verified' : 'never signed in',
                     $person->isActive() ? null : 'deactivated',
                     null === $person->getPosition() ? 'no position' : null,

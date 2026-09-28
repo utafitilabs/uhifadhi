@@ -21,6 +21,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
@@ -36,6 +37,8 @@ use Uhifadhi\Bundle\AreaBundle\Service\PersonDirectoryService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationNoticeStore;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
+use Uhifadhi\Contracts\Access\PersonAccess;
+use Uhifadhi\Contracts\Entity\UserInterface;
 
 /**
  * EVERY WRITE THE STATIONS SECTION MAKES.
@@ -67,6 +70,12 @@ final readonly class StationEditController
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $urls,
         private ?TokenStorageInterface $tokens = null,
+        /**
+         * WHO MAY BE POSTED BY WHOM — a posting changes a person, so it asks
+         * the person-configure permission as the person's own page does
+         * (ruled 28 Sep 2026: only a Super Admin configures a Super Admin).
+         */
+        private ?AuthorizationCheckerInterface $authorization = null,
     ) {
     }
 
@@ -275,6 +284,7 @@ final readonly class StationEditController
         if (null === $person) {
             return $this->refuse($area, (string) $station->getName(), 'pick somebody the directory offers', $station);
         }
+        $this->denyUnlessMayConfigure($person);
 
         try {
             $this->postings->post($station, $person, PostingSource::WrittenHere, actor: $this->actor());
@@ -295,6 +305,7 @@ final readonly class StationEditController
     ): Response {
         $this->denyUnlessTokenValid($request, self::POSTING_TOKEN);
         $station = $this->stationOf($area, $posting);
+        $this->denyUnlessMayConfigure($posting->getPerson());
 
         $this->postings->end($posting, null, $this->actor());
 
@@ -315,6 +326,7 @@ final readonly class StationEditController
     ): Response {
         $this->denyUnlessTokenValid($request, self::POSTING_TOKEN);
         $station = $this->stationOf($area, $posting);
+        $this->denyUnlessMayConfigure($posting->getPerson());
 
         try {
             $this->postings->appointLeader($posting, $this->actor());
@@ -326,6 +338,18 @@ final readonly class StationEditController
     }
 
     // ------------------------------------------------------------------ plumbing
+
+    /**
+     * The controller's `denyAccessUnlessGranted(PersonAccess::CONFIGURE, $person)`
+     * — it extends nothing. Without an authorization checker there is no one
+     * to answer, and nobody is refused on a question nobody can ask.
+     */
+    private function denyUnlessMayConfigure(?UserInterface $person): void
+    {
+        if (null !== $person && null !== $this->authorization && !$this->authorization->isGranted(PersonAccess::CONFIGURE, $person)) {
+            throw new AccessDeniedException('Only a Super Admin changes a Super Admin, and only an Admin or a Super Admin an Admin.');
+        }
+    }
 
     /**
      * LATITUDE AND LONGITUDE, AS A PERSON WRITES THEM. The form asks for them

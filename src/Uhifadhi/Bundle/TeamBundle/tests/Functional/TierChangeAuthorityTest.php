@@ -28,9 +28,11 @@ use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
  */
 final class TierChangeAuthorityTest extends WebTestCaseWithSchema
 {
-    private function changeTier(User $target, TeamRoleEnum $tier): void
+    private function changeTier(User $target, TeamRoleEnum $tier, ?User $tokenFrom = null): void
     {
-        $token = $this->tokenFrom('/team/'.$target->getUuidString().'/configure');
+        // The form token from the target's own page — or, where the viewer may
+        // not open it (an Admin on a Super Admin's), from a page they may.
+        $token = $this->tokenFrom('/team/'.($tokenFrom ?? $target)->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$target->getUuidString().'/tier', ['_token' => $token, 'tier' => $tier->value]);
     }
 
@@ -102,7 +104,7 @@ final class TierChangeAuthorityTest extends WebTestCaseWithSchema
         $this->em->flush();
         $this->client->loginUser($admin);
 
-        $this->changeTier($naomi, TeamRoleEnum::Admin);
+        $this->changeTier($naomi, TeamRoleEnum::Admin, tokenFrom: $admin);
         self::assertResponseStatusCodeSame(403);
         self::assertSame(TeamRoleEnum::SuperAdmin, $this->tierOf('n.kileo@example.test'));
     }
@@ -170,32 +172,16 @@ final class TierChangeAuthorityTest extends WebTestCaseWithSchema
         self::assertSame(['super_admin', 'admin', 'staff'], self::tiersOn($this->tierButtons($naomi, $grace)));
     }
 
-    /** Not theirs to give, still theirs to know (ruled 28 Sep 2026): the tier is stated, not offered. */
-    public function testAnAdminLookingAtASuperAdminSeesTheTierButNoChoice(): void
+    /** Only a Super Admin configures a Super Admin (ruled 28 Sep 2026): the Admin gets no page at all. */
+    public function testAnAdminCannotOpenASuperAdminsConfigurePage(): void
     {
         $naomi = $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
         $admin = $this->person('Asha', 'Mollel', TeamRoleEnum::Admin);
         $this->em->flush();
+        $this->client->loginUser($admin);
 
-        $crawler = $this->tierButtons($admin, $naomi);
-        self::assertCount(0, $crawler->filter('#signin .mb-tiers'));
-        self::assertSame('Sign-in·emailandtier', preg_replace('/\s+/u', '', $crawler->filter('#signin .tab')->text()));
-        self::assertStringContainsString('Super Admin', $crawler->filter('#signin')->text());
-    }
-
-    public function testSomebodyWhoMayChangeNoTierSeesNoTierSection(): void
-    {
-        $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
-        $officer = $this->person('Joseph', 'Mrema');
-        $officer->setPosition($this->position('Personnel Officer', ['directory.manage', 'directory.read', 'personal-details.manage', 'personal-details.read']));
-        $this->place($officer);
-        $grace = $this->person('Grace', 'Ndosi');
-        $this->em->flush();
-
-        $crawler = $this->tierButtons($officer, $grace);
-        self::assertCount(0, $crawler->filter('#signin .mb-tiers'));
-        self::assertCount(0, $crawler->filter('button[name="tier"]'));
-        self::assertStringNotContainsString('tier', $crawler->filter('#signin')->text());
+        $this->client->request('GET', '/team/'.$naomi->getUuidString().'/configure');
+        self::assertResponseStatusCodeSame(403);
     }
 
     public function testASuperAdminChangesTiers(): void

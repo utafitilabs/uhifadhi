@@ -107,14 +107,48 @@ final class AccountTouchTest extends WebTestCaseWithSchema
         self::assertFalse($this->isActive('g.ndosi@example.test'));
     }
 
-    public function testStaffSeeNoAccountControlsOnAnAdminsPage(): void
+    /** ONLY A SUPER ADMIN CONFIGURES A SUPER ADMIN (ruled 28 Sep 2026): an Admin views the record and nothing more. */
+    public function testAnAdminCannotOpenASuperAdminsConfigurePage(): void
+    {
+        $this->client->loginUser($this->people['admin']);
+
+        $this->client->request('GET', '/team/'.$this->people['super']->getUuidString().'/configure');
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testAnAdminCannotChangeASuperAdminsPosition(): void
+    {
+        $seat = $this->position('Chief Warden', ['directory.read']);
+        $this->em->flush();
+
+        $status = $this->post($this->people['admin'], $this->people['super'], '/position', ['position' => (string) $seat->getUuidString()]);
+        self::assertSame(403, $status);
+    }
+
+    public function testStaffCannotOpenAnAdminsConfigurePage(): void
     {
         $this->client->loginUser($this->people['officer']);
 
-        $crawler = $this->client->request('GET', '/team/'.$this->people['admin']->getUuidString().'/configure');
+        $this->client->request('GET', '/team/'.$this->people['admin']->getUuidString().'/configure');
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testTheRecordOffersNoConfigureToAViewerWhoMayNotUseIt(): void
+    {
+        $this->client->loginUser($this->people['admin']);
+
+        $crawler = $this->client->request('GET', '/team/'.$this->people['super']->getUuidString());
+        self::assertResponseIsSuccessful('the record is still readable');
+        self::assertCount(0, $crawler->filter('a[href$="/configure"]'));
+    }
+
+    public function testASuperAdminConfiguresAnotherSuperAdmin(): void
+    {
+        $this->client->loginUser($this->people['super']);
+
+        $other = $this->em->getRepository(User::class)->findOneBy(['email' => 'b.laizer@example.test']);
+        self::assertInstanceOf(User::class, $other);
+        $this->client->request('GET', '/team/'.$other->getUuidString().'/configure');
         self::assertResponseIsSuccessful();
-        self::assertCount(0, $crawler->filter('form[action$="/deactivate"]'), 'no Deactivate');
-        self::assertCount(0, $crawler->filter('form[action$="/reset-link"]'), 'no reset link');
-        self::assertCount(0, $crawler->filter('button[form="signin-form"][type="submit"]'), 'no Save the sign-in');
     }
 }

@@ -224,19 +224,29 @@ final readonly class UserService
     }
 
     /**
-     * ONLY A SUPER ADMIN CHANGES A TIER (fixed 28 Sep 2026). A tier is authority
-     * above the matrix, so whoever hands it out must already stand at the top:
-     * an Admin, or anybody holding `directory.manage` across the organization,
-     * could otherwise make anybody — themselves included — a Super Admin.
+     * WHO CHANGES A TIER (fixed 28 Sep 2026, ruled the same day). Admins make
+     * and unmake Admins — peers, able to demote one another, the one who made
+     * them included; only a Super Admin makes a Super Admin or changes a Super
+     * Admin's tier; and a position never grants a tier, whatever it holds.
      * Checked here, not only on the screen, so no door can skip it.
-     *
-     * @throws AccessDeniedException   when the one changing it is not a Super Admin
+     */
+    public static function mayChangeTier(?User $by, User $user, TeamRoleEnum $tier): bool
+    {
+        return match ($by?->getTeamRole()) {
+            TeamRoleEnum::SuperAdmin => true,
+            TeamRoleEnum::Admin => TeamRoleEnum::SuperAdmin !== $tier && TeamRoleEnum::SuperAdmin !== $user->getTeamRole(),
+            default => false,
+        };
+    }
+
+    /**
+     * @throws AccessDeniedException   when the one changing it may not ({@see mayChangeTier()})
      * @throws LastSuperAdminException when this would leave nobody who can administer the team
      */
     public function changeTier(User $user, TeamRoleEnum $tier, ?User $by): void
     {
-        if (null === $by || TeamRoleEnum::SuperAdmin !== $by->getTeamRole()) {
-            throw new AccessDeniedException('Only a Super Admin changes a tier.');
+        if (!self::mayChangeTier($by, $user, $tier)) {
+            throw new AccessDeniedException('Only a Super Admin makes a Super Admin or changes one; an Admin makes and unmakes Admins; a position changes no tier.');
         }
 
         $this->invariant->assertMayChangeTier($user, $tier);

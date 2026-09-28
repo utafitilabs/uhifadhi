@@ -32,8 +32,8 @@ use Uhifadhi\Bundle\TeamBundle\Repository\OneTimePasswordRepository;
  * THE RULES, and where each lives:
  *   - Only the tiers above the matrix issue one ({@see mayIssue()}); a
  *     position grants nothing here, whatever it holds.
- *   - Only a Super Admin issues one for an Admin or a Super Admin, so an
- *     Admin can never take over a more powerful account.
+ *   - Only a Super Admin issues one for a Super Admin, so an Admin can never
+ *     take over a more powerful account; Admins issue them for each other.
  *   - The code is random — eight characters from an alphabet without the
  *     look-alikes (0 O 1 I), so it reads cleanly over a radio — never derived
  *     from the clock, which a guesser could narrow down.
@@ -68,7 +68,9 @@ final readonly class OneTimePasswordService
             return false;
         }
 
-        return !$person->getTeamRole()->canManageContent() || TeamRoleEnum::SuperAdmin === $issuer->getTeamRole();
+        // ADMINS ARE PEERS (ruled 28 Sep): an Admin issues one for another
+        // Admin; only a Super Admin issues one for a Super Admin.
+        return TeamRoleEnum::SuperAdmin !== $person->getTeamRole() || TeamRoleEnum::SuperAdmin === $issuer->getTeamRole();
     }
 
     /**
@@ -81,7 +83,7 @@ final readonly class OneTimePasswordService
     public function issue(User $issuer, User $person): string
     {
         if (!$this->mayIssue($issuer, $person)) {
-            throw new AccessDeniedException('Only an administrator above the matrix issues a one-time password, and only a Super Admin for an Admin or a Super Admin.');
+            throw new AccessDeniedException('Only an administrator above the matrix issues a one-time password, and only a Super Admin for a Super Admin.');
         }
 
         $code = $this->generate();

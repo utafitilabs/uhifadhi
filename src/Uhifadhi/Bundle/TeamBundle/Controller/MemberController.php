@@ -260,8 +260,15 @@ final readonly class MemberController
             'oneTimePassword' => \is_string($shownCode) ? $shownCode : null,
             'oneTimePasswordHours' => (int) OneTimePasswordService::EXPIRES_AFTER,
             'isSelf' => $this->signedIn()?->getId() === $member->getId(),
-            // ONLY A SUPER ADMIN CHANGES A TIER — see UserService::changeTier().
-            'mayChangeTier' => TeamRoleEnum::SuperAdmin === $viewer?->getTeamRole(),
+            // WHO CHANGES WHICH TIER — see UserService::mayChangeTier(). One
+            // answer per tier button, and the warning an Admin reads before
+            // making somebody their peer.
+            'mayChangeTier' => $viewer?->getTeamRole()->canManageContent() ?? false,
+            'tierAllowed' => array_combine(
+                array_map(static fn (TeamRoleEnum $t): string => $t->value, TeamRoleEnum::cases()),
+                array_map(static fn (TeamRoleEnum $t): bool => UserService::mayChangeTier($viewer, $member, $t), TeamRoleEnum::cases()),
+            ),
+            'warnsPeer' => TeamRoleEnum::Admin === $viewer?->getTeamRole() && TeamRoleEnum::Staff === $member->getTeamRole(),
             'stationedAt' => $postings[0] ?? null,
             'stationPlate' => $this->plateFor($postings[0] ?? null),
             'postingDoor' => $this->postingDoor->url(self::placedAreaUuids($member)),

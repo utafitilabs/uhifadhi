@@ -19,7 +19,6 @@ use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\GrantJustification;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PositionHeldException;
 use Uhifadhi\Bundle\TeamBundle\Exception\RuleExceptionRefusedException;
@@ -215,7 +214,10 @@ final readonly class PositionService
     /** @throws RuleExceptionRefusedException */
     private function assertSuperAdmin(User $actor, string $label): void
     {
-        if (TeamRoleEnum::SuperAdmin !== $actor->getTeamRole()) {
+        // THE TIERS ABOVE THE MATRIX GIVE IT (ruled 28 Sep: Admins run the
+        // installation day to day, so a control-room seat does not wait for the
+        // developer's Super Admin); a position never does.
+        if (!$actor->getTeamRole()->canManageContent()) {
             throw RuleExceptionRefusedException::notASuperAdmin($label);
         }
     }

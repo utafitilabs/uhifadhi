@@ -70,11 +70,31 @@ final class RuleExceptionTest extends IntegrationTestCase
         self::assertNull($current[self::PAIR]->getRevokedAt());
     }
 
-    /** @return iterable<string, array{TeamRoleEnum}> */
+    /**
+     * WHO MAY NOT (ruled 28 Sep 2026): the tiers above the matrix give and take
+     * an exception — Admins run the installation day to day — and a position
+     * never does, whatever it holds.
+     *
+     * @return iterable<string, array{TeamRoleEnum}>
+     */
     public static function notASuperAdmin(): iterable
     {
-        yield 'an Admin, who composes every other grant' => [TeamRoleEnum::Admin];
         yield 'a staff member, whatever their position' => [TeamRoleEnum::Staff];
+    }
+
+    public function testAnAdminGivesItWithAReasonAndTakesItAway(): void
+    {
+        $room = $this->aPosition('Radio Operator');
+        $amani = $this->aPerson('Amani', TeamRoleEnum::Admin);
+
+        $this->positions()->grantException($room, self::PAIR, self::REASON, $amani);
+        $this->em->clear();
+        self::assertContains(self::PAIR, $this->reload($room)->getGrantValues());
+        self::assertArrayHasKey(self::PAIR, $this->justifications()->findCurrentByPosition($this->reload($room)));
+
+        $this->positions()->revokeException($this->reload($room), self::PAIR, $this->aPerson('Asha', TeamRoleEnum::Admin));
+        $this->em->clear();
+        self::assertNotContains(self::PAIR, $this->reload($room)->getGrantValues());
     }
 
     #[DataProvider('notASuperAdmin')]
@@ -87,7 +107,7 @@ final class RuleExceptionTest extends IntegrationTestCase
             $this->positions()->grantException($room, self::PAIR, self::REASON, $actor);
             self::fail('a '.$tier->label().' gave an exception to the rank rule');
         } catch (RuleExceptionRefusedException $refusal) {
-            self::assertStringContainsString('Super Admin', $refusal->getMessage());
+            self::assertStringContainsString('an Admin or a Super Admin', $refusal->getMessage());
         }
 
         $this->em->clear();

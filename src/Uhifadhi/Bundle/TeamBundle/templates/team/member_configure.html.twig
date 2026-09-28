@@ -119,13 +119,23 @@
                         <button type="submit" name="tier" value="{{ tier.value }}"
                                 class="mb-tier{{ member.teamRole == tier ? ' on' : '' }}"
                                 aria-pressed="{{ member.teamRole == tier ? 'true' : 'false' }}"
-                                {{ (isLastSuperAdmin and tier != member.teamRole) or not mayChangeTier ? 'disabled' : '' }}>
+                                {% if warnsPeer and tier.value == 'admin' %}
+                                    {{ stimulus_controller('confirm-modal') }}
+                                    data-action="click->confirm-modal#ask"
+                                    data-confirm-modal-title-value="Make {{ member.fullName }} an Admin?"
+                                    data-confirm-modal-message-value="{{ member.fullName }} will hold every permission you hold, across the whole organization, and could remove you as an Admin."
+                                    data-confirm-modal-confirm-label-value="Make them an Admin"
+                                {% endif %}
+                                {{ (isLastSuperAdmin and tier != member.teamRole) or not mayChangeTier or not (tierAllowed[tier.value] ?? false) ? 'disabled' : '' }}>
                             <span class="tt"><i></i><b>{{ tier.label }}</b></span>
                             <em>{{ tier.description }}</em>
                             <span class="grants">grants <b{{ tier.canManageContent ? '' : ' class="none"' }}>{{ tier.grants }}</b></span>
                         </button>
                     {% endfor %}
                 </div>
+                {% if warnsPeer %}
+                    <div class="mb-grant"><div><b>An Admin is your equal</b> &middot; they will hold every permission you hold and could remove you as an Admin</div></div>
+                {% endif %}
                 {% if member.teamRole.value != 'super_admin' %}
                     <div class="mb-grant"><div><b>Grants every permission you hold</b> &middot; including this one</div></div>
                 {% endif %}
@@ -238,7 +248,7 @@
                                 <button class="softbtn" type="submit">{{ bits.icon_shield() }} Issue</button>
                             </form>
                         {% else %}
-                            <span class="mb-absent">{{ bits.icon_off() }} Super Admin only for an Admin or a Super Admin</span>
+                            <span class="mb-absent">{{ bits.icon_off() }} Super Admin only for a Super Admin</span>
                         {% endif %}
                     </div>
                     {% if oneTimePassword %}

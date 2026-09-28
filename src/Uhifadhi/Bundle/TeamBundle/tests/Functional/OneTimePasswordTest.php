@@ -138,22 +138,28 @@ final class OneTimePasswordTest extends WebTestCaseWithSchema
         self::assertResponseStatusCodeSame(403);
     }
 
-    public function testAnAdminMayNotIssueOneForASuperAdminOrAnotherAdmin(): void
+    public function testAnAdminMayNotIssueOneForASuperAdmin(): void
     {
         $this->admin();
         $superAdmin = $this->em->getRepository(User::class)->findOneBy(['email' => 'n.kileo@example.test']);
         self::assertInstanceOf(User::class, $superAdmin);
+
+        $crawler = $this->client->request('GET', '/team/'.$superAdmin->getUuidString().'/configure');
+        self::assertStringContainsString('Super Admin only for a Super Admin', $crawler->html());
+
+        $token = $this->tokenFrom('/team/'.$superAdmin->getUuidString().'/configure');
+        $this->client->request('POST', '/team/'.$superAdmin->getUuidString().'/one-time-password', ['_token' => $token]);
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    /** Admins are peers (ruled 28 Sep 2026): one issues a code for another. */
+    public function testAnAdminIssuesOneForAnotherAdmin(): void
+    {
+        $this->admin();
         $otherAdmin = $this->person('Baraka', 'Laizer', TeamRoleEnum::Admin);
         $this->em->flush();
 
-        foreach ([$superAdmin, $otherAdmin] as $target) {
-            $crawler = $this->client->request('GET', '/team/'.$target->getUuidString().'/configure');
-            self::assertStringContainsString('Super Admin only for an Admin or a Super Admin', $crawler->html());
-
-            $token = $this->tokenFrom('/team/'.$target->getUuidString().'/configure');
-            $this->client->request('POST', '/team/'.$target->getUuidString().'/one-time-password', ['_token' => $token]);
-            self::assertResponseStatusCodeSame(403);
-        }
+        self::assertMatchesRegularExpression('/^[A-HJ-NP-Z2-9]{8}$/', $this->issue($otherAdmin));
     }
 
     public function testASuperAdminMayIssueOneForAnAdmin(): void

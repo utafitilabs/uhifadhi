@@ -31,7 +31,6 @@ use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PositionHeldException;
 use Uhifadhi\Bundle\TeamBundle\Exception\RuleExceptionRefusedException;
@@ -214,7 +213,7 @@ final readonly class PositionController
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
             // Only a Super Admin gives or takes an exception to a rule; anybody
             // else who configures positions reads the card without controls.
-            'mayGiveExceptions' => TeamRoleEnum::SuperAdmin === $this->authority->actor()?->getTeamRole(),
+            'mayGiveExceptions' => $this->authority->actor()?->getTeamRole()->canManageContent() ?? false,
             'reasonMinLength' => PositionService::REASON_MIN_LENGTH,
         ]));
     }
@@ -532,8 +531,8 @@ final readonly class PositionController
     private function superAdmin(): User
     {
         $actor = $this->authority->actor();
-        if (null === $actor || TeamRoleEnum::SuperAdmin !== $actor->getTeamRole()) {
-            throw new AccessDeniedException('Only a Super Admin may give or take away an exception to a rule.');
+        if (null === $actor || !$actor->getTeamRole()->canManageContent()) {
+            throw new AccessDeniedException('Only an Admin or a Super Admin may give or take away an exception to a rule.');
         }
 
         return $actor;

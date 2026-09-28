@@ -93,8 +93,8 @@ final class PositionExceptionTest extends WebTestCaseWithSchema
         self::assertNotContains(self::PAIR, $this->reload($room)->getGrantValues());
     }
 
-    /** An Admin composes every other grant, and reads this card without controls. */
-    public function testAnAdminSeesTheCardReadOnlyAndIsRefusedAPost(): void
+    /** An Admin gives it too (ruled 28 Sep 2026): a control-room seat does not wait for the developer's Super Admin. */
+    public function testAnAdminGivesItWithAReason(): void
     {
         $amani = $this->person('Amani', 'Lwila', TeamRoleEnum::Admin);
         $room = $this->position('Radio Operator');
@@ -102,10 +102,28 @@ final class PositionExceptionTest extends WebTestCaseWithSchema
         $this->client->loginUser($amani);
 
         $crawler = $this->client->request('GET', $this->url($room, '/configure'));
-        $card = $crawler->filter('details.xrule');
-        self::assertCount(0, $card->filter('textarea, button'));
-        self::assertStringContainsString('only a Super Admin', $card->text());
+        self::assertGreaterThan(0, $crawler->filter('details.xrule textarea')->count(), 'the card carries its controls');
 
+        $this->client->request('POST', $this->url($room, '/exceptions/locations.read'), ['_token' => $this->token($room), 'reason' => self::REASON]);
+        self::assertResponseRedirects();
+        $this->em->clear();
+        self::assertContains(self::PAIR, $this->reload($room)->getGrantValues());
+    }
+
+    /** A staff member reads the card without controls and is refused, whatever their position holds. */
+    public function testAStaffMemberSeesTheCardReadOnlyAndIsRefusedAPost(): void
+    {
+        $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
+        $officer = $this->person('Joseph', 'Mrema');
+        // Holding the permission that opens and saves this very page, and
+        // still refused: an exception is a tier's to give, never a position's.
+        $officer->setPosition($this->position('Personnel Officer', ['positions.configure', 'positions.read', 'directory.manage', 'directory.read']));
+        $this->place($officer);
+        $room = $this->position('Radio Operator');
+        $this->em->flush();
+        $this->client->loginUser($officer);
+
+        $this->client->request('GET', $this->url($room, '/configure'));
         $this->client->request('POST', $this->url($room, '/exceptions/locations.read'), ['_token' => $this->token($room), 'reason' => self::REASON]);
         self::assertResponseStatusCodeSame(403);
         $this->em->clear();

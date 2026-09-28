@@ -1,6 +1,6 @@
 {# EXCEPTIONS TO A RULE — a grant that lifts a rule everybody else is held to
    ("Live locations" lifts the rank rule). Ruled 2026-09-26: never a box in
-   the matrix; its own card, folded shut; only a Super Admin gives or takes
+   the matrix; its own card, folded shut; only an Admin or a Super Admin gives or takes
    it, with a written reason kept with who and when.
 
    DESIGN → CODE COVERAGE
@@ -33,7 +33,7 @@
         <p class="xwhy">{{ row.current.reason }}</p>
         <span class="xby">given by {{ row.current.grantedByName }} &middot; <time datetime="{{ row.current.grantedAt|date('c') }}" data-localtime-format="daystamp">{{ row.current.grantedAt|date('j M Y H:i') }}</time></span>
     {% elseif row.held %}
-        <span class="xby">held with no reason on record &middot; refused until a Super Admin gives it again</span>
+        <span class="xby">held with no reason on record &middot; refused until an Admin or a Super Admin gives it again</span>
     {% endif %}
 {%- endmacro %}
 
@@ -41,7 +41,7 @@
 {% macro edit(card, mayGive, csrfToken, reasonMinLength) %}
     {% if card.exceptions is not empty %}
     <div class="c{{ card.exceptions|filter(r => r.held) is not empty ? ' xgiven' }}">
-        <span class="tab">{{ _self.title(card.exceptions) }}<span class="src">&middot; Super Admin only &middot; kept with a reason</span></span>
+        <span class="tab">{{ _self.title(card.exceptions) }}<span class="src">&middot; Admins and Super Admins &middot; kept with a reason</span></span>
         {% for row in card.exceptions %}
             {#- SHUT UNTIL GIVEN, OPEN ONCE GIVEN: the reason is read by
                 whoever opens the page, not only by whoever unfolds it. -#}
@@ -50,7 +50,7 @@
                 <div class="xbody">
                     {{ _self.given(row) }}
                     {% if not mayGive %}
-                        <span class="xby">only a Super Admin changes this</span>
+                        <span class="xby">only an Admin or a Super Admin changes this</span>
                     {% elseif row.held %}
                         <form method="post" action="{{ path('team_position_exception_revoke', {uuid: card.uuid, pair: row.pair}) }}" class="xform">
                             <input type="hidden" name="_token" value="{{ csrfToken }}">

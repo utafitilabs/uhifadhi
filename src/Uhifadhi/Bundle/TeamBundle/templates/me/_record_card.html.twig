@@ -1,5 +1,5 @@
 {# MY RECORD (#19) — the facts the organization keeps about me: position, rank, department, where I am posted. #}
-<div class="c" data-me="record"><span class="tab"><span class="idx">ME&middot;14</span>My record<span class="src">&middot; {{ person.fullName }}{% if person.rangerCode %} &middot; {{ person.rangerCode|upper }}{% endif %}</span></span>
+<div class="c" data-me="record"><span class="tab">My record<span class="src">&middot; {{ person.fullName }}{% if person.rangerCode %} &middot; {{ person.rangerCode|upper }}{% endif %}</span></span>
     <div class="rln"><span>Position</span><span class="mono d">{{ person.position ? person.position.name : 'no position' }}</span></div>
     {% if rank %}<div class="rln"><span>Rank</span><span class="mono d">{{ rank.rank.name }} &middot; since {{ rank.since|date('j M Y') }}</span></div>{% endif %}
     <div class="rln"><span>Department</span><span class="mono d">{{ person.placement and person.placement.departmentsLabel ? person.placement.departmentsLabel : 'all departments' }}</span></div>

@@ -1,5 +1,5 @@
 {# MY PHONE (#19) — the one I am signed in on: its name and when it last reached the server. #}
-<div class="c" data-me="phone"><span class="tab"><span class="idx">ME&middot;15</span>My phone<span class="src">&middot; Doria</span></span>
+<div class="c" data-me="phone"><span class="tab">My phone<span class="src">&middot; Doria</span></span>
     {% if token %}
         <div class="rln"><span>Phone</span><span class="mono d">{{ token.deviceName ?? 'a phone' }}</span></div>
         <div class="rln"><span>Last in touch</span><span class="mono d">{{ token.lastUsedAt ? token.lastUsedAt|date('D j M · H:i')|lower : 'not yet' }}</span></div>

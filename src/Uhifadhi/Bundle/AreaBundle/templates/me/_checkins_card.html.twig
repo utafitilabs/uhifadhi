@@ -1,5 +1,5 @@
 {# MY CHECK-INS (#19) — the latest claims, newest first: day, status, in and out, hours. #}
-<div class="c" data-me="checkins"><span class="tab"><span class="idx">ME&middot;08</span>My check-ins<span class="src">&middot; the latest {{ claims|length }}</span></span>
+<div class="c" data-me="checkins"><span class="tab">My check-ins<span class="src">&middot; the latest {{ claims|length }}</span></span>
     {% for claim in claims %}
         <div class="rln"><span><b>{{ claim.occurredAt|date('D j')|lower }}</b> <span class="mono d">{{ claim.status ? claim.status.label|lower : '' }}</span></span>
         <span class="mono d">{{ claim.occurredAt|date('H:i') }} &ndash; {% if claim.endedAt %}{{ claim.endedAt|date('H:i') }} &middot; {{ area_my_span(claim.occurredAt, claim.endedAt) }}{% else %}on watch &middot; {{ area_my_span(claim.occurredAt, now) }} so far{% endif %}</span></div>

@@ -1,5 +1,5 @@
 {# MY STATION (#19) — the post I am posted at: who leads it, how many are posted there, since when I am. #}
-<div class="c" data-me="station"><span class="tab"><span class="idx">ME&middot;10</span>My station<span class="src">&middot; {{ station.name }}</span></span>
+<div class="c" data-me="station"><span class="tab">My station<span class="src">&middot; {{ station.name }}</span></span>
     <div class="rln"><span>Station head</span><span class="mono d">{{ lead ? lead.fullName : 'nobody leads it yet' }}</span></div>
     <div class="rln"><span>Posted here</span><span class="mono d" data-me="posted">{{ posted }}</span></div>
     {% if station.zone %}<div class="rln"><span>Zone</span><span class="mono d">{{ station.zone.name }}</span></div>{% endif %}

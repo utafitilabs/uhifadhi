@@ -12,11 +12,11 @@
 
 {% block shell_page %}
     <div class="grid w-flush dp-kstrip ao-kstrip md-figures">
-        <div class="c kpi"><span class="tab"><span class="idx">DL&middot;02</span>On watch</span><b class="disp">{{ hours }} h</b><span class="sub">{{ month|date('F')|lower }} &middot; {{ watches }} watch{{ watches == 1 ? '' : 'es' }}</span></div>
-        <div class="c kpi"><span class="tab"><span class="idx">DL&middot;03</span>Days checked in</span><b class="disp">{{ days }}</b><span class="sub">in {{ month|date('F')|lower }}</span></div>
-        <div class="c kpi"><span class="tab"><span class="idx">DL&middot;04</span>Pings</span><b class="disp">{{ pings }}</b><span class="sub">sent on watch</span></div>
+        <div class="c kpi"><span class="tab">On watch</span><b class="disp">{{ hours }} h</b><span class="sub">{{ month|date('F')|lower }} &middot; {{ watches }} watch{{ watches == 1 ? '' : 'es' }}</span></div>
+        <div class="c kpi"><span class="tab">Days checked in</span><b class="disp">{{ days }}</b><span class="sub">in {{ month|date('F')|lower }}</span></div>
+        <div class="c kpi"><span class="tab">Pings</span><b class="disp">{{ pings }}</b><span class="sub">sent on watch</span></div>
     </div>
-    <div class="c" data-me="log"><span class="tab"><span class="idx">DL&middot;01</span>Every check-in<span class="src">&middot; {{ month|date('F')|lower }} &middot; newest first</span></span>
+    <div class="c" data-me="log"><span class="tab">Every check-in<span class="src">&middot; {{ month|date('F')|lower }} &middot; newest first</span></span>
         <table class="tbl" style="margin-top:10px"><thead><tr><th>Day</th><th>Status</th><th>Post</th><th>In</th><th>Out</th><th>On watch</th></tr></thead><tbody>
         {% for claim in claims %}
             <tr><td><b>{{ claim.occurredAt|date('D j')|lower }}</b></td><td>{{ claim.status ? claim.status.label : '' }}</td><td>{{ claim.station ? claim.station.name : '—' }}</td>

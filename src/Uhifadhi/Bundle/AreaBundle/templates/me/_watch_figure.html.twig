@@ -1,5 +1,5 @@
 {# MY WATCH — the first figure (#19): how long I have been on, or when I last was. #}
-<div class="c kpi" data-me="watch"><span class="tab"><span class="idx">ME&middot;01</span>My watch</span>
+<div class="c kpi" data-me="watch"><span class="tab">My watch</span>
 {% if open %}
     <b class="disp">{{ area_my_span(open.occurredAt, now) }}</b>
     <span class="sub">on since {{ open.occurredAt|date('H:i') }}{% if open.lastPingAt %} &middot; last ping {{ open.lastPingAt|date('H:i') }}{% endif %}</span>

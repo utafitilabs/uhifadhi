@@ -83,7 +83,7 @@ final readonly class MeController
             'plate' => $this->plates->plateOf($station)?->html,
             'bands' => $this->sections->forOne(
                 new StationRef((string) $station->getUuidString(), (string) $area->getUuidString(), (string) $station->getName()),
-                StationSurface::Record,
+                StationSurface::Mine,
                 fn (string $slug): bool => $this->areaModules->isActive($area, $slug),
             ),
         ]));

@@ -87,9 +87,13 @@
 
         {# SIGN-IN: the email and the tier. The email is a contact detail and
            stands or falls with personal-details.read; the tier is org-wide
-           authority and only an unbounded administrator may touch it. #}
-        <div class="c">
-            <span class="tab">Sign-in<span class="src">&middot; email and tier</span></span>
+           authority. THE TIER IS NEED-TO-KNOW (ruled 28 Sep 2026, option B): the
+           card draws only the tiers the viewer may give, and for a viewer who may
+           give none there is no tier section at all — nobody learns from this
+           card which accounts are Super Admins. #}
+        {% set givable = tiers|filter(t => tierAllowed[t.value] ?? false) %}
+        <div class="c" id="signin">
+            <span class="tab">Sign-in<span class="src">&middot; email{{ givable is empty ? '' : ' and tier' }}</span></span>
             <form id="signin-form" method="post" action="{{ path('team_member_update', {uuid: member.uuidString}) }}">
                 <input type="hidden" name="_token" value="{{ csrfToken }}">
                 <input type="hidden" name="return" value="configure">
@@ -110,12 +114,13 @@
                     </span></span></div>
                 {% endif %}
             </form>
+            {% if givable is not empty %}
             <form method="post" action="{{ path('team_member_tier', {uuid: member.uuidString}) }}">
                 <input type="hidden" name="_token" value="{{ csrfToken }}">
                 <input type="hidden" name="return" value="configure">
-                <div class="pms-row"><span class="k">tier</span><span class="v"><span class="zfrag">Who may administer the team &middot; three, and only three</span></span></div>
-                <div class="mb-tiers">
-                    {% for tier in tiers %}
+                <div class="pms-row mb-tierhead"><span class="k">tier</span><span class="v"><span class="zfrag">{{ givable|length == 3 ? 'three tiers' : 'the two tiers an Admin gives' }}</span></span></div>
+                <div class="mb-tiers{{ givable|length == 2 ? ' two' : '' }}">
+                    {% for tier in givable %}
                         <button type="submit" name="tier" value="{{ tier.value }}"
                                 class="mb-tier{{ member.teamRole == tier ? ' on' : '' }}"
                                 aria-pressed="{{ member.teamRole == tier ? 'true' : 'false' }}"
@@ -126,7 +131,7 @@
                                     data-confirm-modal-message-value="{{ member.fullName }} will hold every permission you hold, across the whole organization, and could remove you as an Admin."
                                     data-confirm-modal-confirm-label-value="Make them an Admin"
                                 {% endif %}
-                                {{ (isLastSuperAdmin and tier != member.teamRole) or not mayChangeTier or not (tierAllowed[tier.value] ?? false) ? 'disabled' : '' }}>
+                                {{ isLastSuperAdmin and tier != member.teamRole ? 'disabled' : '' }}>
                             <span class="tt"><i></i><b>{{ tier.label }}</b></span>
                             <em>{{ tier.description }}</em>
                             <span class="grants">grants <b{{ tier.canManageContent ? '' : ' class="none"' }}>{{ tier.grants }}</b></span>
@@ -134,17 +139,15 @@
                     {% endfor %}
                 </div>
                 {% if warnsPeer %}
-                    <div class="mb-grant"><div><b>An Admin is your equal</b> &middot; they will hold every permission you hold and could remove you as an Admin</div></div>
-                {% endif %}
-                {% if member.teamRole.value != 'super_admin' %}
-                    <div class="mb-grant"><div><b>Grants every permission you hold</b> &middot; including this one</div></div>
+                    <div class="mb-grant">{{ bits.icon_warn() }}<div><b>An Admin is your equal.</b> They will hold every permission you hold, across the whole organization, and could remove you as an Admin.</div></div>
                 {% endif %}
                 {% if isLastSuperAdmin %}
                     <div class="mb-refuse"><span><b>Refused &mdash; last active Super Admin.</b> {{ member.fullName }} is the only one</span></div>
                 {% endif %}
             </form>
+            {% endif %}
             <div class="staddrow">
-                <span class="chg"><b>no changes</b><span class="to">tier <b>{{ member.teamRole.label }}</b> &middot; unchanged</span></span>
+                <span class="chg"><b>no changes</b></span>
                 <span class="sp"></span>
                 <button type="reset" class="btn" form="signin-form">Discard</button>
                 <button type="submit" class="cta" form="signin-form">Save the sign-in</button>

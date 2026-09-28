@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
+use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 
@@ -132,34 +133,67 @@ final class TierChangeAuthorityTest extends WebTestCaseWithSchema
         self::assertSame(TeamRoleEnum::Staff, $this->tierOf('j.mrema@example.test'));
     }
 
-    public function testAnAdminSeesTheSuperAdminTierDisabledAndAWarningOnAdmin(): void
+    /** The Sign-in card draws only the tiers the viewer may give (option B, ruled 28 Sep 2026). */
+    private function tierButtons(User $viewer, User $member): Crawler
+    {
+        $this->client->loginUser($viewer);
+
+        return $this->client->request('GET', '/team/'.$member->getUuidString().'/configure');
+    }
+
+    /** @return list<string> */
+    private static function tiersOn(Crawler $crawler): array
+    {
+        return array_values($crawler->filter('.mb-tiers button[name="tier"]')->each(static fn (Crawler $b): string => (string) $b->attr('value')));
+    }
+
+    public function testAnAdminSeesOnlyTheTwoTiersAnAdminGivesAndAWarningOnAdmin(): void
     {
         $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
         $admin = $this->person('Asha', 'Mollel', TeamRoleEnum::Admin);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
-        $this->client->loginUser($admin);
 
-        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString().'/configure');
-        self::assertCount(1, $crawler->filter('.mb-tiers button[name="tier"][value="super_admin"][disabled]'), 'Super Admin is not theirs to give');
-        self::assertCount(0, $crawler->filter('.mb-tiers button[name="tier"][value="admin"][disabled]'), 'Admin is');
-        self::assertStringContainsString('could remove you as an Admin', $crawler->filter('.mb-tiers')->html(), 'with the warning on it');
+        $crawler = $this->tierButtons($admin, $grace);
+        self::assertSame(['admin', 'staff'], self::tiersOn($crawler), 'Super Admin is not drawn at all');
+        self::assertStringContainsString('email and tier', $crawler->filter('#signin .tab')->text());
+        self::assertStringContainsString('could remove you as an Admin', $crawler->filter('#signin')->html(), 'with the warning on it');
     }
 
-    public function testAStaffMemberSeesEveryTierButtonDisabled(): void
+    public function testASuperAdminSeesAllThreeTiers(): void
+    {
+        $naomi = $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
+        $this->person('Baraka', 'Laizer', TeamRoleEnum::SuperAdmin);
+        $grace = $this->person('Grace', 'Ndosi');
+        $this->em->flush();
+
+        self::assertSame(['super_admin', 'admin', 'staff'], self::tiersOn($this->tierButtons($naomi, $grace)));
+    }
+
+    public function testAnAdminLookingAtASuperAdminSeesNoTierSection(): void
+    {
+        $naomi = $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
+        $admin = $this->person('Asha', 'Mollel', TeamRoleEnum::Admin);
+        $this->em->flush();
+
+        $crawler = $this->tierButtons($admin, $naomi);
+        self::assertCount(0, $crawler->filter('#signin .mb-tiers'));
+        self::assertSame('Sign-in·email', preg_replace('/\s+/u', '', $crawler->filter('#signin .tab')->text()), 'the card is titled Sign-in · email');
+    }
+
+    public function testSomebodyWhoMayChangeNoTierSeesNoTierSection(): void
     {
         $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
         $officer = $this->person('Joseph', 'Mrema');
-        $officer->setPosition($this->position('Personnel Officer', ['directory.manage', 'directory.read', 'personal-details.manage']));
+        $officer->setPosition($this->position('Personnel Officer', ['directory.manage', 'directory.read', 'personal-details.manage', 'personal-details.read']));
         $this->place($officer);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
-        $this->client->loginUser($officer);
 
-        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString().'/configure');
-        $buttons = $crawler->filter('.mb-tiers button[name="tier"]');
-        self::assertGreaterThan(0, $buttons->count());
-        self::assertSame($buttons->count(), $crawler->filter('.mb-tiers button[name="tier"][disabled]')->count());
+        $crawler = $this->tierButtons($officer, $grace);
+        self::assertCount(0, $crawler->filter('#signin .mb-tiers'));
+        self::assertCount(0, $crawler->filter('button[name="tier"]'));
+        self::assertStringNotContainsString('tier', $crawler->filter('#signin')->text());
     }
 
     public function testASuperAdminChangesTiers(): void

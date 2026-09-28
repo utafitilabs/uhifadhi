@@ -3744,3 +3744,9 @@ form.c { display: block; margin-bottom: 20px; }
    the ordinary quiet card. No left bar. */
 .c.xgiven { border-color: color-mix(in srgb, var(--warn) 55%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--warn) 7%, rgb(var(--c-p1))), rgb(var(--c-p2))); }
 .c.xgiven > .tab { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 55%, transparent); }
+
+/* The Sign-in card's tier section, need-to-know (ruled 28 Sep 2026, option B):
+   an Admin is drawn the two tiers they give, side by side; a Super Admin all three. */
+.mb-tierhead { border-top: 1px dashed var(--c-ln); margin-top: 12px; }
+.mb-tiers.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.mb-tierhead + .mb-tiers { margin-top: 13px; }

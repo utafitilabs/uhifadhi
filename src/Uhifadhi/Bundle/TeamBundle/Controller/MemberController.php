@@ -261,9 +261,8 @@ final readonly class MemberController
             'oneTimePasswordHours' => (int) OneTimePasswordService::EXPIRES_AFTER,
             'isSelf' => $this->signedIn()?->getId() === $member->getId(),
             // WHO CHANGES WHICH TIER — see UserService::mayChangeTier(). One
-            // answer per tier button, and the warning an Admin reads before
-            // making somebody their peer.
-            'mayChangeTier' => $viewer?->getTeamRole()->canManageContent() ?? false,
+            // answer per tier; the card draws only the tiers answered yes, and
+            // the warning an Admin reads before making somebody their peer.
             'tierAllowed' => array_combine(
                 array_map(static fn (TeamRoleEnum $t): string => $t->value, TeamRoleEnum::cases()),
                 array_map(static fn (TeamRoleEnum $t): bool => UserService::mayChangeTier($viewer, $member, $t), TeamRoleEnum::cases()),

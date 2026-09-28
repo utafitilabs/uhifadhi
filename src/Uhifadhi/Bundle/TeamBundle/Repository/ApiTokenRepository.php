@@ -41,6 +41,24 @@ final class ApiTokenRepository extends ServiceEntityRepository
     }
 
     /** The token this handset already has, if any — signing in again rotates it. */
+    /** The phone this person signed in on most recently and is still signed in on — their own dashboard's "My phone" (#19). */
+    public function findLatestLiveFor(User $owner, \DateTimeImmutable $now): ?ApiToken
+    {
+        $token = $this->createQueryBuilder('t')
+            ->andWhere('t.owner = :owner')
+            ->andWhere('t.revokedAt IS NULL')
+            ->andWhere('t.expiresAt > :now')
+            ->setParameter('owner', $owner)
+            ->setParameter('now', $now)
+            ->orderBy('t.lastUsedAt', 'DESC')
+            ->addOrderBy('t.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $token instanceof ApiToken ? $token : null;
+    }
+
     public function findOneByDevice(User $owner, string $deviceId): ?ApiToken
     {
         return $this->findOneBy(['owner' => $owner, 'deviceId' => $deviceId]);

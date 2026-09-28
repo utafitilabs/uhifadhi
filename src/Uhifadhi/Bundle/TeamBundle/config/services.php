@@ -49,6 +49,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\TeamSectionController;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ModuleHistoryListener;
+use Uhifadhi\Bundle\TeamBundle\Me\TeamMyCards;
 use Uhifadhi\Bundle\TeamBundle\Message\BackfillModuleHistory;
 use Uhifadhi\Bundle\TeamBundle\MessageHandler\BackfillModuleHistoryHandler;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonDirectory;
@@ -141,6 +142,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
 use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;
 use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
+use Uhifadhi\Contracts\Me\MyCardProviderInterface;
 use Uhifadhi\Contracts\People\PeopleFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
@@ -654,6 +656,18 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.access.door', Door::class)
         ->args([service('security.authorization_checker')]);
     $services->alias(Door::class, 'team.access.door');
+
+    // THE TEAM'S CARDS ON A PERSON'S OWN DASHBOARD (#19): my record, my phone.
+    $services->set('team.my_cards', TeamMyCards::class)
+        ->args([
+            service('twig'),
+            service(UserRepository::class),
+            service('team.person_rank'),
+            service(ApiTokenRepository::class),
+            service('team.access.door'),
+            tagged_iterator(PersonPostingProviderInterface::TAG),
+        ])
+        ->tag(MyCardProviderInterface::TAG);
 
     $services->set('team.access.tier_sight', TierSight::class)
         ->args([service('security.token_storage')]);

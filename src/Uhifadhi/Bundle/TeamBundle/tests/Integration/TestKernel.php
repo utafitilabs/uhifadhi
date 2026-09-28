@@ -427,6 +427,7 @@ final class TestKernel extends Kernel
             // department can be asked about.
             'registry.area_modules' => 'registry.area_modules',
             \Uhifadhi\Bundle\TeamBundle\Service\OneTimePasswordService::class => 'team.one_time_password',
+            \Uhifadhi\Bundle\TeamBundle\Me\TeamMyCards::class => 'team.my_cards',
         ] as $class => $serviceId) {
             $container->services()->alias('test_public.'.$class, $serviceId)->public();
         }

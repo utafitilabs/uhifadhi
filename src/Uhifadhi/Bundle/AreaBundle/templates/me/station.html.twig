@@ -34,7 +34,7 @@
             </div>
             <div class="c" data-me="posted"><span class="tab">Posted here<span class="src">&middot; {{ posted|length }} &middot; {{ onWatch|length }} on watch now</span></span>
                 {% for posting in posted %}{% set person = posting.person %}{% if person %}
-                    <div class="r-per"><span class="avatar">{{ (person.firstName|first ~ person.lastName|first)|upper }}</span><span class="nm">{{ person.fullName }}<em>{{ posting.leader ? 'station head' : '' }}{{ person.uuidString == me.uuidString ? (posting.leader ? ' · me' : 'me') : '' }}</em></span><span class="sp"></span><span class="mt">{{ onWatch[person.uuidString] is defined ? 'on watch · since ' ~ onWatch[person.uuidString].occurredAt|date('H:i') : 'not on watch' }}</span></div>
+                    <div class="rln"><span><b>{{ person.fullName }}</b>{% if posting.leader %} <span class="mono d">station head</span>{% endif %}{% if person.uuidString == me.uuidString %} <span class="chip acc">me</span>{% endif %}</span><span class="mono d">{{ onWatch[person.uuidString] is defined ? 'on watch · since ' ~ onWatch[person.uuidString].occurredAt|date('H:i') : 'not on watch' }}</span></div>
                 {% endif %}{% endfor %}
             </div>
             {% for band in bands %}

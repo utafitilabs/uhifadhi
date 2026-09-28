@@ -11,7 +11,7 @@
 {% block shell_page_subtitle %}Every check-in I made and the hours on watch — the web copy of the Duty log on my phone.{% endblock %}
 
 {% block shell_page %}
-    <div class="grid w-flush dp-kstrip ao-kstrip md-figures">
+    <div class="grid kstrip ao-kstrip md-figures">
         <div class="c kpi"><span class="tab">On watch</span><b class="disp">{{ hours }} h</b><span class="sub">{{ month|date('F')|lower }} &middot; {{ watches }} watch{{ watches == 1 ? '' : 'es' }}</span></div>
         <div class="c kpi"><span class="tab">Days checked in</span><b class="disp">{{ days }}</b><span class="sub">in {{ month|date('F')|lower }}</span></div>
         <div class="c kpi"><span class="tab">Pings</span><b class="disp">{{ pings }}</b><span class="sub">sent on watch</span></div>

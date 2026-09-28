@@ -49,8 +49,8 @@ final class MyDashboardTest extends WebTestCase
 
         self::assertCount(1, $crawler->filter('.md-figures [data-fake="figure"]'));
         self::assertCount(1, $crawler->filter('.md-pages [data-fake="door"]'));
-        self::assertCount(1, $crawler->filter('.md-row [data-fake="row"]'));
-        self::assertSame(['left-first', 'left-second'], $crawler->filter('.md-left [data-fake]')->each(static fn ($c): string => (string) $c->attr('data-fake')));
+        self::assertCount(1, $crawler->filter('[data-slot="row"] [data-fake="row"]'));
+        self::assertSame(['left-first', 'left-second'], $crawler->filter('[data-slot="left"] [data-fake]')->each(static fn ($c): string => (string) $c->attr('data-fake')));
     }
 
     public function testSomebodyWhoReadsTheAreasStillGetsTheOrganizationsDashboard(): void

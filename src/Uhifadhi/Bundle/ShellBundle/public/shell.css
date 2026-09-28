@@ -1675,6 +1675,13 @@ i.livedot.none::after { animation: none; border: 0; }
 
 /* AND A TABLE SCROLLS RATHER THAN WIDENING ITS CARD. */
 .ovx-tbl { overflow-x: auto; }
+/* A DASHBOARD CARD'S TABLE DOES THE SAME, with no wrapper to remember: a
+   module adds columns to a card (the areas card grows one per figure a module
+   contributes), and on a narrow card they ran past its edge. The table is the
+   scroll box; its body keeps the table layout, so a table that fits still
+   spans the card exactly as before. */
+.c[data-w] > table.tbl { display: block; overflow-x: auto; }
+.c[data-w] > table.tbl > tbody { display: table; width: 100%; }
 
 /* ---- THE KPI PLATE — a label on the tab, one number, one sub-line --------
    The number is display type at 30px and BLOCK, and the block is the whole

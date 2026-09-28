@@ -38,6 +38,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
+use Uhifadhi\Bundle\AreaBundle\Service\MyDashboard;
 use Uhifadhi\Bundle\AreaBundle\Service\OrgOverviewCatalogue;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceStreamService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationNoticeStore;
@@ -55,6 +56,7 @@ use Uhifadhi\Bundle\AreaBundle\Widget\OrgOverviewWidgets;
 use Uhifadhi\Bundle\ShellBundle\Contract\AreaShellSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\ModuleGroup;
+use Uhifadhi\Contracts\Me\MyCardProviderInterface;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 use Uhifadhi\Contracts\People\StationPlateProviderInterface;
 use Uhifadhi\Contracts\Settings\SettingsCheckSourceInterface;
@@ -192,6 +194,11 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('area.register')])
         ->tag(OrgOverviewContributorInterface::TAG);
 
+    // A PERSON'S OWN DASHBOARD (#19): every package's cards about the one
+    // person signed in, through the contract tag — the frame names none.
+    $services->set('area.my_dashboard', MyDashboard::class)
+        ->args([tagged_iterator(MyCardProviderInterface::TAG)]);
+
     $services->set('area.controller.dashboard', OrgDashboardController::class)
         ->args([
             service('twig'),
@@ -206,6 +213,8 @@ return static function (ContainerConfigurator $container): void {
             service('area.preset_library'),
             service('area.presence'),
             service('area.presence_stream'),
+            service('area.my_dashboard'),
+            service('security.authorization_checker'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(OrgDashboardController::class, 'area.controller.dashboard')->public();

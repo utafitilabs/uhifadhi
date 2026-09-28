@@ -1,0 +1,49 @@
+{# A PERSON'S OWN DASHBOARD — what `/` draws for somebody who may not read the
+   areas (open item #19; design variants-my-dashboard, option A, ruled 28 Sep
+   2026). Every card is a package's, about this one person, rendered by that
+   package; the frame owns the layout and nothing inside it:
+
+   figures (the row of four) · the doors to their own pages · the plate and
+   what stands beside it · the two-column band · the three-across row. A slot
+   nobody filled draws nothing, so an installation with fewer modules is a
+   shorter page, never a broken one. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}{{ greeting }}, {{ firstName }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_page_tabs %}{% endblock %}
+
+{% block shell_breadcrumbs %}{{ shell_brand().name|lower }}{% endblock %}
+
+{% block shell_page_title %}{{ greeting }}, {{ firstName }}{% endblock %}
+
+{% block shell_page_subtitle %}{% endblock %}
+
+{% block shell_page %}
+    {% if cards.figure is not empty %}
+        <div class="grid w-flush dp-kstrip ao-kstrip md-figures">{% for card in cards.figure %}{{ card|raw }}{% endfor %}</div>
+    {% endif %}
+    {% if cards.door is not empty %}
+        <div class="md-pages">{% for card in cards.door %}{{ card|raw }}{% endfor %}</div>
+    {% endif %}
+    {% if cards.plate is not empty or cards['beside-plate'] is not empty %}
+        <div class="md-g c2">
+            <div class="md-col md-plate">{% for card in cards.plate %}{{ card|raw }}{% endfor %}</div>
+            <div class="md-col md-beside">{% for card in cards['beside-plate'] %}{{ card|raw }}{% endfor %}</div>
+        </div>
+    {% endif %}
+    {% if cards.left is not empty or cards.right is not empty %}
+        <div class="md-g c2e">
+            <div class="md-col md-left">{% for card in cards.left %}{{ card|raw }}{% endfor %}</div>
+            <div class="md-col md-right">{% for card in cards.right %}{{ card|raw }}{% endfor %}</div>
+        </div>
+    {% endif %}
+    {% if cards.row is not empty %}
+        <div class="md-g c3 md-row">{% for card in cards.row %}{{ card|raw }}{% endfor %}</div>
+    {% endif %}
+{% endblock %}

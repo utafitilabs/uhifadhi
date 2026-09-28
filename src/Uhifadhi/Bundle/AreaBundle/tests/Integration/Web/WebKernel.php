@@ -375,6 +375,9 @@ final class WebKernel extends Kernel
          * rendered with nothing but the host's own cells, which proves the
          * host and nothing about the seam the page exists for.
          */
+        // A package's cards on a person's own dashboard.
+        $services->set(FakeMyCards::class)->tag('uhifadhi.me.cards');
+
         $services->set(FakeOrgWidgets::class)
             ->args(['patrols', $this->figures])
             ->tag(OrgOverviewContributorInterface::TAG);

@@ -132,6 +132,7 @@ final class EveryRouteNamesItsPairTest extends KernelTestCase
         '_api_/areas/{areaUuid}/checkins_post' => 'AreaBundle\\Api\\DutyApiContext::requireRanger',
         '_api_/areas/{areaUuid}/checkins/{clientRef}_patch' => 'AreaBundle\\Api\\DutyApiContext::requireRanger',
         '_api_/areas/{areaUuid}/positions_post' => 'AreaBundle\\Api\\DutyApiContext::requireRanger',
+        'organization_dashboard' => 'AreaBundle\\Controller\\OrgDashboardController::dashboard — areas.read decides WHICH dashboard `/` draws (the organization\'s, or the person\'s own, #19), never whether there is one',
         'shell_area_configure' => 'each section it frames, on its own screen — and whether the frame itself should be gated is unruled',
         'shell_module_configure' => 'the same, for a module surface',
     ];

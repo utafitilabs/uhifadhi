@@ -22,6 +22,8 @@ use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
@@ -29,6 +31,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaOverview;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
+use Uhifadhi\Bundle\AreaBundle\Service\MyDashboard;
 use Uhifadhi\Bundle\AreaBundle\Service\OrgOverviewCatalogue;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceStreamService;
 use Uhifadhi\Bundle\AtlasBundle\Model\LiveStream;
@@ -91,13 +94,27 @@ final readonly class OrgDashboardController
         private LivePositionsInterface $positions,
         /** And the leave to watch them move: the plate's stream and the cookie. */
         private PresenceStreamService $streams,
+        /** A PERSON'S OWN DASHBOARD, for somebody who may not read the areas (#19). */
+        private MyDashboard $mine,
+        /** Which of the two `/` draws is decided by the areas read, asked here. */
+        private AuthorizationCheckerInterface $authorization,
     ) {
     }
 
+    /**
+     * `/` IS FOR EVERYBODY SIGNED IN (open item #19, ruled 28 Sep 2026): the
+     * organization's dashboard for somebody who may read the areas, and their
+     * own for everybody else — where they used to meet a 403. The areas read
+     * decides WHICH page, never whether there is one, so the route names no
+     * single pair and the route test lists it with this reason.
+     */
     #[Route('/', name: self::ROUTE, methods: ['GET'])]
-    #[IsGranted(self::READ)]
     public function dashboard(Request $request): Response
     {
+        if (!$this->authorization->isGranted(self::READ)) {
+            return $this->mine(new \DateTimeImmutable());
+        }
+
         // ONE MOMENT FOR THE WHOLE PAGE, handed to every cell, so two figures
         // are never measured a second apart and then read side by side.
         $now = new \DateTimeImmutable();
@@ -332,6 +349,23 @@ final readonly class OrgDashboardController
         }
 
         return new RedirectResponse($this->router->generate(self::WIDGETS_ROUTE));
+    }
+
+    /** The dashboard of the one person signed in: their own cards, from every package. */
+    private function mine(\DateTimeImmutable $now): Response
+    {
+        $person = $this->signedIn();
+        $uuid = $person?->getUuidString();
+        if (null === $person || null === $uuid) {
+            throw new AccessDeniedException('A dashboard of your own needs an account of your own.');
+        }
+        $hour = (int) $now->format('G');
+
+        return new Response($this->twig->render('@Area/me/dashboard.html.twig', [
+            'firstName' => $person->getFirstName() ?? $person->getFullName(),
+            'greeting' => $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Good evening'),
+            'cards' => $this->mine->for($uuid, $now),
+        ]));
     }
 
     private function signedIn(): ?ModuleUserInterface

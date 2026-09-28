@@ -1562,3 +1562,19 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
    design's height and scrolls inside itself, which is also what keeps the
    column beside it the height the design draws. */
 .zhistcap { max-height: 432px; overflow-y: auto; scrollbar-width: thin; }
+
+/* ==========================================================================
+   A PERSON'S OWN DASHBOARD — the frame's layout only (open item #19, option A,
+   ruled 28 Sep 2026). Every card inside is a package's and carries its own
+   rules; this sheet places them.
+   ======================================================================== */
+.md-figures { margin-bottom: 18px; }
+.md-pages { display: flex; gap: 10px; margin: 0 0 18px; flex-wrap: wrap; }
+.md-pages a { border: 1px solid var(--c-ln); border-radius: 9px; padding: 8px 12px; text-decoration: none; color: rgb(var(--c-tx)); font-size: 13px; }
+.md-pages a b { color: rgb(var(--c-acc)); }
+.md-g { display: grid; gap: 18px; margin-bottom: 18px; }
+.md-g.c2 { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+.md-g.c2e { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.md-g.c3 { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+.md-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+@media (max-width: 1100px) { .md-g.c2, .md-g.c2e, .md-g.c3 { grid-template-columns: 1fr; } }

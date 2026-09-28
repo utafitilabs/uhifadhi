@@ -19,6 +19,7 @@ use Uhifadhi\Bundle\AreaBundle\Controller\AreaCreateController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaModulesController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaWidgetsController;
+use Uhifadhi\Bundle\AreaBundle\Controller\MeController;
 use Uhifadhi\Bundle\AreaBundle\Controller\OrgDashboardController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationEditController;
@@ -29,10 +30,12 @@ use Uhifadhi\Bundle\AreaBundle\Controller\ZoneController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneImportController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneRecordController;
+use Uhifadhi\Bundle\AreaBundle\Me\AreaMyCards;
 use Uhifadhi\Bundle\AreaBundle\Overview\OrgOverviewContributorInterface;
 use Uhifadhi\Bundle\AreaBundle\People\AreaPersonPostings;
 use Uhifadhi\Bundle\AreaBundle\People\AreaStationPlates;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\CheckInRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
@@ -52,6 +55,7 @@ use Uhifadhi\Bundle\AreaBundle\Shell\AreaNavigation;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaShellSource;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreasTheViewerMayOpen;
 use Uhifadhi\Bundle\AreaBundle\Shell\OrgDashboardNavigation;
+use Uhifadhi\Bundle\AreaBundle\Twig\MyExtension;
 use Uhifadhi\Bundle\AreaBundle\Widget\OrgOverviewWidgets;
 use Uhifadhi\Bundle\ShellBundle\Contract\AreaShellSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
@@ -193,6 +197,35 @@ return static function (ContainerConfigurator $container): void {
     $services->set('area.org_widgets', OrgOverviewWidgets::class)
         ->args([service('area.register')])
         ->tag(OrgOverviewContributorInterface::TAG);
+
+    // THE GROUND'S CARDS ON A PERSON'S OWN DASHBOARD (#19): my watch, my
+    // post on the plate, my station, my check-ins, and the doors to the
+    // pages behind them.
+    $services->set('area.my_cards', AreaMyCards::class)
+        ->args([
+            service('twig'),
+            service(PostingRepository::class),
+            service(CheckInRepository::class),
+            service('area.station_plates'),
+            service('router'),
+        ])
+        ->tag(MyCardProviderInterface::TAG);
+
+    // THE PAGES OF A PERSON'S OWN: My station and My duty log.
+    $services->set('area.controller.me', MeController::class)
+        ->args([
+            service('twig'),
+            service('security.token_storage'),
+            service(PostingRepository::class),
+            service(CheckInRepository::class),
+            service('area.station_plates'),
+            service('area.station_sections'),
+            service('registry.area_modules'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(MeController::class, 'area.controller.me')->public();
+
+    $services->set('area.twig.my', MyExtension::class)->tag('twig.extension');
 
     // A PERSON'S OWN DASHBOARD (#19): every package's cards about the one
     // person signed in, through the contract tag — the frame names none.

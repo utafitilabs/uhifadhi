@@ -1,0 +1,49 @@
+{# MY STATION (#19; design variants-my-dashboard/station.html, approved 28 Sep
+   2026): the post the signed-in person is posted at — its facts, who leads it,
+   everybody posted there and who is on watch, the plate, what it expects, and
+   whatever each module puts on the post (patrols from here, the watch). #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}{{ station ? station.name : 'My station' }}{% endblock %}
+{% block stylesheets %}{{ parent() }}{{ include('@Area/_stylesheets.html.twig') }}{% endblock %}
+{% block shell_page_tabs %}{% endblock %}
+{% block shell_breadcrumbs %}<a href="{{ path('organization_dashboard') }}">{{ shell_brand().name|lower }}</a> / my station{% endblock %}
+{% block shell_page_title %}{{ station ? station.name : 'My station' }}{% endblock %}
+{% block shell_page_subtitle %}{% if station %}The station I am posted at: who leads it, who is posted here, what it expects and what went out from it.{% endif %}{% endblock %}
+
+{% block shell_page %}
+{% if station is null %}
+    <div class="c"><span class="tab">My station</span><div class="rln"><span>You are posted at no station.</span><span class="mono d">the office posts you from your record</span></div></div>
+{% else %}
+    <div class="factband" style="margin-bottom:18px">
+        {% if station.code %}<span class="f"><span class="k">Code</span><span class="v">{{ station.code }}</span></span>{% endif %}
+        {% if station.zone %}<span class="f"><span class="k">Zone</span><span class="v">{{ station.zone.name }}</span></span>{% endif %}
+        {% if station.locality %}<span class="f"><span class="k">Where</span><span class="v">{{ station.locality }}</span></span>{% endif %}
+        <span class="f"><span class="k">Area</span><span class="v">{{ area.name }}</span></span>
+        <span class="sp"></span>
+    </div>
+    <div class="md-g c2">
+        <div class="md-col">
+            <div class="c" data-me="head"><span class="tab"><span class="idx">SN&middot;01</span>Station head<span class="src">&middot; who leads {{ station.name }}</span></span>
+                {% if lead and lead.person %}
+                    <div class="rln"><span>{{ lead.person.fullName }}</span><span class="mono d">{% if lead.since %}leads since {{ lead.since|date('j M Y') }}{% endif %}</span></div>
+                    <div class="rln"><span>On watch now</span><span class="mono d">{{ onWatch[lead.person.uuidString] is defined ? 'yes · since ' ~ onWatch[lead.person.uuidString].occurredAt|date('H:i') : 'no' }}</span></div>
+                {% else %}
+                    <div class="rln"><span class="d">Nobody leads it yet.</span><span class="mono d"></span></div>
+                {% endif %}
+            </div>
+            <div class="c" data-me="posted"><span class="tab"><span class="idx">SN&middot;02</span>Posted here<span class="src">&middot; {{ posted|length }} &middot; {{ onWatch|length }} on watch now</span></span>
+                {% for posting in posted %}{% set person = posting.person %}{% if person %}
+                    <div class="r-per"><span class="avatar">{{ (person.firstName|first ~ person.lastName|first)|upper }}</span><span class="nm">{{ person.fullName }}<em>{{ posting.leader ? 'station head' : '' }}{{ person.uuidString == me.uuidString ? (posting.leader ? ' · me' : 'me') : '' }}</em></span><span class="sp"></span><span class="mt">{{ onWatch[person.uuidString] is defined ? 'on watch · since ' ~ onWatch[person.uuidString].occurredAt|date('H:i') : 'not on watch' }}</span></div>
+                {% endif %}{% endfor %}
+            </div>
+            {% for band in bands %}
+                {{ include('@Area/_partial/_station_band.html.twig', {band: band}, with_context = false) }}
+            {% endfor %}
+        </div>
+        <div class="md-col">
+            {% if plate %}<div class="c" data-me="plate"><span class="tab"><span class="idx">SN&middot;05</span>Where it is<span class="src">&middot; {{ station.name }} and its ring</span></span>{{ plate|raw }}</div>{% endif %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

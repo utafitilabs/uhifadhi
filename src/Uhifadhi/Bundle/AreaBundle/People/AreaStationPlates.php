@@ -17,6 +17,7 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationRecordController;
+use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPlateService;
@@ -55,6 +56,21 @@ final readonly class AreaStationPlates implements StationPlateProviderInterface
         }
         $area = $station->getArea();
         if (null === $area || !$this->authorization->isGranted(StationRecordController::READ, $area)) {
+            return null;
+        }
+
+        return $this->plateOf($station);
+    }
+
+    /**
+     * THE PLATE ITSELF, with no question asked — for a caller that has already
+     * decided the viewer may see this station: a person's own dashboard draws
+     * the post they are posted at (#19), whatever they may read of the area.
+     */
+    public function plateOf(Station $station): ?StationPlate
+    {
+        $area = $station->getArea();
+        if (null === $area) {
             return null;
         }
 

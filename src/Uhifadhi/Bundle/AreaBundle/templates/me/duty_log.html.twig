@@ -1,0 +1,31 @@
+{# MY DUTY LOG (#19; design variants-my-dashboard/duty-log.html, approved 28
+   Sep 2026): every check-in the signed-in person made in a month — the web
+   copy of the Duty log on their phone. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}My duty log{% endblock %}
+{% block stylesheets %}{{ parent() }}{{ include('@Area/_stylesheets.html.twig') }}{% endblock %}
+{% block shell_page_tabs %}{% endblock %}
+{% block shell_breadcrumbs %}<a href="{{ path('organization_dashboard') }}">{{ shell_brand().name|lower }}</a> / my duty log{% endblock %}
+{% block shell_page_title %}My duty log <span class="chip acc">{{ month|date('F Y') }}</span>{% endblock %}
+{% block shell_page_subtitle %}Every check-in I made and the hours on watch — the web copy of the Duty log on my phone.{% endblock %}
+
+{% block shell_page %}
+    <div class="grid w-flush dp-kstrip ao-kstrip md-figures">
+        <div class="c kpi"><span class="tab"><span class="idx">DL&middot;02</span>On watch</span><b class="disp">{{ hours }} h</b><span class="sub">{{ month|date('F')|lower }} &middot; {{ watches }} watch{{ watches == 1 ? '' : 'es' }}</span></div>
+        <div class="c kpi"><span class="tab"><span class="idx">DL&middot;03</span>Days checked in</span><b class="disp">{{ days }}</b><span class="sub">in {{ month|date('F')|lower }}</span></div>
+        <div class="c kpi"><span class="tab"><span class="idx">DL&middot;04</span>Pings</span><b class="disp">{{ pings }}</b><span class="sub">sent on watch</span></div>
+    </div>
+    <div class="c" data-me="log"><span class="tab"><span class="idx">DL&middot;01</span>Every check-in<span class="src">&middot; {{ month|date('F')|lower }} &middot; newest first</span></span>
+        <table class="tbl" style="margin-top:10px"><thead><tr><th>Day</th><th>Status</th><th>Post</th><th>In</th><th>Out</th><th>On watch</th></tr></thead><tbody>
+        {% for claim in claims %}
+            <tr><td><b>{{ claim.occurredAt|date('D j')|lower }}</b></td><td>{{ claim.status ? claim.status.label : '' }}</td><td>{{ claim.station ? claim.station.name : '—' }}</td>
+            <td class="mono">{{ claim.occurredAt|date('H:i') }}</td><td class="mono">{{ claim.endedAt ? claim.endedAt|date('H:i') : 'on watch' }}</td>
+            <td class="mono">{{ area_my_span(claim.occurredAt, claim.endedAt ?? now) }}</td></tr>
+        {% else %}
+            <tr><td colspan="6" class="d">No check-ins in {{ month|date('F') }}.</td></tr>
+        {% endfor %}
+        </tbody></table>
+        <div class="sxfoot"><span>a correction is added, never overwritten</span><span class="sp"></span><a class="tgl" href="{{ path('me_duty_log', {month: previous|date('Y-m')}) }}">&larr; {{ previous|date('F') }}</a>{% if next %}<a class="tgl" href="{{ path('me_duty_log', {month: next|date('Y-m')}) }}">{{ next|date('F') }} &rarr;</a>{% endif %}</div>
+    </div>
+{% endblock %}

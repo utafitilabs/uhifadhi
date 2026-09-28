@@ -149,6 +149,28 @@ class CheckInRepository extends ServiceEntityRepository
     }
 
     /**
+     * ONE PERSON'S LATEST CLAIMS, in every area, newest first — their own
+     * dashboard's check-ins and their duty log (#19).
+     *
+     * @return list<CheckIn>
+     */
+    public function findRecentForPerson(string $personUuid, int $limit, ?\DateTimeImmutable $since = null): array
+    {
+        $query = $this->withEverythingAReadingNeeds()
+            ->andWhere('person.uuid = :person')
+            ->setParameter('person', $personUuid)
+            ->orderBy('c.occurredAt', 'DESC')
+            ->setMaxResults($limit);
+        if (null !== $since) {
+            $query->andWhere('c.occurredAt >= :since')->setParameter('since', $since);
+        }
+        /** @var list<CheckIn> $rows */
+        $rows = $query->getQuery()->getResult();
+
+        return $rows;
+    }
+
+    /**
      * ONE PERSON'S CLAIMS FOR ONE DAY, oldest first.
      *
      * @return list<CheckIn>

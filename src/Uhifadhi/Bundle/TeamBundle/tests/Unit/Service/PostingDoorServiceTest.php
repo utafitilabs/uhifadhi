@@ -68,6 +68,33 @@ final class PostingDoorServiceTest extends TestCase
         self::assertSame('/areas/01a0c006-bfb6-752d-bc76-5e816ddeaa93/configure/stations', $door->url());
     }
 
+    /**
+     * THE PERSON'S AREA DECIDES, NOT ONLY THE VIEWER'S (found on staging, 28
+     * Sep): an administrator who sees four areas, on the record of somebody
+     * placed on one of them, goes straight to that area's stations — where
+     * "Station someone" is — never to the register.
+     */
+    public function testThePersonsOneAreaSendsTheViewerToItsStations(): void
+    {
+        $door = $this->door([
+            '01a0c006-bfb6-752d-bc76-5e816ddeaa93' => 'Northern Reserve',
+            '01a0c006-bfb7-78cc-9a9f-54bd5ebfa376' => 'Southern Reserve',
+        ]);
+
+        self::assertSame('/areas/01a0c006-bfb7-78cc-9a9f-54bd5ebfa376/configure/stations', $door->url(['01a0c006-bfb7-78cc-9a9f-54bd5ebfa376']));
+    }
+
+    /** A person placed on an area the viewer cannot open falls back to what the viewer can. */
+    public function testThePersonsAreaOutsideTheViewersReachIsNotALink(): void
+    {
+        $door = $this->door([
+            '01a0c006-bfb6-752d-bc76-5e816ddeaa93' => 'Northern Reserve',
+            '01a0c006-bfb7-78cc-9a9f-54bd5ebfa376' => 'Southern Reserve',
+        ]);
+
+        self::assertSame('/areas', $door->url(['01a0c006-0000-7000-8000-000000000000']));
+    }
+
     /** No areas at all, and the register is still somewhere to start. */
     public function testWithNoAreasTheRegisterIsStillTheAnswer(): void
     {

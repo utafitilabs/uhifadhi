@@ -141,6 +141,12 @@
                 "name": "uhifadhi--shell-bundle--reorder",
                 "fetch": "eager",
                 "enabled": true
+            },
+            "copy": {
+                "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/copy_controller.js",
+                "name": "uhifadhi--team-bundle--copy",
+                "fetch": "lazy",
+                "enabled": true
             }
         },
         "importmap": {

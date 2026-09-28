@@ -198,8 +198,13 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
         self::assertSame(TeamRoleEnum::Staff, $this->em->getRepository(User::class)->findOneBy(['email' => 'g.ndosi@example.test'])?->getTeamRole());
     }
 
-    /** A holder placed across the organization is unbounded: they may change a tier. */
-    public function testAnOrganizationWideAdminMayChangeATier(): void
+    /**
+     * A HOLDER PLACED ACROSS THE ORGANIZATION STILL MAY NOT CHANGE A TIER
+     * (fixed 28 Sep 2026): only a Super Admin does. This test used to assert
+     * the opposite, which is how a position could hand out authority above
+     * the matrix.
+     */
+    public function testAnOrganizationWideAdminMayNotChangeATier(): void
     {
         $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
         $orgAdmin->setPosition($this->position('Coordinator', self::ADMINISTRATOR));
@@ -213,9 +218,9 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
             '_token' => $token, 'tier' => TeamRoleEnum::Admin->value,
         ]);
 
-        self::assertResponseRedirects();
+        self::assertResponseStatusCodeSame(403);
         $this->em->clear();
-        self::assertSame(TeamRoleEnum::Admin, $this->em->getRepository(User::class)->findOneBy(['email' => 'g.ndosi@example.test'])?->getTeamRole());
+        self::assertSame(TeamRoleEnum::Staff, $this->em->getRepository(User::class)->findOneBy(['email' => 'g.ndosi@example.test'])?->getTeamRole());
     }
 
     // ---- the cast ---------------------------------------------------------

@@ -60,12 +60,27 @@ final readonly class PostingDoorService
      * The address, or null where this installation mounts no area pages at
      * all and there is nowhere to send anybody.
      */
-    public function url(): ?string
+    /**
+     * @param list<string>|null $personAreas the uuids of the areas the person is
+     *                                       placed on, when the door is for one
+     *                                       person; null or empty when unknown
+     */
+    public function url(?array $personAreas = null): ?string
     {
         $areas = array_values(array_filter(
             $this->scopes->available(),
             static fn (object $scope): bool => !$scope->isOrganization(),
         ));
+
+        // THE PERSON'S AREA DECIDES WHERE IT CAN: placed on areas the viewer
+        // may open, the door narrows to those (found on staging, 28 Sep — a
+        // viewer who sees several areas was always sent to the register).
+        if (null !== $personAreas && [] !== $personAreas) {
+            $theirs = array_values(array_filter($areas, static fn (object $scope): bool => \in_array($scope->areaUuid, $personAreas, true)));
+            if ([] !== $theirs) {
+                $areas = $theirs;
+            }
+        }
 
         if (1 === \count($areas)) {
             try {

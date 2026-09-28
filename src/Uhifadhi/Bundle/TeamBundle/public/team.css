@@ -2030,6 +2030,9 @@ tr.tm-bandrow.vacant .tm-band b { color: rgb(var(--c-fog)); }
 .mb-drow .dt code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; color: rgb(var(--c-fog)); }
 /* A ONE-TIME PASSWORD, SHOWN ONCE: large enough to read out over a radio, and
    selected whole by one click so it copies in one go. */
+/* The code row stacks: the sentence above, the code and its Copy button under it. */
+.mb-drow.otp { grid-template-columns: 1fr; gap: 10px; }
+.mb-otp-row { display: inline-flex; align-items: center; gap: 10px; }
 .mb-otp {
     font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 20px; font-weight: 700;
     letter-spacing: .18em; color: rgb(var(--c-tx)); user-select: all; cursor: text;

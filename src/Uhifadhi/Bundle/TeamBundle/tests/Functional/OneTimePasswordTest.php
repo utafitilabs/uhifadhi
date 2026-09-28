@@ -86,6 +86,7 @@ final class OneTimePasswordTest extends WebTestCaseWithSchema
         $code = $this->issue($grace);
 
         self::assertMatchesRegularExpression('/^[A-HJ-NP-Z2-9]{8}$/', $code, 'eight capitals and digits, no look-alikes');
+        self::assertCount(1, $this->client->getCrawler()->filter('[data-controller="uhifadhi--team-bundle--copy"] button[data-copy-button][data-action="uhifadhi--team-bundle--copy#copy"]'), 'a Copy button sits beside the code');
         $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString().'/configure');
         self::assertCount(0, $crawler->filter('[data-one-time-password]'), 'shown once: gone on the next visit');
 

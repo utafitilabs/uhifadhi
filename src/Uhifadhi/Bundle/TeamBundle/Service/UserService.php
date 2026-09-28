@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Service;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
@@ -223,10 +224,21 @@ final readonly class UserService
     }
 
     /**
+     * ONLY A SUPER ADMIN CHANGES A TIER (fixed 28 Sep 2026). A tier is authority
+     * above the matrix, so whoever hands it out must already stand at the top:
+     * an Admin, or anybody holding `directory.manage` across the organization,
+     * could otherwise make anybody — themselves included — a Super Admin.
+     * Checked here, not only on the screen, so no door can skip it.
+     *
+     * @throws AccessDeniedException   when the one changing it is not a Super Admin
      * @throws LastSuperAdminException when this would leave nobody who can administer the team
      */
-    public function changeTier(User $user, TeamRoleEnum $tier): void
+    public function changeTier(User $user, TeamRoleEnum $tier, ?User $by): void
     {
+        if (null === $by || TeamRoleEnum::SuperAdmin !== $by->getTeamRole()) {
+            throw new AccessDeniedException('Only a Super Admin changes a tier.');
+        }
+
         $this->invariant->assertMayChangeTier($user, $tier);
 
         $user->setTeamRole($tier);

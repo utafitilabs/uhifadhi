@@ -156,15 +156,15 @@ final class UserServiceTest extends IntegrationTestCase
 
         $this->expectException(LastSuperAdminException::class);
 
-        $this->accounts()->changeTier($ada, TeamRoleEnum::Staff);
+        $this->accounts()->changeTier($ada, TeamRoleEnum::Staff, $ada);
     }
 
     public function testATierChangeIsStoredOnceThereIsASuccessor(): void
     {
         $ada = $this->accounts()->create('ada@example.test', 'Ada', 'Mwangi', 'a-long-enough-passphrase', TeamRoleEnum::SuperAdmin);
-        $this->accounts()->create('bea@example.test', 'Bea', 'Kimaro', 'a-long-enough-passphrase', TeamRoleEnum::SuperAdmin);
+        $bea = $this->accounts()->create('bea@example.test', 'Bea', 'Kimaro', 'a-long-enough-passphrase', TeamRoleEnum::SuperAdmin);
 
-        $this->accounts()->changeTier($ada, TeamRoleEnum::Staff);
+        $this->accounts()->changeTier($ada, TeamRoleEnum::Staff, $bea);
 
         self::assertSame(TeamRoleEnum::Staff, $this->users()->findOneByEmail('ada@example.test')?->getTeamRole());
     }

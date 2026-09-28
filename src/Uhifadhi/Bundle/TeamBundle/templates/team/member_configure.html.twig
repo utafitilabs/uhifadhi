@@ -242,9 +242,12 @@
                         {% endif %}
                     </div>
                     {% if oneTimePassword %}
-                        <div class="mb-drow">
+                        <div class="mb-drow otp">
                             <div class="dt"><b>Pass it on now</b><em>Shown once &middot; it is {{ member.firstName }}&rsquo;s password until they change it</em></div>
-                            <code class="mb-otp" data-one-time-password>{{ oneTimePassword }}</code>
+                            <div class="mb-otp-row" data-controller="uhifadhi--team-bundle--copy">
+                                <code class="mb-otp" data-one-time-password data-uhifadhi--team-bundle--copy-target="source">{{ oneTimePassword }}</code>
+                                <button class="softbtn acc" type="button" data-copy-button data-uhifadhi--team-bundle--copy-target="button" data-action="uhifadhi--team-bundle--copy#copy">{{ bits.icon_check() }} <span data-label>Copy</span></button>
+                            </div>
                         </div>
                     {% endif %}
                 {% endif %}

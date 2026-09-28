@@ -205,7 +205,7 @@ final readonly class MemberController
             'departmentsTotal' => \count($this->departments->findAllActiveOrdered()),
             'stationedAt' => $postings[0] ?? null,
             'stationPlate' => $this->plateFor($postings[0] ?? null),
-            'postingDoor' => $this->postingDoor->url(),
+            'postingDoor' => $this->postingDoor->url(self::placedAreaUuids($member)),
             'postings' => $postings,
             'reach' => null === $position ? 0 : $this->users->countActiveHoldingAnyPosition([$position]),
             'history' => \array_slice($history, 0, self::HISTORY),
@@ -260,10 +260,11 @@ final readonly class MemberController
             'oneTimePassword' => \is_string($shownCode) ? $shownCode : null,
             'oneTimePasswordHours' => (int) OneTimePasswordService::EXPIRES_AFTER,
             'isSelf' => $this->signedIn()?->getId() === $member->getId(),
-            'mayChangeTier' => $this->authority->isUnbounded(),
+            // ONLY A SUPER ADMIN CHANGES A TIER — see UserService::changeTier().
+            'mayChangeTier' => TeamRoleEnum::SuperAdmin === $viewer?->getTeamRole(),
             'stationedAt' => $postings[0] ?? null,
             'stationPlate' => $this->plateFor($postings[0] ?? null),
-            'postingDoor' => $this->postingDoor->url(),
+            'postingDoor' => $this->postingDoor->url(self::placedAreaUuids($member)),
             'reach' => null === $position ? 0 : $this->users->countActiveHoldingAnyPosition([$position]),
             'history' => \array_slice($history, 0, 7),
             'historyTotal' => \count($history),
@@ -404,7 +405,7 @@ final readonly class MemberController
         }
 
         try {
-            $this->accounts->changeTier($member, $tier);
+            $this->accounts->changeTier($member, $tier, $this->signedIn());
         } catch (LastSuperAdminException $refusal) {
             return $this->back($request, $member, $refusal->getMessage(), 'error');
         }
@@ -552,6 +553,24 @@ final readonly class MemberController
         $this->accounts->reactivate($member);
 
         return $this->back($request, $member, \sprintf('%s can sign in again.', $member->getFullName()));
+    }
+
+    /**
+     * The uuids of the areas a person is placed on; empty for somebody placed
+     * across the organization or nowhere.
+     *
+     * @return list<string>
+     */
+    private static function placedAreaUuids(User $member): array
+    {
+        $uuids = [];
+        foreach ($member->getPlacement()?->getAreas() ?? [] as $area) {
+            if (null !== $area->getUuidString()) {
+                $uuids[] = $area->getUuidString();
+            }
+        }
+
+        return $uuids;
     }
 
     private function member(string $uuid): User

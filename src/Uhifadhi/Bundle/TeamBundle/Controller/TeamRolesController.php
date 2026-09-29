@@ -49,7 +49,10 @@ final readonly class TeamRolesController
     }
 
     #[Route('/team/roles', name: self::ROLES, defaults: TeamController::SURFACE, methods: ['GET'])]
-    #[IsGranted('directory.read')]
+    #[IsGranted(TeamController::READ)]
+    // THE MATRIX IS WHAT EACH POSITION GRANTS, which is the positions
+    // register's own reading, so it asks for the register's pair.
+    #[IsGranted(PositionController::READ)]
     public function index(): Response
     {
         return new Response($this->twig->render('@Team/team/roles.html.twig', $this->board->read()));

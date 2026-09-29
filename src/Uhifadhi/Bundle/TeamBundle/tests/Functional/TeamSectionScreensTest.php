@@ -277,6 +277,50 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
     }
 
     /**
+     * THE OVERVIEW AND THE ROLES MATRIX READ POSITIONS AS WELL AS PEOPLE.
+     * Somebody who may read the directory and not the positions register —
+     * a ranger — opens People and Assignments and is refused both of those,
+     * which the strip and the sidebar do not offer.
+     */
+    public function testTheDirectoryAloneOpensPeopleAndAssignmentsAndNotTheOverviewOrRoles(): void
+    {
+        $this->installation();
+        $ranger = $this->person('Kofi', 'Mensah');
+        $ranger->setPosition($this->position('Ranger', ['directory.read']));
+        $this->place($ranger);
+        $this->em->flush();
+        $this->client->loginUser($ranger);
+
+        $crawler = $this->visit('/team');
+        self::assertSame(['People', 'Assignments'], $crawler->filter('.atabs a')->each(static fn (Crawler $a): string => trim($a->text())));
+        self::assertCount(0, $crawler->filter('nav.nav a[href="/team/overview"], nav.nav a[href="/team/roles"]'));
+        $this->visit('/team/assignments');
+
+        foreach (['/team/overview', '/team/roles'] as $path) {
+            $this->client->request('GET', $path);
+            self::assertResponseStatusCodeSame(403, $path);
+        }
+    }
+
+    /** WITH THE POSITIONS REGISTER AS WELL, the whole strip is there. */
+    public function testTheDirectoryAndThePositionsOpenTheWholeStrip(): void
+    {
+        $this->installation();
+        $lead = $this->person('Amara', 'Okonkwo');
+        $lead->setPosition($this->position('Coordinator', ['directory.read', 'positions.read']));
+        $this->place($lead);
+        $this->em->flush();
+        $this->client->loginUser($lead);
+
+        $crawler = $this->visit('/team/overview');
+        self::assertSame(
+            ['Overview', 'People', 'Positions', 'Assignments', 'Roles'],
+            $crawler->filter('.atabs a')->each(static fn (Crawler $a): string => trim($a->text())),
+        );
+        $this->visit('/team/roles');
+    }
+
+    /**
      * Four people: a Super Admin, an Admin, a Staff member whose position
      * carries the grant, and one who holds nothing and has never signed in.
      */

@@ -299,17 +299,20 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             return $row;
         }
 
+        $positions = $this->authorization->isGranted(PositionController::READ);
         $screens = array_values(array_filter([
-            $this->screen('Overview', TeamSectionController::OVERVIEW),
+            // THE OVERVIEW AND THE ROLES MATRIX READ POSITIONS AS WELL AS
+            // PEOPLE, and their routes ask for both.
+            $positions ? $this->screen('Overview', TeamSectionController::OVERVIEW) : null,
             // A PERSON'S RECORD AND ITS CONFIGURE PAGE ARE THE PEOPLE SCREEN'S,
             // and a position's are the register's: the tree opens the path to
             // the screen a record belongs to, or the viewer stands nowhere.
             $this->screen('People', TeamController::PEOPLE, ['team_member', 'team_member_configure', TeamConfigureController::PEOPLE]),
-            $this->authorization->isGranted(PositionController::READ)
+            $positions
                 ? $this->screen('Positions', PositionController::REGISTER, ['team_position_show', 'team_position_configure', TeamConfigureController::POSITIONS])
                 : null,
             $this->screen('Assignments', TeamPostingsController::POSTINGS, [TeamConfigureController::ASSIGNMENTS]),
-            $this->screen('Roles', TeamRolesController::ROLES),
+            $positions ? $this->screen('Roles', TeamRolesController::ROLES) : null,
             // RANKS ONLY WHERE THE STRIP HAS IT: while the organization uses
             // ranks and the viewer may read them.
             $this->ranksScreen(),

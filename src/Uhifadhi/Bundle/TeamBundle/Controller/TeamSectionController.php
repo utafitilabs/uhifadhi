@@ -45,7 +45,11 @@ final readonly class TeamSectionController
     }
 
     #[Route('/team/overview', name: self::OVERVIEW, defaults: TeamController::SURFACE, methods: ['GET'])]
-    #[IsGranted('directory.read')]
+    #[IsGranted(TeamController::READ)]
+    // IT COUNTS POSITIONS TOO, by department and by grant, so it asks for
+    // them as the register does: knowing who is on the team is not knowing
+    // how the organization is arranged.
+    #[IsGranted(PositionController::READ)]
     public function overview(): Response
     {
         return new Response($this->twig->render('@Team/team/overview.html.twig', [

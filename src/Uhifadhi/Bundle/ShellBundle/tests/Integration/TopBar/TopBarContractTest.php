@@ -91,7 +91,7 @@ final class TopBarContractTest extends ContractTestCase
      */
     public function testTheViewerCardIsRenderedFromTheContract(): void
     {
-        HostKernel::$userBadge = new UserBadge('N. Kileo', 'NK', 'UCA · operator');
+        HostKernel::$userBadge = new UserBadge('N. Kileo', 'NK', 'UNR · operator');
 
         $crawler = $this->crawl(self::PAGE);
 
@@ -99,13 +99,13 @@ final class TopBarContractTest extends ContractTestCase
         self::assertCount(1, $card);
         self::assertSame('NK', trim($card->filter('.avatar')->text()));
         self::assertSame('N. Kileo', trim($card->filter('.uinfo b')->text()));
-        self::assertSame('UCA · operator', trim($card->filter('.uinfo em')->text()));
+        self::assertSame('UNR · operator', trim($card->filter('.uinfo em')->text()));
     }
 
     /** WITH NO FIREWALL THERE IS NOTHING TO SIGN OUT OF: the card stays a plain card. */
     public function testWithoutSecurityTheCardOffersNoSignOut(): void
     {
-        HostKernel::$userBadge = new UserBadge('N. Kileo', 'NK', 'UCA · operator');
+        HostKernel::$userBadge = new UserBadge('N. Kileo', 'NK', 'UNR · operator');
 
         $crawler = $this->crawl(self::PAGE);
 
@@ -180,7 +180,7 @@ final class TopBarContractTest extends ContractTestCase
      */
     public function testTheCardIsReadLiveSoItVanishesTheSameRequestTheViewerGoes(): void
     {
-        HostKernel::$userBadge = new UserBadge('N. Kileo', 'NK', 'UCA · operator');
+        HostKernel::$userBadge = new UserBadge('N. Kileo', 'NK', 'UNR · operator');
         self::assertStringContainsString('N. Kileo', $this->render(self::PAGE));
 
         HostKernel::$userBadge = null;

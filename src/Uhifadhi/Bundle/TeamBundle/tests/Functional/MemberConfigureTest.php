@@ -79,8 +79,8 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
     {
         $this->signedInAdministrator();
         $sergeant = $this->position('Sergeant', ['surveys.read'], [ScopeKind::Organization, ScopeKind::Area]);
-        $this->area('Kilimani Crater');
-        $this->area('Olkeju');
+        $this->area('Kilimani');
+        $this->area('Tambarare');
         $this->department('Ecology');
         $this->department('Protection Service');
         $frank = $this->person('Frank', 'Massawe');
@@ -96,8 +96,8 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
         $chips = $crawler->filter('.pwchips label.pmb');
         $labels = $chips->each(static fn (Crawler $c): string => trim(preg_replace('/\s+/', ' ', $c->text()) ?? ''));
         self::assertContains('The whole organization every area at once', $labels);
-        self::assertContains('Kilimani Crater', $labels);
-        self::assertContains('Olkeju', $labels);
+        self::assertContains('Kilimani', $labels);
+        self::assertContains('Tambarare', $labels);
         self::assertContains('All departments', $labels);
         self::assertContains('Ecology', $labels);
         self::assertContains('Protection Service', $labels);
@@ -111,7 +111,7 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
     {
         $this->signedInAdministrator();
         $ranger = $this->position('Ranger', ['surveys.read'], [ScopeKind::Area]);
-        $this->area('Kilimani Crater');
+        $this->area('Kilimani');
         $frank = $this->person('Frank', 'Massawe');
         $frank->setPosition($ranger);
         $this->em->flush();
@@ -128,8 +128,8 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
     {
         $this->signedInAdministrator();
         $sergeant = $this->position('Sergeant', ['surveys.read']);
-        $kilimani = $this->area('Kilimani Crater');
-        $this->area('Olkeju');
+        $kilimani = $this->area('Kilimani');
+        $this->area('Tambarare');
         $ecology = $this->department('Ecology');
         $protection = $this->department('Protection Service');
         $this->department('ICT');
@@ -154,7 +154,7 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
         $placement = $stored->getPlacement();
         self::assertNotNull($placement);
         self::assertFalse($placement->isWholeOrganization());
-        self::assertSame(['Kilimani Crater'], array_map(static fn ($a): string => (string) $a->getName(), $placement->getAreas() ?? []));
+        self::assertSame(['Kilimani'], array_map(static fn ($a): string => (string) $a->getName(), $placement->getAreas() ?? []));
         self::assertSame('Ecology +1', $placement->departmentsLabel());
     }
 
@@ -163,7 +163,7 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
     {
         $this->signedInAdministrator();
         $sergeant = $this->position('Sergeant', ['surveys.read']);
-        $kilimani = $this->area('Kilimani Crater');
+        $kilimani = $this->area('Kilimani');
         $ecology = $this->department('Ecology');
         $frank = $this->person('Frank', 'Massawe');
         $this->em->flush();

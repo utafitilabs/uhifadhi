@@ -38,7 +38,7 @@ final class NamedHostKernel extends HostKernel
     {
         parent::reset();
 
-        self::$organization = new OrganizationIdentity('Uhifadhi Conservation Authority', 'UCA');
+        self::$organization = new OrganizationIdentity('Uhifadhi Nature Reserves', 'UNR');
     }
 
     protected function configureContainer(ContainerConfigurator $container): void

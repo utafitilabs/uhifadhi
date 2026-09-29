@@ -453,7 +453,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     {
         $this->withSuccessor();
         $sergeant = $this->position('Sergeant', ['surveys.read']);
-        $kilimani = $this->area('Kilimani Crater');
+        $kilimani = $this->area('Kilimani');
         $ecology = $this->department('Ecology');
         $frank = $this->person('Frank', 'Massawe');
         $frank->setPosition($sergeant);
@@ -478,7 +478,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         self::assertCount(1, $position);
         self::assertStringContainsString('Sergeant', $position->filter('.pcard b')->first()->text());
         $pills = $position->filter('.pmx-sk.on')->each(static fn (Crawler $c): string => trim($c->text()));
-        self::assertContains('Kilimani Crater', $pills);
+        self::assertContains('Kilimani', $pills);
         self::assertContains('Ecology', $pills);
         self::assertStringContainsString('Change the position', $position->filter('.pcard-foot a.ov-open')->text());
         self::assertStringEndsWith('/configure#position', (string) $position->filter('.pcard-foot a.ov-open')->attr('href'));
@@ -489,7 +489,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $row = $ledger->filter('.pmk-row.thru')->first();
         self::assertCount(1, $row);
         self::assertStringContainsString('read', $row->filter('.pmc.on')->text());
-        self::assertStringContainsString('Kilimani Crater', $row->filter('.pmx-sc')->text());
+        self::assertStringContainsString('Kilimani', $row->filter('.pmx-sc')->text());
         self::assertStringContainsString('Sergeant', $row->filter('.pml-thru')->text());
         self::assertStringContainsString('See it on the position', $ledger->filter('.pcard-foot a.ov-open')->text());
 

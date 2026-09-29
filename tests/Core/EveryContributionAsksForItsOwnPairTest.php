@@ -95,14 +95,14 @@ final class EveryContributionAsksForItsOwnPairTest extends WebTestCase
      */
     public function testTheSidebarNamesOnlyTheAreasTheViewerIsPlacedAt(): void
     {
-        $here = $this->area('Kilimani Crater');
-        $this->area('Mbuyu Plains');
+        $here = $this->area('Kilimani');
+        $this->area('Tambarare Plains');
         $this->signIn($this->composed(['areas.read'], new Placement()->inAreas([$here])->acrossAllDepartments()));
 
         $nav = $this->nav($this->client->request('GET', '/areas/'.$here->getUuidString()));
 
-        self::assertStringContainsString('Kilimani Crater', $nav);
-        self::assertStringNotContainsString('Mbuyu Plains', $nav);
+        self::assertStringContainsString('Kilimani', $nav);
+        self::assertStringNotContainsString('Tambarare Plains', $nav);
     }
 
     /**
@@ -132,7 +132,7 @@ final class EveryContributionAsksForItsOwnPairTest extends WebTestCase
      */
     public function testAnAreasTabsAreOnlyTheOnesTheViewerHolds(): void
     {
-        $area = $this->area('Kilimani Crater');
+        $area = $this->area('Kilimani');
         $this->signIn($this->composed(['areas.read']));
 
         $crawler = $this->client->request('GET', '/areas/'.$area->getUuidString());
@@ -149,7 +149,7 @@ final class EveryContributionAsksForItsOwnPairTest extends WebTestCase
     /** And the Departments tab comes with its own pair, asked without the area as its route asks it. */
     public function testTheDepartmentsTabComesWithItsOwnPair(): void
     {
-        $area = $this->area('Kilimani Crater');
+        $area = $this->area('Kilimani');
         $this->signIn($this->composed(['areas.read', 'departments.read']));
 
         $crawler = $this->client->request('GET', '/areas/'.$area->getUuidString());
@@ -163,7 +163,7 @@ final class EveryContributionAsksForItsOwnPairTest extends WebTestCase
      */
     public function testTheAreasConfigureStripCarriesOnlyTheSectionsTheViewerHolds(): void
     {
-        $area = $this->area('Kilimani Crater');
+        $area = $this->area('Kilimani');
         $this->signIn($this->composed(['areas.read', 'zones.read']));
 
         $crawler = $this->client->request('GET', '/areas/'.$area->getUuidString().'/configure/widgets');
@@ -175,7 +175,7 @@ final class EveryContributionAsksForItsOwnPairTest extends WebTestCase
     /** With the departments' pair, their section joins the strip. */
     public function testTheDepartmentsSectionJoinsTheStripWithItsPair(): void
     {
-        $area = $this->area('Kilimani Crater');
+        $area = $this->area('Kilimani');
         $this->signIn($this->composed(['areas.read', 'departments.read']));
 
         $crawler = $this->client->request('GET', '/areas/'.$area->getUuidString().'/configure/widgets');
@@ -219,7 +219,7 @@ final class EveryContributionAsksForItsOwnPairTest extends WebTestCase
     /** @return array{User, Station, AreaOfInterest} */
     private function aStationedPerson(): array
     {
-        $area = $this->area('Kilimani Crater');
+        $area = $this->area('Kilimani');
 
         /** @var StationService $stations */
         $stations = static::getContainer()->get('test_public.area.stations');

@@ -37,13 +37,13 @@ final class StationDirectoryTest extends IntegrationTestCase
     /** Every area's stations in one answer, because a reader counts across all of them. */
     public function testItReadsEveryAreasStationsInOneAnswer(): void
     {
-        $kilimani = $this->anArea('Kilimani Crater');
-        $olkeju = $this->anArea('Olkeju');
+        $kilimani = $this->anArea('Kilimani');
+        $olkeju = $this->anArea('Tambarare');
         $this->stations()->add($kilimani, 'Eastgate Post', -29.75, -3.2, 'ST-01');
         $this->stations()->add($olkeju, 'Mkwaju Station', -29.5, -3.4, 'ST-02');
 
         self::assertSame(
-            ['Kilimani Crater/ST-01', 'Olkeju/ST-02'],
+            ['Kilimani/ST-01', 'Tambarare/ST-02'],
             array_map(static fn (PostedStation $s): string => $s->areaName.'/'.$s->code, $this->directory()->stations()),
         );
     }
@@ -97,11 +97,11 @@ final class StationDirectoryTest extends IntegrationTestCase
     /** An area with no station is still offered as a choice, reading nought. */
     public function testAnAreaWithNoStationIsStillOffered(): void
     {
-        $this->anArea('Kilimani Crater');
-        $this->anArea('Sekenke');
+        $this->anArea('Kilimani');
+        $this->anArea('Tambarare');
 
         self::assertSame(
-            ['Kilimani Crater', 'Sekenke'],
+            ['Kilimani', 'Tambarare'],
             array_map(static fn (DirectoryArea $a): string => $a->name, $this->directory()->areas()),
         );
     }

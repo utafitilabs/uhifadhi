@@ -1673,7 +1673,7 @@ final readonly class PatrolGeo implements PerformanceGeoProviderInterface
         return [new GeoSeries(
             key: 'patrols.coverage',
             title: 'Patrol coverage, by area',
-            figures: [new GeoFigure($areaUuid, 'Kilimani Crater', 58.0)],
+            figures: [new GeoFigure($areaUuid, 'Kilimani', 58.0)],
             over: GeoSeries::OVER_AREAS,
             unit: '%',
             polarity: ColumnPolarity::Up,

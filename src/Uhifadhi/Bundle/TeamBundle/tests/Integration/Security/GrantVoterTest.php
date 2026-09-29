@@ -90,7 +90,7 @@ final class GrantVoterTest extends IntegrationTestCase
 
     public function testAPairThePositionCarriesIsGrantedOnTheGroundItIsPlacedAt(): void
     {
-        $kilimani = $this->area('Kilimani Crater');
+        $kilimani = $this->area('Kilimani');
         $person = $this->staff(
             $this->positionGranting('Sergeant', ['directory.read']),
             new Placement()->inAreas([$kilimani])->acrossAllDepartments(),
@@ -101,7 +101,7 @@ final class GrantVoterTest extends IntegrationTestCase
 
     public function testAPairThePositionDoesNotCarryIsRefused(): void
     {
-        $kilimani = $this->area('Kilimani Crater');
+        $kilimani = $this->area('Kilimani');
         $person = $this->staff(
             $this->positionGranting('Sergeant', ['directory.read']),
             new Placement()->inAreas([$kilimani])->acrossAllDepartments(),
@@ -113,7 +113,7 @@ final class GrantVoterTest extends IntegrationTestCase
     /** Nothing is held unless a position says so, reading included. */
     public function testSomebodyWithNoPositionHoldsNothingAtAll(): void
     {
-        $kilimani = $this->area('Kilimani Crater');
+        $kilimani = $this->area('Kilimani');
         $person = (new User())->setEmail('n@example.test')->setFirstName('N')->setLastName('P')
             ->setPassword('x')->setTeamRole(TeamRoleEnum::Staff)
             ->setPlacement(new Placement()->acrossTheOrganization()->acrossAllDepartments());
@@ -130,7 +130,7 @@ final class GrantVoterTest extends IntegrationTestCase
      */
     public function testAnExceptionWrittenWithoutAReasonIsRefused(): void
     {
-        $kilimani = $this->area('Kilimani Crater');
+        $kilimani = $this->area('Kilimani');
         $room = $this->positionGranting('Radio Operator', ['locations.read']);
         $this->em->persist($room);
         $person = $this->persistedStaff($room, new Placement()->acrossTheOrganization()->acrossAllDepartments());
@@ -141,7 +141,7 @@ final class GrantVoterTest extends IntegrationTestCase
 
     public function testAnExceptionGivenWithAReasonIsHeldAndTakingItAwayEndsIt(): void
     {
-        $kilimani = $this->area('Kilimani Crater');
+        $kilimani = $this->area('Kilimani');
         $room = $this->positionGranting('Radio Operator', []);
         $this->em->persist($room);
         $person = $this->persistedStaff($room, new Placement()->acrossTheOrganization()->acrossAllDepartments());
@@ -157,8 +157,8 @@ final class GrantVoterTest extends IntegrationTestCase
     /** The exception lifts the rank rule, not the ground: the placement is still asked. */
     public function testAnExceptionStillAsksWhereThePersonIsPlaced(): void
     {
-        $kilimani = $this->area('Kilimani Crater');
-        $mbuyu = $this->area('Mbuyu');
+        $kilimani = $this->area('Kilimani');
+        $mbuyu = $this->area('Tambarare');
         $room = $this->positionGranting('Radio Operator', []);
         $this->em->persist($room);
         $person = $this->persistedStaff($room, new Placement()->inAreas([$kilimani])->acrossAllDepartments());
@@ -171,7 +171,7 @@ final class GrantVoterTest extends IntegrationTestCase
     /** It belongs to the seat: the moment somebody leaves it, they no longer hold it. */
     public function testLeavingTheSeatLeavesTheException(): void
     {
-        $kilimani = $this->area('Kilimani Crater');
+        $kilimani = $this->area('Kilimani');
         $room = $this->positionGranting('Radio Operator', []);
         $ranger = $this->positionGranting('Ranger', ['directory.read']);
         $this->em->persist($room);
@@ -191,7 +191,7 @@ final class GrantVoterTest extends IntegrationTestCase
      */
     public function testTheTiersHoldTheExceptionByTier(): void
     {
-        $kilimani = $this->area('Kilimani Crater');
+        $kilimani = $this->area('Kilimani');
 
         foreach ([TeamRoleEnum::SuperAdmin, TeamRoleEnum::Admin] as $tier) {
             $person = (new User())->setEmail($tier->value.'@example.test')->setFirstName('T')->setLastName('A')
@@ -234,8 +234,8 @@ final class GrantVoterTest extends IntegrationTestCase
      */
     public function testTheRightPositionInTheWrongAreaIsRefused(): void
     {
-        $kilimani = $this->area('Kilimani Crater');
-        $mbuyu = $this->area('Mbuyu');
+        $kilimani = $this->area('Kilimani');
+        $mbuyu = $this->area('Tambarare');
         $person = $this->staff(
             $this->positionGranting('Sergeant', ['directory.read']),
             new Placement()->inAreas([$kilimani])->acrossAllDepartments(),
@@ -254,7 +254,7 @@ final class GrantVoterTest extends IntegrationTestCase
 
         // Gazetted after the placement was written, which is why the breadth
         // is a stored answer rather than a snapshot of the area list.
-        $later = $this->area('Olkeju');
+        $later = $this->area('Tambarare');
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($person, ['directory.read'], $later));
     }
@@ -266,7 +266,7 @@ final class GrantVoterTest extends IntegrationTestCase
      */
     public function testSomebodyWithNoPlacementIsRefusedWhatTheirPositionGrants(): void
     {
-        $kilimani = $this->area('Kilimani Crater');
+        $kilimani = $this->area('Kilimani');
         $person = $this->staff($this->positionGranting('Sergeant', ['directory.read']), null);
 
         self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($person, ['directory.read'], $kilimani));
@@ -283,7 +283,7 @@ final class GrantVoterTest extends IntegrationTestCase
      */
     public function testTheRightPositionInTheRightAreaButTheWrongDepartmentIsRefused(): void
     {
-        $kilimani = $this->area('Kilimani Crater');
+        $kilimani = $this->area('Kilimani');
         $ecology = $this->department('Ecology', 'surveys');
         $protection = $this->department('Protection Service', 'surveys');
 
@@ -313,7 +313,7 @@ final class GrantVoterTest extends IntegrationTestCase
      */
     public function testACoreConcernIsNotRefusedByTheDepartmentQuestion(): void
     {
-        $kilimani = $this->area('Kilimani Crater');
+        $kilimani = $this->area('Kilimani');
         $this->department('Ecology', 'surveys');
 
         $person = $this->staff(
@@ -330,7 +330,7 @@ final class GrantVoterTest extends IntegrationTestCase
      */
     public function testAModuleConcernNoDepartmentRunsIsNotRefusedEither(): void
     {
-        $kilimani = $this->area('Kilimani Crater');
+        $kilimani = $this->area('Kilimani');
         $person = $this->staff(
             $this->positionGranting('Data Analyst', ['surveys.read']),
             new Placement()->inAreas([$kilimani])->inDepartments([$this->department('ICT', null)]),
@@ -342,7 +342,7 @@ final class GrantVoterTest extends IntegrationTestCase
     /** Somebody placed across all departments is in every one of them. */
     public function testAPlacementAcrossAllDepartmentsCoversTheOneRunningTheModule(): void
     {
-        $kilimani = $this->area('Kilimani Crater');
+        $kilimani = $this->area('Kilimani');
         $this->department('Ecology', 'surveys');
 
         $person = $this->staff(
@@ -362,7 +362,7 @@ final class GrantVoterTest extends IntegrationTestCase
      */
     public function testTheTierBypassIgnoresThePlacementEntirely(): void
     {
-        $mbuyu = $this->area('Mbuyu');
+        $mbuyu = $this->area('Tambarare');
         $admin = (new User())->setEmail('a@example.test')->setFirstName('A')->setLastName('D')
             ->setPassword('x')->setTeamRole(TeamRoleEnum::Admin);
 

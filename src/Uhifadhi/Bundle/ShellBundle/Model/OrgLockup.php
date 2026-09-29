@@ -30,8 +30,8 @@ use Uhifadhi\Contracts\Settings\OrganizationIdentity;
  * filled in rather than empty, and so the bar has something to draw in the
  * meantime. It is never what the short name is pinned to.
  *
- * A WORD THE WRITER DID NOT CAPITALISE IS NOT AN INITIAL. "Kilimani Crater and
- * Olkeju Highlands Conservation Authority" reads KCOHCA: the conjunctions and
+ * A WORD THE WRITER DID NOT CAPITALISE IS NOT AN INITIAL. "Kilimani and
+ * Tambarare Highlands Nature Reserves" reads KCOHCA: the conjunctions and
  * prepositions an organization's name is strung together with are not part of
  * how anybody says it short, and the writer has already marked them by leaving
  * them lower case.

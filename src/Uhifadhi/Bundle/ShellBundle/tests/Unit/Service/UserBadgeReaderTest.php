@@ -32,7 +32,7 @@ final class UserBadgeReaderTest extends TestCase
 
     public function testItHandsBackWhateverTheSourceComposed(): void
     {
-        $badge = new UserBadge('N. Kileo', 'NK', 'UCA · operator');
+        $badge = new UserBadge('N. Kileo', 'NK', 'UNR · operator');
 
         $reader = new UserBadgeReader(new class($badge) implements UserBadgeSourceInterface {
             public function __construct(private readonly UserBadge $badge)

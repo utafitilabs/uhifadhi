@@ -51,8 +51,8 @@ final class OrganizationNameTest extends ContractTestCase
         $lockup = $crawler->filter('header.topbar .tb-left');
         self::assertCount(1, $lockup, 'The organization is named once, in the bar.');
         self::assertCount(1, $lockup->filter('.tb-rule'), "The brand's accent rule opens the lockup.");
-        self::assertSame('Uhifadhi Conservation Authority', trim($lockup->filter('b')->text()));
-        self::assertSame('UCA', trim($lockup->filter('.tb-short')->text()));
+        self::assertSame('Uhifadhi Nature Reserves', trim($lockup->filter('b')->text()));
+        self::assertSame('UNR', trim($lockup->filter('.tb-short')->text()));
     }
 
     /**
@@ -76,7 +76,7 @@ final class OrganizationNameTest extends ContractTestCase
      */
     public function testALongNameIsBoundedAndCarriesTheFullNameAsItsTitle(): void
     {
-        $long = 'Kilimani Crater and Olkeju Highlands Wildlife Conservation Authority';
+        $long = 'Kilimani and Tambarare Highlands Wildlife and Nature Reserves Trust';
         self::assertGreaterThanOrEqual(60, \strlen($long), 'The fixture is a name that does not fit.');
 
         NamedHostKernel::$organization = new OrganizationIdentity($long, 'KCOHCA');
@@ -106,9 +106,9 @@ final class OrganizationNameTest extends ContractTestCase
      */
     public function testTheShortNameFallsBackToTheNamesInitials(): void
     {
-        NamedHostKernel::$organization = new OrganizationIdentity('Uhifadhi Conservation Authority');
+        NamedHostKernel::$organization = new OrganizationIdentity('Uhifadhi Nature Reserves');
 
-        self::assertSame('UCA', trim($this->crawl(self::PAGE)->filter('header.topbar .tb-short')->text()));
+        self::assertSame('UNR', trim($this->crawl(self::PAGE)->filter('header.topbar .tb-short')->text()));
     }
 
     /**
@@ -123,7 +123,7 @@ final class OrganizationNameTest extends ContractTestCase
 
         $crawler = $this->crawl(self::PAGE);
 
-        self::assertSame('UCA · operator', trim($crawler->filter('header.topbar .uinfo em')->text()));
+        self::assertSame('UNR · operator', trim($crawler->filter('header.topbar .uinfo em')->text()));
     }
 
     /**
@@ -135,6 +135,6 @@ final class OrganizationNameTest extends ContractTestCase
     {
         $title = $this->crawl('@fixtures/bare_document_page.html.twig')->filter('title');
 
-        self::assertStringEndsWith('Uhifadhi Conservation Authority', trim($title->text()));
+        self::assertStringEndsWith('Uhifadhi Nature Reserves', trim($title->text()));
     }
 }

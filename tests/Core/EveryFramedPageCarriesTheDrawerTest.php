@@ -95,7 +95,7 @@ final class EveryFramedPageCarriesTheDrawerTest extends WebTestCase
 
     public function testEveryFramedPageCarriesTheOpenerTheScrimAndTheCloseMark(): void
     {
-        $area = new AreaOfInterest()->setName('Kilimani Crater');
+        $area = new AreaOfInterest()->setName('Kilimani');
         $this->em->persist($area);
         $this->em->flush();
         $areaUuid = (string) $area->getUuidString();

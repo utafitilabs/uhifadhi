@@ -107,7 +107,7 @@ final class RouteByComposedPositionTest extends WebTestCase
 
     public function testAPositionHoldingExactlyARoutesPairsOpensThatRoute(): void
     {
-        $area = $this->area('Kilimani Crater');
+        $area = $this->area('Kilimani');
         $refused = [];
 
         foreach ($this->gatedRoutes() as $name => [$path, $pairs]) {
@@ -130,7 +130,7 @@ final class RouteByComposedPositionTest extends WebTestCase
 
     public function testAPositionHoldingEveryOtherPairIsRefused(): void
     {
-        $area = $this->area('Kilimani Crater');
+        $area = $this->area('Kilimani');
         $everything = $this->catalogue()->pairs();
         $opened = [];
 
@@ -170,21 +170,21 @@ final class RouteByComposedPositionTest extends WebTestCase
      */
     public function testTheRightPositionInTheWrongAreaIsRefused(): void
     {
-        $here = $this->area('Kilimani Crater');
-        $elsewhere = $this->area('Mbuyu');
+        $here = $this->area('Kilimani');
+        $elsewhere = $this->area('Tambarare');
 
         $this->signIn($this->composed(['areas.read'], new Placement()->inAreas([$elsewhere])->acrossAllDepartments()));
 
         self::assertFalse(
             $this->checker()->isGranted('areas.read', $here),
-            'Placed at Mbuyu and holding areas.read, this person reads Kilimani Crater. The second question — does the placement cover the area — is not being asked.',
+            'Placed at Tambarare and holding areas.read, this person reads Kilimani. The second question — does the placement cover the area — is not being asked.',
         );
     }
 
     /** And it is granted where they ARE placed, so the refusal above is about the ground and nothing else. */
     public function testTheSamePositionIsGrantedInTheAreaItIsPlacedAt(): void
     {
-        $here = $this->area('Kilimani Crater');
+        $here = $this->area('Kilimani');
 
         $this->signIn($this->composed(['areas.read'], new Placement()->inAreas([$here])->acrossAllDepartments()));
 
@@ -213,8 +213,8 @@ final class RouteByComposedPositionTest extends WebTestCase
      */
     public function testEveryAreaScopedRouteRefusesTheRightPositionInTheWrongArea(): void
     {
-        $hereUuid = (string) $this->area('Kilimani Crater')->getUuidString();
-        $this->area('Mbuyu');
+        $hereUuid = (string) $this->area('Kilimani')->getUuidString();
+        $this->area('Tambarare');
 
         $opened = [];
         $asked = 0;
@@ -228,7 +228,7 @@ final class RouteByComposedPositionTest extends WebTestCase
 
             // Re-read the ground each time: the sign-in below reboots the
             // kernel and detaches whatever the last one held.
-            $elsewhere = $this->area('Mbuyu');
+            $elsewhere = $this->area('Tambarare');
             $this->signIn($this->composed($pairs, new Placement()->inAreas([$elsewhere])->acrossAllDepartments()));
             $this->client->request('GET', str_replace('{uuid}', $hereUuid, $path));
 
@@ -292,7 +292,7 @@ final class RouteByComposedPositionTest extends WebTestCase
         }
 
         $module = (string) $this->catalogue()->moduleOf(explode('.', $pair)[0]);
-        $area = $this->area('Kilimani Crater');
+        $area = $this->area('Kilimani');
         $runs = $this->department('Ecology', $module);
         $doesNot = $this->department('ICT', null);
 

@@ -119,7 +119,7 @@ final class AreaCreateTest extends WebTestCase
         $this->signIn();
 
         $this->browser()->request('POST', '/areas/new', [
-            'name' => 'Olkeju',
+            'name' => 'Tambarare',
             'boundary_mode' => 'later',
             '_token' => $this->tokenOnTheForm(),
         ]);
@@ -128,7 +128,7 @@ final class AreaCreateTest extends WebTestCase
         self::assertSame(302, $response->getStatusCode());
 
         $this->em->clear();
-        $area = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Olkeju']);
+        $area = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Tambarare']);
         self::assertInstanceOf(AreaOfInterest::class, $area);
         self::assertFalse($area->hasBoundary(), 'created with no gazetted edge');
         self::assertNull($area->getSource());

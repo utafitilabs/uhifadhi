@@ -25,10 +25,10 @@ final class OrgLockupTest extends TestCase
 {
     public function testTheSetShortNameIsTheOneDrawn(): void
     {
-        $lockup = OrgLockup::of(new OrganizationIdentity('Uhifadhi Conservation Authority', 'UCA'));
+        $lockup = OrgLockup::of(new OrganizationIdentity('Uhifadhi Nature Reserves', 'UNR'));
 
-        self::assertSame('Uhifadhi Conservation Authority', $lockup->name);
-        self::assertSame('UCA', $lockup->shortName);
+        self::assertSame('Uhifadhi Nature Reserves', $lockup->name);
+        self::assertSame('UNR', $lockup->shortName);
     }
 
     /**
@@ -42,13 +42,13 @@ final class OrgLockupTest extends TestCase
 
     public function testAnUnsetShortNameFallsBackToTheNamesInitials(): void
     {
-        self::assertSame('UCA', OrgLockup::of(new OrganizationIdentity('Uhifadhi Conservation Authority'))->shortName);
+        self::assertSame('UNR', OrgLockup::of(new OrganizationIdentity('Uhifadhi Nature Reserves'))->shortName);
     }
 
     /** A field somebody emptied is a field nobody set. */
     public function testAShortNameOfNothingButSpaceIsNotASetShortName(): void
     {
-        self::assertSame('UCA', OrgLockup::of(new OrganizationIdentity('Uhifadhi Conservation Authority', '  '))->shortName);
+        self::assertSame('UNR', OrgLockup::of(new OrganizationIdentity('Uhifadhi Nature Reserves', '  '))->shortName);
     }
 
     /**
@@ -57,12 +57,12 @@ final class OrgLockupTest extends TestCase
      */
     public function testTheConjunctionsAreNotInitials(): void
     {
-        self::assertSame('KCOHCA', OrgLockup::initials('Kilimani Crater and Olkeju Highlands Conservation Authority'));
+        self::assertSame('KTHNR', OrgLockup::initials('Kilimani and Tambarare Highlands Nature Reserves'));
     }
 
     public function testPunctuationDoesNotBecomeAnInitial(): void
     {
-        self::assertSame('SWMA', OrgLockup::initials('Sekenke Wildlife-Management Area'));
+        self::assertSame('TWMA', OrgLockup::initials('Tambarare Wildlife-Management Area'));
     }
 
     /** A name in lower case throughout still has a first letter. */

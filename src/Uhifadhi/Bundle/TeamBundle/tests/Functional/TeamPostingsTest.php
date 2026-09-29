@@ -107,7 +107,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
         $options = $this->visit('/team/assignments')->filter('.lfilt details')->eq(0)->filter('.i-ddopt');
 
         self::assertSame(
-            ['all areas', 'Kilimani Crater', 'Sekenke'],
+            ['all areas', 'Kilimani', 'Tambarare'],
             $options->each(static fn (Crawler $c): string => trim($c->filter('.i-ddopt-l')->text())),
         );
         self::assertSame('0', $options->last()->filter('.i-ddopt-n')->text());
@@ -226,8 +226,8 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
         $this->administrator();
 
         FakeStationDirectory::$areas = [
-            new DirectoryArea('area-kilimani', 'Kilimani Crater'),
-            new DirectoryArea('area-sekenke', 'Sekenke'),
+            new DirectoryArea('area-kilimani', 'Kilimani'),
+            new DirectoryArea('area-sekenke', 'Tambarare'),
         ];
         FakeStationDirectory::$stations = [
             new PostedStation(
@@ -235,7 +235,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
                 name: 'Eastgate Post',
                 code: 'ST-01',
                 areaUuid: 'area-kilimani',
-                areaName: 'Kilimani Crater',
+                areaName: 'Kilimani',
                 zoneName: 'Crater',
                 posts: [
                     new StationPost(self::uuid($joseph), new \DateTimeImmutable('2026-01-04'), true),
@@ -247,7 +247,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
                 name: 'Ridge Outpost',
                 code: 'ST-08',
                 areaUuid: 'area-kilimani',
-                areaName: 'Kilimani Crater',
+                areaName: 'Kilimani',
                 zoneName: 'Ridge',
             ),
         ];

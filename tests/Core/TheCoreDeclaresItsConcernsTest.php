@@ -46,7 +46,7 @@ final class TheCoreDeclaresItsConcernsTest extends TestCase
     public function testTheGroundDeclaresAreasZonesStationsAssignmentsDutyAndLocations(): void
     {
         self::assertSame(
-            ['areas', 'zones', 'stations', 'assignments', 'duty', 'locations'],
+            ['areas', 'dashboard', 'zones', 'stations', 'assignments', 'duty', 'locations'],
             array_map(static fn (ConcernInterface $c): string => $c->key(), self::iterate(new AreaConcerns())),
         );
     }
@@ -97,6 +97,12 @@ final class TheCoreDeclaresItsConcernsTest extends TestCase
     public function testGroundConcernsOfferOrganizationOrArea(): void
     {
         foreach (self::iterate(new AreaConcerns()) as $concern) {
+            // The organization's dashboard is the organization's figures: it has
+            // no area to be scoped to (ruled 29 Sep 2026, #19).
+            if (AreaConcerns::DASHBOARD === $concern->key()) {
+                self::assertSame([ScopeKind::Organization], $concern->scopeKinds());
+                continue;
+            }
             self::assertSame(
                 [ScopeKind::Organization, ScopeKind::Area],
                 $concern->scopeKinds(),
@@ -135,7 +141,7 @@ final class TheCoreDeclaresItsConcernsTest extends TestCase
             }
         }
 
-        self::assertCount(12, $seen);
+        self::assertCount(13, $seen);
     }
 
     public function testEverySourceSaysWhoItIs(): void

@@ -117,11 +117,12 @@ final readonly class TeamContentProvider implements ContentProviderInterface
             TeamConcerns::DEPARTMENTS.'.read', TeamConcerns::DEPARTMENTS.'.configure',
             'modules.read',
             'areas.read', 'stations.read', 'stations.configure', 'assignments.manage',
+            'dashboard.read',
         ],
         'head_ranger' => [
             TeamConcerns::DIRECTORY.'.read',
             'areas.read', 'zones.read', 'stations.read', 'stations.configure',
-            'assignments.manage', 'duty.record',
+            'assignments.manage', 'duty.record', 'dashboard.read',
         ],
         'ranger' => [
             TeamConcerns::DIRECTORY.'.read',
@@ -130,7 +131,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         'analyst' => [
             TeamConcerns::DIRECTORY.'.read',
             'modules.read',
-            'areas.read', 'zones.read', 'zones.export',
+            'areas.read', 'zones.read', 'zones.export', 'dashboard.read',
         ],
         'sergeant' => [
             TeamConcerns::DIRECTORY.'.read',

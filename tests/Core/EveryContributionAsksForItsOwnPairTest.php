@@ -105,16 +105,24 @@ final class EveryContributionAsksForItsOwnPairTest extends WebTestCase
         self::assertStringNotContainsString('Mbuyu Plains', $nav);
     }
 
-    /** The dashboard's row asks what the dashboard enforces. */
-    public function testTheDashboardRowIsWithheldFromSomebodyWhoCannotReadTheAreas(): void
+    /**
+     * THE DASHBOARD'S ROW IS EVERYBODY'S. `/` answers every signed-in person —
+     * the organization's dashboard for somebody holding `dashboard.read`, their
+     * own for everybody else — so the row leads somewhere for whoever reads it,
+     * and withholding it would hide the one page every person has.
+     */
+    public function testTheDashboardRowIsOfferedToSomebodyWithoutTheOrganizationDashboard(): void
     {
         $this->signIn($this->composed(['directory.read']));
 
         $crawler = $this->client->request('GET', '/team');
 
         self::assertResponseIsSuccessful();
-        self::assertNotContains('/', $crawler->filter('nav.nav a.nav-item')->each(static fn (Crawler $a): string => (string) $a->attr('href')));
-        self::assertStringNotContainsString('Dashboard', $this->nav($crawler));
+        self::assertContains('/', $crawler->filter('nav.nav a.nav-item')->each(static fn (Crawler $a): string => (string) $a->attr('href')));
+        self::assertStringContainsString('Dashboard', $this->nav($crawler));
+
+        $this->client->request('GET', '/');
+        self::assertResponseIsSuccessful();
     }
 
     /**

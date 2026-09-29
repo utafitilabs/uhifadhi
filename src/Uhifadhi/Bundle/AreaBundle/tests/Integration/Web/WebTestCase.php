@@ -47,6 +47,7 @@ abstract class WebTestCase extends KernelTestCase
      */
     protected const array ALL_AREA_PERMISSIONS = [
         'areas.read', 'areas.configure',
+        'dashboard.read',
         'zones.read', 'zones.configure', 'zones.delete', 'zones.export',
         'stations.read', 'stations.configure',
         'assignments.read', 'assignments.manage',

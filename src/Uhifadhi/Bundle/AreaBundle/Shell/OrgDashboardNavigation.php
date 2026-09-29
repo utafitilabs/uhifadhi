@@ -16,7 +16,6 @@ namespace Uhifadhi\Bundle\AreaBundle\Shell;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Bundle\AreaBundle\Controller\OrgDashboardController;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
@@ -55,17 +54,14 @@ final readonly class OrgDashboardNavigation implements NavigationSourceInterface
     public function __construct(
         private UrlGeneratorInterface $urls,
         private RequestStack $requests,
-        private AuthorizationCheckerInterface $authorization,
     ) {
     }
 
     public function sections(): iterable
     {
-        // THE ROW ASKS WHAT THE PAGE BEHIND IT ENFORCES, so nobody is offered
-        // a dashboard that refuses them.
-        if (!$this->authorization->isGranted(OrgDashboardController::READ)) {
-            return;
-        }
+        // EVERYBODY HAS A DASHBOARD (#19): `/` draws the organization's for a
+        // holder of dashboard.read and the person's own for everybody else,
+        // so the row is offered to anybody signed in.
 
         try {
             $url = $this->urls->generate(OrgDashboardController::ROUTE);

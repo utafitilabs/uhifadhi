@@ -24,7 +24,8 @@ namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
 final class MyDashboardTest extends WebTestCase
 {
     /** @var list<string> */
-    private const array NO_AREAS = ['duty.read', 'duty.record'];
+    /** A ranger: reads their area (the handset needs it) and holds no organization dashboard. */
+    private const array NO_AREAS = ['areas.read', 'duty.read', 'duty.record'];
 
     public function testSomebodyWhoCannotReadTheAreasGetsTheirOwnDashboard(): void
     {
@@ -63,5 +64,32 @@ final class MyDashboardTest extends WebTestCase
 
         self::assertSame(200, $this->browser()->getResponse()->getStatusCode());
         self::assertCount(0, $crawler->filter('[data-fake]'), 'no personal cards on the organization dashboard');
+    }
+
+    /** Ruled 29 Sep 2026: reading an area is not the organization dashboard's grant. */
+    public function testReadingTheAreasIsNotEnoughForTheOrganizationsDashboard(): void
+    {
+        $this->boot(self::NO_AREAS);
+        $this->signInAsPerson()->named('Naserian', 'Lekishon');
+        $this->em->flush();
+
+        $crawler = $this->browser()->request('GET', '/');
+
+        self::assertSame(200, $this->browser()->getResponse()->getStatusCode());
+        self::assertCount(1, $crawler->filter('[data-fake="figure"]'), 'their own, although they read the areas');
+    }
+
+    public function testAHolderOfTheOrganizationsDashboardHasADoorToTheirOwn(): void
+    {
+        $this->boot();
+        $this->signInAsPerson()->named('Asha', 'Mollel');
+        $this->em->flush();
+
+        $door = $this->browser()->request('GET', '/')->filter('a[href="/me"]');
+        self::assertCount(1, $door);
+
+        $crawler = $this->browser()->request('GET', '/me');
+        self::assertSame(200, $this->browser()->getResponse()->getStatusCode());
+        self::assertCount(1, $crawler->filter('[data-fake="figure"]'), 'their own cards at /me');
     }
 }

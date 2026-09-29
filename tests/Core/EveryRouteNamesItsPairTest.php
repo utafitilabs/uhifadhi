@@ -90,6 +90,7 @@ final class EveryRouteNamesItsPairTest extends KernelTestCase
         'team_invite_accept_submit' => 'the same, the submitting half',
         'team_api_auth_token' => 'this is how a handset becomes somebody',
         'welcome' => 'the landing page names no record and shows nobody anything they are not already entitled to',
+        'my_dashboard' => "a person's own dashboard shows nothing but their own records (#19)",
         'me_station' => "a person's own station page shows nothing but the post they are posted at (#19)",
         'me_duty_log' => "a person's own duty log shows nothing but the check-ins they made (#19)",
         'liveness' => 'an uptime probe, answered out of the container alone, with no database and no session',
@@ -134,7 +135,7 @@ final class EveryRouteNamesItsPairTest extends KernelTestCase
         '_api_/areas/{areaUuid}/checkins_post' => 'AreaBundle\\Api\\DutyApiContext::requireRanger',
         '_api_/areas/{areaUuid}/checkins/{clientRef}_patch' => 'AreaBundle\\Api\\DutyApiContext::requireRanger',
         '_api_/areas/{areaUuid}/positions_post' => 'AreaBundle\\Api\\DutyApiContext::requireRanger',
-        'organization_dashboard' => 'AreaBundle\\Controller\\OrgDashboardController::dashboard — areas.read decides WHICH dashboard `/` draws (the organization\'s, or the person\'s own, #19), never whether there is one',
+        'organization_dashboard' => 'AreaBundle\\Controller\\OrgDashboardController::dashboard — dashboard.read decides WHICH dashboard `/` draws (the organization\'s, or the person\'s own, #19), never whether there is one',
         'shell_area_configure' => 'each section it frames, on its own screen — and whether the frame itself should be gated is unruled',
         'shell_module_configure' => 'the same, for a module surface',
     ];

@@ -70,7 +70,11 @@ final readonly class OrgDashboardController
     public const string ROUTE = 'organization_dashboard';
 
     /** The pair the dashboard enforces, and the one its sidebar row asks. */
-    public const string READ = 'areas.read';
+    /** Who lands on the organization's dashboard: a grant of its own (ruled 29 Sep 2026, #19). */
+    public const string READ = 'dashboard.read';
+
+    /** The person's own dashboard, at its own address for somebody who also sees the organization's. */
+    public const string MINE = 'my_dashboard';
 
     /** Its widget library. */
     public const string WIDGETS_ROUTE = 'organization_widgets';
@@ -102,11 +106,12 @@ final readonly class OrgDashboardController
     }
 
     /**
-     * `/` IS FOR EVERYBODY SIGNED IN (open item #19, ruled 28 Sep 2026): the
-     * organization's dashboard for somebody who may read the areas, and their
-     * own for everybody else — where they used to meet a 403. The areas read
-     * decides WHICH page, never whether there is one, so the route names no
-     * single pair and the route test lists it with this reason.
+     * `/` IS FOR EVERYBODY SIGNED IN (open item #19): the organization's
+     * dashboard for somebody who holds `dashboard.read`, and their own for
+     * everybody else (ruled 29 Sep 2026 — not `areas.read`, which the handset
+     * needs and everybody placed anywhere holds). The grant decides WHICH
+     * page, never whether there is one, so the route names no single pair
+     * and the route test lists it with this reason.
      */
     #[Route('/', name: self::ROUTE, methods: ['GET'])]
     public function dashboard(Request $request): Response
@@ -145,7 +150,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets', name: self::WIDGETS_ROUTE, methods: ['GET'])]
-    #[IsGranted('areas.read')]
+    #[IsGranted(self::READ)]
     public function library(): Response
     {
         $now = new \DateTimeImmutable();
@@ -174,14 +179,14 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets/save', name: 'organization_widgets_save', methods: ['POST'])]
-    #[IsGranted('areas.read')]
+    #[IsGranted(self::READ)]
     public function save(Request $request): Response
     {
         return $this->endpoint->save($request, $this->catalogue->catalog());
     }
 
     #[Route('/widgets/reset', name: 'organization_widgets_reset', methods: ['POST'])]
-    #[IsGranted('areas.read')]
+    #[IsGranted(self::READ)]
     public function reset(Request $request): Response
     {
         $catalog = $this->catalogue->catalog();
@@ -195,7 +200,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets/preset/{presetId}', name: 'organization_widgets_preset', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'])]
-    #[IsGranted('areas.read')]
+    #[IsGranted(self::READ)]
     public function applyPreset(Request $request, string $presetId): Response
     {
         $catalog = $this->catalogue->catalog();
@@ -209,7 +214,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets/preset/{presetId}/copy', name: 'organization_widgets_preset_copy', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'], priority: 1)]
-    #[IsGranted('areas.read')]
+    #[IsGranted(self::READ)]
     public function copyPreset(Request $request, string $presetId): Response
     {
         return $this->afterWrite(
@@ -220,7 +225,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets/presets', name: 'organization_widgets_preset_create', methods: ['POST'])]
-    #[IsGranted('areas.read')]
+    #[IsGranted(self::READ)]
     public function createPreset(Request $request): Response
     {
         return $this->afterWrite(
@@ -231,7 +236,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets/presets/{presetUuid}/apply', name: 'organization_widgets_preset_apply', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('areas.read')]
+    #[IsGranted(self::READ)]
     public function applyCustomPreset(Request $request, string $presetUuid): Response
     {
         return $this->afterWrite(
@@ -242,7 +247,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets/presets/{presetUuid}/rename', name: 'organization_widgets_preset_rename', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('areas.read')]
+    #[IsGranted(self::READ)]
     public function renameCustomPreset(Request $request, string $presetUuid): Response
     {
         return $this->afterWrite(
@@ -253,7 +258,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets/presets/{presetUuid}/delete', name: 'organization_widgets_preset_delete', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('areas.read')]
+    #[IsGranted(self::READ)]
     public function deleteCustomPreset(Request $request, string $presetUuid): Response
     {
         return $this->afterWrite(
@@ -349,6 +354,18 @@ final readonly class OrgDashboardController
         }
 
         return new RedirectResponse($this->router->generate(self::WIDGETS_ROUTE));
+    }
+
+    /**
+     * THE PERSON'S OWN DASHBOARD at its own address — the door a holder of
+     * the organization's dashboard follows to theirs ("My dashboard", ruled
+     * 29 Sep 2026). It shows nothing but their own records, so it names no
+     * pair; the route test lists it with that reason.
+     */
+    #[Route('/me', name: self::MINE, methods: ['GET'])]
+    public function myDashboard(): Response
+    {
+        return $this->mine(new \DateTimeImmutable());
     }
 
     /** The dashboard of the one person signed in: their own cards, from every package. */

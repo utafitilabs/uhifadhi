@@ -48,6 +48,7 @@ final readonly class AreaConcerns implements ConcernSourceInterface
     public const string ASSIGNMENTS = 'assignments';
     public const string DUTY = 'duty';
     public const string LOCATIONS = 'locations';
+    public const string DASHBOARD = 'dashboard';
 
     public function declaredBy(): string
     {
@@ -64,6 +65,21 @@ final readonly class AreaConcerns implements ConcernSourceInterface
             description: 'The areas this installation manages, their boundaries and their settings.',
             verbs: [Verb::Read, Verb::Configure],
             scopeKinds: $ground,
+        );
+
+        /*
+         * THE ORGANIZATION'S DASHBOARD, a grant of its own (ruled 29 Sep 2026,
+         * #19): reading an area is what the handset and the area pages need,
+         * and everybody placed anywhere holds it, so it cannot also say who
+         * sees the whole organization's figures. Whoever does not hold this
+         * lands on their own dashboard instead.
+         */
+        yield new Concern(
+            key: self::DASHBOARD,
+            label: 'Organization dashboard',
+            description: "The organization's figures, map and queues on the landing page — everybody else lands on their own.",
+            verbs: [Verb::Read],
+            scopeKinds: [ScopeKind::Organization],
         );
 
         yield new Concern(

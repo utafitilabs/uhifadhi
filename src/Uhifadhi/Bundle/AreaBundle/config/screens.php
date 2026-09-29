@@ -651,7 +651,7 @@ return static function (ContainerConfigurator $container): void {
          * needs a door; the brandmark points at the same address.
          */
         $services->set('area.dashboard_navigation', OrgDashboardNavigation::class)
-            ->args([service('router'), service('request_stack'), service('security.authorization_checker')])
+            ->args([service('router'), service('request_stack')])
             ->tag('shell.nav_section');
     }
 };

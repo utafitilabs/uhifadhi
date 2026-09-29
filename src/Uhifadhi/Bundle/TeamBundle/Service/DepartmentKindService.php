@@ -24,7 +24,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentKindRepository;
  * A KIND IS A WORD, AND THE RULES ABOUT IT ARE RULES ABOUT WORDS: it is
  * trimmed, it is not empty, and no two kinds share one. They live here rather
  * than in the screen that happens to ask, so the day a second screen asks —
- * an importer, a console command, the devkit's demo content — it gets the same
+ * an importer, a console command, the devkit's seed content — it gets the same
  * answer instead of a second opinion.
  *
  * AN EMPTY MEANING IS NULL, NOT "". The column is nullable because "nobody has

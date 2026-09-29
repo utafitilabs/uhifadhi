@@ -30,7 +30,7 @@ final class DepartmentAreaSectionsTest extends TestCase
 {
     public function testItContributesTheDepartmentsScreenForThatArea(): void
     {
-        $sections = (new DepartmentAreaSections(self::doorHolding(['departments.read'])))->sectionsFor('0198f0a0-0000-7000-8000-000000000001', 'Northreach');
+        $sections = (new DepartmentAreaSections(self::doorHolding(['departments.read'])))->sectionsFor('0198f0a0-0000-7000-8000-000000000001', 'Kilimani');
 
         self::assertCount(1, $sections);
         self::assertSame('departments', $sections[0]->id);
@@ -42,7 +42,7 @@ final class DepartmentAreaSectionsTest extends TestCase
     /** The screen enforces `departments.read`; a viewer without it is offered no entry. */
     public function testAViewerWithoutDepartmentsReadIsOfferedNothing(): void
     {
-        self::assertSame([], (new DepartmentAreaSections(self::doorHolding([])))->sectionsFor('0198f0a0-0000-7000-8000-000000000001', 'Northreach'));
+        self::assertSame([], (new DepartmentAreaSections(self::doorHolding([])))->sectionsFor('0198f0a0-0000-7000-8000-000000000001', 'Kilimani'));
     }
 
     /** @param list<string> $held */

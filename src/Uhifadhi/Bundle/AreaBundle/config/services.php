@@ -740,7 +740,7 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(AreaComposition::class, 'area.composition');
 
     /*
-     * THE DEMO GROUND, OFFERED TO A TOOL THAT IS NOT INSTALLED HERE. Three
+     * THE SEED GROUND, OFFERED TO A TOOL THAT IS NOT INSTALLED HERE. Three
      * slices — the areas, the scheme that subdivides each of them, the posts
      * standing on it and who works out of them — each an ordinary tagged
      * service nothing in this bundle ever asks anything of.

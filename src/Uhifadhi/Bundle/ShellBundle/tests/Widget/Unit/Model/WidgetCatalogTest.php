@@ -191,18 +191,18 @@ final class WidgetCatalogTest extends TestCase
         // THERE IS NO ANONYMOUS LAYOUT. The catalogue's own composition is what a
         // fresh person sees, so it has to be nameable, previewable and
         // applicable like everything else in the strip.
-        $catalog = new WidgetCatalog('demo', [new WidgetGroup('top', 'At a glance', 'The numbers.')], [
+        $catalog = new WidgetCatalog('seed', [new WidgetGroup('top', 'At a glance', 'The numbers.')], [
             new Widget('kpis', 'KPI strip', 'top'),
             new Widget('map', 'Map', 'top', cols: 6, spans: [12, 6]),
             new Widget('log', 'Log', 'top', on: false),
         ], [
             new WidgetPreset('wide', 'Wide', 'Everything at full width.', ['kpis' => 12, 'log' => 12]),
-        ], defaultLabel: 'The demo board', defaultDescription: 'What this surface ships with.');
+        ], defaultLabel: 'The seed board', defaultDescription: 'What this surface ships with.');
 
         $builtins = $catalog->builtins();
 
         self::assertSame(['default', 'wide'], array_column($builtins, 'id'));
-        self::assertSame('The demo board', $builtins[0]->label);
+        self::assertSame('The seed board', $builtins[0]->label);
         self::assertSame(['kpis' => 12, 'map' => 6], $builtins[0]->layout, 'a widget that is off by default is not in it');
         // And it answers to preset() like any other, so applying it is not a
         // special case anywhere downstream.
@@ -212,7 +212,7 @@ final class WidgetCatalogTest extends TestCase
 
     public function testACatalogueWhoseOwnCompositionIsAlreadyADesignDoesNotNameItTwice(): void
     {
-        $catalog = new WidgetCatalog('demo', [new WidgetGroup('top', 'At a glance', 'The numbers.')], [
+        $catalog = new WidgetCatalog('seed', [new WidgetGroup('top', 'At a glance', 'The numbers.')], [
             new Widget('kpis', 'KPI strip', 'top'),
         ], [
             new WidgetPreset('just-kpis', 'Just the numbers', 'One plate.', ['kpis' => 12]),
@@ -225,7 +225,7 @@ final class WidgetCatalogTest extends TestCase
 
     public function testTheSurfacesNamedDefaultWinsAndARetiredOneFallsBack(): void
     {
-        $catalog = new WidgetCatalog('demo', [new WidgetGroup('top', 'At a glance', 'The numbers.')], [
+        $catalog = new WidgetCatalog('seed', [new WidgetGroup('top', 'At a glance', 'The numbers.')], [
             new Widget('kpis', 'KPI strip', 'top'),
             new Widget('map', 'Map', 'top'),
         ], [
@@ -237,7 +237,7 @@ final class WidgetCatalogTest extends TestCase
         // A design a release retired must never leave a dashboard blank: the
         // surface's answer falls back to the first built-in, exactly as a stored
         // reference to a deleted preset does.
-        $retired = new WidgetCatalog('demo', [new WidgetGroup('top', 'At a glance', 'The numbers.')], [
+        $retired = new WidgetCatalog('seed', [new WidgetGroup('top', 'At a glance', 'The numbers.')], [
             new Widget('kpis', 'KPI strip', 'top'),
         ], defaultPreset: 'gone-in-3-0');
 
@@ -246,7 +246,7 @@ final class WidgetCatalogTest extends TestCase
 
     public function testAWidgetsPickerLineIsOptionalAndCarriedOnTheDefinition(): void
     {
-        $catalog = new WidgetCatalog('demo', [new WidgetGroup('top', 'At a glance', 'The numbers.')], [
+        $catalog = new WidgetCatalog('seed', [new WidgetGroup('top', 'At a glance', 'The numbers.')], [
             new Widget('kpis', 'KPI strip', 'top', note: 'Four counts, across the top.'),
             new Widget('map', 'Map', 'top'),
         ]);

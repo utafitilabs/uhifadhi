@@ -321,8 +321,8 @@ final class PositionConfigureTest extends WebTestCaseWithSchema
 
     /**
      * THE ACTIONS CARD IS ALWAYS DRAWN, and what it offers is the only thing
-     * that changes. A sweep of the demo ground found no button named Retire
-     * and read that as a missing card; every demo position was held, so every
+     * that changes. A sweep of the seed ground found no button named Retire
+     * and read that as a missing card; every seed position was held, so every
      * one of them was correctly showing the refusal instead. Both states are
      * asserted here so the next reading of that page needs no guessing.
      */

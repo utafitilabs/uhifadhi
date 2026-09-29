@@ -44,7 +44,7 @@ namespace Uhifadhi\Contracts\Devkit;
  *
  * A provider is a collector of commands rather than a single command, so it has
  * no identity of its own — each {@see CommandDescriptor} carries its own name.
- * For a module's demo/sample CONTENT, which is ordered and seeded rather than
+ * For a module's seed/sample CONTENT, which is ordered and seeded rather than
  * invoked, use {@see ContentProviderInterface} instead.
  */
 interface CommandProviderInterface

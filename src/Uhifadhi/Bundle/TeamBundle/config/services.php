@@ -193,7 +193,7 @@ use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
  *   team.overview               the roster's counts and its attention rows
  *   team.widget_surface.*       the roster and the matrix, as dashboard surfaces
  *   team.command.create_user    the first administrator, made from the console
- *   team.devkit.content         the demo organization devkit seeds in a dev install
+ *   team.devkit.content         the seed organization devkit seeds in a dev install
  *   team.controller.security    the sign-in screen
  *   team.controller.team        the roster
  *   team.controller.member      one person's record

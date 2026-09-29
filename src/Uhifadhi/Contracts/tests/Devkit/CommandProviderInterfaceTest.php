@@ -102,7 +102,7 @@ final class CommandProviderInterfaceTest extends TestCase
                 return [
                     new CommandDescriptor(
                         'demo:reset',
-                        'Wipe and reseed the demo content for a clean slate.',
+                        'Wipe and reseed the seed content for a clean slate.',
                         static fn (array $arguments, CommandIo $io): int => [] === $arguments ? 0 : 1,
                     ),
                 ];

@@ -28,7 +28,7 @@ use Uhifadhi\Bundle\AreaBundle\Tests\Integration\IntegrationTestCase;
  *
  * A LOG WRITTEN BY A CONTROLLER IS A LOG WITH HOLES IN IT. Every write that
  * changes a zone set can arrive from somewhere that is not an HTTP request —
- * a console importer, a fixture loader, a demo seeder, whatever an
+ * a console importer, a fixture loader, a seeder, whatever an
  * installation writes next — and a line written in the controller means all
  * of those leave the history empty. The screen would look right and the
  * record would be wrong, which is the worst of the two.

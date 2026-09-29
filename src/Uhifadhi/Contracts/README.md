@@ -21,7 +21,7 @@ Interfaces and the small value objects that cross them. `ModuleProviderInterface
 announces itself to a host as a module — the catalogue metadata and the route it enters on.
 `Entity\UserInterface` is how a module's records point at a person without depending on whoever owns
 accounts, and `Entity\AreaInterface` is how they point at an area without depending on whoever owns
-areas. The `Devkit\` interfaces are how a module contributes dev-only demo content and maintenance
+areas. The `Devkit\` interfaces are how a module contributes dev-only seed content and maintenance
 commands that a `require-dev` collector materialises in a dev install and never in production.
 The `Facts\` interfaces are how a module files a figure over a growing set on the core's facts
 ledger — computed by the worker on a schedule, read by a page as a stored number with its time —

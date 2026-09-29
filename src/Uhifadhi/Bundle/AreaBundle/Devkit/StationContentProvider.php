@@ -24,8 +24,8 @@ use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 use Uhifadhi\Contracts\Entity\UserInterface;
 
 /**
- * THE POSTS AND THE PEOPLE WORKING OUT OF THEM — eight stations in every demo
- * area, and the roster spread across them with somebody in charge at each.
+ * THE POSTS AND THE PEOPLE WORKING OUT OF THEM — each seeded reserve's own
+ * posts, and the roster spread across them with somebody in charge at each.
  *
  * ONE SLICE, NOT TWO. A station and its staffing are separable in the database
  * and inseparable on the screen: every page that draws a post draws who stands
@@ -78,7 +78,7 @@ final readonly class StationContentProvider implements ContentProviderInterface
 
     public function description(): string
     {
-        return 'Posts standing in the demo areas, and the people working out of them.';
+        return 'Posts standing in the seeded reserves, and the people working out of them.';
     }
 
     public function dependsOn(): array
@@ -91,7 +91,7 @@ final readonly class StationContentProvider implements ContentProviderInterface
         /*
          * THE ROSTER IS HANDED OUT ONCE. Somebody stands at ONE post (ruled),
          * so this walks the roster forward across every area and every post
-         * and never round it: a demo that put the same ranger at two gates
+         * and never round it: a seed that put the same ranger at two gates
          * was describing a state the product refuses, and the seeder was the
          * first thing to hit that refusal.
          *
@@ -102,15 +102,15 @@ final readonly class StationContentProvider implements ContentProviderInterface
         $roster = $this->roster();
         $next = 0;
 
-        foreach (DemoArea::all() as $demo) {
-            $area = $this->register->findOneBy(['name' => $demo->name]);
+        foreach (SeedArea::all() as $seed) {
+            $area = $this->register->findOneBy(['name' => $seed->name]);
 
             if (null === $area || $this->posts->countByArea($area) > 0) {
                 continue;
             }
 
-            foreach ($demo->stations() as $post) {
-                [$lon, $lat] = $demo->pointOf($post);
+            foreach ($seed->stations() as $post) {
+                [$lon, $lat] = $seed->pointOf($post);
 
                 $this->stations->add(
                     $area,

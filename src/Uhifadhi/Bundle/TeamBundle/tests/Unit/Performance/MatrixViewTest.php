@@ -49,12 +49,12 @@ final class MatrixViewTest extends TestCase
             [new MatrixColumn('cov', 'Coverage')],
             [
                 new MatrixRow('a', 'Ecology', ['cov' => new MatrixCell(1.0)], 'Org-wide', 'EC'),
-                new MatrixRow('b', 'Vets', ['cov' => new MatrixCell(2.0)], 'Northreach', 'VS'),
+                new MatrixRow('b', 'Vets', ['cov' => new MatrixCell(2.0)], 'Kilimani', 'VS'),
                 new MatrixRow('c', 'Tourism', ['cov' => new MatrixCell(3.0)], 'Org-wide', 'TO'),
             ],
         ));
 
-        self::assertSame(['Org-wide', 'Northreach'], array_map(
+        self::assertSame(['Org-wide', 'Kilimani'], array_map(
             static fn (object $band): string => $band->name,
             $view->bands,
         ));

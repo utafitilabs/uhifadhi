@@ -37,14 +37,14 @@ use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
  * every card reads "grants nothing" is a register that has never been read.
  *
  * IT GOES THROUGH THE SAME SERVICES THE SCREENS DO, and that is the whole
- * discipline of it. Demo content written straight to the tables is demo content
+ * discipline of it. Seed content written straight to the tables is seed content
  * that can be shaped in ways the product cannot produce — a position holding a
  * permission no module declares, a department in a state no form can reach —
  * and every such row is a bug report about a screen that is working correctly.
  * Everything below is reachable by somebody clicking.
  *
  * IT SEEDS ONCE. An installation that already answers to any of the addresses
- * below is left exactly as it is: re-running a demo seeder is a developer
+ * below is left exactly as it is: re-running a seeder is a developer
  * repeating a command, not an instruction to enter this organization twice —
  * and a department name is unique org-wide, so the second attempt is refused
  * rather than duplicated, taking every slice seeded after this one down with it.
@@ -55,12 +55,12 @@ use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
  *
  * NOBODY HERE HAS AN AREA. This bundle knows about people and never about
  * areas, so the departments it seeds are organization-wide and it depends on no
- * other content. A demo installation that also has areas confines them from the
+ * other content. A seed installation that also has areas confines them from the
  * screen, which is the same act an operator would perform.
  *
- * THE PASSWORDS ARE GENERATED AND NEVER PRINTED. Demo accounts are still
+ * THE PASSWORDS ARE GENERATED AND NEVER PRINTED. Seed accounts are still
  * accounts: one shipped with a known password is a door left open on whatever
- * machine the demo was run on. Somebody who needs to sign in as one of these
+ * machine the seed was run on. Somebody who needs to sign in as one of these
  * resets it, exactly as they would for a colleague who has forgotten theirs.
  *
  * @see ContentProviderInterface
@@ -91,7 +91,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
     /**
      * WHAT EACH POSITION IS ALLOWED TO DO, and it is the point of the slice.
      *
-     * A DEMO ORGANIZATION WHERE EVERY CARD READS "grants nothing" teaches the
+     * A SEED ORGANIZATION WHERE EVERY CARD READS "grants nothing" teaches the
      * register to say nothing. These are the pairs a park would actually
      * write: a coordinator administers the team, a head ranger runs the
      * ground and its assignments, a ranger reads it and books on for duty, an
@@ -140,9 +140,9 @@ final readonly class TeamContentProvider implements ContentProviderInterface
     ];
 
     /**
-     * THE FIELD STAFF THE DEMO GROUND NEEDS, and the number is not arbitrary.
+     * THE FIELD STAFF THE SEED GROUND NEEDS, and the number is not arbitrary.
      *
-     * The demo ground is two areas of twelve posts each, two posts in each
+     * The seed ground is two areas of twelve posts each, two posts in each
      * left deliberately empty because "nobody works out of here" is a state
      * the screens have to draw. The rest are not the same size — a main gate
      * holds five and an outpost holds two, which is what makes a duty board
@@ -209,7 +209,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
     public function load(): void
     {
         if ($this->alreadySeeded()) {
-            // A SECOND SEED TOPS UP, NEVER REDRAWS: a demo position seeded
+            // A SECOND SEED TOPS UP, NEVER REDRAWS: a seed position seeded
             // before it had anything to grant is granted now, by its name,
             // and only while it still grants nothing — a park that has since
             // ticked its own cells is left exactly as it is.
@@ -223,9 +223,9 @@ final readonly class TeamContentProvider implements ContentProviderInterface
             return;
         }
 
-        // THE DEMO'S WORDS ARE FOUND BEFORE THEY ARE MADE. An installation that
+        // THE SEED'S WORDS ARE FOUND BEFORE THEY ARE MADE. An installation that
         // already keeps a department or a position under one of these names
-        // — recorded by hand, or imported — keeps its own record, and the demo
+        // — recorded by hand, or imported — keeps its own record, and the seed
         // files its people under that one rather than failing on the name.
         $protection = $this->departmentNamed('Protection Service');
         $ecology = $this->departmentNamed('Ecology');
@@ -273,7 +273,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
      *
      * The six above are the roles a reader has to see — the super admin, the
      * one who may administer, the analyst, the person holding nothing. These
-     * are the body of the organization, and without them the demo ground
+     * are the body of the organization, and without them the seed ground
      * seeds with three posts staffed and thirteen empty, which makes the one
      * deliberately empty post say nothing at all.
      *
@@ -328,7 +328,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
      * actually moves. Nothing here is a module's — a module publishes its
      * own history through its own snapshot.
      *
-     * IT IS DEMO CONTENT AND IT SAYS SO BY BEING HERE: an installation
+     * IT IS SEED CONTENT AND IT SAYS SO BY BEING HERE: an installation
      * that has not run the devkit has no history, and its pages say "no
      * history yet" rather than drawing a flat line at nought.
      *
@@ -397,7 +397,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
     }
 
     /**
-     * SOMEBODY, THEIR POSITION AND WHERE THEY ARE PLACED. The demo places
+     * SOMEBODY, THEIR POSITION AND WHERE THEY ARE PLACED. The seed places
      * everybody across the organization, because this content seeds no areas
      * of its own; the departments are the dimension it does exercise.
      *

@@ -287,7 +287,7 @@ class Kernel extends BaseKernel
             ->alias('test_public.'.ConcernCatalogue::class, 'team.access.catalogue')
             ->public();
 
-        // The ground's own demo content, for the same reason: a specification
+        // The ground's own seed content, for the same reason: a specification
         // that seeds the shipped organization has to reach the providers an
         // installation's devkit would run, not copies of them.
         $container->services()

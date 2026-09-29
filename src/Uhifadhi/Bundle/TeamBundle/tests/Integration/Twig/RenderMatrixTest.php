@@ -71,7 +71,7 @@ final class RenderMatrixTest extends TestCase
 
         self::assertStringContainsString('class="pfscope"', $html);
         self::assertStringContainsString('Org-wide', $html);
-        self::assertStringContainsString('Northreach', $html);
+        self::assertStringContainsString('Kilimani', $html);
     }
 
     /** A department is its two letters, its name and the way into its own page. */
@@ -255,10 +255,10 @@ final class RenderMatrixTest extends TestCase
                     'fil' => new MatrixCell(3.0),
                     'vac' => new MatrixCell(1.0),
                     'pat' => MatrixCell::notMine(),
-                ], 'Northreach', 'VS', '/departments/vets'),
+                ], 'Kilimani', 'VS', '/departments/vets'),
             ],
             'one cell a department in a topic',
-            ['Org-wide' => 'each reads every area', 'Northreach' => 'each reads one area only'],
+            ['Org-wide' => 'each reads every area', 'Kilimani' => 'each reads one area only'],
         );
     }
 

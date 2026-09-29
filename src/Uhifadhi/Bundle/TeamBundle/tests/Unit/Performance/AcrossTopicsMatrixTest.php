@@ -106,7 +106,7 @@ final class AcrossTopicsMatrixTest extends TestCase
             static fn (MatrixRow $row): string => $row->departmentName,
             $matrix->rows,
         ));
-        self::assertSame(['Org-wide', 'Northreach'], array_map(
+        self::assertSame(['Org-wide', 'Kilimani'], array_map(
             static fn (MatrixRow $row): string => $row->band,
             $matrix->rows,
         ));
@@ -133,7 +133,7 @@ final class AcrossTopicsMatrixTest extends TestCase
         $matrix = self::build([self::topic('staffing', 'Staffing', ['a' => 1.0])]);
 
         self::assertSame('each reads every area', $matrix->bandNotes['Org-wide'] ?? null);
-        self::assertSame('each reads one area only', $matrix->bandNotes['Northreach'] ?? null);
+        self::assertSame('each reads one area only', $matrix->bandNotes['Kilimani'] ?? null);
     }
 
     /** The way into a department is the caller's to name, and it rides on the row. */
@@ -159,7 +159,7 @@ final class AcrossTopicsMatrixTest extends TestCase
     {
         $directory = new DepartmentDirectory([
             new DepartmentEntry('a', 'Ecology', null, 'Org-wide', ['patrols'], ['patrols' => new \DateTimeImmutable()], 'EC'),
-            new DepartmentEntry('b', 'Tourism', 'north', 'Northreach', mark: 'TO'),
+            new DepartmentEntry('b', 'Tourism', 'north', 'Kilimani', mark: 'TO'),
         ]);
 
         return new AcrossTopicsMatrix()->build(

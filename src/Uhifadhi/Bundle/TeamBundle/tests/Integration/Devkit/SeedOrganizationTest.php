@@ -28,7 +28,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitContentCollector
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 
 /**
- * THE DEMO ORGANIZATION, SEEDED THROUGH THE COLLECTOR THAT WILL SEED IT.
+ * THE SEED ORGANIZATION, SEEDED THROUGH THE COLLECTOR THAT WILL SEED IT.
  *
  * The bundle offers content; devkit collects it in a dev install and runs it.
  * The collector standing in here does the same much, so what is proved is the
@@ -37,7 +37,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
  * somebody could have built from the screens.
  */
 #[CoversClass(TeamContentProvider::class)]
-final class DemoOrganizationTest extends IntegrationTestCase
+final class SeedOrganizationTest extends IntegrationTestCase
 {
     public function testTheBundleOffersItsContentThroughTheDevkitContracts(): void
     {
@@ -62,14 +62,14 @@ final class DemoOrganizationTest extends IntegrationTestCase
         self::assertCount(5, $this->service(PositionRepository::class)->findAllOrdered());
         // THE SIX NAMED ROLES AND THE FIELD STAFF BEHIND THEM. The six are
         // the roles a reader has to see; the rest are the body of the
-        // organization, and without them the demo GROUND seeds with three
+        // organization, and without them the seed GROUND seeds with three
         // posts staffed and thirteen empty — see TeamContentProvider's own
         // note on why the number is what it is.
         self::assertCount(6 + TeamContentProvider::FIELD_STAFF, $this->service(UserRepository::class)->findAllByName());
     }
 
     /**
-     * SEEDING TWICE IS SEEDING ONCE. A developer running the demo seeder again
+     * SEEDING TWICE IS SEEDING ONCE. A developer running the seeder again
      * is repeating a command, not asking for a second organization — and the
      * slices seeded after this one only run if this one does not refuse.
      */
@@ -87,7 +87,7 @@ final class DemoOrganizationTest extends IntegrationTestCase
     }
 
     /**
-     * A SECOND SEED TOPS UP A DEMO POSITION THAT GRANTS NOTHING — one seeded
+     * A SECOND SEED TOPS UP A SEED POSITION THAT GRANTS NOTHING — one seeded
      * before it had anything to grant — and leaves one somebody has since
      * composed by hand exactly as it is.
      */
@@ -113,13 +113,13 @@ final class DemoOrganizationTest extends IntegrationTestCase
 
         $ranger = $positions->findOneBy(['name' => 'Ranger']);
         $analyst = $positions->findOneBy(['name' => 'Analyst']);
-        self::assertNotSame([], $ranger?->getGrantValues(), 'The empty demo position was granted.');
+        self::assertNotSame([], $ranger?->getGrantValues(), 'The empty seed position was granted.');
         self::assertSame([TeamConcerns::DIRECTORY.'.read'], $analyst?->getGrantValues(), 'And the hand-composed one was left alone.');
     }
 
     /**
-     * SOMEBODY CAN ADMINISTER IT. A demo organization whose every account is
-     * Staff is a demo nobody can open the team screens from.
+     * SOMEBODY CAN ADMINISTER IT. A seed organization whose every account is
+     * Staff is a seed nobody can open the team screens from.
      */
     public function testSomebodySeededCanAdministerTheTeam(): void
     {
@@ -144,7 +144,7 @@ final class DemoOrganizationTest extends IntegrationTestCase
             $granted = [...$granted, ...$position->getGrantValues()];
         }
 
-        // THE DEMO MAKES SOMEBODY WHO CAN ADMINISTER THE TEAM, because an
+        // THE SEED MAKES SOMEBODY WHO CAN ADMINISTER THE TEAM, because an
         // installation whose seeded organization has nobody able to write a
         // position is one a reader cannot get started in.
         self::assertContains('positions.configure', $granted);
@@ -152,7 +152,7 @@ final class DemoOrganizationTest extends IntegrationTestCase
     }
 
     /**
-     * A PERSON WITH NO POSITION IS A STATE THE ROSTER HAS TO DRAW, so the demo
+     * A PERSON WITH NO POSITION IS A STATE THE ROSTER HAS TO DRAW, so the seed
      * organization has one.
      */
     public function testSomebodyIsSeededWithNoPositionAtAll(): void
@@ -195,10 +195,10 @@ final class DemoOrganizationTest extends IntegrationTestCase
     }
 
     /**
-     * THE CASE THE RULING EXISTS FOR IS IN THE DEMO DATA. An analyst
+     * THE CASE THE RULING EXISTS FOR IS IN THE SEED DATA. An analyst
      * supporting Ecology and Protection is ONE position placed against two
      * departments — under the old shape, where a position belonged to a
-     * department, the demo could only show them as two Analysts or as one
+     * department, the seed could only show them as two Analysts or as one
      * filed under a department of convenience. Seeding it means every screen
      * that draws a department meets the case on the first dev install rather
      * than in production.

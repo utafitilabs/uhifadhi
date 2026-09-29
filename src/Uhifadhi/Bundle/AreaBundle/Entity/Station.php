@@ -101,7 +101,7 @@ class Station
     #[ORM\Column(nullable: true)]
     private ?int $elevationM = null;
 
-    /** Where it stands, in the words people use for it — "crater rim road". */
+    /** Where it stands, in the words people use for it — "eastern gate road". */
     #[ORM\Column(length: 96, nullable: true)]
     private ?string $locality = null;
 

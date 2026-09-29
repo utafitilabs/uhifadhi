@@ -21,7 +21,7 @@ use Uhifadhi\Bundle\AreaBundle\Tests\Integration\IntegrationTestCase;
  * A CODE IS ISSUED ON SAVE, and it is the area's own sequence.
  *
  * WHAT A CODE IS FOR. A radio call and a paper form say ST-04, not "the
- * ranger post on the crater rim road", so every post gets a short identifier
+ * ranger post on the eastern gate road", so every post gets a short identifier
  * the moment it is recorded — without anybody being asked to invent one, and
  * without two areas having to agree about numbering they share nothing else
  * with.

@@ -210,7 +210,7 @@ frame's.
 <button type="submit"
         {{ stimulus_controller('confirm-modal') }}
         data-action="click->confirm-modal#ask"
-        data-confirm-modal-title-value="Remove “Crater”?"
+        data-confirm-modal-title-value="Remove “Lone Hills”?"
         data-confirm-modal-message-value="Its ground becomes unzoned, which is legal…"
         data-confirm-modal-confirm-label-value="Remove the zone"
         data-confirm-modal-danger-value="true">Remove the zone</button>

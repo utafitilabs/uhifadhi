@@ -21,7 +21,7 @@ import { Controller } from '@hotwired/stimulus';
  *     <button type="submit"
  *             data-controller="confirm-modal"
  *             data-action="click->confirm-modal#ask"
- *             data-confirm-modal-title-value="Remove “Crater”?"
+ *             data-confirm-modal-title-value="Remove “Lone Hills”?"
  *             data-confirm-modal-message-value="Its ground becomes unzoned…"
  *             data-confirm-modal-confirm-label-value="Remove the zone"
  *             data-confirm-modal-danger-value="true">Remove the zone</button>

@@ -17,7 +17,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Model;
  * A NAME AS IT ARRIVES IN A FILE, AND AS THE PRODUCT WILL SAY IT.
  *
  * GIS exports shout. A shapefile's attribute table is very often upper-case
- * throughout — CRATER, HIGHLANDS, LAKESHORE — because that is how the tool
+ * throughout — LONE HILLS, SALT PANS, ESCARPMENT — because that is how the tool
  * that wrote it writes, not because anybody decided the zone is called that.
  * Imported straight, those names shout everywhere the product says them: in
  * the register, on the plate's key, in the sidebar's menu, in a sentence in

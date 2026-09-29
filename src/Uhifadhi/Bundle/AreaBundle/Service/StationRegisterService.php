@@ -32,7 +32,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
  * move into SQL the day an area has thousands.
  *
  * EVERY PANEL COUNTS AGAINST THE OTHER FILTERS, not against its own. Picking
- * "Crater" should tell you how many posts Crater has *given* that you are
+ * "Lone Hills" should tell you how many posts Lone Hills has *given* that you are
  * looking at the active ones — so each facet is counted with its own filter
  * lifted and the rest standing, which is what makes the number a prediction
  * of what picking it would do.

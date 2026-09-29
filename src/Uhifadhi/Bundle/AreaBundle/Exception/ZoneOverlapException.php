@@ -21,7 +21,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
  *
  * THE MESSAGE NAMES THE OTHER ZONE AND THE SIZE. "It overlaps something" is
  * useless to whoever is drawing it — one of the two has to be fixed — and
- * "overlaps Crater" without a number does not say whether the file is wrong or
+ * "overlaps Lone Hills" without a number does not say whether the file is wrong or
  * the stored zone is. The size answers that in four words.
  *
  * HOW MUCH IS A SLIVER IS THE AREA'S OWN — see {@see \Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService}.

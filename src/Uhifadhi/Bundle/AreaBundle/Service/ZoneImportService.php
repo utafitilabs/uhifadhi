@@ -612,7 +612,7 @@ final readonly class ZoneImportService
     /**
      * THE NAME THIS FEATURE WILL BE CALLED. A file that shouts every name —
      * which most GIS exports do — is not an installation that decided its
-     * zones are called CRATER, so an entirely upper-case name is title-cased
+     * zones are called ESCARPMENT, so an entirely upper-case name is title-cased
      * and everything else is left exactly as it arrived.
      * {@see ImportedName} carries the rule and the reason.
      *

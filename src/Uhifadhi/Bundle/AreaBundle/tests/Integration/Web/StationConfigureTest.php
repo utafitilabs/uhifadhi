@@ -109,14 +109,14 @@ final class StationConfigureTest extends WebTestCase
             'lat' => '-3.2',
             'lon' => '-29.75',
             'elevation' => '2286',
-            'locality' => 'crater rim road',
+            'locality' => 'eastern gate road',
             'opened' => '2024-01-14',
         ]);
 
         $station = $this->stationsRepository()->findOneBy(['name' => 'Eastgate Post']);
         self::assertInstanceOf(Station::class, $station);
         self::assertSame(2286, $station->getElevationM());
-        self::assertSame('crater rim road', $station->getLocality());
+        self::assertSame('eastern gate road', $station->getLocality());
         self::assertSame('2024-01-14', $station->getOpenedAt()?->format('Y-m-d'));
     }
 
@@ -143,7 +143,7 @@ final class StationConfigureTest extends WebTestCase
         $this->submit($area, '/stations/'.$uuid.'/rename', ['name' => 'Eastgate Main Gate'], $uuid);
         $this->submit($area, '/stations/'.$uuid.'/point', ['lat' => '-3.1', 'lon' => '-29.4'], $uuid);
         $this->submit($area, '/stations/'.$uuid.'/describe', [
-            'elevation' => '2286', 'locality' => 'crater rim road',
+            'elevation' => '2286', 'locality' => 'eastern gate road',
         ], $uuid);
 
         $this->em->clear();
@@ -151,7 +151,7 @@ final class StationConfigureTest extends WebTestCase
         self::assertInstanceOf(Station::class, $station);
         self::assertSame('Eastgate Main Gate', $station->getName());
         self::assertSame(2286, $station->getElevationM());
-        self::assertSame('crater rim road', $station->getLocality());
+        self::assertSame('eastern gate road', $station->getLocality());
         // The point moved east, out of the western zone, and the zone followed it.
         self::assertNull($station->getZone());
     }

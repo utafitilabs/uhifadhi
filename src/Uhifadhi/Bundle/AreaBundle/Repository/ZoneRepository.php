@@ -243,7 +243,7 @@ class ZoneRepository extends SpatialEntityRepository
 
     /**
      * HOW MUCH GROUND A CANDIDATE RING WOULD TAKE FROM A ZONE THAT IS ALREADY
-     * THERE. "Overlaps Crater" is a refusal; "overlaps Crater by 41 km²" is a
+     * THERE. "Overlaps Lone Hills" is a refusal; "overlaps Lone Hills by 41 km²" is a
      * refusal somebody can act on, because it says whether the file is wrong or
      * the stored zone is.
      */

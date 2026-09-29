@@ -172,16 +172,16 @@
            nothing, so the rank row touches no permission. #}
         <div class="c" id="position">
             <span class="tab">Position{% if usesRanks %} and rank{% endif %}<span class="src">&middot; the seat, {% if usesRanks %}the rank, {% endif %}where it applies, the departments</span></span>
-            <form method="post" action="{{ path('team_member_position', {uuid: member.uuidString}) }}">
+            <form method="post" action="{{ path('team_member_position', {uuid: member.uuidString}) }}" data-controller="uhifadhi--team-bundle--position-card">
                 <input type="hidden" name="_token" value="{{ csrfToken }}">
                 <input type="hidden" name="return" value="configure">
                 <div class="pcard">
                     <span class="pcol-k">Assigned position</span>
                     <div class="mb-assignrow">
                         <select class="sel" name="position" aria-label="Assigned position">
-                            <option value="">&mdash; no position &mdash;</option>
+                            <option value="" data-reach="{{ 0 }}">&mdash; no position &mdash;</option>
                             {% for choice in choices %}
-                                <option value="{{ choice.uuid }}"{{ card and card.uuid == choice.uuid ? ' selected' : '' }}{{ choice.full and not (card and card.uuid == choice.uuid) ? ' disabled' : '' }}>{{ choice.label }}</option>
+                                <option value="{{ choice.uuid }}" data-reach="{{ choice.held + (card and card.uuid == choice.uuid ? 0 : 1) }}"{{ card and card.uuid == choice.uuid ? ' selected' : '' }}{{ choice.full and not (card and card.uuid == choice.uuid) ? ' disabled' : '' }}>{{ choice.label }}</option>
                             {% endfor %}
                         </select>
                         <span class="hint">Sorted by name</span>
@@ -236,7 +236,7 @@
                     </div>
                 </div>
                 <div class="staddrow">
-                    <span class="chg"><b>no changes</b><span class="to">reaches <b>{{ reach }}</b> {{ reach == 1 ? 'person' : 'people' }} &middot; <b>{{ chosenDepartments }}</b> of {{ departmentsTotal }} departments</span></span>
+                    <span class="chg" data-uhifadhi--team-bundle--position-card-target="preview"><b>no changes</b><span class="to">reaches <b>{{ reach }}</b> {{ reach == 1 ? 'person' : 'people' }} &middot; <b>{{ chosenDepartments }}</b> of {{ departmentsTotal }} departments</span></span>
                     <span class="sp"></span>
                     <button type="reset" class="btn">Discard</button>
                     <button type="submit" class="cta">Save the position</button>

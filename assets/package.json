@@ -147,6 +147,12 @@
                 "name": "uhifadhi--team-bundle--copy",
                 "fetch": "lazy",
                 "enabled": true
+            },
+            "position-card": {
+                "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/position_card_controller.js",
+                "name": "uhifadhi--team-bundle--position-card",
+                "fetch": "lazy",
+                "enabled": true
             }
         },
         "importmap": {

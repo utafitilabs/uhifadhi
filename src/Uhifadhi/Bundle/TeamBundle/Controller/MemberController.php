@@ -799,7 +799,7 @@ final readonly class MemberController
      * when it is full, who holds it — a full one is listed and refused, never
      * hidden.
      *
-     * @return list<array{uuid: string, label: string, full: bool}>
+     * @return list<array{uuid: string, label: string, full: bool, held: int}>
      */
     private function choices(): array
     {
@@ -812,6 +812,9 @@ final readonly class MemberController
                 'uuid' => $card->uuid(),
                 'label' => $card->name().' — '.$this->seatsLabel($card),
                 'full' => $card->isFull(),
+                // How many hold it now; the card's foot adds the person being
+                // configured when they would be moving into it.
+                'held' => $card->seatsFilled(),
             ];
         }
 

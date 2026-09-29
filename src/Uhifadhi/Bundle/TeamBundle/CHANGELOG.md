@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * THE POSITION CARD'S FOOT IS LIVE on a person's configure page (the
+   `position-card` controller, `uhifadhi--team-bundle--position-card`): it says
+   "no changes" only while nothing moved, names what did (position, rank, where it
+   applies, departments), and counts the departments from the boxes as they stand
+   and the reach from the chosen position; Discard returns it to "no changes".
  * TEAM › OVERVIEW AND TEAM › ROLES ASK FOR `positions.read` as well as
    `directory.read`: both read how the organization is arranged, which is the
    positions register's reading. Their tabs and sidebar rows follow. People and

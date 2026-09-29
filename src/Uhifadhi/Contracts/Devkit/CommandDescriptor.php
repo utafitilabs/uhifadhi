@@ -62,7 +62,7 @@ final readonly class CommandDescriptor
     /**
      * @param string                                $name        the console name devkit registers,
      *                                                           namespaced by convention
-     *                                                           (e.g. "patrol:demo:reset")
+     *                                                           (e.g. "patrol:sample:reset")
      * @param string                                $description one line of help, shown in `list`
      *                                                           and `--help`
      * @param \Closure(list<string>, CommandIo):int $handler     does the work: receives the argument
@@ -79,7 +79,7 @@ final readonly class CommandDescriptor
         // Refused rather than stored: an unnamed command cannot be registered,
         // and a nameless row is the one thing devkit's wrapper cannot paper over.
         if ('' === trim($name)) {
-            throw new \InvalidArgumentException('A command descriptor was declared without a name. Give it the console name devkit should register it under, e.g. "patrol:demo:reset".');
+            throw new \InvalidArgumentException('A command descriptor was declared without a name. Give it the console name devkit should register it under, e.g. "patrol:sample:reset".');
         }
 
         // The same rule the permission catalogue enforces: a name is what the

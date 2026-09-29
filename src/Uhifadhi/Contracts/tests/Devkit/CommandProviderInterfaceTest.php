@@ -101,7 +101,7 @@ final class CommandProviderInterfaceTest extends TestCase
             {
                 return [
                     new CommandDescriptor(
-                        'demo:reset',
+                        'sample:reset',
                         'Wipe and reseed the seed content for a clean slate.',
                         static fn (array $arguments, CommandIo $io): int => [] === $arguments ? 0 : 1,
                     ),
@@ -112,7 +112,7 @@ final class CommandProviderInterfaceTest extends TestCase
         $commands = $provider->commands();
         self::assertCount(1, $commands);
         self::assertInstanceOf(CommandDescriptor::class, $commands[0]);
-        self::assertSame('demo:reset', $commands[0]->name);
+        self::assertSame('sample:reset', $commands[0]->name);
 
         // devkit's wrapper hands the token tail and the console's streams to the
         // handler, and returns its exit code as the command's exit code.

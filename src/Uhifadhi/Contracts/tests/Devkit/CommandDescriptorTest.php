@@ -29,12 +29,12 @@ final class CommandDescriptorTest extends TestCase
     public function testItCarriesTheNameHelpAndHandler(): void
     {
         $descriptor = new CommandDescriptor(
-            'patrol:demo:reset',
+            'patrol:sample:reset',
             'Wipe and reseed the patrol seed content.',
             static fn (array $arguments, CommandIo $io): int => 0,
         );
 
-        self::assertSame('patrol:demo:reset', $descriptor->name);
+        self::assertSame('patrol:sample:reset', $descriptor->name);
         self::assertSame('Wipe and reseed the patrol seed content.', $descriptor->description);
 
         $handler = $descriptor->handler;
@@ -50,7 +50,7 @@ final class CommandDescriptorTest extends TestCase
     public function testTheHandlerReceivesTheArgumentTailAndReturnsAnExitCode(): void
     {
         $descriptor = new CommandDescriptor(
-            'demo:seed',
+            'sample:seed',
             'Seed content, optionally scaled by a --count argument.',
             static fn (array $arguments, CommandIo $io): int => \count($arguments),
         );
@@ -70,7 +70,7 @@ final class CommandDescriptorTest extends TestCase
     public function testTheHandlerAlsoReceivesTheStreamsItSpeaksThrough(): void
     {
         $descriptor = new CommandDescriptor(
-            'demo:seed',
+            'sample:seed',
             'Seed content and say what was seeded.',
             static function (array $arguments, CommandIo $io): int {
                 $io->write('seeded');
@@ -146,6 +146,6 @@ final class CommandDescriptorTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        new CommandDescriptor('demo:reset', '   ', static fn (array $arguments, CommandIo $io): int => 0);
+        new CommandDescriptor('sample:reset', '   ', static fn (array $arguments, CommandIo $io): int => 0);
     }
 }

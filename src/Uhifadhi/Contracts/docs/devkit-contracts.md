@@ -120,7 +120,7 @@ final class PatrolCommandProvider implements CommandProviderInterface
     {
         return [
             new CommandDescriptor(
-                'patrol:demo:reset',
+                'patrol:sample:reset',
                 'Wipe and reseed the patrol seed content.',
                 fn (array $arguments, CommandIo $io): int => $this->reset($arguments, $io),
             ),

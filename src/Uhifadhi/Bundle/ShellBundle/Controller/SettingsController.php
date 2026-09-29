@@ -15,7 +15,10 @@ namespace Uhifadhi\Bundle\ShellBundle\Controller;
 
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Twig\Environment;
+use Uhifadhi\Bundle\ShellBundle\Access\ShellConcerns;
 use Uhifadhi\Bundle\ShellBundle\Service\SettingsSection;
 
 /**
@@ -40,12 +43,12 @@ use Uhifadhi\Bundle\ShellBundle\Service\SettingsSection;
  * IT IS REACHABLE ONLY THROUGH THE APPLICATION'S IMPORT, like everything else
  * here: config/routes/settings.php is addressed by nobody in this bundle.
  *
- * WHO MAY READ IT IS NOT THIS PAGE'S QUESTION, and that is the same answer the
- * welcome screen gives: the shell holds no authorization service, so the
- * section is behind whatever the installation's security.yaml puts it behind —
- * on a default-closed installation, a stranger asking for it lands on the
- * sign-in screen. Each contributed figure, check and decision is gated by its
- * own source, which is the layer that has both the viewer and the voters.
+ * WHO MAY READ IT IS {@see ShellConcerns::SETTINGS_READ} — an administrator's
+ * reading of the installation, held by a position and never by being signed
+ * in. The section asks it here and its sidebar row asks it in its source; the
+ * renderer asks nothing. Each contributed figure, check and decision is still
+ * gated by its own source. A kernel with no security at all has nobody to ask,
+ * and the section is behind whatever its firewall puts it behind.
  *
  * NO BASE CLASS: a reusable bundle's controller takes what it needs in its
  * constructor and is wired explicitly in config/services.php.
@@ -57,11 +60,16 @@ final readonly class SettingsController
     public function __construct(
         private Environment $twig,
         private SettingsSection $section,
+        private ?AuthorizationCheckerInterface $authorization = null,
     ) {
     }
 
     public function __invoke(?string $tab = null): Response
     {
+        if (null !== $this->authorization && !$this->authorization->isGranted(ShellConcerns::SETTINGS_READ)) {
+            throw new AccessDeniedException(\sprintf('The settings section asks for "%s".', ShellConcerns::SETTINGS_READ));
+        }
+
         $screen = $this->section->screen($tab);
         if (null === $screen) {
             throw new NotFoundHttpException(\sprintf('"%s" is not a screen of the settings section.', (string) $tab));

@@ -93,10 +93,12 @@ final readonly class TeamContentProvider implements ContentProviderInterface
      *
      * A SEED ORGANIZATION WHERE EVERY CARD READS "grants nothing" teaches the
      * register to say nothing. These are the pairs a park would actually
-     * write: a coordinator administers the team, a head ranger runs the
-     * ground and its assignments, a ranger reads it and books on for duty, an
-     * analyst reads widely and exports, a sergeant stands between the two
-     * field ones.
+     * write: a coordinator administers the team and reads the settings, a
+     * head ranger runs the ground and its assignments, a ranger reads it and
+     * books on for duty, an analyst reads widely and exports, a sergeant
+     * stands between the two field ones. The files register is read by the
+     * three who work from the whole organization's records, never by the
+     * field ones, who see a file on the record it belongs to.
      *
      * THE PAIRS OUTSIDE THIS BUNDLE ARE WRITTEN AS STRINGS ON PURPOSE. Only
      * the team's own concerns are this bundle's to name in code: the area and
@@ -118,11 +120,13 @@ final readonly class TeamContentProvider implements ContentProviderInterface
             'modules.read',
             'areas.read', 'stations.read', 'stations.configure', 'assignments.manage',
             'dashboard.read',
+            'settings.read', 'files.read', 'storage.read',
         ],
         'head_ranger' => [
             TeamConcerns::DIRECTORY.'.read',
             'areas.read', 'zones.read', 'stations.read', 'stations.configure',
             'assignments.manage', 'duty.record', 'dashboard.read',
+            'files.read',
         ],
         'ranger' => [
             TeamConcerns::DIRECTORY.'.read',
@@ -132,6 +136,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
             TeamConcerns::DIRECTORY.'.read',
             'modules.read',
             'areas.read', 'zones.read', 'zones.export', 'dashboard.read',
+            'files.read',
         ],
         'sergeant' => [
             TeamConcerns::DIRECTORY.'.read',

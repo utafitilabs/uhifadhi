@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Uhifadhi\Bundle\ShellBundle\Access\ShellConcerns;
 use Uhifadhi\Bundle\ShellBundle\Contract\LayoutContract;
 use Uhifadhi\Bundle\ShellBundle\Controller\FaviconController;
 use Uhifadhi\Bundle\ShellBundle\Controller\SettingsController;
@@ -38,6 +39,7 @@ use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\ShellBundle\Twig\AsOfRuntime;
 use Uhifadhi\Bundle\ShellBundle\Twig\ShellExtension;
 use Uhifadhi\Bundle\ShellBundle\Twig\ShellRuntime;
+use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
 use Uhifadhi\Contracts\Settings\OrganizationIdentitySourceInterface;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
@@ -298,8 +300,18 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('shell.settings.section'),
             service('request_stack'),
+            service('security.authorization_checker')->nullOnInvalid(),
+            service('security.token_storage')->nullOnInvalid(),
         ])
         ->tag(ShellBundle::NAV_TAG);
+
+    /*
+     * THE SECTION'S PAIR, declared where it is enforced. Tagged by hand; the
+     * catalogue that reads the tag lives in whichever bundle keeps positions,
+     * and a kernel without one simply never collects it.
+     */
+    $services->set('shell.access.concerns', ShellConcerns::class)
+        ->tag(ConcernSourceInterface::TAG);
 
     /*
      * THE SECTION'S ONE CONTROLLER. The `controller.service_arguments` tag is
@@ -321,6 +333,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('twig'),
             service('shell.settings.section'),
+            service('security.authorization_checker')->nullOnInvalid(),
         ])
         ->tag('controller.service_arguments');
 

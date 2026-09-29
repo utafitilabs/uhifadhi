@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * The organization dashboard's "Settings · Modules" link is offered only to
+   whoever holds `settings.read`, and the zones page's "Area settings" link only
+   to whoever may configure the area — a door is offered only where it opens.
+
  * `Station::$positionSource` (`Enum\StationPositionSource`: `surveyed`, `estimated`) says where a
    station's point came from. `StationService::add()` records `surveyed` unless the caller passes
    `positionSource`; `StationService::moveTo()` sets `surveyed`. Migration `Version20260925220000`

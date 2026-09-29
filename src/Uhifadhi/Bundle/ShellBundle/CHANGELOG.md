@@ -8,6 +8,13 @@
 
 Not released yet.
 
+ * THE SETTINGS SECTION ASKS FOR ITS OWN PAIR: `settings.read` (the new "Settings"
+   concern, organization-wide, declared by `Access\ShellConcerns`). Without it the
+   section's address is refused and its sidebar row is absent. A kernel with no
+   security keeps the old behaviour — behind whatever its firewall puts it. Nothing
+   is granted it by upgrading: Admins and Super Admins hold it by tier, and a Staff
+   position holds it once an administrator ticks it.
+
  * A CARET STEP IS SEEN: the reorder control slides the two rows past each other in
    180 ms on the settle's curve, the moved row lifted (`.reorder-stepping`, `.reorder-passing`);
    where motion is refused they swap in place.

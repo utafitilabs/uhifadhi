@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * TEAM › OVERVIEW AND TEAM › ROLES ASK FOR `positions.read` as well as
+   `directory.read`: both read how the organization is arranged, which is the
+   positions register's reading. Their tabs and sidebar rows follow. People and
+   Assignments stay on `directory.read`. The seed coordinator reads the settings
+   and the files register; the head ranger and the analyst read the files register.
+
  * A DEPARTMENT FIGURE THE WORKER FILED ON THE FACTS LEDGER IS READ FROM THERE:
    for the month a page is about, `<module>.<key>` under the department
    replaces the module's live answer (value, `asOf`, and the month before's

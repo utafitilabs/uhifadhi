@@ -91,6 +91,37 @@ final class AreaSettingsContributionTest extends WebTestCase
     }
 
     /**
+     * SETTINGS IS AN ADMINISTRATOR'S READING, held by a position: somebody
+     * who may read every part of the ground and not the settings pair is
+     * refused the section and is never offered its row.
+     */
+    public function testWithoutTheSettingsPairTheSectionIsRefusedAndItsRowIsAbsent(): void
+    {
+        $this->boot(self::READ_ONLY_AREA_PERMISSIONS);
+        $this->signIn();
+        $area = $this->aLiveArea();
+
+        $this->browser()->request('GET', '/settings');
+        self::assertSame(403, $this->browser()->getResponse()->getStatusCode());
+
+        $crawler = $this->browser()->request('GET', '/areas/'.$area->getUuidString());
+        self::assertSame(200, $this->browser()->getResponse()->getStatusCode());
+        self::assertCount(0, $crawler->filter('nav.nav a.nav-item[href="/settings"]'), 'A row the viewer may not open is absent, not inert.');
+    }
+
+    /** AND WITH IT, THE ROW IS THERE AND THE SECTION OPENS. */
+    public function testWithTheSettingsPairTheRowIsOfferedAndTheSectionOpens(): void
+    {
+        $this->boot([...self::READ_ONLY_AREA_PERMISSIONS, 'settings.read']);
+        $this->signIn();
+        $this->aLiveArea();
+
+        $crawler = $this->browser()->request('GET', '/settings');
+        self::assertSame(200, $this->browser()->getResponse()->getStatusCode());
+        self::assertCount(1, $crawler->filter('nav.nav a.nav-item[href="/settings"]'));
+    }
+
+    /**
      * THE SETTINGS OVERVIEW'S "WHAT A MODULE ADDS" CARD quotes each module in
      * its own line, over HTTP; a module that says nothing beyond its name is
      * quoted by what it reads from, and no row is left with an empty cell.

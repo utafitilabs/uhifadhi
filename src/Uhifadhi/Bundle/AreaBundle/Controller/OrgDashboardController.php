@@ -35,6 +35,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\MyDashboard;
 use Uhifadhi\Bundle\AreaBundle\Service\OrgOverviewCatalogue;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceStreamService;
 use Uhifadhi\Bundle\AtlasBundle\Model\LiveStream;
+use Uhifadhi\Bundle\ShellBundle\Access\ShellConcerns;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Contracts\Area\LivePositionsInterface;
@@ -316,9 +317,16 @@ final readonly class OrgDashboardController
         ];
     }
 
-    /** Null where this installation has not mounted the settings section. */
+    /**
+     * Null where this installation has not mounted the settings section, and
+     * where the viewer may not read it: a door is offered only where it opens.
+     */
     private function settingsModulesUrl(): ?string
     {
+        if (!$this->authorization->isGranted(ShellConcerns::SETTINGS_READ)) {
+            return null;
+        }
+
         try {
             return $this->router->generate('settings', ['tab' => 'modules']);
         } catch (RouteNotFoundException) {

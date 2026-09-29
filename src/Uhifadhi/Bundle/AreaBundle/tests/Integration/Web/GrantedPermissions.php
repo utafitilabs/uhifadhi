@@ -57,10 +57,11 @@ final readonly class GrantedPermissions implements VoterInterface
     /**
      * THE CONCERNS THIS SUITE ANSWERS FOR: the five this bundle declares, plus
      * the modules composed onto an area, which the registry declares and these
-     * screens ask about. Anything else — a role, another module's concern — is
+     * screens ask about, and the shell's settings section these screens
+     * contribute to. Anything else — a role, another module's concern — is
      * somebody else's question and gets an abstention, never a refusal.
      */
-    private const array OURS = ['areas.', 'zones.', 'stations.', 'assignments.', 'duty.', 'locations.', 'modules.', 'team.member.', 'dashboard.'];
+    private const array OURS = ['areas.', 'zones.', 'stations.', 'assignments.', 'duty.', 'locations.', 'modules.', 'team.member.', 'dashboard.', 'settings.'];
 
     private function ours(string $attribute): bool
     {

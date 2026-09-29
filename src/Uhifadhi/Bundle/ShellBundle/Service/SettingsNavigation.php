@@ -15,6 +15,9 @@ namespace Uhifadhi\Bundle\ShellBundle\Service;
 
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Uhifadhi\Bundle\ShellBundle\Access\ShellConcerns;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
@@ -47,6 +50,12 @@ use Uhifadhi\Contracts\Shell\NavGroup;
  * section's route resource or does not; an installation that has not mounted
  * it gets no row rather than a sidebar that takes every page down with it.
  *
+ * ONLY FOR WHOEVER HOLDS THE SECTION'S PAIR. Gating is a source's job, not
+ * the renderer's, and this is the section's source: a viewer without
+ * {@see ShellConcerns::SETTINGS_READ} gets no row, rather than a row whose
+ * address refuses them. A kernel with no security at all has nobody to ask
+ * and keeps the row, behind whatever its firewall puts the section.
+ *
  * BUILT PER CALL, NEVER CACHED — the shell reads its sources live on every
  * render, and nothing here happens in the constructor.
  */
@@ -58,11 +67,21 @@ final readonly class SettingsNavigation implements NavigationSourceInterface
     public function __construct(
         private SettingsSection $section,
         private RequestStack $requests,
+        private ?AuthorizationCheckerInterface $authorization = null,
+        private ?TokenStorageInterface $tokens = null,
     ) {
     }
 
     public function sections(): iterable
     {
+        if (null !== $this->authorization) {
+            // NO TOKEN, NO QUESTION: outside a firewall the checker throws
+            // rather than answering, and nobody identified holds nothing.
+            if (null === $this->tokens?->getToken() || !$this->authorization->isGranted(ShellConcerns::SETTINGS_READ)) {
+                return;
+            }
+        }
+
         try {
             $children = [];
             foreach (SettingsTab::cases() as $tab) {

@@ -55,6 +55,9 @@ abstract class WebTestCase extends KernelTestCase
         // The host's answer to "may this viewer change this person" — the
         // team's voter in an installation (PersonAccess::CONFIGURE).
         'team.member.configure',
+        // The shell's settings section, which an administrator reads and the
+        // screens this suite contributes to are drawn on.
+        'settings.read',
     ];
 
     /**

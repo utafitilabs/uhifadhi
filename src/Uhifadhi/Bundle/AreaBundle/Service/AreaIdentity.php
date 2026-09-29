@@ -52,6 +52,7 @@ final readonly class AreaIdentity
      * facts are optional and a null clears them back to unrecorded.
      *
      * @param int|null $pingIntervalMinutes null is "not set" and reads as {@see PingInterval::DEFAULT_MINUTES}
+     * @param int|null $staleAfterMinutes   null is "not set" and reads as two intervals
      *
      * @throws AreaIdentityException when the name is blank, the tolerance is out of range, or the interval is under a minute
      */
@@ -62,6 +63,7 @@ final readonly class AreaIdentity
         ?int $establishedYear,
         ?float $zoneOverlapTolerancePct = null,
         ?int $pingIntervalMinutes = null,
+        ?int $staleAfterMinutes = null,
     ): AreaOfInterest {
         $name = trim($name);
         if ('' === $name) {
@@ -88,12 +90,23 @@ final readonly class AreaIdentity
             throw new AreaIdentityException('Ping every is at least one minute. Leave it blank to run at the default of '.PingInterval::DEFAULT_MINUTES.' minutes.');
         }
 
+        /*
+         * SHORTER THAN ONE PING IS NO THRESHOLD: every ranger would read stale
+         * in the quiet between two pings that both arrived on time. Refused,
+         * naming the interval it is measured against.
+         */
+        $interval = $pingIntervalMinutes ?? PingInterval::DEFAULT_MINUTES;
+        if (null !== $staleAfterMinutes && $staleAfterMinutes < $interval) {
+            throw new AreaIdentityException(\sprintf('Stale after is at least as long as Ping every (%d minutes here): a ranger is not stale between two pings that arrived on time. Leave it blank for two pings.', $interval));
+        }
+
         $area
             ->setName($name)
             ->setIucnCategory($iucnCategory)
             ->setEstablishedYear($establishedYear)
             ->setZoneOverlapTolerancePct($zoneOverlapTolerancePct)
-            ->setPingIntervalMinutes($pingIntervalMinutes);
+            ->setPingIntervalMinutes($pingIntervalMinutes)
+            ->setStaleAfterMinutes($staleAfterMinutes);
 
         $this->entityManager->flush();
 

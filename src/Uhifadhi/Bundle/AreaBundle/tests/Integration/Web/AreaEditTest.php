@@ -295,6 +295,73 @@ final class AreaEditTest extends WebTestCase
         self::assertSame(20, $fresh->getPingIntervalMinutes());
     }
 
+    /**
+     * STALE AFTER SITS BESIDE PING EVERY, a number and a unit stored as
+     * minutes; blank is not set and reads as two intervals, which the record
+     * says in so many words.
+     */
+    public function testStaleAfterRoundTripsAndBlankReadsAsTwoIntervals(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea('Northern Reserve');
+
+        $this->browser()->request('POST', $this->editUrl($area), [
+            'name' => 'Northern Reserve',
+            'pingEvery' => '30',
+            'pingEveryUnit' => 'minutes',
+            'staleAfter' => '2',
+            'staleAfterUnit' => 'hours',
+            '_token' => $this->tokenOn($this->editUrl($area), 'area_edit'),
+        ]);
+        self::assertSame(302, $this->browser()->getResponse()->getStatusCode());
+
+        $this->em->clear();
+        $fresh = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Northern Reserve']);
+        self::assertInstanceOf(AreaOfInterest::class, $fresh);
+        self::assertSame(120, $fresh->getStaleAfterMinutes());
+        self::assertMatchesRegularExpression('/name="staleAfter"\s+value="2"/', $this->body($this->editUrl($fresh)));
+        self::assertMatchesRegularExpression('#<th>Stale after</th>\s*<td class="num">2 hours</td>#', $this->body('/areas/'.$fresh->getUuidString().'/configure/settings'));
+
+        $this->browser()->request('POST', $this->editUrl($fresh), [
+            'name' => 'Northern Reserve',
+            'pingEvery' => '30',
+            'pingEveryUnit' => 'minutes',
+            'staleAfter' => '',
+            'staleAfterUnit' => 'minutes',
+            '_token' => $this->tokenOn($this->editUrl($fresh), 'area_edit'),
+        ]);
+        self::assertMatchesRegularExpression('#<th>Stale after</th>\s*<td class="num">1 hour <span class="chip">two pings</span></td>#', $this->body('/areas/'.$fresh->getUuidString().'/configure/settings'));
+    }
+
+    /**
+     * SHORTER THAN ONE PING IS REFUSED: every ranger would read stale in the
+     * quiet between two pings that both arrived on time.
+     */
+    public function testAStaleAfterShorterThanThePingIntervalIsRefused(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea('Northern Reserve');
+
+        $this->browser()->request('POST', $this->editUrl($area), [
+            'name' => 'Northern Reserve',
+            'pingEvery' => '30',
+            'pingEveryUnit' => 'minutes',
+            'staleAfter' => '20',
+            'staleAfterUnit' => 'minutes',
+            '_token' => $this->tokenOn($this->editUrl($area), 'area_edit'),
+        ]);
+
+        self::assertSame(422, $this->browser()->getResponse()->getStatusCode());
+        self::assertStringContainsString('at least as long as Ping every', $this->errorOn($this->browser()->getResponse()));
+
+        $this->em->clear();
+        $fresh = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Northern Reserve']);
+        self::assertInstanceOf(AreaOfInterest::class, $fresh);
+        self::assertNull($fresh->getStaleAfterMinutes());
+    }
+
     /** Clearing the gazetted facts is allowed — they are optional and a blank means unrecorded. */
     public function testTheGazettedFactsCanBeClearedBackToUnrecorded(): void
     {

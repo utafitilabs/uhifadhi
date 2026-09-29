@@ -144,7 +144,7 @@ final class AreaPersistenceTest extends IntegrationTestCase
         self::assertSame(
             [
                 'id', 'name', 'geom', 'source', 'iucnCategory', 'establishedYear',
-                'zoneOverlapTolerancePct', 'pingIntervalMinutes', 'createdAt', 'updatedAt', 'uuid',
+                'zoneOverlapTolerancePct', 'pingIntervalMinutes', 'staleAfterMinutes', 'createdAt', 'updatedAt', 'uuid',
             ],
             $properties,
             'an area is a name, a boundary, where it came from, its registry facts and how its own ground is read — nothing else',

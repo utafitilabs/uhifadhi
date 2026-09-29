@@ -73,12 +73,29 @@ final readonly class LivePresence
      * beside a five-minute area's on the same silence. A position that
      * states no interval is read at the set's, which is every per-area
      * reading.
+     *
+     * AN AREA MAY NAME THE SILENCE ITSELF — "stale after" on its settings —
+     * and a position stamped with it is judged by that instead of by two
+     * intervals.
      */
     public function isStale(LivePosition $position): bool
     {
-        $interval = $position->pingIntervalMinutes ?? $this->pingIntervalMinutes;
+        return $position->ageSeconds($this->asOf) > $this->staleAfterSeconds($position);
+    }
 
-        return $position->ageSeconds($this->asOf) > $interval * 60 * self::STALE_AFTER_INTERVALS;
+    /**
+     * THE SILENCE THAT MAKES THIS POSITION STALE, in seconds: its area's own
+     * "stale after" where it named one, two of its intervals otherwise. ONE
+     * ANSWER for the server's reading and for the plate that keeps ageing a
+     * mark on its own clock, so the two never disagree about the same fix.
+     */
+    public function staleAfterSeconds(LivePosition $position): int
+    {
+        if (null !== $position->staleAfterMinutes) {
+            return $position->staleAfterMinutes * 60;
+        }
+
+        return ($position->pingIntervalMinutes ?? $this->pingIntervalMinutes) * 60 * self::STALE_AFTER_INTERVALS;
     }
 
     /** How many of the positions nobody should be believing any more. */

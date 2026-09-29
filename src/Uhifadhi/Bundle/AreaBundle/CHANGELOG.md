@@ -8,6 +8,14 @@
 
 Not released yet.
 
+ * AN AREA SAYS WHEN IT STOPS BELIEVING A FIX: "Stale after" on the area's edit
+   screen, beside Ping every — a number and a unit, stored as minutes
+   (`area_of_interest.stale_after_minutes`, nullable; migration
+   `Version20260930010000`). Blank reads as two pings, which Configure ›
+   Settings says ("1 hour · two pings"); shorter than Ping every is refused.
+   Every live position is stamped with it, so the plate, the rail and the
+   stream dim on the same minute.
+
  * The organization dashboard's "Settings · Modules" link is offered only to
    whoever holds `settings.read`, and the zones page's "Area settings" link only
    to whoever may configure the area — a door is offered only where it opens.

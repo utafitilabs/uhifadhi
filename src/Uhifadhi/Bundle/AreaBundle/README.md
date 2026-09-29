@@ -394,9 +394,9 @@ as `AtlasBundle\Model\LiveMarks::frame()` draws it at page load, and nothing mor
     "name": "A. Mollel",          // what the mark's title shows
     "initials": "AM",             // what the mark prints
     "age": "4 min",               // how old the fix is, in the mark's words
-    "stale": false,               // past two ping intervals
+    "stale": false,               // past the area's "stale after" — two ping intervals unless it named one
     "at": "2026-09-19T06:56:00+03:00",   // the instant of the fix
-    "staleAfterSeconds": 1800     // this area's two intervals, so the plate's clock agrees
+    "staleAfterSeconds": 1800     // the same threshold, so the plate's clock agrees
   }
 }
 ```

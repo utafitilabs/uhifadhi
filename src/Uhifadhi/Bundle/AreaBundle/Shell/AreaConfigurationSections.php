@@ -27,6 +27,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\PingInterval;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
+use Uhifadhi\Contracts\Area\LivePresence;
 use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
 use Uhifadhi\Contracts\Shell\ConfigurationSection;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
@@ -176,6 +177,9 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
                     'areaKm2' => $this->register->areaKm2($area),
                     'defaultZoneOverlapTolerance' => ZoneOverlapService::DEFAULT_TOLERANCE_PCT,
                     'pingEvery' => IntervalUnit::say($this->pingInterval->for($area)),
+                    // WHAT THIS AREA CALLS STALE: its own figure, or two of
+                    // its pings where it named none.
+                    'staleAfter' => IntervalUnit::say($area->getStaleAfterMinutes() ?? LivePresence::STALE_AFTER_INTERVALS * $this->pingInterval->for($area)),
                     'zoneCount' => $this->zones->countFor($area),
                 ],
             );

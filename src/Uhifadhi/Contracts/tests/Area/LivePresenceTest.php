@@ -64,6 +64,20 @@ final class LivePresenceTest extends TestCase
         self::assertFalse($this->presence(30, $fix)->isStale($this->at($fix)));
     }
 
+    /**
+     * AN AREA MAY SAY WHEN IT STOPS BELIEVING A FIX, and then that is the
+     * rule rather than two intervals: forty minutes of silence is stale where
+     * the area said thirty-five, and still believed where it said nothing.
+     */
+    public function testAPositionStampedWithItsAreasStaleAfterIsJudgedByIt(): void
+    {
+        $presence = $this->presence(30, '2026-09-19 13:20:00');
+
+        self::assertTrue($presence->isStale($this->at('2026-09-19 13:20:00', staleAfter: 35)));
+        self::assertFalse($presence->isStale($this->at('2026-09-19 13:20:00')));
+        self::assertFalse($presence->isStale($this->at('2026-09-19 13:20:00', staleAfter: 90)));
+    }
+
     /** A surface that wants to say "3 of 7 have gone quiet" is given the count. */
     public function testTheAnswerCountsTheOnesNobodyShouldBelieve(): void
     {
@@ -94,9 +108,10 @@ final class LivePresenceTest extends TestCase
         return new LivePresence([$this->at($recordedAt)], $intervalMinutes, new \DateTimeImmutable(self::NOW));
     }
 
-    private function at(string $recordedAt): LivePosition
+    private function at(string $recordedAt, ?int $staleAfter = null): LivePosition
     {
         return new LivePosition(
+            staleAfterMinutes: $staleAfter,
             personUuid: 'p1',
             personName: 'A Ranger',
             clientRef: 'w1',

@@ -91,7 +91,7 @@ final class LiveMarks
     {
         return [
             new LegendItem(
-                label: 'Stale · older than two intervals',
+                label: 'Stale · past the area’s stale after',
                 swatch: PlatePalette::DIM,
                 shape: LayerShape::LiveStale,
                 group: self::GROUP,
@@ -148,8 +148,6 @@ final class LiveMarks
      */
     private static function feature(LivePosition $position, bool $stale, LivePresence $presence): array
     {
-        $interval = $position->pingIntervalMinutes ?? $presence->pingIntervalMinutes;
-
         return [
             'type' => 'Feature',
             'id' => $position->personUuid,
@@ -161,7 +159,7 @@ final class LiveMarks
                 'stale' => $stale,
                 // Stated in UTC whatever the process's own zone: the viewer's clock localises it.
                 'at' => $position->recordedAt->setTimezone(new \DateTimeZone('UTC'))->format(\DateTimeInterface::ATOM),
-                'staleAfterSeconds' => $interval * 60 * LivePresence::STALE_AFTER_INTERVALS,
+                'staleAfterSeconds' => $presence->staleAfterSeconds($position),
             ],
         ];
     }

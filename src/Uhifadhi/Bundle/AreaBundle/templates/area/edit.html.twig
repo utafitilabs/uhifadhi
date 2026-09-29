@@ -118,6 +118,26 @@
                         </span>
                     </div>
 
+                    {# STALE AFTER — when a live mark stops being believed and
+                       dims. The same number-and-unit pair as Ping every, and
+                       never shorter than it. Blank is two pings, which the
+                       placeholder states in this area's own minutes. #}
+                    <div style="margin-top:14px">
+                        <label class="fldlab" for="area-stale">Stale after</label>
+                        <span class="ed-pair">
+                            <input class="fld" id="area-stale" name="staleAfter"
+                                   value="{{ staleAfter.number }}" inputmode="decimal"
+                                   placeholder="{{ defaultStaleAfter }}"
+                                   aria-label="Stale after, how much">
+                            <select class="fld" name="staleAfterUnit" aria-label="Stale after, in what">
+                                {% for unit in intervalUnits %}
+                                    <option value="{{ unit.value }}"{{ unit == staleAfter.unit ? ' selected' : '' }}>{{ unit.label }}</option>
+                                {% endfor %}
+                            </select>
+                            <span class="ed-pairnote">of silence &middot; a live mark dims past it &middot; blank is two pings</span>
+                        </span>
+                    </div>
+
                     <div class="rln" style="margin-top:16px">
                         <span class="fog">Area (derived from boundary)</span>
                         <span class="mono d">{% if area.hasBoundary %}{{ areaKm2|number_format }} km&sup2; &middot; not editable{% else %}&mdash; &middot; no boundary yet{% endif %}</span>

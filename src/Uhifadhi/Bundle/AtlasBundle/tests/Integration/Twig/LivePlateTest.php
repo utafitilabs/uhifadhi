@@ -118,7 +118,7 @@ final class LivePlateTest extends TestCase
         self::assertCount(1, $group, 'one heading, because it is one mark in three states');
 
         self::assertSame(
-            ['Live position2 on', 'Stale · older than two intervals1', 'No position2'],
+            ['Live position2 on', 'Stale · past the area’s stale after1', 'No position2'],
             $group->filter('.lay')->each(static fn (Crawler $n): string => trim(preg_replace('/\s+/', ' ', $n->text()) ?? '')),
         );
     }
@@ -178,7 +178,7 @@ final class LivePlateTest extends TestCase
         );
 
         self::assertSame(
-            ['Live position2 on', 'Stale · older than two intervals1', 'No position0', 'Post on'],
+            ['Live position2 on', 'Stale · past the area’s stale after1', 'No position0', 'Post on'],
             $group->filter('.lay')->each(
                 static fn (Crawler $n): string => trim(preg_replace('/\s+/', ' ', $n->text()) ?? ''),
             ),

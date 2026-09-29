@@ -248,6 +248,24 @@ final class LiveMarksTest extends TestCase
         self::assertSame(600, self::arr(LiveMarks::frame($presence, $own)['properties'])['staleAfterSeconds']);
     }
 
+    /** An area that named its own silence sends it, so the plate dims on the same minute. */
+    public function testAFrameCarriesItsAreasOwnStaleAfter(): void
+    {
+        $own = new LivePosition(
+            personUuid: 'p-6',
+            personName: 'N. Lekishon',
+            clientRef: 'w-2',
+            state: DayState::AtPostVerified,
+            latitude: -3.2,
+            longitude: -29.5,
+            recordedAt: new \DateTimeImmutable(self::NOW.' -4 minutes'),
+            pingIntervalMinutes: 15,
+            staleAfterMinutes: 45,
+        );
+
+        self::assertSame(2700, self::arr(LiveMarks::frame(self::presence($own), $own)['properties'])['staleAfterSeconds']);
+    }
+
     /**
      * SOMEBODY WHO LEFT THE GROUND is a frame with no point: the same key,
      * nothing to draw, and one word saying why.

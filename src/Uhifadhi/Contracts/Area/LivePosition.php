@@ -83,6 +83,11 @@ final readonly class LivePosition
          * by their own clocks.
          */
         public ?int $pingIntervalMinutes = null,
+        /**
+         * When the area stops believing a fix, in minutes, where it said so;
+         * null is the rule every area starts with, two intervals.
+         */
+        public ?int $staleAfterMinutes = null,
     ) {
     }
 

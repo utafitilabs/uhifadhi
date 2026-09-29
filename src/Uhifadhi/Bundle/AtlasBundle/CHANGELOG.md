@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * A live mark's `staleAfterSeconds` is `LivePresence::staleAfterSeconds()`, so
+   an area's own "stale after" reaches the plate's clock; the legend reads
+   "Stale · past the area’s stale after".
+
  * A PLATE PICKS A POINT INTO A FORM: `AtlasMap::pickPoint(PointPick)` names the form a click
    writes into and the pair of inputs it fills; the plate draws a draggable pin (`.atlas-pin`),
    the caption under the legend in its three states (`.pickcap`: at rest, adding, moving, with

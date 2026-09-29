@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * `LivePosition` carries `staleAfterMinutes` (optional, last), and
+   `LivePresence::staleAfterSeconds()` is the one threshold: the position's
+   area's own figure where it states one, two intervals otherwise;
+   `isStale()` reads it.
+
  * `Facts\FactProviderInterface` (tag `uhifadhi.facts`) — a module declares the
    figures it computes over growing sets (`FigureDefinition`: key, subject
    kind, additive) and computes them for one period (`FactRequest` in,

@@ -61,6 +61,12 @@
                     <th>Ping every</th>
                     <td class="num">{{ pingEvery }}{% if area.pingIntervalMinutes is null %} <span class="chip">default</span>{% endif %}</td>
                 </tr>
+                {# WHEN A LIVE MARK STOPS BEING BELIEVED — the area's own
+                   figure, or two of its pings where it named none. #}
+                <tr>
+                    <th>Stale after</th>
+                    <td class="num">{{ staleAfter }}{% if area.staleAfterMinutes is null %} <span class="chip">two pings</span>{% endif %}</td>
+                </tr>
                 <tr><th>Identifier</th><td class="mono">{{ area.uuidString }}</td></tr>
             </table>
             <div class="use">The registry fields are optional and a dash means UNRECORDED, not zero:

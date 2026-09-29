@@ -39,6 +39,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
 use Uhifadhi\Bundle\AreaBundle\Service\PingInterval;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
 use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
+use Uhifadhi\Contracts\Area\LivePresence;
 use Uhifadhi\Contracts\Shell\ConfigurationSection;
 
 /**
@@ -110,10 +111,10 @@ final readonly class AreaEditController
 
         $this->denyUnlessTokenValid($request, self::IDENTITY_TOKEN);
 
-        [$name, $iucn, $established, $tolerance, $pingEvery] = $this->identityFrom($request);
+        [$name, $iucn, $established, $tolerance, $pingEvery, $staleAfter] = $this->identityFrom($request);
 
         try {
-            $this->identity->update($area, $name, $iucn, $established, $tolerance, $pingEvery);
+            $this->identity->update($area, $name, $iucn, $established, $tolerance, $pingEvery, $staleAfter);
         } catch (AreaIdentityException $e) {
             return $this->render($area, identityError: $e->getMessage(), status: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
@@ -192,7 +193,7 @@ final readonly class AreaEditController
      * reads as minutes, and a number that is not one reads as zero, which the
      * identity refuses with its reason.
      *
-     * @return array{0: string, 1: string|null, 2: int|null, 3: float|null, 4: int|null}
+     * @return array{0: string, 1: string|null, 2: int|null, 3: float|null, 4: int|null, 5: int|null}
      */
     private function identityFrom(Request $request): array
     {
@@ -201,6 +202,8 @@ final readonly class AreaEditController
         $tolerance = trim($request->request->getString('zoneOverlapTolerance'));
         $pingEvery = trim($request->request->getString('pingEvery'));
         $pingUnit = IntervalUnit::tryFrom($request->request->getString('pingEveryUnit')) ?? IntervalUnit::Minutes;
+        $staleAfter = trim($request->request->getString('staleAfter'));
+        $staleUnit = IntervalUnit::tryFrom($request->request->getString('staleAfterUnit')) ?? IntervalUnit::Minutes;
 
         return [
             $request->request->getString('name'),
@@ -208,13 +211,19 @@ final readonly class AreaEditController
             '' === $established ? null : (int) $established,
             '' === $tolerance ? null : (float) $tolerance,
             '' === $pingEvery ? null : $pingUnit->toMinutes(is_numeric($pingEvery) ? (float) $pingEvery : 0.0),
+            '' === $staleAfter ? null : $staleUnit->toMinutes(is_numeric($staleAfter) ? (float) $staleAfter : 0.0),
         ];
     }
 
     /** @return array{number: int|null, unit: IntervalUnit} */
     private static function pingEveryOf(AreaOfInterest $area): array
     {
-        $minutes = $area->getPingIntervalMinutes();
+        return self::asNumberAndUnit($area->getPingIntervalMinutes());
+    }
+
+    /** @return array{number: int|null, unit: IntervalUnit} */
+    private static function asNumberAndUnit(?int $minutes): array
+    {
         if (null === $minutes) {
             return ['number' => null, 'unit' => IntervalUnit::Minutes];
         }
@@ -247,6 +256,10 @@ final readonly class AreaEditController
                 // WHOLE COUNT OF; an unset one leaves the field blank, so the
                 // placeholder can say what blank means.
                 'pingEvery' => self::pingEveryOf($area),
+                // STALE AFTER, offered back the same way; blank says what it
+                // reads as — two of this area's pings.
+                'staleAfter' => self::asNumberAndUnit($area->getStaleAfterMinutes()),
+                'defaultStaleAfter' => LivePresence::STALE_AFTER_INTERVALS * ($area->getPingIntervalMinutes() ?? PingInterval::DEFAULT_MINUTES),
                 'intervalUnits' => IntervalUnit::cases(),
                 'zoneCount' => $this->zones->countFor($area),
                 'map' => $this->areaMap->overview($this->mapPayload->forArea($area)),

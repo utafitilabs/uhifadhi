@@ -135,6 +135,17 @@ class AreaOfInterest implements AreaInterface
     #[ORM\Column(nullable: true)]
     private ?int $pingIntervalMinutes = null;
 
+    /**
+     * WHEN THIS AREA STOPS BELIEVING A RANGER'S LAST FIX, in minutes — the
+     * live marks dim and the rail says stale past it. Beside Ping every
+     * because it is counted against it, and never shorter than it.
+     *
+     * NULL IS "NOT SET" and reads as two intervals, the rule every area
+     * starts with ({@see \Uhifadhi\Contracts\Area\LivePresence::STALE_AFTER_INTERVALS}).
+     */
+    #[ORM\Column(nullable: true)]
+    private ?int $staleAfterMinutes = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -219,6 +230,18 @@ class AreaOfInterest implements AreaInterface
     public function setPingIntervalMinutes(?int $pingIntervalMinutes): static
     {
         $this->pingIntervalMinutes = $pingIntervalMinutes;
+
+        return $this;
+    }
+
+    public function getStaleAfterMinutes(): ?int
+    {
+        return $this->staleAfterMinutes;
+    }
+
+    public function setStaleAfterMinutes(?int $staleAfterMinutes): static
+    {
+        $this->staleAfterMinutes = $staleAfterMinutes;
 
         return $this;
     }

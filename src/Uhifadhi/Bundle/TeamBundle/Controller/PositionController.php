@@ -211,8 +211,9 @@ final readonly class PositionController
             'grantable' => $this->authority->grantableGrants(),
             'placeableKinds' => [ScopeKind::Organization, ScopeKind::Area],
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
-            // Only a Super Admin gives or takes an exception to a rule; anybody
-            // else who configures positions reads the card without controls.
+            // The tiers above the matrix give or take an exception to a rule
+            // (ruled 28 Sep); anybody else who configures positions reads the
+            // card without controls.
             'mayGiveExceptions' => $this->authority->actor()?->getTeamRole()->canManageContent() ?? false,
             'reasonMinLength' => PositionService::REASON_MIN_LENGTH,
         ]));

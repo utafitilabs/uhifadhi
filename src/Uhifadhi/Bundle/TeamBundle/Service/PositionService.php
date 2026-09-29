@@ -136,11 +136,11 @@ final readonly class PositionService
         $this->entityManager->flush();
     }
 
-    /** The shortest reason a Super Admin may write: long enough to be a sentence, not a shrug. */
+    /** The shortest reason an administrator may write: long enough to be a sentence, not a shrug. */
     public const int REASON_MIN_LENGTH = 12;
 
     /**
-     * GIVING A SEAT AN EXCEPTION TO A RULE: a Super Admin, a written reason,
+     * GIVING A SEAT AN EXCEPTION TO A RULE: an Admin or a Super Admin, a written reason,
      * and a pair that is an exception — or nothing is written.
      *
      * @throws RuleExceptionRefusedException when any of the three is missing, or the seat already holds it
@@ -148,7 +148,7 @@ final readonly class PositionService
     public function grantException(Position $position, string $pair, string $reason, User $actor, ?\DateTimeImmutable $now = null): GrantJustification
     {
         $label = $this->exceptionLabel($pair);
-        $this->assertSuperAdmin($actor, $label);
+        $this->assertAboveTheMatrix($actor, $label);
 
         $reason = trim($reason);
         if (mb_strlen($reason) < self::REASON_MIN_LENGTH) {
@@ -172,12 +172,12 @@ final readonly class PositionService
      * TAKING IT AWAY: the pair leaves the seat, and its row is stamped with
      * who and when rather than deleted, so the history still reads true.
      *
-     * @throws RuleExceptionRefusedException when the actor is not a Super Admin or the seat does not hold it
+     * @throws RuleExceptionRefusedException when the actor is not an Admin or a Super Admin, or the seat does not hold it
      */
     public function revokeException(Position $position, string $pair, User $actor, ?\DateTimeImmutable $now = null): void
     {
         $label = $this->exceptionLabel($pair);
-        $this->assertSuperAdmin($actor, $label);
+        $this->assertAboveTheMatrix($actor, $label);
 
         $held = \in_array($pair, $position->getGrantValues(), true);
         $current = $this->justifications?->findOneCurrent($position, $pair);
@@ -212,13 +212,13 @@ final readonly class PositionService
     }
 
     /** @throws RuleExceptionRefusedException */
-    private function assertSuperAdmin(User $actor, string $label): void
+    private function assertAboveTheMatrix(User $actor, string $label): void
     {
         // THE TIERS ABOVE THE MATRIX GIVE IT (ruled 28 Sep: Admins run the
         // installation day to day, so a control-room seat does not wait for the
         // developer's Super Admin); a position never does.
         if (!$actor->getTeamRole()->canManageContent()) {
-            throw RuleExceptionRefusedException::notASuperAdmin($label);
+            throw RuleExceptionRefusedException::notAboveTheMatrix($label);
         }
     }
 

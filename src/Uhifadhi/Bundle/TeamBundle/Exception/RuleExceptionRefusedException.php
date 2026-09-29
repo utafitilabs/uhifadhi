@@ -23,7 +23,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Exception;
  */
 final class RuleExceptionRefusedException extends \RuntimeException
 {
-    public static function notASuperAdmin(string $label): self
+    public static function notAboveTheMatrix(string $label): self
     {
         return new self(\sprintf('Refused — only an Admin or a Super Admin may give or take away “%s”. It is an exception to a rule everybody else is held to.', $label));
     }

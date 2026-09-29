@@ -148,8 +148,9 @@ final readonly class AreaConcerns implements ConcernSourceInterface
             verbs: [Verb::Read],
             scopeKinds: $ground,
             // A person's position is a fact about them, and this grant takes a
-            // seat out of the rule everybody else is held to: only a Super
-            // Admin gives it, with a written reason, and it is listed for review.
+            // seat out of the rule everybody else is held to: only an Admin or
+            // a Super Admin gives it, with a written reason, and it is listed
+            // for review.
             sensitive: true,
             lifts: 'the rank rule',
         );

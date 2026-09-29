@@ -54,7 +54,7 @@ use Uhifadhi\Contracts\Performance\TopicMovementInterface;
  *
  * SCOPE AND PERIOD ARE IN THE ADDRESS, never in a session. A director
  * reading the organization's August and an area manager reading
- * Northreach's quarter are looking at two pages, and either can be sent
+ * Kilimani's quarter are looking at two pages, and either can be sent
  * to somebody — which a control that remembered its last state could not
  * be.
  *

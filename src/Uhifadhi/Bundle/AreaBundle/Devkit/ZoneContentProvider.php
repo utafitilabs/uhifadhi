@@ -20,14 +20,14 @@ use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 
 /**
- * EVERY DEMO AREA GETS A ZONING SCHEME — six sectors, subdividing the ground
- * the boundary encloses and stopping short of it, so the screens have both a
- * scheme to draw and ground outside one.
+ * EVERY SEEDED RESERVE GETS ITS ZONING SCHEME — the reserve's fixed zones,
+ * which tile the ground its boundary encloses: eleven in one reserve, six in
+ * the other, so no screen can pass by drawing the same count twice.
  *
  * IT ARRIVES AS A FILE, THROUGH THE IMPORT. A zoning scheme has exactly one
  * supported way in — one GeoJSON FeatureCollection, one feature per zone,
- * through {@see ZoneImportService} — and demo content that wrote the zones
- * straight through the zone service would be demo content exempt from the
+ * through {@see ZoneImportService} — and seed content that wrote the zones
+ * straight through the zone service would be seed content exempt from the
  * checks every real scheme passes: the names, the boundary, the invariant that
  * two zones share no interior. So the table is written out as the file it
  * would have been exported as, imported, and let go.
@@ -41,12 +41,12 @@ use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
  *
  * IT SEEDS ONCE, PER AREA. An area that already has zones is left exactly as it
  * is — an import ADDS, so a second run would otherwise be the moment a
- * developer's own zone found itself beside a demo one.
+ * developer's own zone found itself beside a seeded one.
  */
 final readonly class ZoneContentProvider implements ContentProviderInterface
 {
     /** What the provenance row is named after, since no real document was uploaded. */
-    private const string FILE_NAME = 'demo-zoning-scheme.geojson';
+    private const string FILE_NAME = 'seed-zoning-scheme.geojson';
 
     public function __construct(
         private AreaOfInterestRepository $register,
@@ -67,7 +67,7 @@ final readonly class ZoneContentProvider implements ContentProviderInterface
 
     public function description(): string
     {
-        return 'A zoning scheme for every demo area, imported as one FeatureCollection.';
+        return 'The zoning scheme of every seeded reserve, imported as one FeatureCollection.';
     }
 
     public function dependsOn(): array
@@ -77,15 +77,15 @@ final readonly class ZoneContentProvider implements ContentProviderInterface
 
     public function load(): void
     {
-        foreach (DemoArea::all() as $demo) {
-            $area = $this->register->findOneBy(['name' => $demo->name]);
+        foreach (SeedArea::all() as $seed) {
+            $area = $this->register->findOneBy(['name' => $seed->name]);
 
             if (null === $area || $this->zones->countFor($area) > 0) {
                 continue;
             }
 
-            $path = (string) tempnam(sys_get_temp_dir(), 'uhifadhi-demo-zones');
-            file_put_contents($path, $demo->zoneScheme());
+            $path = (string) tempnam(sys_get_temp_dir(), 'uhifadhi-seed-zones');
+            file_put_contents($path, $seed->zoneScheme());
 
             try {
                 // THE IMPORT WRITES ITS OWN LOG LINE. Nothing here says so

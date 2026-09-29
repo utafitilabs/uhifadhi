@@ -14,50 +14,50 @@ declare(strict_types=1);
 namespace Uhifadhi\Core\Tests\Core;
 
 use PHPUnit\Framework\Attributes\CoversNothing;
-use Uhifadhi\Bundle\AreaBundle\Devkit\DemoArea;
+use Uhifadhi\Bundle\AreaBundle\Devkit\SeedArea;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 
 /**
- * THE SHIPPED DEMO CONTENT OBEYS THE PRODUCT'S OWN RULES.
+ * THE SHIPPED SEED CONTENT OBEYS THE PRODUCT'S OWN RULES.
  *
  * A seeder is the first user of every rule the services hold, and it is the
  * one user nobody watches: it runs in a fresh dev install, in CI, and in
  * every module's fleet leg. When "one posting a person" was ruled, the
- * core's own demo was posting the same ranger at two gates — and the first
+ * core's own seed was posting the same ranger at two gates — and the first
  * thing that knew was somebody else's pipeline, five tests deep in another
  * repository.
  *
  * SEEDED THROUGH THE REAL SERVICES, never raw rows. A test that wrote
  * postings with the entity manager would pass while the shipped seeder broke
  * the rule, which is exactly the failure this exists to catch: it is the
- * SERVICES that hold the invariants, so the demo has to arrive through them.
+ * SERVICES that hold the invariants, so the seed has to arrive through them.
  */
 #[CoversNothing]
-final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
+final class SeedContentSeedsUnderTheRulesTest extends MigrationsTestCase
 {
     /**
-     * ONE POSTING A PERSON, across every area the demo ships.
+     * ONE POSTING A PERSON, across every area the seed ships.
      *
-     * `post()` refuses the second one, so a demo that broke the rule would
+     * `post()` refuses the second one, so a seed that broke the rule would
      * fail here as an exception rather than as an assertion — and either way
      * the message names the person and the post they already stand at.
      */
-    public function testEveryPersonInTheDemoStandsAtOnePostAtMost(): void
+    public function testEveryPersonInTheSeedStandsAtOnePostAtMost(): void
     {
-        $this->seedTheDemoOrganization();
+        $this->seedTheSeedOrganization();
 
         $standing = array_map(
             static fn (mixed $id): string => (string) (\is_scalar($id) ? $id : ''),
             $this->connection->fetchFirstColumn('SELECT person_id FROM posting WHERE ended_at IS NULL ORDER BY id'),
         );
 
-        self::assertNotSame([], $standing, 'the demo posts somebody, or this proves nothing');
+        self::assertNotSame([], $standing, 'the seed posts somebody, or this proves nothing');
         self::assertSame(
             array_values(array_unique($standing)),
             $standing,
-            'Somebody in the shipped demo stands at two posts, which the product refuses.',
+            'Somebody in the shipped seed stands at two posts, which the product refuses.',
         );
     }
 
@@ -66,9 +66,9 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
      * posting service holds, checked over the same seeding for the same
      * reason.
      */
-    public function testEveryStaffedPostInTheDemoHasOneLeader(): void
+    public function testEveryStaffedPostInTheSeedHasOneLeader(): void
     {
-        $this->seedTheDemoOrganization();
+        $this->seedTheSeedOrganization();
 
         $rows = $this->connection->fetchAllAssociative(
             'SELECT station_id, COUNT(*) FILTER (WHERE leader) AS leaders'
@@ -88,7 +88,7 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
      * others. That is the whole reason the roster is the size it is.
      *
      * "Nobody works out of here" is a state the screens have to draw, so the
-     * demo ground leaves some posts empty on purpose — which ones is written
+     * seed ground leaves some posts empty on purpose — which ones is written
      * in the table, as a headcount of nought. It only says anything while
      * every OTHER post is staffed: a ground that seeded three posts and left
      * thirteen empty makes the deliberate ones invisible, which is what
@@ -105,48 +105,44 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
      */
     public function testThePostsTheGroundLeavesEmptyAreTheOnesItMeantTo(): void
     {
-        $this->seedTheDemoOrganization();
+        $this->seedTheSeedOrganization();
 
         $rows = $this->connection->fetchAllAssociative(
-            'SELECT s.area_id, COUNT(p.id) AS standing'
-            .' FROM station s LEFT JOIN posting p ON p.station_id = s.id AND p.ended_at IS NULL'
-            .' GROUP BY s.area_id, s.id',
+            'SELECT a.name AS area, COUNT(p.id) AS standing'
+            .' FROM station s JOIN area_of_interest a ON a.id = s.area_id'
+            .' LEFT JOIN posting p ON p.station_id = s.id AND p.ended_at IS NULL'
+            .' GROUP BY a.name, s.id',
         );
 
         self::assertNotSame([], $rows);
 
         $empty = [];
         foreach ($rows as $row) {
-            $area = (string) (\is_scalar($row['area_id']) ? $row['area_id'] : '');
+            $area = (string) (\is_scalar($row['area']) ? $row['area'] : '');
             $empty[$area] ??= 0;
             if (0 === (int) (is_numeric($row['standing']) ? $row['standing'] : 0)) {
                 ++$empty[$area];
             }
         }
 
-        $meant = 0;
-        foreach (DemoArea::all()[0]->stations() as $post) {
-            if (0 === $post->posted) {
-                ++$meant;
+        // EACH RESERVE HAS POSTS OF ITS OWN, so each is held to its own table.
+        $meant = [];
+        foreach (SeedArea::all() as $reserve) {
+            $meant[$reserve->name] = 0;
+            foreach ($reserve->stations() as $post) {
+                if (0 === $post->posted) {
+                    ++$meant[$reserve->name];
+                }
             }
+            self::assertGreaterThan(0, $meant[$reserve->name], \sprintf('%s means to leave a post empty at all', $reserve->name));
         }
 
-        self::assertGreaterThan(0, $meant, 'the ground means to leave a post empty at all');
-
-        foreach ($empty as $area => $count) {
-            self::assertSame($meant, $count, \sprintf('area %s leaves exactly the posts the table leaves empty', $area));
-        }
+        self::assertSame($meant, $empty, 'every reserve leaves exactly the posts its table leaves empty');
     }
 
-    /**
-     * AND THE ROSTER IS SIZED FOR THE GROUND. The number the team bundle
-     * seeds is stated as a constant with its arithmetic written beside it;
-     * this is the check that the arithmetic still matches the ground, since
-     * neither bundle may look at the other.
-     */
     public function testTheRosterIsBigEnoughToStaffEveryPost(): void
     {
-        $this->seedTheDemoOrganization();
+        $this->seedTheSeedOrganization();
 
         $posted = $this->rowCount('SELECT COUNT(*) FROM posting WHERE ended_at IS NULL');
 
@@ -155,7 +151,7 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
         // the SUM of the table's headcounts and not two a post. Counting
         // postings rather than people is what makes this the check it is:
         // people left over are fine, a post left short is not.
-        self::assertSame(DemoArea::headcount(), $posted, 'every post the ground staffs is fully staffed');
+        self::assertSame(SeedArea::headcount(), $posted, 'every post the ground staffs is fully staffed');
     }
 
     /**
@@ -166,20 +162,20 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
      */
     public function testPostsPastTheEndOfTheRosterStandEmpty(): void
     {
-        $this->seedTheDemoOrganization();
+        $this->seedTheSeedOrganization();
 
         $people = $this->rowCount('SELECT COUNT(*) FROM team_user');
         $posted = $this->rowCount('SELECT COUNT(*) FROM posting WHERE ended_at IS NULL');
 
         self::assertGreaterThan(0, $people);
-        self::assertLessThanOrEqual($people, $posted, 'the demo never posts more people than it has');
+        self::assertLessThanOrEqual($people, $posted, 'the seed never posts more people than it has');
     }
 
     /**
-     * EVERY DEMO POSITION GRANTS SOMETHING, AND ONE OF THEM IS UNHELD.
+     * EVERY SEED POSITION GRANTS SOMETHING, AND ONE OF THEM IS UNHELD.
      *
      * The register draws one card per position with its concern chips in the
-     * body; the demo once wrote four positions and gave three of them
+     * body; the seed once wrote four positions and gave three of them
      * nothing, so the first screen a developer opens read "grants nothing"
      * four times and taught the register to say nothing at all. The unheld
      * one is the other half: retiring is refused while anybody holds a
@@ -190,9 +186,9 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
      * A seeded pair nothing declares would be a position the configure screen
      * could not have produced, which is the one thing a seeder must never be.
      */
-    public function testEveryDemoPositionGrantsSomethingAndOneStandsEmpty(): void
+    public function testEverySeedPositionGrantsSomethingAndOneStandsEmpty(): void
     {
-        $this->seedTheDemoOrganization();
+        $this->seedTheSeedOrganization();
 
         $catalogue = static::getContainer()->get('test_public.'.ConcernCatalogue::class);
         self::assertInstanceOf(ConcernCatalogue::class, $catalogue);
@@ -212,7 +208,7 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
             /** @var list<string> $grants */
             $grants = json_decode((string) (\is_scalar($row['grants']) ? $row['grants'] : '[]'), true, 512, \JSON_THROW_ON_ERROR);
 
-            self::assertNotSame([], $grants, \sprintf('the demo position "%s" grants nothing', $name));
+            self::assertNotSame([], $grants, \sprintf('the seed position "%s" grants nothing', $name));
             foreach ($grants as $pair) {
                 self::assertContains($pair, $declared, \sprintf('"%s" holds a pair nothing declares: %s', $name, $pair));
             }
@@ -222,7 +218,7 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
             }
         }
 
-        self::assertGreaterThan(0, $unheld, 'no demo position stands empty, so retiring is never offered');
+        self::assertGreaterThan(0, $unheld, 'no seed position stands empty, so retiring is never offered');
     }
 
     /** One count, as an int — the driver answers a string and phpstan is right to say so. */
@@ -234,8 +230,8 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
         return (int) $count;
     }
 
-    /** The shipped demo, through the providers an installation's devkit would run. */
-    private function seedTheDemoOrganization(): void
+    /** The shipped seed, through the providers an installation's devkit would run. */
+    private function seedTheSeedOrganization(): void
     {
         // An installation's own first act: migrate, then seed. Seeding into a
         // database with no schema would fail for a reason that has nothing to

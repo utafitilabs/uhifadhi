@@ -41,7 +41,7 @@ final class WidgetPresetTest extends TestCase
     private static function catalog(array $presets = []): WidgetCatalog
     {
         return new WidgetCatalog(
-            'demo',
+            'seed',
             [
                 new WidgetGroup('top', 'At a glance', 'The numbers first.'),
                 new WidgetGroup('detail', 'In detail', 'The records behind them.'),

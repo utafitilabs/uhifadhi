@@ -36,7 +36,7 @@ final class WidgetCustomPresetTest extends TestCase
     private static function catalog(): WidgetCatalog
     {
         return new WidgetCatalog(
-            'demo',
+            'seed',
             [new WidgetGroup('top', 'At a glance', 'The numbers first.')],
             [
                 new Widget('kpis', 'KPI strip', 'top'),

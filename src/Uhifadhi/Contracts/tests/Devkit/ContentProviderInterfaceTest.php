@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 
 /**
- * The demo-content contract asks four questions and offers one verb: what is
+ * The seed-content contract asks four questions and offers one verb: what is
  * this content called (the key), what does a human call it (the label), what
  * does it seed (the description), what must run before it (dependsOn) — and then
  * load(), which does the seeding. Two things are worth a test: that the
@@ -122,7 +122,7 @@ final class ContentProviderInterfaceTest extends TestCase
 
             public function description(): string
             {
-                return 'A handful of demo conservation areas to hang everything else on.';
+                return 'A handful of seed conservation areas to hang everything else on.';
             }
 
             public function dependsOn(): array
@@ -154,7 +154,7 @@ final class ContentProviderInterfaceTest extends TestCase
 
             public function description(): string
             {
-                return 'Sample incidents raised inside the demo areas.';
+                return 'Sample incidents raised inside the seed areas.';
             }
 
             public function dependsOn(): array

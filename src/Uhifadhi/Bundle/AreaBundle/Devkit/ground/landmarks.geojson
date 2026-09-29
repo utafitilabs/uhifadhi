@@ -1,0 +1,170 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Mlima Mkuu",
+    "meaning": "the great mountain",
+    "kind": "mountain"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.355,
+     -3.066
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Mlima Mdogo",
+    "meaning": "the small mountain",
+    "kind": "mountain"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.75,
+     -3.24
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Kilima Ncha",
+    "meaning": "the pointed hill",
+    "kind": "hill"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.71,
+     -2.7
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Kilima Kati",
+    "meaning": "the middle hill",
+    "kind": "hill"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.23,
+     -2.93
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Kilima Chumvi",
+    "meaning": "salt hill",
+    "kind": "hill"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.1,
+     -2.62
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Ziwa Chumvi",
+    "meaning": "the salt lake",
+    "kind": "lake"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.02,
+     -2.42
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Ukuta Mkuu",
+    "meaning": "the great wall",
+    "kind": "escarpment"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     35.93,
+     -3.0
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Ziwa Kavu",
+    "meaning": "the dry lake",
+    "kind": "lakebed"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.1,
+     -2.62
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Chemchemi",
+    "meaning": "the springs",
+    "kind": "swamp"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.28,
+     -2.69
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Vilima Vyeusi",
+    "meaning": "the black hills",
+    "kind": "hills"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.85,
+     -2.55
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Mto Mchanga",
+    "meaning": "sand river",
+    "kind": "river"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     37.2,
+     -2.25
+    ]
+   }
+  }
+ ]
+}

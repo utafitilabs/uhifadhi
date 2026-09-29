@@ -30,7 +30,7 @@ use Uhifadhi\Bundle\ShellBundle\Tests\Integration\ContractTestCase;
  * fixed and stated, and the label truncates.
  *
  * WHY IT DOES NOT SHOW IN THE DESIGN. The replica's tree is drawn with short
- * demo names, so the squeeze never gets far enough to see. That is exactly the
+ * seed names, so the squeeze never gets far enough to see. That is exactly the
  * class of defect a contract over the sheet is for.
  */
 final class SidebarRowFurnitureTest extends ContractTestCase

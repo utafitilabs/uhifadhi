@@ -27,18 +27,18 @@ use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
  * exactly what that service asks of every caller.
  *
  * IT SEEDS ONCE, PER AREA. An area whose name is already in the register is
- * left alone, so a second `fixtures:demo` adds nothing and a developer who
+ * left alone, so a second `fixtures:seed` adds nothing and a developer who
  * removed one of them gets it back without the other being duplicated.
  *
  * IT IS COLLECTED, NOT RUN — devkit installs through `require-dev`, so in a
  * production build nothing asks this anything.
  *
- * @see DemoArea for every coordinate, and for why they are where they are
+ * @see SeedArea for every coordinate, and for why they are where they are
  */
 final readonly class AreaContentProvider implements ContentProviderInterface
 {
     /** What the provenance column says, where a real boundary would name a file. */
-    private const string SOURCE = 'Demo content shipped with the core.';
+    private const string SOURCE = 'Seed content shipped with the core.';
 
     public function __construct(
         private AreaCreator $creator,
@@ -68,16 +68,16 @@ final readonly class AreaContentProvider implements ContentProviderInterface
 
     public function load(): void
     {
-        foreach (DemoArea::all() as $demo) {
-            if (null !== $this->register->findOneBy(['name' => $demo->name])) {
+        foreach (SeedArea::all() as $seed) {
+            if (null !== $this->register->findOneBy(['name' => $seed->name])) {
                 continue;
             }
 
             $this->creator->create(
-                $demo->name,
-                $demo->iucnCategory,
-                $demo->establishedYear,
-                $demo->boundary(),
+                $seed->name,
+                $seed->iucnCategory,
+                $seed->establishedYear,
+                $seed->boundary(),
                 self::SOURCE,
             );
         }

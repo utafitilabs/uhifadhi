@@ -118,11 +118,11 @@ final class EveryWidgetLibraryRendersTest extends WebTestCase
 
     /**
      * THE GROUND A DEVELOPER ACTUALLY OPENS THESE PAGES OVER — the shipped
-     * demo, through the same providers devkit runs, plus one area that has no
+     * seed, through the same providers devkit runs, plus one area that has no
      * boundary yet.
      *
      * A LIBRARY IS ONLY EVER WRONG OVER REAL ROWS. Two hand-made areas render
-     * every one of these pages green; the installation's own demo — several
+     * every one of these pages green; the installation's own seed — several
      * areas, zones, posts, a staffed roster and the figures modules contribute
      * to each — is the shape that broke one of them, so it is the shape the
      * smoke test uses.

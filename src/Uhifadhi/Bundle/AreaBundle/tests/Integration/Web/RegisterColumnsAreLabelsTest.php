@@ -57,7 +57,7 @@ final class RegisterColumnsAreLabelsTest extends WebTestCase
             static fn (Crawler $row): string => trim($row->filter('td')->eq($patrols)->text()),
         );
 
-        // Northreach answers for it; Sinde Flats runs a module that counts
+        // Kilimani answers for it; Sinde Flats runs a module that counts
         // something else entirely and says nothing here — rather than its own
         // figure standing under a heading that is not its own.
         self::assertSame(['23', '—'], $cells);
@@ -65,7 +65,7 @@ final class RegisterColumnsAreLabelsTest extends WebTestCase
 
     /**
      * TWO LIVE AREAS RUNNING DIFFERENT MODULES, and the register reads them
-     * in name order — so the columns are headed from Northreach's three
+     * in name order — so the columns are headed from Kilimani's three
      * figures and Sinde Flats, which runs something else, can answer for none
      * of them.
      */
@@ -73,7 +73,7 @@ final class RegisterColumnsAreLabelsTest extends WebTestCase
     {
         $this->boot();
 
-        $this->aLiveArea('Northreach');
+        $this->aLiveArea('Kilimani');
 
         $elsewhere = $this->anArea('Sinde Flats');
         $this->switchOn($elsewhere, 'incidents', 'Incidents');

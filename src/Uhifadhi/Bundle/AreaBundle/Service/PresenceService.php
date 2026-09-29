@@ -84,7 +84,7 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
          * This service used to read the wall clock in two places, and both
          * of them decided whether a watch was over. A suite that pins a
          * clock at half past ten therefore passed all morning and failed
-         * after six — the roster's demo plate emptied itself, because every
+         * after six — the roster's seed plate emptied itself, because every
          * open watch read as one the roster had already ended. A reading
          * that changes with the hour it is run at is not a reading.
          *

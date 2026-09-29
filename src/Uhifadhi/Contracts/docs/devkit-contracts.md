@@ -2,14 +2,14 @@
 
 Two interfaces — `Devkit\ContentProviderInterface` and `Devkit\CommandProviderInterface` — and
 one value object, `Devkit\CommandDescriptor`. They are how a module contributes **dev-only**
-machinery: demo content to seed, and maintenance commands to run, that exist on a developer's
+machinery: seed content to seed, and maintenance commands to run, that exist on a developer's
 machine and in CI but in no production build.
 
 ## Contents
 
 - [The require-dev firewall](#the-require-dev-firewall)
 - [Why the interfaces live here and not in devkit](#why-the-interfaces-live-here-and-not-in-devkit)
-- [`ContentProviderInterface` — demo content, ordered by dependency](#contentproviderinterface--demo-content-ordered-by-dependency)
+- [`ContentProviderInterface` — seed content, ordered by dependency](#contentproviderinterface--seed-content-ordered-by-dependency)
 - [`CommandProviderInterface` — commands, described without symfony/console](#commandproviderinterface--commands-described-without-symfonyconsole)
 - [The framework-coupling decision, stated once](#the-framework-coupling-decision-stated-once)
 
@@ -19,7 +19,7 @@ machine and in CI but in no production build.
 every piece of machinery it owns — is absent from a production build. Its job is to be a
 **collector**: other modules ship **inert provider classes** declared through the two contracts on
 this page, and devkit `tagged_iterator`s them and materialises real Symfony console commands and
-demo-content loaders — but only in a dev install, because that is the only place devkit exists.
+seed-content loaders — but only in a dev install, because that is the only place devkit exists.
 
 This is not a small job, because devkit owns **every command the platform has bar one**. The core
 ships a single console command — TeamBundle's `team:user:create`, the first administrator, which
@@ -56,9 +56,9 @@ Put the interface in devkit instead and patrol-module could not name it in produ
 devkit is not installed — the class would fatal on autoload. The require-dev firewall is exactly
 what forces these contracts into the always-present package.
 
-## `ContentProviderInterface` — demo content, ordered by dependency
+## `ContentProviderInterface` — seed content, ordered by dependency
 
-A module implements this once per slice of demo content it seeds. devkit's `fixtures:demo` command
+A module implements this once per slice of seed content it seeds. devkit's `fixtures:seed` command
 collects every provider, orders them, and calls `load()` on each — dev-only.
 
 ```php
@@ -71,7 +71,7 @@ final class IncidentContentProvider implements ContentProviderInterface
 
     public function key(): string         { return 'incident'; }
     public function label(): string       { return 'Incidents'; }
-    public function description(): string { return 'Sample incidents raised inside the demo areas.'; }
+    public function description(): string { return 'Sample incidents raised inside the seed areas.'; }
     public function dependsOn(): array    { return ['area', 'patrol']; }
 
     public function load(): void { /* seed through $this->em */ }
@@ -81,7 +81,7 @@ final class IncidentContentProvider implements ContentProviderInterface
 Four questions and one verb. devkit has to **identify** each contribution (`key`, `label`,
 `description`), **order** it against the others (`dependsOn`), and **run** it (`load`).
 
-**Ordering is expressed as dependencies, not a priority number.** An incidents demo needs areas
+**Ordering is expressed as dependencies, not a priority number.** An incidents seed needs areas
 and patrols to hang its records on; `dependsOn()` returning `['area', 'patrol']` says exactly that,
 and devkit topologically sorts the providers on those edges. A hand-tuned integer only approximates
 the relationship — and two modules that pick the same number say nothing at all about which comes
@@ -104,7 +104,7 @@ seeded records are the effect; `load()` returns nothing.
 
 ## `CommandProviderInterface` — commands, described without symfony/console
 
-A module implements this to offer dev/maintenance commands beyond demo seeding. It is a bag: one
+A module implements this to offer dev/maintenance commands beyond seeding. It is a bag: one
 method, `commands()`, returning a list of `CommandDescriptor`. devkit turns each descriptor into a
 real console command — in dev only.
 
@@ -121,7 +121,7 @@ final class PatrolCommandProvider implements CommandProviderInterface
         return [
             new CommandDescriptor(
                 'patrol:demo:reset',
-                'Wipe and reseed the patrol demo content.',
+                'Wipe and reseed the patrol seed content.',
                 fn (array $arguments, CommandIo $io): int => $this->reset($arguments, $io),
             ),
         ];

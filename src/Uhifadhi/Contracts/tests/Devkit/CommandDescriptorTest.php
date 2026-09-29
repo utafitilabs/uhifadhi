@@ -30,12 +30,12 @@ final class CommandDescriptorTest extends TestCase
     {
         $descriptor = new CommandDescriptor(
             'patrol:demo:reset',
-            'Wipe and reseed the patrol demo content.',
+            'Wipe and reseed the patrol seed content.',
             static fn (array $arguments, CommandIo $io): int => 0,
         );
 
         self::assertSame('patrol:demo:reset', $descriptor->name);
-        self::assertSame('Wipe and reseed the patrol demo content.', $descriptor->description);
+        self::assertSame('Wipe and reseed the patrol seed content.', $descriptor->description);
 
         $handler = $descriptor->handler;
         self::assertSame(0, $handler([], self::io()));
@@ -51,7 +51,7 @@ final class CommandDescriptorTest extends TestCase
     {
         $descriptor = new CommandDescriptor(
             'demo:seed',
-            'Seed demo content, optionally scaled by a --count argument.',
+            'Seed content, optionally scaled by a --count argument.',
             static fn (array $arguments, CommandIo $io): int => \count($arguments),
         );
 
@@ -71,7 +71,7 @@ final class CommandDescriptorTest extends TestCase
     {
         $descriptor = new CommandDescriptor(
             'demo:seed',
-            'Seed demo content and say what was seeded.',
+            'Seed content and say what was seeded.',
             static function (array $arguments, CommandIo $io): int {
                 $io->write('seeded');
                 $io->error('one slice was already there');

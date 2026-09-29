@@ -112,8 +112,8 @@ final class MatrixPlacingTest extends TestCase
                 self::row('ec', 'Org-wide', 10.0),
                 self::row('ps', 'Org-wide', 20.0),
                 self::row('cd', 'Org-wide', 30.0),
-                self::row('vs', 'Northreach', 99.0),
-                self::row('ic', 'Northreach', 1.0),
+                self::row('vs', 'Kilimani', 99.0),
+                self::row('ic', 'Kilimani', 1.0),
             ],
         );
 

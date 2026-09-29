@@ -46,7 +46,7 @@ final readonly class GrantedPermissions implements VoterInterface
                 continue;
             }
             $decided = true;
-            if (!\in_array($attribute, $this->granted, true)) {
+            if (!\in_array($attribute, $this->granted, true) && !$this->grantedIn($attribute, $subject)) {
                 return self::ACCESS_DENIED;
             }
         }
@@ -62,6 +62,28 @@ final readonly class GrantedPermissions implements VoterInterface
      * somebody else's question and gets an abstention, never a refusal.
      */
     private const array OURS = ['areas.', 'zones.', 'stations.', 'assignments.', 'duty.', 'locations.', 'modules.', 'team.member.', 'dashboard.', 'settings.'];
+
+    /**
+     * A PAIR HELD IN ONE AREA ONLY, written `areas.read@Western Reserve`: it
+     * answers for that area, and for "anywhere" when no area is asked — the
+     * way a placement in named areas answers.
+     */
+    private function grantedIn(string $attribute, mixed $subject): bool
+    {
+        foreach ($this->granted as $grant) {
+            if (!str_starts_with($grant, $attribute.'@')) {
+                continue;
+            }
+            if (null === $subject) {
+                return true;
+            }
+            if ($subject instanceof \Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest && $subject->getName() === substr($grant, \strlen($attribute) + 1)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private function ours(string $attribute): bool
     {

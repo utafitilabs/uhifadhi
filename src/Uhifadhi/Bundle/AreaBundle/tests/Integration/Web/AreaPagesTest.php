@@ -55,6 +55,24 @@ final class AreaPagesTest extends WebTestCase
     }
 
     /**
+     * AN AREA THE VIEWER MAY NOT OPEN IS NOT LISTED: a card whose door
+     * refuses is a card that should not have been drawn.
+     */
+    public function testTheRegisterListsOnlyTheAreasTheViewerMayOpen(): void
+    {
+        $this->boot(['areas.read@Western Reserve']);
+        $this->signIn();
+        $this->anArea('Northern Conservation Reserve');
+        $this->anArea('Western Reserve');
+
+        $body = $this->body('/areas');
+
+        self::assertSame(200, $this->browser()->getResponse()->getStatusCode());
+        self::assertStringContainsString('Western Reserve', $body);
+        self::assertStringNotContainsString('Northern Conservation Reserve', $body);
+    }
+
+    /**
      * THE REGISTER IS A WALL OF WORKSPACES, NOT A TABLE. The graduated design
      * draws one card per area — a thumbnail, its identity and its operational
      * pulse — so the register renders card markup and no table.

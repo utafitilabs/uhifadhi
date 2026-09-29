@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * THE AREAS REGISTER LISTS ONLY WHAT THE VIEWER MAY OPEN (`areas.read` asked
+   of each area, as the area page asks it); the organization dashboard's area
+   figures and map read the same rows, so they count only that ground too.
  * AN AREA SAYS WHEN IT STOPS BELIEVING A FIX: "Stale after" on the area's edit
    screen, beside Ping every — a number and a unit, stored as minutes
    (`area_of_interest.stale_after_minutes`, nullable; migration

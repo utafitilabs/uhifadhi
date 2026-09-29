@@ -598,6 +598,8 @@ return static function (ContainerConfigurator $container): void {
             service(AreaModuleRepository::class),
             service(AreaOverview::class),
             service(AreaThumbnailer::class),
+            service('security.authorization_checker')->nullOnInvalid(),
+            service('security.token_storage')->nullOnInvalid(),
         ]);
     $services->alias(AreaRegister::class, 'area.register');
 

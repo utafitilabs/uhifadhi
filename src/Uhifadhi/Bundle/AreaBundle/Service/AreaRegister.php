@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\Service;
 
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Uhifadhi\Bundle\AreaBundle\Access\AreaConcerns;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Model\AreaRow;
 use Uhifadhi\Bundle\AreaBundle\Model\CardStat;
@@ -56,6 +59,8 @@ final readonly class AreaRegister
         private AreaModuleRepository $areaModules,
         private AreaOverview $overview,
         private AreaThumbnailer $thumbnailer,
+        private ?AuthorizationCheckerInterface $authorization = null,
+        private ?TokenStorageInterface $tokens = null,
     ) {
     }
 
@@ -73,10 +78,30 @@ final readonly class AreaRegister
 
         $rows = [];
         foreach ($this->areas->findBy([], ['name' => 'ASC']) as $area) {
+            // ONLY WHAT THE VIEWER MAY OPEN: a card whose door refuses is a
+            // card that should not have been drawn, and a count that included
+            // it would count ground the viewer cannot see.
+            if (!$this->mayOpen($area)) {
+                continue;
+            }
             $rows[] = $this->cardFor($area, $now, $since);
         }
 
         return $rows;
+    }
+
+    /**
+     * The area page's own question, asked of each area. A kernel with no
+     * security, or a render with nobody looking, lists every area: there is
+     * nobody to ask about.
+     */
+    private function mayOpen(AreaOfInterest $area): bool
+    {
+        if (null === $this->authorization || null === $this->tokens?->getToken()) {
+            return true;
+        }
+
+        return $this->authorization->isGranted(AreaConcerns::AREAS.'.read', $area);
     }
 
     private function cardFor(AreaOfInterest $area, \DateTimeImmutable $now, \DateTimeImmutable $since): AreaRow

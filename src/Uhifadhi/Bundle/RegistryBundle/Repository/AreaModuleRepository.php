@@ -174,4 +174,28 @@ class AreaModuleRepository extends ServiceEntityRepository
 
         return $running;
     }
+
+    /**
+     * EVERY AREA THE INSTALLATION HOLDS, whatever class it maps them to: the
+     * target the `area` association names, read in id order. A kernel that maps
+     * no concrete area (the association left at the interface) has none.
+     *
+     * @return iterable<AreaInterface>
+     */
+    public function everyArea(): iterable
+    {
+        $em = $this->getEntityManager();
+        $areaClass = $em->getClassMetadata(AreaModule::class)->getAssociationMapping('area')->targetEntity;
+
+        if (AreaInterface::class === $areaClass || !class_exists($areaClass)) {
+            return [];
+        }
+
+        $identifier = $em->getClassMetadata($areaClass)->getSingleIdentifierFieldName();
+
+        /** @var iterable<AreaInterface> $areas */
+        $areas = $em->getRepository($areaClass)->findBy([], [$identifier => 'ASC']);
+
+        return $areas;
+    }
 }

@@ -168,21 +168,9 @@ final readonly class RegistrySyncService
      *
      * @return iterable<AreaInterface>
      */
+    /** @return iterable<AreaInterface> */
     private function areas(): iterable
     {
-        $areaClass = $this->em->getClassMetadata(AreaModule::class)
-            ->getAssociationMapping('area')
-            ->targetEntity;
-
-        if (AreaInterface::class === $areaClass || !class_exists($areaClass)) {
-            return [];
-        }
-
-        $identifier = $this->em->getClassMetadata($areaClass)->getSingleIdentifierFieldName();
-
-        /** @var iterable<AreaInterface> $areas */
-        $areas = $this->em->getRepository($areaClass)->findBy([], [$identifier => 'ASC']);
-
-        return $areas;
+        return $this->areaModules->everyArea();
     }
 }

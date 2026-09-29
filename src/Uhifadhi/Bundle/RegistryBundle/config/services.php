@@ -19,6 +19,7 @@ use Symfony\Component\Lock\Store\DoctrineDbalStore;
 use Uhifadhi\Bundle\RegistryBundle\Access\RegistryConcerns;
 use Uhifadhi\Bundle\RegistryBundle\Command\FactsRebuildCommand;
 use Uhifadhi\Bundle\RegistryBundle\Command\RegistrySyncCommand;
+use Uhifadhi\Bundle\RegistryBundle\Devkit\ModulesContentProvider;
 use Uhifadhi\Bundle\RegistryBundle\EventListener\ParkedModuleListener;
 use Uhifadhi\Bundle\RegistryBundle\EventListener\QueueTableSchemaListener;
 use Uhifadhi\Bundle\RegistryBundle\Facts\FactProviders;
@@ -167,6 +168,19 @@ return static function (ContainerConfigurator $container): void {
             service('registry.catalogue'),
             service('event_dispatcher'),
         ]);
+
+    /*
+     * THE SEED'S LAST WORD ON MODULES: every catalogued module switched on in
+     * every seed area, so a seeded installation shows its seed content. A
+     * devkit content provider — collected by the dev-only devkit, inert here.
+     */
+    $services->set('registry.devkit.modules', ModulesContentProvider::class)
+        ->args([
+            service(AreaModuleRepository::class),
+            service('registry.catalogue'),
+            service('registry.area_modules'),
+        ])
+        ->tag('uhifadhi.devkit.content_provider');
 
     $services->set('registry.area_module_ledger', AreaModuleLedger::class)
         ->args([service('registry.catalogue'), service(AreaModuleRepository::class)]);

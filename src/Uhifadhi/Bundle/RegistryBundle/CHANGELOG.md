@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * THE SEED SWITCHES EVERY MODULE ON IN EVERY SEED AREA (`registry.devkit.modules`,
+   key `modules`, after `area`): the modules' seed records were written into
+   areas where those modules were parked, so a seeded installation
+   showed none of them. Dev-only — collected by devkit. `AreaModuleRepository::everyArea()`
+   is the one lookup the sync and the seed share.
  * THE FACTS LEDGER. `figure_fact` — one row per subject, figure and period,
    written with `INSERT … ON CONFLICT DO UPDATE` — and `registry.facts.reader`
    (`FactReaderInterface`), which reads a month or a figure that does not add

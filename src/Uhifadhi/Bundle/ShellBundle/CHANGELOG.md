@@ -8,6 +8,13 @@
 
 Not released yet.
 
+ * Settings › Overview stacks its three cards one to a row, as the design draws them,
+   rather than three columns; Installation's card has a door to Modules and the
+   catalogue's a door to Installation, as drawn.
+
+ * The account menu under the name lists My profile above Sign out when the badge names
+   a profile page (`UserBadge::$profileUrl`), with the `shell:user` icon.
+
  * `Contract\DeletionPageInterface` (service `uhifadhi.deletion_page`): the one delete
    page a bundle or module hands its record to (ruled 28 Sep, #48). Twig
    `may_delete()` answers the Delete rows, false where nothing deletes. The Settings

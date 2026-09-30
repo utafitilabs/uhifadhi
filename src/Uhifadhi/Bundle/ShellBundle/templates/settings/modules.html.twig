@@ -19,6 +19,7 @@
             {{ settings.matrix.columns|length }} installed &middot;
             running in {{ settings.matrix.liveAreas }} of {{ settings.matrix.rows|length }}
             area{{ settings.matrix.rows|length == 1 ? '' : 's' }}</span></span>
+        <a class="more" href="{{ installationUrl }}">Installation &rarr;</a>
         {{ include('@Shell/settings/_matrix.html.twig', {matrix: settings.matrix}, with_context: false) }}
     </div>
 

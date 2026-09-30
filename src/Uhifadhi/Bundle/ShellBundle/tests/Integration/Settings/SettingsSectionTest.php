@@ -255,7 +255,8 @@ final class SettingsSectionTest extends ShellKernelTestCase
             ['What this installation gives you', 'Next steps'],
             $crawler->filter('div.pgbody h2.zone')->each(static fn (Crawler $one): string => trim($one->text())),
         );
-        self::assertCount(3, $crawler->filter('div.pgbody .grid.g3 > .c'), 'The ground, what a module adds, and what stays true.');
+        self::assertCount(3, $crawler->filter('div.pgbody h2.zone + .grid > .c'), 'The ground, what a module adds, and what stays true.');
+        self::assertSame('grid', $crawler->filter('div.pgbody h2.zone + .grid')->attr('class'), 'one card to a row, as the design stacks them - never three columns (Settings fidelity sweep, 30 Sep)');
     }
 
     /**
@@ -266,7 +267,7 @@ final class SettingsSectionTest extends ShellKernelTestCase
      */
     public function testTheGroundIsReadFromTheCoresOwnParts(): void
     {
-        $rows = $this->get('/settings')->filter('div.pgbody .grid.g3 > .c')->first()->filter('table.tbl tr');
+        $rows = $this->get('/settings')->filter('div.pgbody h2.zone + .grid > .c')->first()->filter('table.tbl tr');
 
         self::assertGreaterThan(1, $rows->count(), 'Every part of the core this kernel boots has a row.');
         self::assertStringContainsString('uhifadhi/', $rows->first()->text(), 'A part names the package it would answer to.');
@@ -278,7 +279,7 @@ final class SettingsSectionTest extends ShellKernelTestCase
      */
     public function testWhatAModuleAddsKeepsItsOpenEnd(): void
     {
-        $card = $this->get('/settings')->filter('div.pgbody .grid.g3 > .c')->eq(1);
+        $card = $this->get('/settings')->filter('div.pgbody h2.zone + .grid > .c')->eq(1);
 
         self::assertStringContainsString('composer require', $card->text());
         self::assertStringContainsString('anything else', $card->text());
@@ -287,7 +288,7 @@ final class SettingsSectionTest extends ShellKernelTestCase
     /** And the three standing facts, drawn as the queue's own rows. */
     public function testTheRulesTheRestFollowsAreStated(): void
     {
-        $rules = $this->get('/settings')->filter('div.pgbody .grid.g3 > .c')->eq(2)->filter('.ao-att');
+        $rules = $this->get('/settings')->filter('div.pgbody h2.zone + .grid > .c')->eq(2)->filter('.ao-att');
 
         self::assertCount(3, $rules);
         self::assertStringContainsString('registers with the registry', $rules->first()->text());

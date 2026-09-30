@@ -139,7 +139,7 @@ final class AreaSettingsContributionTest extends WebTestCase
 
         $this->browser()->request('GET', '/settings');
         self::assertSame(200, $this->browser()->getResponse()->getStatusCode());
-        $card = $this->browser()->getCrawler()->filter('div.pgbody .grid.g3 > .c')->eq(1);
+        $card = $this->browser()->getCrawler()->filter('div.pgbody h2.zone + .grid > .c')->eq(1);
 
         $cells = $card->filter('table.tbl tr')->each(
             static fn (Crawler $row): array => $row->filter('td')->each(static fn (Crawler $td): string => trim($td->text())),

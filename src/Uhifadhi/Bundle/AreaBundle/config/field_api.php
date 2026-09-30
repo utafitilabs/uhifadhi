@@ -27,6 +27,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\CheckInRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\PersonPositionRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
+use Uhifadhi\Bundle\AreaBundle\Security\CheckInWriteVoter;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInService;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
 use Uhifadhi\Bundle\AreaBundle\Service\DutyRosterService;
@@ -149,6 +150,12 @@ return static function (ContainerConfigurator $container): void {
             service('area.presence_publisher'),
         ]);
     $services->alias(CheckInService::class, 'area.checkins');
+
+    // ONLY THE OWNER, THE HEAD OF THEIR STATION, OR THE TIERS CHANGE A
+    // CHECK-IN (ruled 30 Sep, #67).
+    $services->set('area.access.checkin_write_voter', CheckInWriteVoter::class)
+        ->args([service(PostingRepository::class)])
+        ->tag('security.voter');
 
     $services->set('area.api.duty', DutyApiContext::class)
         ->args([

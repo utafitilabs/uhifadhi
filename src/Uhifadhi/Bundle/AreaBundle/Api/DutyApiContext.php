@@ -19,7 +19,9 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Bundle\AreaBundle\Access\AreaConcerns;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\CheckIn;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
+use Uhifadhi\Bundle\AreaBundle\Security\CheckInWriteVoter;
 use Uhifadhi\Contracts\Access\Verb;
 use Uhifadhi\Contracts\Entity\UserInterface;
 
@@ -78,6 +80,21 @@ final readonly class DutyApiContext
         }
 
         return $user;
+    }
+
+    /**
+     * THE CHECK-IN IS THE CALLER'S TO CHANGE, or a refusal (ruled 30 Sep, #67):
+     * its owner, the head of a station they are posted at, or the tiers.
+     * Asked after the duty gate, so a caller who may not record duty at all
+     * learns nothing about which claims exist.
+     *
+     * @throws DutyApiException
+     */
+    public function requireWriter(CheckIn $checkIn): void
+    {
+        if (!$this->authorization->isGranted(CheckInWriteVoter::WRITE, $checkIn)) {
+            throw DutyApiException::forbidden();
+        }
     }
 
     /**

@@ -43,6 +43,7 @@ final class UpdateCheckInProcessor extends DutyProcessor
 
         $checkIn = $this->checkIns->findByRef($area, $clientRef)
             ?? throw DutyApiException::unknownCheckIn($clientRef);
+        $this->api->requireWriter($checkIn);
 
         $this->writes->amend($checkIn, $this->api->body());
 

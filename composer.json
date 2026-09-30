@@ -21,6 +21,7 @@
     ],
     "require": {
         "php": ">=8.4",
+        "ext-filter": "*",
         "ext-mbstring": "*",
         "composer-runtime-api": "^2.0",
         "api-platform/core": "^4.3",

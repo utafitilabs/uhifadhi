@@ -3750,3 +3750,11 @@ form.c { display: block; margin-bottom: 20px; }
 .mb-tierhead { border-top: 1px dashed var(--c-ln); margin-top: 12px; }
 .mb-tiers.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .mb-tierhead + .mb-tiers { margin-top: 13px; }
+
+/* The Sign-in card on a person's record (ruled 30 Sep, #67, design D): the
+   facts as label and value, then the send in a foot of its own. */
+.signin-card { margin-bottom: 14px; }
+.signin-facts td:first-child { color: rgb(var(--c-dim)); width: 42%; }
+.signin-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    border-top: 1px solid var(--c-ln); margin-top: 10px; padding-top: 10px; font-size: 12px; color: rgb(var(--c-dim)); }
+.signin-foot .softbtn { white-space: nowrap; flex: none; }

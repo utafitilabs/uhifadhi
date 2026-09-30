@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Symfony\Component\Console\Application;
+use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 use Uhifadhi\Bundle\RegistryBundle\Event\ModuleInstalledEvent;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
@@ -49,6 +50,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\TeamSectionController;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ModuleHistoryListener;
+use Uhifadhi\Bundle\TeamBundle\EventListener\SignedInListener;
 use Uhifadhi\Bundle\TeamBundle\Me\TeamMyCards;
 use Uhifadhi\Bundle\TeamBundle\Message\BackfillModuleHistory;
 use Uhifadhi\Bundle\TeamBundle\MessageHandler\BackfillModuleHistoryHandler;
@@ -113,6 +115,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\RankService;
 use Uhifadhi\Bundle\TeamBundle\Service\RolesBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\RosterFacets;
 use Uhifadhi\Bundle\TeamBundle\Service\RuleExceptionReview;
+use Uhifadhi\Bundle\TeamBundle\Service\SignInCard;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
@@ -497,6 +500,11 @@ return static function (ContainerConfigurator $container): void {
             service('team.performance_history'),
         ])
         ->tag('messenger.message_handler', ['handles' => BackfillModuleHistory::class]);
+
+    // THE LAST WEB SIGN-IN, for the Sign-in card (ruled 30 Sep, #67).
+    $services->set('team.signed_in_listener', SignedInListener::class)
+        ->args([service('doctrine.orm.entity_manager')])
+        ->tag('kernel.event_listener', ['event' => LoginSuccessEvent::class, 'method' => 'onLoginSuccess']);
 
     $services->set('team.api_error_listener', ApiErrorListener::class)
         ->tag('kernel.event_listener', ['event' => 'kernel.exception', 'method' => 'onException', 'priority' => 512])
@@ -1198,9 +1206,18 @@ return static function (ContainerConfigurator $container): void {
             tagged_iterator(PersonRecordCellProviderInterface::TAG),
             service('team.one_time_password'),
             service('security.authorization_checker'),
+            service('team.sign_in_card'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(MemberController::class, 'team.controller.member')->public();
+
+    // THE SIGN-IN CARD on a person's record (ruled 30 Sep, #67, design D).
+    $services->set('team.sign_in_card', SignInCard::class)
+        ->args([
+            service('security.authorization_checker'),
+            service('team.area_authority'),
+            service(ApiTokenRepository::class),
+        ]);
 
     /*
      * WHERE A POSTING IS MADE. This bundle holds no areas, so the door is

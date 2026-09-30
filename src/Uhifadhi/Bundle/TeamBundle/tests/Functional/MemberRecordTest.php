@@ -83,8 +83,10 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
+        // THE SIGN-IN CARD HEADS THE RAIL for a viewer who holds Sign-in help
+        // (ruled 30 Sep, #67, design D) - the tiers hold it.
         self::assertSame(
-            ['Stationed at', 'History'],
+            ['Sign-in', 'Stationed at', 'History'],
             $crawler->filter('.recgrid .col')->eq(1)->filter('.c > .tab')->each(
                 static fn (Crawler $c): string => trim(str_replace($c->filter('.src')->text(''), '', $c->text())),
             ),
@@ -447,9 +449,12 @@ final class MemberRecordTest extends WebTestCaseWithSchema
      * THE RECORD READS AND NEVER WRITES. Ruled 21 Sep: changes happen on the
      * configure page; the record states the position, where it applies, the
      * departments, where the person is stationed, what that grants, and the
-     * account's history — with no control at all.
+     * account's history — with no control at all. One exception since 30 Sep
+     * (#67, design D): the Sign-in card's send, for whoever holds Sign-in help,
+     * because the configure page is the tiers' alone and a head of station
+     * never reaches it.
      */
-    public function testTheRecordCarriesNoControl(): void
+    public function testTheRecordCarriesNoControlButTheSignInCardsSend(): void
     {
         $this->withSuccessor();
         $sergeant = $this->position('Sergeant', ['surveys.read']);
@@ -463,8 +468,13 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/team/'.$frank->getUuidString());
         self::assertResponseIsSuccessful();
 
-        self::assertCount(0, $crawler->filter('.recgrid form'));
-        self::assertCount(0, $crawler->filter('.recgrid input, .recgrid select, .recgrid button'));
+        self::assertCount(1, $crawler->filter('.recgrid form'));
+        self::assertCount(1, $crawler->filter('.recgrid .signin-card form[action$="/reset-link"]'), 'the one form is the Sign-in card\'s send');
+        self::assertSame(
+            $crawler->filter('.recgrid .signin-card input, .recgrid .signin-card button')->count(),
+            $crawler->filter('.recgrid input, .recgrid select, .recgrid button')->count(),
+            'no control outside the Sign-in card',
+        );
 
         $sub = preg_replace('/\s+/', ' ', $crawler->filter('p.pgsub')->text()) ?? '';
         self::assertStringContainsString('Sergeant', $sub);
@@ -495,7 +505,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
 
         // THE SIDE COLUMN: stationed at, then history.
         $side = $crawler->filter('.recgrid .col')->eq(1)->filter('.c > .tab')->each(static fn (Crawler $t): string => trim(explode('·', $t->text())[0]));
-        self::assertSame(['Stationed at', 'History'], $side);
+        self::assertSame(['Sign-in', 'Stationed at', 'History'], $side);
         self::assertCount(1, $crawler->filter('.recgrid .col')->eq(1)->filter('.c.stcard'));
 
         // AND THE DOOR OUT IS CONFIGURE, in the head.

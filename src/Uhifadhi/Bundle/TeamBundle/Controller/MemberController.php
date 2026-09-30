@@ -53,6 +53,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PersonRankService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\PostingDoorService;
+use Uhifadhi\Bundle\TeamBundle\Service\SignInCard;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Contracts\Access\ScopeKind;
@@ -178,6 +179,8 @@ final readonly class MemberController
         private ?OneTimePasswordService $oneTimePasswords = null,
         /** Asks MemberVoter who may configure a person (ruled 28 Sep 2026); without it, nobody may. */
         private ?AuthorizationCheckerInterface $authorization = null,
+        /** THE SIGN-IN CARD on the record, for whoever holds Sign-in help (ruled 30 Sep, #67). */
+        private ?SignInCard $signInCard = null,
     ) {
     }
 
@@ -219,6 +222,9 @@ final readonly class MemberController
             'history' => \array_slice($history, 0, self::HISTORY),
             'historyTotal' => \count($history),
             'recordCells' => $this->recordCellsFor($member),
+            'signIn' => $signIn = $this->signInCard?->for($member),
+            'signInToken' => null === $signIn ? null : $this->csrf->getToken(self::CSRF_ID)->getValue(),
+            'mailReady' => $this->mail->isConfigured(),
         ]));
     }
 
@@ -308,8 +314,14 @@ final readonly class MemberController
             ['token' => $this->resets->begin($member)],
             UrlGeneratorInterface::ABSOLUTE_URL,
         ));
+        $member->resetLinkSent(new \DateTimeImmutable(), $this->signedIn());
+        $this->entityManager->flush();
 
-        return $this->back($request, $member, \sprintf('A reset link is on its way to %s.', $member->getEmail()));
+        // The approved line (30 Sep, #67): where it went, as this viewer may read the address.
+        return $this->back($request, $member, \sprintf(
+            'A link was sent to %s. It works once and expires in an hour.',
+            $this->signInCard?->addressFor($member) ?? $member->getEmail(),
+        ));
     }
 
     /**

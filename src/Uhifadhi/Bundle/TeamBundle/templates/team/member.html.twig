@@ -178,6 +178,7 @@
     </div>
 
     <div class="col">
+        {% if signIn %}{{ include('@Team/team/_sign_in_card.html.twig') }}{% endif %}
         {{ include('@Team/team/_stationed_at.html.twig', {stationedAt: stationedAt, postingDoor: postingDoor, stationPlate: stationPlate}) }}
 
         <div class="c">

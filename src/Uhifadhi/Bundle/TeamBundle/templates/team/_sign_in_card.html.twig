@@ -1,0 +1,30 @@
+{#
+   THE SIGN-IN CARD (ruled 30 Sep, #67, design D; after sending, d-sent).
+   Can they get in, where a link would go, when one last went - and the
+   button in the foot. Drawn only for a viewer who holds Sign-in help and
+   reaches the person; the controller decides, so this asks nothing.
+#}
+{% import '@Team/team/_bits.html.twig' as bits %}
+<div class="c signin-card">
+    <span class="tab">Sign-in<span class="src">&middot; can they get in?</span></span>
+    <table class="tbl signin-facts"><tbody>
+        <tr><td>Account</td><td>{% if not signIn.active %}deactivated{% elseif not signIn.verified %}not yet verified{% else %}active{% endif %}</td></tr>
+        <tr><td>Last signed in</td><td>
+            {%- if signIn.signedInAt -%}
+                <b><time datetime="{{ signIn.signedInAt|date('c') }}" data-localtime-format="day">{{ signIn.signedInAt|date('j M') }}</time></b> &middot; {{ signIn.signedInOn }}
+            {%- else %}never{% endif -%}
+        </td></tr>
+        <tr><td>Link goes to</td><td class="mono">{{ signIn.address }}</td></tr>
+        <tr><td>Last link sent</td><td>
+            {%- if signIn.sentAt -%}
+                <b>{% if signIn.sentJustNow %}just now{% else %}<time datetime="{{ signIn.sentAt|date('c') }}" data-localtime-format="daystamp">{{ signIn.sentAt|date('j M · H:i') }}</time>{% endif %}</b>
+                {%- if signIn.sentBy %} &middot; by {{ signIn.sentBy }}{% endif %}
+            {%- else %}never{% endif -%}
+        </td></tr>
+    </tbody></table>
+    <form class="signin-foot" method="post" action="{{ path('team_member_reset_link', {uuid: member.uuidString}) }}">
+        <span>Only an Admin changes the address.</span>
+        <input type="hidden" name="_token" value="{{ signInToken }}">
+        <button class="softbtn" type="submit"{% if not signIn.active or not mailReady %} disabled title="{{ not signIn.active ? 'The account is deactivated' : 'No mailer configured — MAILER_DSN is unset' }}"{% endif %}>{{ bits.icon_mail() }} {{ signIn.sentAt ? 'Send again' : 'Send a reset link' }}</button>
+    </form>
+</div>

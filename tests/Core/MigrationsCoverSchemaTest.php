@@ -208,6 +208,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260927220000',
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260930010000',
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260930120000',
+                'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260930130000',
             ],
             $this->plannedVersions(),
         );

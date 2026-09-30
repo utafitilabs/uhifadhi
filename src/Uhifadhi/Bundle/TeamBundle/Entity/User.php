@@ -211,6 +211,27 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $oneTimePasswordIssuedAt = null;
 
+    /**
+     * THE LAST TIME THIS PERSON SIGNED IN ON THE WEB. The handset's own
+     * sign-ins are its tokens' last use; the Sign-in card reads whichever is
+     * later (ruled 30 Sep, #67, design D).
+     */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $lastSignedInAt = null;
+
+    /**
+     * WHEN SOMEBODY LAST SENT THIS PERSON A RESET LINK, AND WHO. Kept after the
+     * link is used or lapses - the reset token itself is cleared - because the
+     * Sign-in card says when the last one went, so a head of station does not
+     * send a second into an inbox that already holds a live one.
+     */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $resetLinkSentAt = null;
+
+    #[ORM\ManyToOne(targetEntity: self::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?User $resetLinkSentBy = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -532,6 +553,37 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
     {
         $this->password = $password;
         $this->oneTimePasswordIssuedAt = null;
+
+        return $this;
+    }
+
+    public function getLastSignedInAt(): ?\DateTimeImmutable
+    {
+        return $this->lastSignedInAt;
+    }
+
+    public function signedInAt(\DateTimeImmutable $at): static
+    {
+        $this->lastSignedInAt = $at;
+
+        return $this;
+    }
+
+    public function getResetLinkSentAt(): ?\DateTimeImmutable
+    {
+        return $this->resetLinkSentAt;
+    }
+
+    public function getResetLinkSentBy(): ?self
+    {
+        return $this->resetLinkSentBy;
+    }
+
+    /** A reset link went to this person, sent by somebody (null when they asked for it themselves). */
+    public function resetLinkSent(\DateTimeImmutable $at, ?self $by): static
+    {
+        $this->resetLinkSentAt = $at;
+        $this->resetLinkSentBy = $by;
 
         return $this;
     }

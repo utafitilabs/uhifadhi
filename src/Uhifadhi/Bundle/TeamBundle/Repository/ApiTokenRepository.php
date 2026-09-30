@@ -59,6 +59,19 @@ final class ApiTokenRepository extends ServiceEntityRepository
         return $token instanceof ApiToken ? $token : null;
     }
 
+    /** The last time any of this person's handsets used its token, or null for never. */
+    public function lastUsedAtFor(User $owner): ?\DateTimeImmutable
+    {
+        $latest = $this->createQueryBuilder('t')
+            ->andWhere('t.owner = :owner')->setParameter('owner', $owner)
+            ->andWhere('t.lastUsedAt IS NOT NULL')
+            ->orderBy('t.lastUsedAt', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()->getOneOrNullResult();
+
+        return $latest instanceof ApiToken ? $latest->getLastUsedAt() : null;
+    }
+
     public function findOneByDevice(User $owner, string $deviceId): ?ApiToken
     {
         return $this->findOneBy(['owner' => $owner, 'deviceId' => $deviceId]);

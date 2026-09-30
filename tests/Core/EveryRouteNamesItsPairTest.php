@@ -139,6 +139,10 @@ final class EveryRouteNamesItsPairTest extends KernelTestCase
         'shell_area_configure' => 'each section it frames, on its own screen — and whether the frame itself should be gated is unruled',
         'shell_module_configure' => 'the same, for a module surface',
         'team_member_delete' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
+        'team_position_delete' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
+        'team_department_delete' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
+        'area_station_delete' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
+        'area_delete' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
     ];
 
     public function testEveryRouteEitherNamesAPairOrIsDeliberatelyOpen(): void

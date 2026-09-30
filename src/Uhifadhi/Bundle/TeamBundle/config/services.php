@@ -17,6 +17,7 @@ use Symfony\Component\Console\Application;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 use Uhifadhi\Bundle\RegistryBundle\Event\ModuleInstalledEvent;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
+use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
@@ -47,9 +48,12 @@ use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamRolesController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamSectionController;
+use Uhifadhi\Bundle\TeamBundle\Deletion\AreaTeamDeletion;
 use Uhifadhi\Bundle\TeamBundle\Deletion\DeletionPage;
 use Uhifadhi\Bundle\TeamBundle\Deletion\DeletionService;
+use Uhifadhi\Bundle\TeamBundle\Deletion\DepartmentDeletion;
 use Uhifadhi\Bundle\TeamBundle\Deletion\PersonDeletion;
+use Uhifadhi\Bundle\TeamBundle\Deletion\PositionDeletion;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ModuleHistoryListener;
@@ -343,6 +347,18 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set('team.deletion_page', DeletionPage::class)
         ->args([service('team.deletions'), service('twig'), service('security.csrf.token_manager')]);
+    $services->alias(DeletionPageInterface::SERVICE, 'team.deletion_page');
+
+    // THE TEAM'S OWN RECORDS, and what of the Team's an area's delete reaches.
+    $services->set('team.deletion.position', PositionDeletion::class)
+        ->args([service('doctrine.orm.entity_manager'), service('router')])
+        ->tag(DeletionContributorInterface::TAG);
+    $services->set('team.deletion.department', DepartmentDeletion::class)
+        ->args([service('doctrine.orm.entity_manager'), service('router')])
+        ->tag(DeletionContributorInterface::TAG);
+    $services->set('team.deletion.area', AreaTeamDeletion::class)
+        ->args([service('doctrine.orm.entity_manager')])
+        ->tag(DeletionContributorInterface::TAG);
 
     // THE TEAM OWNS A PERSON: it names them and removes the account last.
     $services->set('team.deletion.person', PersonDeletion::class)
@@ -1272,6 +1288,7 @@ return static function (ContainerConfigurator $container): void {
             service('security.csrf.token_manager'),
             service('router'),
             service('team.area_authority'),
+            service('team.deletion_page'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(PositionController::class, 'team.controller.position')->public();
@@ -1306,6 +1323,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.performance.departments_band'),
             service('team.department_palette'),
             service(CurrentPeriodInterface::class)->nullOnInvalid(),
+            service('team.deletion_page'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(DepartmentController::class, 'team.controller.department')->public();

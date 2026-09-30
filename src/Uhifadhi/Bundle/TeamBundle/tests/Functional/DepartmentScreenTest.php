@@ -594,16 +594,27 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         self::assertInstanceOf(Department::class, $this->em->getRepository(Department::class)->findOneBy(['name' => 'Ecology & Research']));
     }
 
-    // ---- deactivate, never delete -----------------------------------------
+    // ---- deactivate; delete is a Super Admin's ------------------------------
 
-    /** DELETE is never drawn; DEACTIVATE is — the standing fleet rule. */
-    public function testTheScreenDeactivatesButNeverDeletesADepartment(): void
+    /**
+     * DEACTIVATE is the action; DELETE is drawn for a Super Admin alone (ruled
+     * 28 Sep, #48, superseding "never delete" for the one tier that tidies what
+     * was made by mistake or in tests).
+     */
+    public function testTheScreenDeactivatesAndOnlyASuperAdminAlsoDeletes(): void
     {
         $this->screen();
 
         $page = $this->configureOf('Ecology')->filter('[data-dp-configure]')->text();
-        self::assertStringNotContainsString('Delete', $page);
         self::assertStringContainsString('Deactivate', $page);
+        self::assertStringContainsString('Delete the department', $page);
+
+        $admin = $this->person('Desta', 'Haile', TeamRoleEnum::Admin);
+        $this->em->flush();
+        $this->client->loginUser($admin);
+        $page = $this->configureOf('Ecology')->filter('[data-dp-configure]')->text();
+        self::assertStringContainsString('Deactivate', $page);
+        self::assertStringNotContainsString('Delete', $page);
     }
 
     /**

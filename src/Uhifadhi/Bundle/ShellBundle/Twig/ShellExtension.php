@@ -38,6 +38,7 @@ final class ShellExtension extends AbstractExtension
         return [
             // The sidebar's content, collected from the tagged sources.
             new TwigFunction('shell_nav', [ShellRuntime::class, 'nav']),
+            new TwigFunction('may_delete', [DeletionRuntime::class, 'mayDelete']),
             // The sheets a page links because a component of somebody
             // else's may be drawn on it — a stylesheet link in the body
             // is not conforming HTML, so the head asks first.

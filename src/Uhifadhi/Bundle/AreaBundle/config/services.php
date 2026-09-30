@@ -16,7 +16,9 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 use Symfony\Component\Console\Application;
 use Uhifadhi\Bundle\AreaBundle\Access\AreaConcerns;
 use Uhifadhi\Bundle\AreaBundle\Command\PresenceRebuildCommand;
+use Uhifadhi\Bundle\AreaBundle\Deletion\AreaDeletion;
 use Uhifadhi\Bundle\AreaBundle\Deletion\PersonDutyDeletion;
+use Uhifadhi\Bundle\AreaBundle\Deletion\StationDeletion;
 use Uhifadhi\Bundle\AreaBundle\Devkit\AreaContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\StationContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\ZoneContentProvider;
@@ -783,5 +785,13 @@ return static function (ContainerConfigurator $container): void {
     // WHAT OF THE AREA'S GOES WITH A DELETED PERSON (ruled 28 Sep, #48).
     $services->set('area.deletion.person_duty', PersonDutyDeletion::class)
         ->args([service('doctrine.orm.entity_manager')])
+        ->tag(DeletionContributorInterface::TAG);
+
+    // THE AREA'S OWN RECORDS: a station, and the area itself.
+    $services->set('area.deletion.station', StationDeletion::class)
+        ->args([service('doctrine.orm.entity_manager'), service('router')])
+        ->tag(DeletionContributorInterface::TAG);
+    $services->set('area.deletion.area', AreaDeletion::class)
+        ->args([service('doctrine.orm.entity_manager'), service('router')])
         ->tag(DeletionContributorInterface::TAG);
 };

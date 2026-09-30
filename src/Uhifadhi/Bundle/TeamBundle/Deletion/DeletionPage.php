@@ -22,6 +22,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Twig\Environment;
+use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 
 /**
  * THE DELETE PAGE, ONE FOR EVERY KIND OF RECORD (ruled 28 Sep, #48, design C
@@ -30,7 +31,7 @@ use Twig\Environment;
  * it a route and hands the record here, so every delete reads and behaves the
  * same and none of them is written twice.
  */
-final readonly class DeletionPage
+final readonly class DeletionPage implements DeletionPageInterface
 {
     public const string CSRF_ID = 'uhifadhi_delete';
 
@@ -39,6 +40,11 @@ final readonly class DeletionPage
         private Environment $twig,
         private CsrfTokenManagerInterface $csrf,
     ) {
+    }
+
+    public function mayDelete(): bool
+    {
+        return $this->deletions->mayDelete();
     }
 
     public function respond(Request $request, object $record): Response

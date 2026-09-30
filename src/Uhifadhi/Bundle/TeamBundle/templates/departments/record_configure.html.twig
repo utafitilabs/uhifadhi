@@ -131,6 +131,14 @@
                 </form>
             {% endif %}
         </div>
+        {% if may_delete() %}
+            {# A SUPER ADMIN DELETES (ruled 28 Sep, #48): its own page, counted and typed. #}
+            <div class="c">
+                <span class="tab">Delete<span class="src">&middot; Super Admin only</span></span>
+                <p class="sbn">Its goals, the modules it runs and its stored figures go; the people placed in it stay. For a department that is only closing, Deactivate above keeps everything.</p>
+                <div class="staddrow"><span class="sp"></span><a class="softbtn danger" href="{{ path('team_department_delete', {uuid: uuid}) }}">Delete the department&hellip;</a></div>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

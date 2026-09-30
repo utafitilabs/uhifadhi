@@ -249,6 +249,14 @@
                     </div>
                 </div>
             {% endif %}
+            {% if may_delete() %}
+                {# A SUPER ADMIN DELETES (ruled 28 Sep, #48): everything under it goes, counted first. #}
+                <div class="c" style="margin-top:14px">
+                    <span class="tab">Delete<span class="src">&middot; Super Admin only</span></span>
+                    <p class="use">The area and everything under it &mdash; stations, zones, duty, and what each module keeps here &mdash; counted on its own page before anything goes.</p>
+                    <a class="btn sm dg" href="{{ path('area_delete', {uuid: area.uuidString}) }}">{{ ux_icon('shell:trash-2') }} Delete the area&hellip;</a>
+                </div>
+            {% endif %}
         </aside>
     </div>
 {% endblock %}

@@ -30,6 +30,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
+use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
@@ -170,6 +171,8 @@ final readonly class DepartmentController
          * see {@see RequiredPeriod}.
          */
         private ?CurrentPeriodInterface $periods,
+        /** A SUPER ADMIN DELETES (ruled 28 Sep, #48): the one delete page, absent without the Team. */
+        private ?DeletionPageInterface $deletionPage = null,
     ) {
     }
 
@@ -935,6 +938,17 @@ final readonly class DepartmentController
         }
 
         return mb_strtoupper(mb_substr($words[0], 0, 2));
+    }
+
+    /** A SUPER ADMIN DELETES A DEPARTMENT (ruled 28 Sep, #48): its people stay. */
+    #[Route('/departments/{uuid}/delete', name: 'team_department_delete', requirements: ['uuid' => Requirement::UUID], methods: ['GET', 'POST'])]
+    public function delete(Request $request, string $uuid): Response
+    {
+        if (null === $this->deletionPage) {
+            throw new NotFoundHttpException('Deleting is not installed here.');
+        }
+
+        return $this->deletionPage->respond($request, $this->department($uuid));
     }
 
     private function department(string $uuid): Department

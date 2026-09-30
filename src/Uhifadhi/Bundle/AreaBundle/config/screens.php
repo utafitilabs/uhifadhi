@@ -58,6 +58,7 @@ use Uhifadhi\Bundle\AreaBundle\Shell\OrgDashboardNavigation;
 use Uhifadhi\Bundle\AreaBundle\Twig\MyExtension;
 use Uhifadhi\Bundle\AreaBundle\Widget\OrgOverviewWidgets;
 use Uhifadhi\Bundle\ShellBundle\Contract\AreaShellSourceInterface;
+use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\ModuleGroup;
 use Uhifadhi\Contracts\Me\MyCardProviderInterface;
@@ -280,6 +281,7 @@ return static function (ContainerConfigurator $container): void {
             service(ZoneRepository::class),
             service('security.csrf.token_manager'),
             service('router'),
+            service(DeletionPageInterface::SERVICE)->nullOnInvalid(),
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaEditController::class, 'area.controller.edit')->public();
@@ -464,6 +466,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.station_sections'),
             service('registry.area_modules'),
             service('security.csrf.token_manager'),
+            service(DeletionPageInterface::SERVICE)->nullOnInvalid(),
         ])
         ->tag('controller.service_arguments');
     $services->alias(StationConfigureController::class, 'area.controller.station_configure')->public();

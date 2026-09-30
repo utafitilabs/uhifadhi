@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Controller;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
@@ -40,6 +41,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\StationSectionService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
+use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 use Uhifadhi\Contracts\Area\StationSurface;
 use Uhifadhi\Contracts\Kpi\StationRef;
 
@@ -93,6 +95,8 @@ final readonly class StationConfigureController
         private StationSectionService $sections,
         private AreaModuleService $areaModules,
         private CsrfTokenManagerInterface $csrf,
+        /** A SUPER ADMIN DELETES (ruled 28 Sep, #48): the one delete page, absent without the Team. */
+        private ?DeletionPageInterface $deletionPage = null,
     ) {
     }
 
@@ -197,6 +201,21 @@ final readonly class StationConfigureController
             'editToken' => $this->csrf->getToken(StationEditController::EDIT_TOKEN)->getValue(),
             'postingToken' => $this->csrf->getToken(StationEditController::POSTING_TOKEN)->getValue(),
         ]));
+    }
+
+    /** A SUPER ADMIN DELETES A STATION (ruled 28 Sep, #48); Deactivate keeps everything. */
+    #[Route('/areas/{uuid}/stations/{station}/delete', name: 'area_station_delete', requirements: ['uuid' => Requirement::UUID, 'station' => Requirement::UUID], methods: ['GET', 'POST'])]
+    public function delete(
+        Request $request,
+        #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
+        string $station,
+    ): Response {
+        $record = $this->stations->findOneBy(['uuid' => $station, 'area' => $area]);
+        if (null === $this->deletionPage || !$record instanceof Station) {
+            throw new NotFoundHttpException('No such station in this area.');
+        }
+
+        return $this->deletionPage->respond($request, $record);
     }
 
     /**

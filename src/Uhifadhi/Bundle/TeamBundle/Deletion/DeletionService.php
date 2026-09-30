@@ -64,6 +64,11 @@ final readonly class DeletionService
                     throw new \LogicException(\sprintf('Two contributors own the %s being deleted; one kind of record has one owner.', $described->kind));
                 }
                 $subject = $described;
+                // THE OWNER'S LINES LEAD: the record itself first, then
+                // whatever each other contributor holds under it.
+                $goes = [...$contributor->whatGoes($record), ...$goes];
+                $stays = [...$contributor->whatStays($record), ...$stays];
+                continue;
             }
             $goes = [...$goes, ...$contributor->whatGoes($record)];
             $stays = [...$stays, ...$contributor->whatStays($record)];

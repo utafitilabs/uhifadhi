@@ -17,6 +17,7 @@ use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\DomCrawler\Field\ChoiceFormField;
 use Symfony\Component\DomCrawler\Form;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
+use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Contracts\Access\ScopeKind;
 
 /**
@@ -258,18 +259,25 @@ final class PositionConfigureTest extends WebTestCaseWithSchema
     }
 
     /**
-     * THERE IS NO DELETE, AND THERE IS NO DEAD CONTROL WHERE ONE WOULD BE.
-     * We do not delete things: a position is retired, which is the one
-     * action the card offers.
+     * RETIRE IS THE ACTION; DELETE IS A SUPER ADMIN'S ALONE (ruled 28 Sep, #48,
+     * superseding "positions are retired and never deleted" for the one tier
+     * that tidies what was made by mistake or in tests). Anybody else sees one
+     * action, and no dead control where the other would be.
      */
-    public function testDeleteIsNotDrawnBecausePositionsAreRetiredAndNeverDeleted(): void
+    public function testRetireIsTheActionAndOnlyASuperAdminAlsoDeletes(): void
     {
         $this->administrator();
         $sergeant = $this->position('Sergeant');
         $this->em->flush();
 
         $crawler = $this->client->request('GET', $this->configure($sergeant));
+        self::assertCount(2, $crawler->filter('.mb-danger .mb-drow'), 'Retire, and a Super Admin\'s Delete.');
+        self::assertCount(1, $crawler->filter('.mb-danger a[href$="/delete"]'));
 
+        $admin = $this->person('Desta', 'Haile', TeamRoleEnum::Admin);
+        $this->em->flush();
+        $this->client->loginUser($admin);
+        $crawler = $this->client->request('GET', $this->configure($sergeant));
         self::assertStringNotContainsString('Delete', $crawler->filter('.mb-danger')->text());
         self::assertCount(1, $crawler->filter('.mb-danger .mb-drow'), 'Actions: one.');
     }

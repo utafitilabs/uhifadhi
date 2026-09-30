@@ -333,6 +333,10 @@
                                             <button type="submit" class="btn sm">{{ ux_icon('shell:power') }} Reactivate</button>
                                         </form>
                                     {% endif %}
+                                    {% if may_delete() %}
+                                        {# A SUPER ADMIN DELETES (ruled 28 Sep, #48); Deactivate keeps everything. #}
+                                        <a class="btn sm dg" href="{{ path('area_station_delete', {uuid: area.uuidString, station: row.uuid}) }}">{{ ux_icon('shell:trash-2') }} Delete&hellip;</a>
+                                    {% endif %}
                                 </div>
                         </details>
                     {% endfor %}

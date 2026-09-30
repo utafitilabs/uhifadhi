@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
@@ -38,6 +39,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
 use Uhifadhi\Bundle\AreaBundle\Service\PingInterval;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
+use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
 use Uhifadhi\Contracts\Area\LivePresence;
 use Uhifadhi\Contracts\Shell\ConfigurationSection;
@@ -91,6 +93,8 @@ final readonly class AreaEditController
         private ZoneRepository $zones,
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $urls,
+        /** A SUPER ADMIN DELETES (ruled 28 Sep, #48): the one delete page, absent without the Team. */
+        private ?DeletionPageInterface $deletionPage = null,
     ) {
     }
 
@@ -181,6 +185,19 @@ final readonly class AreaEditController
         }
 
         return new RedirectResponse($this->urls->generate('area_show', ['uuid' => $area->getUuidString()]));
+    }
+
+    /** A SUPER ADMIN DELETES AN AREA (ruled 28 Sep, #48): everything under it goes, counted first. */
+    #[Route('/areas/{uuid}/delete', name: 'area_delete', requirements: ['uuid' => Requirement::UUID], methods: ['GET', 'POST'])]
+    public function delete(
+        Request $request,
+        #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
+    ): Response {
+        if (null === $this->deletionPage) {
+            throw new NotFoundHttpException('Deleting is not installed here.');
+        }
+
+        return $this->deletionPage->respond($request, $area);
     }
 
     /**

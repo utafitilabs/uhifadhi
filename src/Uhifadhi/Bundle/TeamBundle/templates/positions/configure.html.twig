@@ -210,6 +210,13 @@
                             {% endif %}
                         {% endif %}
                     </div>
+                    {% if may_delete() %}
+                        {# A SUPER ADMIN DELETES (ruled 28 Sep, #48): its own page, counted and typed. #}
+                        <div class="mb-drow">
+                            <div class="dt"><b>Delete this position</b><em>Super Admin only &middot; its holders stay, holding none</em></div>
+                            <a class="softbtn danger" href="{{ path('team_position_delete', {uuid: card.uuid}) }}">{{ ux_icon('shell:trash-2') }} Delete</a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

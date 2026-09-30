@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Uhifadhi\Bundle\ShellBundle\Access\ShellConcerns;
+use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\LayoutContract;
 use Uhifadhi\Bundle\ShellBundle\Controller\FaviconController;
 use Uhifadhi\Bundle\ShellBundle\Controller\SettingsController;
@@ -37,6 +38,7 @@ use Uhifadhi\Bundle\ShellBundle\Service\Theme;
 use Uhifadhi\Bundle\ShellBundle\Service\UserBadgeReader;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\ShellBundle\Twig\AsOfRuntime;
+use Uhifadhi\Bundle\ShellBundle\Twig\DeletionRuntime;
 use Uhifadhi\Bundle\ShellBundle\Twig\ShellExtension;
 use Uhifadhi\Bundle\ShellBundle\Twig\ShellRuntime;
 use Uhifadhi\Contracts\Access\ConcernSourceInterface;
@@ -339,6 +341,10 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set('shell.twig.extension', ShellExtension::class)
         ->tag('twig.extension');
+
+    $services->set('shell.twig.deletion', DeletionRuntime::class)
+        ->args([service(DeletionPageInterface::SERVICE)->nullOnInvalid()])
+        ->tag('twig.runtime');
 
     $services->set('shell.twig.as_of', AsOfRuntime::class)
         ->args([service('clock')])

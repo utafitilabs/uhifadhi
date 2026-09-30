@@ -8,6 +8,22 @@
 
 Not released yet.
 
+ * ADMINISTERING THE TEAM IS THE TIERS' ALONE (ruled 30 Sep, #67): `directory.manage`,
+   `personal-details.manage`, `positions.configure` and `ranks.configure` are declared
+   tier-only. No position holds them: the grant voter refuses them on any seat and says
+   why, a save naming one throws `TierOnlyGrantException`, the grants matrix draws no
+   cell for them, and the seed gives none. Migration `Version20260930120000` removes
+   them from every stored position and cannot be undone. The Add somebody page and
+   buttons follow `directory.manage`.
+ * SIGN-IN HELP: a new concern, `sign-in-help.manage`, a position may carry - the
+   reset link asks for it. A person's record carries a Sign-in card for whoever holds
+   it and reaches the person: the account's state, the last sign-in (web, or the
+   handset's last token use), the address a link goes to (masked unless the viewer
+   reads personal details), and when a link last went and who sent it. After a send:
+   "A link was sent to <address>. It works once and expires in an hour." Migration
+   `Version20260930130000` adds `team_user.last_signed_in_at`, `reset_link_sent_at`,
+   `reset_link_sent_by_id`; `SignedInListener` writes the last web sign-in.
+
  * THE POSITION CARD'S FOOT IS LIVE on a person's configure page (the
    `position-card` controller, `uhifadhi--team-bundle--position-card`): it says
    "no changes" only while nothing moved, names what did (position, rank, where it

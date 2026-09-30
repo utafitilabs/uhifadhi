@@ -6,6 +6,11 @@
 
 ## 1.0.0
 
+ * A CHECK-IN IS CHANGED ONLY BY ITS OWNER, the head of a station they are posted at,
+   or an Admin or a Super Admin (ruled 30 Sep, #67): `CheckInWriteVoter`
+   (`checkin.write`) is asked by `PATCH /api/areas/{area}/checkins/{ref}`. Before, any
+   holder of `duty.record` in the area could end somebody else's.
+
 Not released yet.
 
  * THE AREAS REGISTER LISTS ONLY WHAT THE VIEWER MAY OPEN (`areas.read` asked

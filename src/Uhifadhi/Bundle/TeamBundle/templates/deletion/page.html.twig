@@ -20,10 +20,9 @@
     <a href="{{ path('team_index') }}">uhifadhi</a> / <a href="{{ subject.afterUrl }}">{{ subject.register }}</a> / <a href="{{ subject.recordUrl }}">{{ subject.reference|lower }}</a> / delete
 {% endblock %}
 
-{% block shell_page_head %}
-    <div class="pghead"><div><h1 class="pg">Delete {{ subject.kind }} {{ subject.reference }}</h1><p class="pgsub">{{ subject.summary }}. Super Admin only.</p></div>
-        <div class="pgact w-pgact"><a class="tgl" href="{{ subject.recordUrl }}">Back to the {{ subject.kind }}</a></div></div>
-{% endblock %}
+{% block shell_page_title %}Delete {{ subject.kind }} {{ subject.reference }}{% endblock %}
+{% block shell_page_subtitle %}{{ subject.summary }}. Super Admin only.{% endblock %}
+{% block shell_page_actions %}<a class="tgl w-act" href="{{ subject.recordUrl }}">Back to the {{ subject.kind }}</a>{% endblock %}
 
 {% block shell_page %}
 <div class="dgrid">

@@ -8,6 +8,13 @@
 
 Not released yet.
 
+ * THE REFUSAL PAGE (ruled 30 Sep, #33, design D): a signed-in person who opens a page
+   their position does not reach gets, with a 403, the shell's page "There is nothing
+   here you can open" (crumb "uhifadhi / not allowed", Back and Your dashboard) instead
+   of the framework's bare error page - in every environment. `EventListener\RefusalPage`
+   answers `kernel.exception` after the firewall, for a GET asking for HTML only: a
+   refused form post and the API keep their own answers.
+
  * Settings › Overview stacks its three cards one to a row, as the design draws them,
    rather than three columns; Installation's card has a door to Modules and the
    catalogue's a door to Installation, as drawn.

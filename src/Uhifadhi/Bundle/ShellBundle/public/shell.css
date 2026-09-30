@@ -2910,3 +2910,10 @@ tr.reorder-slot > td { padding: 0; border: 0; }
     .reorder-slot.closing .reorder-gap { animation: none; }
     .reorder-settling { transition: none; }
 }
+
+/* THE REFUSAL PAGE (#33, design D) — one narrow card, centred under the crumb. */
+.rf { max-width: 640px; margin: 48px auto 0; }
+.rf .c { padding: 26px 28px; }
+.rf h2 { font-size: 22px; margin: 4px 0 8px; }
+.rf p { margin: 0 0 12px; line-height: 1.55; }
+.rf .acts { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }

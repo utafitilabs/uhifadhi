@@ -19,6 +19,7 @@ use Uhifadhi\Bundle\ShellBundle\Contract\LayoutContract;
 use Uhifadhi\Bundle\ShellBundle\Controller\FaviconController;
 use Uhifadhi\Bundle\ShellBundle\Controller\SettingsController;
 use Uhifadhi\Bundle\ShellBundle\Controller\WelcomeController;
+use Uhifadhi\Bundle\ShellBundle\EventListener\RefusalPage;
 use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
 use Uhifadhi\Bundle\ShellBundle\Frame\Registry\ConfigurationSectionsRegistry;
 use Uhifadhi\Bundle\ShellBundle\Frame\Registry\ModuleTabsRegistry;
@@ -379,4 +380,10 @@ return static function (ContainerConfigurator $container): void {
     // dispatcher, the application's `event_dispatcher`.
     $services->set('shell.impersonation_return', ImpersonationReturn::class)
         ->tag('kernel.event_subscriber');
+
+    // THE REFUSAL PAGE (#33): after the firewall's own listener (priority 1),
+    // before the framework's error rendering.
+    $services->set('shell.refusal_page', RefusalPage::class)
+        ->args([service('twig'), service('router'), '%shell.home_route%'])
+        ->tag('kernel.event_listener', ['event' => 'kernel.exception', 'method' => 'onException', 'priority' => 0]);
 };

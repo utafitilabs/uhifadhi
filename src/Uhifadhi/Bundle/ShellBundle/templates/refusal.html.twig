@@ -1,0 +1,16 @@
+{# THE REFUSAL PAGE (ruled 30 Sep, #33, design D: uhifadhi-web/refusal/d.html,
+   crumb amended to "not allowed"). Rendered by EventListener\RefusalPage for a
+   page somebody's position does not reach; it names nothing about what was
+   asked for. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Not allowed{% endblock %}
+{% block shell_breadcrumbs %}<a href="/">uhifadhi</a> / <span>not allowed</span>{% endblock %}
+
+{% block shell_page %}
+    <div class="rf"><div class="c">
+        <h2>There is nothing here you can open</h2>
+        <p>The address may be mistyped, or lead somewhere your position does not reach.</p>
+        <div class="acts"><a class="cta" href="javascript:history.back()">&larr; Back</a><a class="tgl" href="{{ dashboardUrl }}">Your dashboard</a></div>
+    </div></div>
+{% endblock %}

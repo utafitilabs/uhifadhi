@@ -6,6 +6,10 @@
 
 ## 1.0.0
 
+ * `Deletion\LinkedRecordsInterface`: a record whose delete takes records others link to
+   by id lists those ids, so a module linking to one keeps its record and drops the link
+   (ruled 28 Sep, #48: an incident filed from a deleted patrol stays, losing its link).
+
  * THE DELETION SEAM (ruled 28 Sep, #48): `Deletion\DeletionContributorInterface`
    (tag `uhifadhi.deletion_contributor`) - one contributor owns a kind of record and
    describes it (`DeletionSubject`) and removes it last; every other one counts what

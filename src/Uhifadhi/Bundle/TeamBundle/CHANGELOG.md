@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * The delete page's crumb starts at `/`, which every installation serves, rather than
+   a Team route an installation may not mount.
+
  * A SUPER ADMIN DELETES (ruled 28 Sep, #48, design C): `Deletion\DeletionService`
    (a Super Admin by tier; a switched Super Admin is refused; the reference typed
    exactly; one transaction) and `Deletion\DeletionPage`, the one delete page -

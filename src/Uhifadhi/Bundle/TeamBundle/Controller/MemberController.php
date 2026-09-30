@@ -292,7 +292,7 @@ final readonly class MemberController
     }
 
     #[Route('/team/{uuid}/reset-link', name: self::RESET_LINK, requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('personal-details.manage')]
+    #[IsGranted('sign-in-help.manage')]
     public function sendResetLink(Request $request, string $uuid): RedirectResponse
     {
         $member = $this->member($uuid);

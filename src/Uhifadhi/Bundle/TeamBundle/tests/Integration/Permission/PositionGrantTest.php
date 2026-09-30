@@ -15,7 +15,9 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Permission;
 
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
+use Uhifadhi\Bundle\TeamBundle\Exception\TierOnlyGrantException;
 use Uhifadhi\Bundle\TeamBundle\Exception\UnknownGrantException;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 
 /**
@@ -66,7 +68,7 @@ final class PositionGrantTest extends IntegrationTestCase
     public function testACoreGrantRoundTrips(): void
     {
         $position = (new Position())->setName('Analyst');
-        $position->setGrantValues(['directory.read', 'directory.manage'], $this->catalogue());
+        $position->setGrantValues(['directory.read', 'directory.export'], $this->catalogue());
 
         $this->em->persist($position);
         $this->em->flush();
@@ -75,7 +77,28 @@ final class PositionGrantTest extends IntegrationTestCase
         $stored = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Analyst']);
         self::assertInstanceOf(Position::class, $stored);
 
-        self::assertSame(['directory.read', 'directory.manage'], $stored->getGrantValues());
+        self::assertSame(['directory.read', 'directory.export'], $stored->getGrantValues());
+    }
+
+    /**
+     * A SAVE NAMING A PAIR ONLY THE TIERS HOLD IS REFUSED (ruled 30 Sep, #67),
+     * and nothing is written: the matrix never draws one, so it is a forged form.
+     */
+    public function testATierOnlyPairIsRefusedAndNothingIsWritten(): void
+    {
+        $position = (new Position())->setName('Coordinator');
+        $position->setGrantValues(['directory.read'], $this->catalogue());
+        $this->em->persist($position);
+        $this->em->flush();
+
+        try {
+            $this->service(PositionService::class)->setGrants($position, ['directory.read', 'directory.manage', 'positions.configure']);
+            self::fail('A tier-only pair was written to a position.');
+        } catch (TierOnlyGrantException $refused) {
+            self::assertSame(['directory.manage', 'positions.configure'], $refused->values);
+        }
+
+        self::assertSame(['directory.read'], $position->getGrantValues());
     }
 
     /** An invented pair is refused, loudly, and it names itself in the message. */

@@ -256,7 +256,12 @@ final class TeamConfigureTest extends WebTestCaseWithSchema
      * first one they may: somebody who composes positions but does not manage
      * the directory sees Positions alone.
      */
-    public function testASectionTheViewerMayNotOpenIsWithheldFromTheStrip(): void
+    /**
+     * CONFIGURING THE TEAM IS THE TIERS' ALONE (ruled 30 Sep, #67): a seat
+     * that still stores positions.configure opens no section, and the
+     * positions register offers it no Configure door.
+     */
+    public function testASeatStoringPositionsConfigureOpensNoSectionAndSeesNoDoor(): void
     {
         $composer = $this->person('Wera', 'Mwita');
         $composer->setPosition($this->position('Registrar', ['directory.read', 'positions.read', 'positions.configure']));
@@ -264,16 +269,13 @@ final class TeamConfigureTest extends WebTestCaseWithSchema
         $this->em->flush();
         $this->client->loginUser($composer);
 
-        self::assertSame('/team/configure/positions', $this->client->request('GET', '/team/positions')->filter('.pgact > *')->last()->attr('href'));
+        $actions = $this->client->request('GET', '/team/positions')->filter('.pgact a')->each(static fn (Crawler $a): string => (string) $a->attr('href'));
+        self::assertNotContains('/team/configure/positions', $actions);
 
-        $crawler = $this->client->request('GET', '/team/configure/positions');
-        self::assertResponseIsSuccessful();
-        self::assertSame(['Positions'], $crawler->filter('.atabs a')->each(static fn (Crawler $a): string => $a->text()));
-
-        $this->client->request('GET', '/team/configure/people');
-        self::assertResponseStatusCodeSame(403);
-        $this->client->request('GET', '/team/configure/assignments');
-        self::assertResponseStatusCodeSame(403);
+        foreach (['/team/configure/positions', '/team/configure/people', '/team/configure/assignments'] as $section) {
+            $this->client->request('GET', $section);
+            self::assertResponseStatusCodeSame(403, $section);
+        }
     }
 
     /** Reading the team does not open any of it. */

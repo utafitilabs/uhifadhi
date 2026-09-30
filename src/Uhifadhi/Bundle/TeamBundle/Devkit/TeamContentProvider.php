@@ -298,7 +298,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
      */
     private function grant(Position $position, array $wanted): void
     {
-        $declared = $this->catalogue->pairs();
+        $declared = $this->catalogue->positionPairs();
 
         $this->positions->setGrants(
             $position,

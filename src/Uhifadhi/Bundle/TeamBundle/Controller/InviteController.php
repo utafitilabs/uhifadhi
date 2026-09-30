@@ -89,7 +89,7 @@ final readonly class InviteController
     }
 
     #[Route('/team/invite', name: 'team_invite', methods: ['GET'])]
-    #[IsGranted('directory.read')]
+    #[IsGranted('directory.manage')]
     public function show(): Response
     {
         return new Response($this->twig->render('@Team/team/invite.html.twig', [

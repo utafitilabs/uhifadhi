@@ -32,7 +32,12 @@ final class TierChangeAuthorityTest extends WebTestCaseWithSchema
     {
         // The form token from the target's own page — or, where the viewer may
         // not open it (an Admin on a Super Admin's), from a page they may.
-        $token = $this->tokenFrom('/team/'.($tokenFrom ?? $target)->getUuidString().'/configure');
+        // A viewer no configure page opens for (Staff, since 30 Sep) posts
+        // without one: the pair is asked before the token.
+        $this->client->request('GET', '/team/'.($tokenFrom ?? $target)->getUuidString().'/configure');
+        $token = $this->client->getResponse()->isSuccessful()
+            ? (string) $this->client->getCrawler()->filter('input[name="_token"]')->first()->attr('value')
+            : '';
         $this->client->request('POST', '/team/'.$target->getUuidString().'/tier', ['_token' => $token, 'tier' => $tier->value]);
     }
 

@@ -46,7 +46,8 @@ final class AreaScopedBannerTest extends WebTestCaseWithSchema
     public static function managementChrome(): iterable
     {
         yield 'roster' => ['/team'];
-        yield 'invite' => ['/team/invite'];
+        // No invite: adding somebody is the tiers' alone (ruled 30 Sep, #67),
+        // so a bounded seat never reaches that page to be told its area.
         yield 'positions' => ['/team/positions'];
         yield 'departments' => ['/departments'];
     }

@@ -27,7 +27,10 @@
 {% block shell_page_subtitle %}Who is on this installation, what each of them may do, and where they are stationed.{% endblock %}
 
 {% block shell_page_actions %}
-    <a class="cta" href="{{ path('team_invite') }}">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Add somebody</a>
+    {# Adding somebody is the tiers' work (ruled 30 Sep, #67): no door to a refusal. #}
+    {% if door('directory.manage') %}
+        <a class="cta" href="{{ path('team_invite') }}">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Add somebody</a>
+    {% endif %}
 {% endblock %}
 
 {% block shell_page %}

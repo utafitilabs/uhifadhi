@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Security;
 
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleCategory;
@@ -108,6 +109,29 @@ final class GrantVoterTest extends IntegrationTestCase
         );
 
         self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($person, ['directory.manage'], $kilimani));
+    }
+
+    /**
+     * A POSITION NEVER HOLDS WHAT ONLY THE TIERS HOLD (ruled 30 Sep, #67).
+     * A seat written before the ruling may still store a team pair; it is
+     * not honoured, and the refusal says why.
+     */
+    public function testATierOnlyPairAPositionStillStoresIsRefusedAndSaysWhy(): void
+    {
+        $person = $this->staff(
+            $this->positionGranting('Coordinator', ['directory.read', 'directory.manage']),
+            new Placement()->acrossTheOrganization()->acrossAllDepartments(),
+        );
+        $vote = new Vote();
+
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->voter()->vote(
+            new UsernamePasswordToken($person, 'main', $person->getRoles()),
+            null,
+            ['directory.manage'],
+            $vote,
+        ));
+        self::assertStringContainsString('only Admins and Super Admins hold', implode(' ', $vote->reasons));
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($person, ['directory.read']), 'the rest of the seat still counts.');
     }
 
     /** Nothing is held unless a position says so, reading included. */

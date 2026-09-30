@@ -88,7 +88,7 @@ final class PositionServiceTest extends IntegrationTestCase
     public function testAGrantIsStoredAndReadBack(): void
     {
         $position = $this->positions()->create('Analyst');
-        $pair = TeamConcerns::POSITIONS.'.configure';
+        $pair = TeamConcerns::POSITIONS.'.read';
 
         $this->positions()->setGrants($position, [$pair]);
 

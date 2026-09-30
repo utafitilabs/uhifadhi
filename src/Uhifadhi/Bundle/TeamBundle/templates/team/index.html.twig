@@ -19,7 +19,10 @@
 {% block shell_page_subtitle %}Everybody on this installation, and what each of them may do.{% endblock %}
 
 {% block shell_page_actions %}
-    <a class="cta" href="{{ path('team_invite') }}">{{ bits.icon_plus() }} Add somebody</a>
+    {# Adding somebody is the tiers' work (ruled 30 Sep, #67): no door to a refusal. #}
+    {% if door('directory.manage') %}
+        <a class="cta" href="{{ path('team_invite') }}">{{ bits.icon_plus() }} Add somebody</a>
+    {% endif %}
     <a class="tgl w-act" href="{{ path('team_positions') }}">{{ bits.icon_tag() }} Positions &amp; permissions</a>
 {% endblock %}
 

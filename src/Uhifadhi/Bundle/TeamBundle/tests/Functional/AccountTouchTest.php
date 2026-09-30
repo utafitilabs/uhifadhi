@@ -51,7 +51,13 @@ final class AccountTouchTest extends WebTestCaseWithSchema
     private function post(User $by, User $member, string $action, array $fields = []): int
     {
         $this->client->loginUser($by);
-        $token = $this->tokenFrom('/team/'.$this->people['grace']->getUuidString().'/configure');
+        // A TOKEN ONLY FROM A PAGE THEY MAY OPEN. Somebody the configure page
+        // refuses posts without one: the pair is asked before the token, so
+        // the answer is still the rule's, never the token check's.
+        $this->client->request('GET', '/team/'.$this->people['grace']->getUuidString().'/configure');
+        $token = $this->client->getResponse()->isSuccessful()
+            ? (string) $this->client->getCrawler()->filter('input[name="_token"]')->first()->attr('value')
+            : '';
         $this->client->request('POST', '/team/'.$member->getUuidString().$action, ['_token' => $token, 'return' => 'configure'] + $fields);
 
         return $this->client->getResponse()->getStatusCode();
@@ -101,9 +107,17 @@ final class AccountTouchTest extends WebTestCaseWithSchema
         self::assertFalse($this->isActive('p.sanka@example.test'));
     }
 
-    public function testStaffStillDeactivateStaff(): void
+    /** Nor Staff: deactivating is the tiers' work, whatever the seat stores (ruled 30 Sep, #67). */
+    public function testStaffNoLongerDeactivateStaff(): void
     {
-        self::assertSame(302, $this->post($this->people['officer'], $this->people['grace'], '/deactivate'));
+        self::assertSame(403, $this->post($this->people['officer'], $this->people['grace'], '/deactivate'));
+        self::assertTrue($this->isActive('g.ndosi@example.test'));
+    }
+
+    /** An Admin deactivates Staff. */
+    public function testAnAdminDeactivatesStaff(): void
+    {
+        self::assertSame(302, $this->post($this->people['admin'], $this->people['grace'], '/deactivate'));
         self::assertFalse($this->isActive('g.ndosi@example.test'));
     }
 

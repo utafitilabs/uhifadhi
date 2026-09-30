@@ -30,6 +30,9 @@ final readonly class Concern implements ConcernInterface
     /** @var list<ScopeKind> */
     private array $scopeKinds;
 
+    /** @var list<Verb> */
+    private array $tierOnly;
+
     /**
      * @param list<Verb>      $verbs      which of the six this concern supports
      * @param list<ScopeKind> $scopeKinds which placements a grant on it may be exercised at
@@ -38,6 +41,8 @@ final readonly class Concern implements ConcernInterface
      * @param string|null     $moduleSlug the module that owns it, null for a core bundle
      * @param string|null     $lifts      the rule a grant on it lifts, for an exception;
      *                                    an exception must be sensitive
+     * @param list<Verb>      $tierOnly   the verbs only the tiers above the matrix hold;
+     *                                    never an exception's
      */
     public function __construct(
         private string $key,
@@ -49,6 +54,7 @@ final readonly class Concern implements ConcernInterface
         private ?string $ownWords = null,
         private ?string $moduleSlug = null,
         private ?string $lifts = null,
+        array $tierOnly = [],
     ) {
         if (1 !== preg_match('/^[a-z0-9]+(-[a-z0-9]+)*$/', $key)) {
             throw new \InvalidArgumentException(\sprintf('The concern key "%s" is not a slug. Use lowercase letters, digits and hyphens - it is the word a route, a door and a grant all name this concern by.', $key));
@@ -94,8 +100,19 @@ final readonly class Concern implements ConcernInterface
             throw new \InvalidArgumentException(\sprintf('The concern "%s" lifts %s but is not declared sensitive. A grant that takes a seat out of a rule everybody else is held to is always sensitive.', $key, $lifts));
         }
 
+        foreach ($tierOnly as $verb) {
+            if (!\in_array($verb, $verbs, true)) {
+                throw new \InvalidArgumentException(\sprintf('The concern "%s" holds "%s" for the tiers alone but does not support it. Name only verbs the concern declares.', $key, $verb->value));
+            }
+        }
+
+        if (null !== $lifts && [] !== $tierOnly) {
+            throw new \InvalidArgumentException(\sprintf('The concern "%s" is given to positions as an exception, so no verb of it can be held by the tiers alone.', $key));
+        }
+
         $this->verbs = $verbs;
         $this->scopeKinds = $scopeKinds;
+        $this->tierOnly = array_values(array_unique($tierOnly, \SORT_REGULAR));
     }
 
     public function key(): string
@@ -141,6 +158,11 @@ final readonly class Concern implements ConcernInterface
     public function lifts(): ?string
     {
         return $this->lifts;
+    }
+
+    public function isTierOnly(Verb $verb): bool
+    {
+        return \in_array($verb, $this->tierOnly, true);
     }
 
     public function supports(Verb $verb): bool

@@ -89,12 +89,12 @@ final class PositionServiceTest extends TestCase
     public function testRenamingChangesOnlyTheName(): void
     {
         $position = self::service()->create('Analyst');
-        self::service()->setGrants($position, [self::CONFIGURE_POSITIONS]);
+        self::service()->setGrants($position, [self::CONFIGURE_DEPARTMENTS]);
 
         self::service()->rename($position, 'Senior Analyst');
 
         self::assertSame('Senior Analyst', $position->getName());
-        self::assertSame([self::CONFIGURE_POSITIONS], $position->getGrantValues());
+        self::assertSame([self::CONFIGURE_DEPARTMENTS], $position->getGrantValues());
     }
 
     public function testRenamingOntoANameTheOrganizationAlreadyUsesIsRefused(): void
@@ -111,8 +111,8 @@ final class PositionServiceTest extends TestCase
     {
         $position = self::service()->create('Analyst');
 
-        self::service()->setGrants($position, [self::CONFIGURE_POSITIONS]);
-        self::assertSame([self::CONFIGURE_POSITIONS], $position->getGrantValues());
+        self::service()->setGrants($position, [self::CONFIGURE_DEPARTMENTS]);
+        self::assertSame([self::CONFIGURE_DEPARTMENTS], $position->getGrantValues());
 
         self::service()->setGrants($position, []);
         self::assertSame([], $position->getGrantValues());
@@ -218,7 +218,7 @@ final class PositionServiceTest extends TestCase
     }
 
     /** The pair this suite grants: composing what a position grants. */
-    private const string CONFIGURE_POSITIONS = TeamConcerns::POSITIONS.'.configure';
+    private const string CONFIGURE_DEPARTMENTS = TeamConcerns::DEPARTMENTS.'.configure';
 
     private static function service(): PositionService
     {

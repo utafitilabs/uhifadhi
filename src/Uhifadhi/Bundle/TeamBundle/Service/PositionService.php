@@ -23,6 +23,7 @@ use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PositionHeldException;
 use Uhifadhi\Bundle\TeamBundle\Exception\RuleExceptionRefusedException;
 use Uhifadhi\Bundle\TeamBundle\Exception\SeatsBelowHoldersException;
+use Uhifadhi\Bundle\TeamBundle\Exception\TierOnlyGrantException;
 use Uhifadhi\Bundle\TeamBundle\Exception\UnknownGrantException;
 use Uhifadhi\Bundle\TeamBundle\Repository\GrantJustificationRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
@@ -115,9 +116,15 @@ final readonly class PositionService
      *
      * @throws UnknownGrantException         when a pair nothing installed declares is granted
      * @throws RuleExceptionRefusedException when the save names an exception the seat does not hold
+     * @throws TierOnlyGrantException        when the save names a pair only the tiers hold
      */
     public function setGrants(Position $position, array $pairs): void
     {
+        $tierOnly = array_values(array_filter($pairs, $this->catalogue->isTierOnly(...)));
+        if ([] !== $tierOnly) {
+            throw new TierOnlyGrantException($tierOnly);
+        }
+
         // AN EXCEPTION IS NEVER THE MATRIX'S TO WRITE. The matrix does not
         // draw one, so a save that names one it does not already hold is a
         // forged form, and a save that leaves one out is merely a save of the

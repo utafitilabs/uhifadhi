@@ -144,10 +144,12 @@ final class SeedOrganizationTest extends IntegrationTestCase
             $granted = [...$granted, ...$position->getGrantValues()];
         }
 
-        // THE SEED MAKES SOMEBODY WHO CAN ADMINISTER THE TEAM, because an
-        // installation whose seeded organization has nobody able to write a
-        // position is one a reader cannot get started in.
-        self::assertContains('positions.configure', $granted);
+        // THE TEAM IS ADMINISTERED BY THE TIERS (ruled 30 Sep, #67): the seed
+        // makes a Super Admin and an Admin, and no seeded seat carries a pair
+        // only they hold. A position still configures departments.
+        foreach (['directory.manage', 'personal-details.manage', 'positions.configure', 'ranks.configure'] as $tierOnly) {
+            self::assertNotContains($tierOnly, $granted);
+        }
         self::assertContains('departments.configure', $granted);
     }
 

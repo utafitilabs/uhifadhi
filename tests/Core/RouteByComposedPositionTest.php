@@ -111,6 +111,12 @@ final class RouteByComposedPositionTest extends WebTestCase
         $refused = [];
 
         foreach ($this->gatedRoutes() as $name => [$path, $pairs]) {
+            // A ROUTE ON A PAIR ONLY THE TIERS HOLD opens for no position by
+            // design (ruled 30 Sep, #67); the test below asks it of an Admin.
+            if ([] !== array_filter($pairs, $this->catalogue()->isTierOnly(...))) {
+                continue;
+            }
+
             $this->signIn($this->composed($pairs));
             $this->client->request('GET', str_replace('{uuid}', (string) $area->getUuidString(), $path));
 
@@ -400,6 +406,33 @@ final class RouteByComposedPositionTest extends WebTestCase
         self::assertInstanceOf(ConcernCatalogue::class, $catalogue);
 
         return $catalogue;
+    }
+
+    /** What no position opens, the tiers do: a tier-only gate is not a locked door. */
+    public function testARouteOnATierOnlyPairOpensForAnAdmin(): void
+    {
+        $area = $this->area('Kilimani');
+        $admin = (new User())->setEmail('admin@example.test')->setFirstName('Desta')->setLastName('Haile')
+            ->setPassword('x')->setTeamRole(TeamRoleEnum::Admin)->setVerified(true);
+        $this->em->persist($admin);
+        $this->em->flush();
+        $this->client->loginUser($admin);
+        $refused = [];
+        $asked = 0;
+
+        foreach ($this->gatedRoutes() as $name => [$path, $pairs]) {
+            if ([] === array_filter($pairs, $this->catalogue()->isTierOnly(...))) {
+                continue;
+            }
+            ++$asked;
+            $this->client->request('GET', str_replace('{uuid}', (string) $area->getUuidString(), $path));
+            if (403 === $this->client->getResponse()->getStatusCode()) {
+                $refused[] = $name;
+            }
+        }
+
+        self::assertGreaterThan(0, $asked, 'the core has routes on tier-only pairs; the table found none.');
+        self::assertSame([], $refused, 'These tier-only routes refuse an Admin: '.implode(', ', $refused));
     }
 
     private function checker(): AuthorizationCheckerInterface

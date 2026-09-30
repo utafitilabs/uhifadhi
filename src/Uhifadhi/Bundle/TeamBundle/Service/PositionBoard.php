@@ -238,7 +238,8 @@ final readonly class PositionBoard
         $verbs = [];
         $cells = [];
         foreach (Verb::cases() as $verb) {
-            if (!$concern->supports($verb)) {
+            // A tier-only verb is no position's to hold, so it is no cell.
+            if (!$concern->supports($verb) || $concern->isTierOnly($verb)) {
                 continue;
             }
 

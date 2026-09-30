@@ -51,6 +51,7 @@ final readonly class TeamConcerns implements ConcernSourceInterface
     public const string POSITIONS = 'positions';
     public const string DEPARTMENTS = 'departments';
     public const string RANKS = 'ranks';
+    public const string SIGN_IN_HELP = 'sign-in-help';
 
     public function declaredBy(): string
     {
@@ -67,6 +68,7 @@ final readonly class TeamConcerns implements ConcernSourceInterface
             description: 'Who is on the team: their name, their position and where they are placed.',
             verbs: [Verb::Read, Verb::Manage, Verb::Export],
             scopeKinds: $people,
+            tierOnly: [Verb::Manage],
         );
 
         yield new Concern(
@@ -76,6 +78,19 @@ final readonly class TeamConcerns implements ConcernSourceInterface
             verbs: [Verb::Read, Verb::Manage],
             scopeKinds: $people,
             sensitive: true,
+            tierOnly: [Verb::Manage],
+        );
+
+        // THE ONE SIGN-IN POWER A POSITION MAY CARRY (ruled 30 Sep, #67): a
+        // head of station sends somebody a link to set their own password.
+        // It goes only to the address on the account, which only the tiers
+        // change, so it can help a person back in and never let anybody else in.
+        yield new Concern(
+            key: self::SIGN_IN_HELP,
+            label: 'Sign-in help',
+            description: 'Send a person a link to set their own password. It goes only to the address on their account.',
+            verbs: [Verb::Manage],
+            scopeKinds: $people,
         );
 
         yield new Concern(
@@ -84,6 +99,7 @@ final readonly class TeamConcerns implements ConcernSourceInterface
             description: 'The positions the organization has written, what each one grants, and who holds it.',
             verbs: [Verb::Read, Verb::Configure],
             scopeKinds: $people,
+            tierOnly: [Verb::Configure],
         );
 
         yield new Concern(
@@ -100,6 +116,7 @@ final readonly class TeamConcerns implements ConcernSourceInterface
             description: 'The ranks the organization keeps, in seniority order, and who holds each. A rank grants nothing.',
             verbs: [Verb::Read, Verb::Configure, Verb::Export],
             scopeKinds: $people,
+            tierOnly: [Verb::Configure],
         );
     }
 }

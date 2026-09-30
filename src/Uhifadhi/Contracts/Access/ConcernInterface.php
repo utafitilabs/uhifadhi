@@ -105,6 +105,16 @@ interface ConcernInterface
      */
     public function lifts(): ?string;
 
+    /**
+     * WHETHER ONLY THE TIERS ABOVE THE MATRIX HOLD THIS VERB. A position can
+     * never carry it: the matrix does not draw it, a save naming it is
+     * refused, and a position that still stores it is not honoured. It is
+     * for the pairs that confer power over people - who holds which seat,
+     * their address, their sign-in - so a seat cannot raise itself or hand on
+     * more than it holds.
+     */
+    public function isTierOnly(Verb $verb): bool;
+
     public function supports(Verb $verb): bool;
 
     public function offers(ScopeKind $kind): bool;

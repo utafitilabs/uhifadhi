@@ -22,6 +22,7 @@ use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Contracts\Access\ConcernInterface;
 use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Access\ScopeKind;
+use Uhifadhi\Contracts\Access\Verb;
 
 /**
  * THE CORE DECLARES ITS OWN CONCERNS THE WAY A MODULE DOES.
@@ -51,12 +52,30 @@ final class TheCoreDeclaresItsConcernsTest extends TestCase
         );
     }
 
-    public function testTheTeamDeclaresTheDirectoryPersonalDetailsPositionsDepartmentsAndRanks(): void
+    public function testTheTeamDeclaresTheDirectoryPersonalDetailsSignInHelpPositionsDepartmentsAndRanks(): void
     {
         self::assertSame(
-            ['directory', 'personal-details', 'positions', 'departments', 'ranks'],
+            ['directory', 'personal-details', 'sign-in-help', 'positions', 'departments', 'ranks'],
             array_map(static fn (ConcernInterface $c): string => $c->key(), self::iterate(new TeamConcerns())),
         );
+    }
+
+    /**
+     * WHAT ONLY THE TIERS HOLD (ruled 30 Sep, #67): who holds which seat, a
+     * person's address and sign-in, the positions and the ranks. Reading
+     * stays a position's to hold, and so does sending a reset link.
+     */
+    public function testTheTeamHoldsItsAdministrationForTheTiersAlone(): void
+    {
+        $team = self::byKey(new TeamConcerns());
+
+        self::assertTrue($team['directory']->isTierOnly(Verb::Manage));
+        self::assertTrue($team['personal-details']->isTierOnly(Verb::Manage));
+        self::assertTrue($team['positions']->isTierOnly(Verb::Configure));
+        self::assertTrue($team['ranks']->isTierOnly(Verb::Configure));
+        self::assertFalse($team['directory']->isTierOnly(Verb::Read));
+        self::assertFalse($team['sign-in-help']->isTierOnly(Verb::Manage));
+        self::assertFalse($team['departments']->isTierOnly(Verb::Configure));
     }
 
     public function testTheRegistryDeclaresModules(): void
@@ -141,7 +160,7 @@ final class TheCoreDeclaresItsConcernsTest extends TestCase
             }
         }
 
-        self::assertCount(13, $seen);
+        self::assertCount(14, $seen);
     }
 
     public function testEverySourceSaysWhoItIs(): void

@@ -104,6 +104,16 @@ final class GrantVoter extends Voter
         }
 
         // 1. Does the position grant it?
+        // WHAT ONLY THE TIERS HOLD, NO POSITION DOES (ruled 30 Sep, #67): who
+        // holds which seat, a person's address and sign-in, and the ranks.
+        // A seat written before the ruling may still store one; it is not
+        // honoured, so no seat can raise itself or hand on more than it holds.
+        if ($this->catalogue->isTierOnly((string) $grant)) {
+            $vote?->addReason(\sprintf('only Admins and Super Admins hold "%s"; no position does.', (string) $grant));
+
+            return false;
+        }
+
         $position = $user->getPosition();
         if (null === $position || !$position->hasGrant($grant)) {
             return false;

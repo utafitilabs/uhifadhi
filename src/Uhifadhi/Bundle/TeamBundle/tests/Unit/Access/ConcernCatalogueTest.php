@@ -147,6 +147,28 @@ final class ConcernCatalogueTest extends TestCase
         self::assertContains('locations.read', $catalogue->pairs(), 'an exception is still a pair the installation offers; it is written elsewhere, not undeclared');
     }
 
+    /**
+     * A TIER-ONLY PAIR IS DECLARED, SO THE TIERS HOLD IT, but a position is
+     * never offered it: what a position may carry is every pair less those
+     * and less the exceptions, which have a card of their own.
+     */
+    public function testATierOnlyPairIsDeclaredButNeverOfferedToAPosition(): void
+    {
+        $catalogue = new ConcernCatalogue([
+            self::source('Team', [
+                new Concern('directory', 'Directory', 'Who is on the team.', [Verb::Read, Verb::Manage, Verb::Export], [ScopeKind::Organization], tierOnly: [Verb::Manage]),
+                new Concern('locations', 'Live locations', 'Every live position.', [Verb::Read], [ScopeKind::Area], sensitive: true, lifts: 'the rank rule'),
+            ]),
+        ]);
+
+        self::assertTrue($catalogue->isTierOnly('directory.manage'));
+        self::assertFalse($catalogue->isTierOnly('directory.read'));
+        self::assertFalse($catalogue->isTierOnly('nothing-declares.this'));
+        self::assertFalse($catalogue->isTierOnly('not a pair'));
+        self::assertContains('directory.manage', $catalogue->pairs());
+        self::assertSame(['directory.read', 'directory.export'], $catalogue->positionPairs());
+    }
+
     /** An installation with nothing installed declares nothing, rather than failing. */
     public function testAnInstallationThatDeclaresNothingHasNoPairs(): void
     {

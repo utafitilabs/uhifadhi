@@ -239,6 +239,44 @@ final class AccessContractTest extends TestCase
         new Concern('locations', 'Live locations', 'See every live position.', [Verb::Read], [ScopeKind::Area], sensitive: true, lifts: '  ');
     }
 
+    public function testAnOrdinaryConcernHoldsNoVerbForTheTiersAlone(): void
+    {
+        $concern = new Concern('zones', 'Zones', 'The zones an area is divided into.', [Verb::Read, Verb::Configure], [ScopeKind::Area]);
+
+        self::assertFalse($concern->isTierOnly(Verb::Read));
+        self::assertFalse($concern->isTierOnly(Verb::Configure));
+    }
+
+    /**
+     * A VERB ONLY THE TIERS ABOVE THE MATRIX HOLD. A position can never carry
+     * it, so a pair that confers power over people cannot be handed to a seat
+     * that would then hand it on.
+     */
+    public function testAConcernNamesTheVerbsOnlyTheTiersHold(): void
+    {
+        $concern = new Concern('directory', 'Directory', 'Who is on the team.', [Verb::Read, Verb::Manage], [ScopeKind::Organization], tierOnly: [Verb::Manage]);
+
+        self::assertTrue($concern->isTierOnly(Verb::Manage));
+        self::assertFalse($concern->isTierOnly(Verb::Read));
+    }
+
+    public function testATierOnlyVerbTheConcernDoesNotSupportIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('holds "configure" for the tiers alone but does not support it');
+
+        new Concern('directory', 'Directory', 'Who is on the team.', [Verb::Read], [ScopeKind::Organization], tierOnly: [Verb::Configure]);
+    }
+
+    /** An exception is given to a position; a tier-only verb never is. The two cannot meet. */
+    public function testAnExceptionCannotBeHeldByTheTiersAlone(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('is given to positions as an exception');
+
+        new Concern('locations', 'Live locations', 'See every live position.', [Verb::Read], [ScopeKind::Area], sensitive: true, lifts: 'the rank rule', tierOnly: [Verb::Read]);
+    }
+
     public function testTheTagIsTheOneTheCoreCollects(): void
     {
         self::assertSame('uhifadhi.access.concerns', ConcernSourceInterface::TAG);

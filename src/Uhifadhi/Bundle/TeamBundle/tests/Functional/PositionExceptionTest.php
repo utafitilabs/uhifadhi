@@ -110,13 +110,13 @@ final class PositionExceptionTest extends WebTestCaseWithSchema
         self::assertContains(self::PAIR, $this->reload($room)->getGrantValues());
     }
 
-    /** A staff member reads the card without controls and is refused, whatever their position holds. */
-    public function testAStaffMemberSeesTheCardReadOnlyAndIsRefusedAPost(): void
+    /** A staff member is refused the page and the post, whatever their position stores (ruled 30 Sep, #67). */
+    public function testAStaffMemberIsRefusedThePageAndThePost(): void
     {
         $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
         $officer = $this->person('Joseph', 'Mrema');
-        // Holding the permission that opens and saves this very page, and
-        // still refused: an exception is a tier's to give, never a position's.
+        // Storing the pairs that used to open and save this very page, and
+        // still refused: positions and exceptions are the tiers' alone.
         $officer->setPosition($this->position('Personnel Officer', ['positions.configure', 'positions.read', 'directory.manage', 'directory.read']));
         $this->place($officer);
         $room = $this->position('Radio Operator');
@@ -124,7 +124,8 @@ final class PositionExceptionTest extends WebTestCaseWithSchema
         $this->client->loginUser($officer);
 
         $this->client->request('GET', $this->url($room, '/configure'));
-        $this->client->request('POST', $this->url($room, '/exceptions/locations.read'), ['_token' => $this->token($room), 'reason' => self::REASON]);
+        self::assertResponseStatusCodeSame(403);
+        $this->client->request('POST', $this->url($room, '/exceptions/locations.read'), ['reason' => self::REASON]);
         self::assertResponseStatusCodeSame(403);
         $this->em->clear();
         self::assertNotContains(self::PAIR, $this->reload($room)->getGrantValues());

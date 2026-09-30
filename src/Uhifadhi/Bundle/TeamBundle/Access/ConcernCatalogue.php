@@ -218,6 +218,37 @@ final readonly class ConcernCatalogue
         ));
     }
 
+    /**
+     * WHETHER ONLY THE TIERS ABOVE THE MATRIX HOLD THIS PAIR. False for a
+     * pair nothing declares, and for a string that is not a pair.
+     */
+    public function isTierOnly(string $pair): bool
+    {
+        $grant = Grant::tryParse($pair);
+        if (null === $grant) {
+            return false;
+        }
+
+        return $this->concern($grant->concern)?->isTierOnly($grant->verb) ?? false;
+    }
+
+    /**
+     * EVERY PAIR A POSITION MAY CARRY, in the matrix's order: every pair less
+     * the tier-only ones, which no position holds, and less the exceptions,
+     * which are given on their own card.
+     *
+     * @return list<string>
+     */
+    public function positionPairs(): array
+    {
+        $exceptions = $this->exceptionPairs();
+
+        return array_values(array_filter(
+            $this->pairs(),
+            fn (string $pair): bool => !$this->isTierOnly($pair) && !\in_array($pair, $exceptions, true),
+        ));
+    }
+
     /** Whether the installation declares a concern that is a fact about a person or a case. */
     public function isSensitive(string $key): bool
     {

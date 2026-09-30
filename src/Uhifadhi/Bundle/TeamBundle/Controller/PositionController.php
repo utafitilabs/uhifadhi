@@ -35,6 +35,7 @@ use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PositionHeldException;
 use Uhifadhi\Bundle\TeamBundle\Exception\RuleExceptionRefusedException;
 use Uhifadhi\Bundle\TeamBundle\Exception\SeatsBelowHoldersException;
+use Uhifadhi\Bundle\TeamBundle\Exception\TierOnlyGrantException;
 use Uhifadhi\Bundle\TeamBundle\Exception\UnknownGrantException;
 use Uhifadhi\Bundle\TeamBundle\Model\PositionCard;
 use Uhifadhi\Bundle\TeamBundle\Model\PositionQuery;
@@ -322,7 +323,7 @@ final readonly class PositionController
 
         try {
             $this->positionWrites->setGrants($position, $granted);
-        } catch (UnknownGrantException|RuleExceptionRefusedException $refusal) {
+        } catch (UnknownGrantException|TierOnlyGrantException|RuleExceptionRefusedException $refusal) {
             return $this->back($request, $refusal->getMessage(), 'error', $position);
         }
 

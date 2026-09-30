@@ -129,12 +129,12 @@ final class OneTimePasswordTest extends WebTestCaseWithSchema
         $this->em->flush();
         $this->client->loginUser($officer);
 
-        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString().'/configure');
-        self::assertResponseIsSuccessful();
-        self::assertStringNotContainsString('one-time password', $crawler->html());
+        // The configure page is the tiers' alone (ruled 30 Sep, #67), so there
+        // is no page to see it on; and the route refuses before any token.
+        $this->client->request('GET', '/team/'.$grace->getUuidString().'/configure');
+        self::assertResponseStatusCodeSame(403);
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
-        $this->client->request('POST', '/team/'.$grace->getUuidString().'/one-time-password', ['_token' => $token]);
+        $this->client->request('POST', '/team/'.$grace->getUuidString().'/one-time-password');
         self::assertResponseStatusCodeSame(403);
     }
 

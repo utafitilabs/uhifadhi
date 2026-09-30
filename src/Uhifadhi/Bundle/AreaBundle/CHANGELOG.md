@@ -6,6 +6,11 @@
 
 ## 1.0.0
 
+ * A SUPER ADMIN DELETES A STATION OR AN AREA (ruled 28 Sep, #48):
+   `/areas/{uuid}/stations/{station}/delete` and `/areas/{uuid}/delete`, through the
+   Shell's `DeletionPageInterface`; the Area counts what goes with a person, a
+   station and an area. Zones keep their own Remove.
+
  * A CHECK-IN IS CHANGED ONLY BY ITS OWNER, the head of a station they are posted at,
    or an Admin or a Super Admin (ruled 30 Sep, #67): `CheckInWriteVoter`
    (`checkin.write`) is asked by `PATCH /api/areas/{area}/checkins/{ref}`. Before, any

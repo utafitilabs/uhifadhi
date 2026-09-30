@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * `Contract\DeletionPageInterface` (service `uhifadhi.deletion_page`): the one delete
+   page a bundle or module hands its record to (ruled 28 Sep, #48). Twig
+   `may_delete()` answers the Delete rows, false where nothing deletes. The Settings
+   section draws the Deletions tab only for somebody who may delete, and leaves its
+   screen to whoever keeps the deletes.
+
  * THE SETTINGS SECTION ASKS FOR ITS OWN PAIR: `settings.read` (the new "Settings"
    concern, organization-wide, declared by `Access\ShellConcerns`). Without it the
    section's address is refused and its sidebar row is absent. A kernel with no

@@ -8,6 +8,16 @@
 
 Not released yet.
 
+ * A SUPER ADMIN DELETES (ruled 28 Sep, #48, design C): `Deletion\DeletionService`
+   (a Super Admin by tier; a switched Super Admin is refused; the reference typed
+   exactly; one transaction) and `Deletion\DeletionPage`, the one delete page -
+   what goes counted and named, what stays, the typed confirmation, the audit line.
+   Each delete keeps one line in `team_deletion` (migration `Version20260930140000`).
+   People (`/team/{uuid}/delete`, never oneself or the last active Super Admin),
+   positions (`/team/positions/{uuid}/delete`) and departments
+   (`/departments/{uuid}/delete`) have a Delete row for a Super Admin. Settings ›
+   Deletions (`/settings/deletions`) is the timeline of every delete, by day.
+
  * ADMINISTERING THE TEAM IS THE TIERS' ALONE (ruled 30 Sep, #67): `directory.manage`,
    `personal-details.manage`, `positions.configure` and `ranks.configure` are declared
    tier-only. No position holds them: the grant voter refuses them on any seat and says

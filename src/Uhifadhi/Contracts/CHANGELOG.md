@@ -6,6 +6,12 @@
 
 ## 1.0.0
 
+ * THE DELETION SEAM (ruled 28 Sep, #48): `Deletion\DeletionContributorInterface`
+   (tag `uhifadhi.deletion_contributor`) - one contributor owns a kind of record and
+   describes it (`DeletionSubject`) and removes it last; every other one counts what
+   of its own goes or stays (`DeletionLine`) and clears its own rows first.
+   `Settings\SettingsTab::Deletions` joins the section's screens.
+
  * `Concern` takes `tierOnly: list<Verb>` - the verbs only the tiers above the matrix
    hold; a position never does. `ConcernInterface::isTierOnly(Verb)` answers it. A
    tier-only verb must be one the concern supports, and an exception has none.

@@ -37,6 +37,8 @@ final readonly class UserBadge
         public string $name,
         public string $initials,
         public ?string $context = null,
+        /** Where the signed-in person edits their own account; the account menu lists it above Sign out. */
+        public ?string $profileUrl = null,
     ) {
     }
 
@@ -46,9 +48,9 @@ final readonly class UserBadge
      * name (straight off its account's full name, say) still gets the two-letter
      * avatar the design draws, without the shell having to see the account.
      */
-    public static function fromName(string $name, ?string $context = null): self
+    public static function fromName(string $name, ?string $context = null, ?string $profileUrl = null): self
     {
-        return new self($name, self::initialsOf($name), $context);
+        return new self($name, self::initialsOf($name), $context, $profileUrl);
     }
 
     /**

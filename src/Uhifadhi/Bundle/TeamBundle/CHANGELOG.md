@@ -8,6 +8,16 @@
 
 Not released yet.
 
+ * MY PROFILE (ruled 30 Sep, #69, design B with Details above Sign-in): `/me/profile`,
+   the signed-in person's own page, apart from what an Admin or a head of station opens.
+   Details (name, and a new optional `phone`); Sign-in (a new address waits in
+   `pending_email` until the link sent to it is opened, within a day; a new password
+   asks for the current one first and keeps the session); Signed in (this browser and
+   each phone, which the person can sign out). Their station, what they hold and their
+   history are read-only beside it. The account menu under the name in the top bar opens
+   it. Migration `Version20260930160000` adds `phone`, `pending_email`,
+   `pending_email_token`, `pending_email_requested_at` and `password_set_at`.
+
  * The delete page's crumb starts at `/`, which every installation serves, rather than
    a Team route an installation may not mount.
 

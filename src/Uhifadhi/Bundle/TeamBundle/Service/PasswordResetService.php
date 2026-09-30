@@ -125,6 +125,25 @@ final readonly class PasswordResetService
     }
 
     /** @throws PasswordTooShortException */
+    /**
+     * A PERSON CHANGES THEIR OWN PASSWORD (ruled 26 Sep; built with My profile,
+     * #69): the current one first, so nobody at an unlocked screen changes it.
+     * False when the current one is wrong; nothing is written then.
+     *
+     * @throws PasswordTooShortException
+     */
+    public function changeOwn(User $user, #[\SensitiveParameter] string $current, #[\SensitiveParameter] string $new): bool
+    {
+        if (!$this->hasher->isPasswordValid($user, $current)) {
+            return false;
+        }
+
+        $this->setCredential($user, $new);
+        $this->entityManager->flush();
+
+        return true;
+    }
+
     private function setCredential(User $user, #[\SensitiveParameter] string $password): void
     {
         if (mb_strlen($password) < User::PASSWORD_MIN_LENGTH) {

@@ -181,17 +181,7 @@
         {% if signIn %}{{ include('@Team/team/_sign_in_card.html.twig') }}{% endif %}
         {{ include('@Team/team/_stationed_at.html.twig', {stationedAt: stationedAt, postingDoor: postingDoor, stationPlate: stationPlate}) }}
 
-        <div class="c">
-            <span class="tab">History<span class="src">&middot; latest {{ history|length }} of {{ historyTotal }}</span></span>
-            <a class="more" href="#">View all &rarr;</a>
-            <div class="hlist">
-                {% for event in history %}
-                    <div class="hrow"><span class="w"><time datetime="{{ event.when|date('c') }}" data-localtime-format="daystamp">{{ event.when|date('j M Y · H:i') }}</time></span><span class="t">{{ event.title }}</span><span class="by">{{ event.note ?: '&mdash;'|raw }}</span></div>
-                {% else %}
-                    <div class="hrow"><span class="w">&mdash;</span><span class="t">Nothing dated yet</span><span class="by">&mdash;</span></div>
-                {% endfor %}
-            </div>
-        </div>
+        {{ include('@Team/team/_history_card.html.twig') }}
     </div>
 </div>
 {% endblock %}

@@ -14,12 +14,14 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
@@ -34,20 +36,24 @@ use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
 use Uhifadhi\Bundle\TeamBundle\Deletion\DeletionPage;
 use Uhifadhi\Bundle\TeamBundle\Deletion\DeletionService;
+use Uhifadhi\Bundle\TeamBundle\Entity\ApiToken;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\Rank;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\LastSuperAdminException;
+use Uhifadhi\Bundle\TeamBundle\Exception\PasswordTooShortException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PositionFullException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PositionRetiredException;
 use Uhifadhi\Bundle\TeamBundle\Model\PositionCard;
+use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Security\MemberVoter;
+use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\OneTimePasswordService;
@@ -186,6 +192,10 @@ final readonly class MemberController
         /** A SUPER ADMIN DELETES A PERSON (ruled 28 Sep, #48): the page, and who may. */
         private ?DeletionPage $deletionPage = null,
         private ?DeletionService $deletions = null,
+        /** MY PROFILE (ruled 30 Sep, #69): the handsets signed in as the viewer, and re-signing in after a change. */
+        private ?ApiTokenRepository $apiTokens = null,
+        private ?ApiTokenManager $apiTokenManager = null,
+        private ?Security $security = null,
     ) {
     }
 
@@ -584,6 +594,157 @@ final readonly class MemberController
         }
 
         return $this->deletionPage->respond($request, $member);
+    }
+
+    /** A pending email change is good for one day. */
+    public const int EMAIL_CHANGE_LIFETIME_SECONDS = 86400;
+
+    /**
+     * MY PROFILE (ruled 30 Sep, #69, design B: Details above Sign-in, then where
+     * you are signed in; the record's facts on the right). The signed-in
+     * person's own page, independent of the configure page an Admin opens and
+     * of the head of station's view.
+     */
+    #[Route('/me/profile', name: 'team_profile', methods: ['GET'])]
+    public function profile(): Response
+    {
+        $me = $this->signedIn() ?? throw new AccessDeniedException('Sign in to read your profile.');
+        $postings = $this->postingsFor($me);
+        $ranks = $this->personRank->historyOf($me);
+        $history = $this->history->of($me, $postings, $ranks);
+
+        return new Response($this->twig->render('@Team/me/profile.html.twig', [
+            'member' => $me,
+            'rankNow' => null !== ($ranks[0] ?? null) && null === $ranks[0]->getUntil() ? $ranks[0] : null,
+            'usesRanks' => $this->personRank->usesRanks(),
+            'placement' => $me->getPlacement(),
+            'stationedAt' => $postings[0] ?? null,
+            'stationPlate' => $this->plateFor($postings[0] ?? null),
+            'postingDoor' => null,
+            'history' => \array_slice($history, 0, self::HISTORY),
+            'historyTotal' => \count($history),
+            'handsets' => $this->apiTokens?->findLiveFor($me, new \DateTimeImmutable()) ?? [],
+            'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
+            'mailReady' => $this->mail->isConfigured(),
+            'myStationUrl' => $this->pathOrNull('me_station'),
+        ]));
+    }
+
+    /** A door to a page another bundle serves, when this installation mounts it. */
+    private function pathOrNull(string $route): ?string
+    {
+        try {
+            return $this->router->generate($route);
+        } catch (RouteNotFoundException) {
+            return null;
+        }
+    }
+
+    #[Route('/me/profile/details', name: 'team_profile_details', methods: ['POST'])]
+    public function profileDetails(Request $request): RedirectResponse
+    {
+        $me = $this->signedIn() ?? throw new AccessDeniedException('Sign in to change your profile.');
+        $this->assertCsrf($request);
+        $first = trim($request->request->getString('firstName'));
+        $last = trim($request->request->getString('lastName'));
+        if ('' === $first || '' === $last || mb_strlen($first) > 100 || mb_strlen($last) > 100) {
+            return $this->toProfile($request, 'Your first and last name are both needed, a hundred letters at most.', 'error');
+        }
+
+        $me->setFirstName($first)->setLastName($last)->setPhone($request->request->getString('phone'));
+        $this->entityManager->flush();
+
+        return $this->toProfile($request, 'Saved.');
+    }
+
+    #[Route('/me/profile/password', name: 'team_profile_password', methods: ['POST'])]
+    public function profilePassword(Request $request): RedirectResponse
+    {
+        $me = $this->signedIn() ?? throw new AccessDeniedException('Sign in to change your password.');
+        $this->assertCsrf($request);
+        $new = $request->request->getString('newPassword');
+        if ($new !== $request->request->getString('again')) {
+            return $this->toProfile($request, 'The new password and its repeat differ; nothing was changed.', 'error');
+        }
+
+        try {
+            if (!$this->resets->changeOwn($me, $request->request->getString('currentPassword'), $new)) {
+                return $this->toProfile($request, 'That is not your current password; nothing was changed.', 'error');
+            }
+        } catch (PasswordTooShortException) {
+            return $this->toProfile($request, \sprintf('A password is at least %d characters.', User::PASSWORD_MIN_LENGTH), 'error');
+        }
+
+        // A CHANGED PASSWORD SIGNS THE SESSION OUT unless it is signed in again
+        // with the new one; the phones stay signed in, as the card says.
+        $this->security?->login($me, 'form_login', 'main');
+
+        return $this->toProfile($request, 'Your password is changed. The phones signed in as you stay signed in.');
+    }
+
+    #[Route('/me/profile/email', name: 'team_profile_email', methods: ['POST'])]
+    public function profileEmail(Request $request): RedirectResponse
+    {
+        $me = $this->signedIn() ?? throw new AccessDeniedException('Sign in to change your address.');
+        $this->assertCsrf($request);
+        $email = mb_strtolower(trim($request->request->getString('email')));
+        if (false === filter_var($email, \FILTER_VALIDATE_EMAIL)) {
+            return $this->toProfile($request, 'That is not an email address.', 'error');
+        }
+        if ($email === $me->getEmail()) {
+            return $this->toProfile($request, 'That is already your address.');
+        }
+        if (null !== $this->users->findOneBy(['email' => $email])) {
+            return $this->toProfile($request, 'Somebody else signs in with that address.', 'error');
+        }
+        if (!$this->mail->isConfigured()) {
+            return $this->toProfile($request, 'This installation cannot send email, so the new address cannot be confirmed. Ask an Admin to change it.', 'error');
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $me->requestEmailChange($email, $token, new \DateTimeImmutable());
+        $this->entityManager->flush();
+        $this->mail->sendEmailChange($email, $this->router->generate('team_profile_email_confirm', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL));
+
+        return $this->toProfile($request, \sprintf('A link was sent to %s. Sign-in stays on your current address until it is opened.', $email));
+    }
+
+    #[Route('/me/profile/email/{token}', name: 'team_profile_email_confirm', requirements: ['token' => '[a-f0-9]{64}'], methods: ['GET'])]
+    public function profileEmailConfirm(Request $request, string $token): RedirectResponse
+    {
+        $me = $this->signedIn() ?? throw new AccessDeniedException('Sign in, then open the link again.');
+        if (!$me->confirmEmailChange($token, new \DateTimeImmutable(), self::EMAIL_CHANGE_LIFETIME_SECONDS)) {
+            return $this->toProfile($request, 'That link is no longer good. Ask for the change again.', 'error');
+        }
+        $this->entityManager->flush();
+        $this->security?->login($me, 'form_login', 'main');
+
+        return $this->toProfile($request, \sprintf('You sign in with %s from now on.', $me->getEmail()));
+    }
+
+    #[Route('/me/profile/handsets/{id}/sign-out', name: 'team_profile_handset_sign_out', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function profileHandsetSignOut(Request $request, int $id): RedirectResponse
+    {
+        $me = $this->signedIn() ?? throw new AccessDeniedException('Sign in to sign a phone out.');
+        $this->assertCsrf($request);
+        $token = $this->apiTokens?->find($id);
+        if (!$token instanceof ApiToken || $token->getOwner()->getId() !== $me->getId()) {
+            throw new NotFoundHttpException('No such phone signed in as you.');
+        }
+
+        $this->apiTokenManager?->revoke($token);
+
+        return $this->toProfile($request, \sprintf('%s is signed out; it can no longer record as you.', $token->getDeviceName() ?? 'The phone'));
+    }
+
+    private function toProfile(Request $request, string $message, string $kind = 'success'): RedirectResponse
+    {
+        $session = $request->hasSession() ? $request->getSession() : null;
+        if ($session instanceof FlashBagAwareSessionInterface) {
+            $session->getFlashBag()->add($kind, $message);
+        }
+
+        return new RedirectResponse($this->router->generate('team_profile'));
     }
 
     #[Route('/team/{uuid}/deactivate', name: 'team_member_deactivate', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]

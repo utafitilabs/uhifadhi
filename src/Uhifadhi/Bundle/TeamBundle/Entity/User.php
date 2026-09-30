@@ -232,6 +232,28 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?User $resetLinkSentBy = null;
 
+    /** A phone number the person gives on their own profile (ruled 30 Sep, #69); optional. */
+    #[ORM\Column(length: 32, nullable: true)]
+    private ?string $phone = null;
+
+    /**
+     * AN EMAIL CHANGE WAITING TO BE CONFIRMED FROM THE NEW ADDRESS (ruled 30
+     * Sep, #69, design B): until the link sent there is opened, sign-in stays
+     * on the old one, so a typo never locks anybody out.
+     */
+    #[ORM\Column(length: 180, nullable: true)]
+    private ?string $pendingEmail = null;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $pendingEmailToken = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $pendingEmailRequestedAt = null;
+
+    /** When the password was last set, by anybody; My profile says "Set 28 Sep". */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $passwordSetAt = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -553,8 +575,63 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
     {
         $this->password = $password;
         $this->oneTimePasswordIssuedAt = null;
+        $this->passwordSetAt = new \DateTimeImmutable();
 
         return $this;
+    }
+
+    public function getPasswordSetAt(): ?\DateTimeImmutable
+    {
+        return $this->passwordSetAt;
+    }
+
+    public function getPhone(): ?string
+    {
+        return $this->phone;
+    }
+
+    public function setPhone(?string $phone): static
+    {
+        $phone = null === $phone ? null : trim($phone);
+        $this->phone = '' === $phone ? null : $phone;
+
+        return $this;
+    }
+
+    public function getPendingEmail(): ?string
+    {
+        return $this->pendingEmail;
+    }
+
+    public function getPendingEmailRequestedAt(): ?\DateTimeImmutable
+    {
+        return $this->pendingEmailRequestedAt;
+    }
+
+    /** Ask to move sign-in to a new address; nothing changes until it is confirmed. */
+    public function requestEmailChange(string $email, string $token, \DateTimeImmutable $at): static
+    {
+        $this->pendingEmail = mb_strtolower(trim($email));
+        $this->pendingEmailToken = $token;
+        $this->pendingEmailRequestedAt = $at;
+
+        return $this;
+    }
+
+    /** The link from the new address was opened: sign-in moves there. False for a stale or foreign token. */
+    public function confirmEmailChange(string $token, \DateTimeImmutable $now, int $lifetimeSeconds): bool
+    {
+        if (null === $this->pendingEmail || null === $this->pendingEmailToken || !hash_equals($this->pendingEmailToken, $token)
+            || null === $this->pendingEmailRequestedAt || $this->pendingEmailRequestedAt->getTimestamp() + $lifetimeSeconds < $now->getTimestamp()) {
+            return false;
+        }
+
+        $this->email = $this->pendingEmail;
+        $this->pendingEmail = null;
+        $this->pendingEmailToken = null;
+        $this->pendingEmailRequestedAt = null;
+
+        return true;
     }
 
     public function getLastSignedInAt(): ?\DateTimeImmutable

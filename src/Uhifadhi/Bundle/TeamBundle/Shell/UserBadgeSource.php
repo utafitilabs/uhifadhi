@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Shell;
 
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
@@ -53,8 +55,10 @@ use Uhifadhi\Contracts\Shell\UserBadgeSourceInterface;
  */
 final readonly class UserBadgeSource implements UserBadgeSourceInterface
 {
-    public function __construct(private TokenStorageInterface $tokenStorage)
-    {
+    public function __construct(
+        private TokenStorageInterface $tokenStorage,
+        private ?UrlGeneratorInterface $urls = null,
+    ) {
     }
 
     public function badge(): ?UserBadge
@@ -69,6 +73,16 @@ final readonly class UserBadgeSource implements UserBadgeSourceInterface
         // not, not even their own (ruled 28 Sep 2026).
         $context = $user->getPosition()?->getName() ?? (TierSight::for($user) ? $user->getTeamRole()->label() : 'No position');
 
-        return UserBadge::fromName($user->getFullName(), $context);
+        return UserBadge::fromName($user->getFullName(), $context, $this->profileUrl());
+    }
+
+    /** My profile (#69), when the installation mounts the Team's routes. */
+    private function profileUrl(): ?string
+    {
+        try {
+            return $this->urls?->generate('team_profile');
+        } catch (RouteNotFoundException) {
+            return null;
+        }
     }
 }

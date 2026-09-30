@@ -1,0 +1,92 @@
+{#
+   MY PROFILE (ruled 30 Sep, #69, design B with Details above Sign-in:
+   team-module/team/variants-my-profile/b.html). The signed-in person's own
+   page: what they change on the left, what they hold on the right.
+#}
+{% extends '@Shell/page.html.twig' %}
+{% import '@Team/team/_bits.html.twig' as bits %}
+
+{% block title %}My profile · {{ member.fullName }}{% endblock %}
+{% block stylesheets %}{{ parent() }}{{ include('@Team/_stylesheets.html.twig') }}{% endblock %}
+{% block shell_page_tabs %}{% endblock %}
+{% block shell_breadcrumbs %}<a href="/">uhifadhi</a> / me / profile{% endblock %}
+
+{% block shell_page_head %}
+<div class="dpthead"><span class="mark">{{ bits.initials(member) }}</span><div><h1 class="pg">{{ member.fullName }}</h1><p class="pgsub"><span>My profile</span> &middot; <span>details</span> &middot; <span>sign-in</span> &middot; <span>where you are signed in</span></p></div></div>{% if myStationUrl %}<div class="pgact w-pgact"><a class="tgl w-act" href="{{ myStationUrl }}">My station</a></div>{% endif %}
+{% endblock %}
+
+{% block shell_page %}
+<div class="recgrid">
+<div class="col">
+    <form class="c" method="post" action="{{ path('team_profile_details') }}">
+        <span class="tab">Details<span class="src">&middot; how the organization knows you</span></span>
+        <input type="hidden" name="_token" value="{{ csrfToken }}">
+        <div class="crgrid" style="margin-top:8px">
+            <div class="crfield grow"><span class="crlab">First name</span><input type="text" class="fld" name="firstName" value="{{ member.firstName }}" maxlength="100" required aria-label="First name"><span class="zfrag">Required &middot; 100</span></div>
+            <div class="crfield grow"><span class="crlab">Last name</span><input type="text" class="fld" name="lastName" value="{{ member.lastName }}" maxlength="100" required aria-label="Last name"><span class="zfrag">Required &middot; 100</span></div>
+        </div>
+        <div class="crgrid" style="margin-top:12px">
+            <div class="crfield grow"><span class="crlab">Phone</span><input type="tel" class="fld" name="phone" value="{{ member.phone }}" maxlength="32" aria-label="Phone"><span class="zfrag">Optional &middot; read by whoever reads personal details</span></div>
+            <div class="crfield"><span class="crlab">Ranger code</span><input type="text" class="fld" value="{{ member.rangerCode }}" readonly aria-label="Ranger code"><span class="zfrag">Set by an Admin</span></div>
+        </div>
+        <div class="staddrow"><span class="chg"><b>no changes</b><span class="to">your name and phone</span></span><span class="sp"></span><button type="reset" class="btn">Discard</button><button type="submit" class="cta">Save my details</button></div>
+    </form>
+
+    <div class="c">
+        <span class="tab">Sign-in<span class="src">&middot; your address and your password</span></span>
+        <form method="post" action="{{ path('team_profile_email') }}">
+            <input type="hidden" name="_token" value="{{ csrfToken }}">
+            <div class="crgrid" style="margin-top:8px">
+                <div class="crfield grow"><span class="crlab">Email</span><input type="email" class="fld" name="email" value="{{ member.email }}" required aria-label="Email"><span class="zfrag">What you sign in with &middot; a new address is used once you open the link sent to it{% if member.pendingEmail %} &middot; waiting for {{ member.pendingEmail }}{% endif %}</span></div>
+            </div>
+            <div class="staddrow"><span class="sp"></span><button type="submit" class="btn"{% if not mailReady %} disabled title="This installation cannot send email: ask an Admin to change your address"{% endif %}>Change my address</button></div>
+        </form>
+        <form method="post" action="{{ path('team_profile_password') }}">
+            <input type="hidden" name="_token" value="{{ csrfToken }}">
+            <div class="pms-row" style="border-top:1px dashed var(--c-ln);margin-top:12px"><span class="k">password</span><span class="v"><span class="zfrag">{% if member.passwordSetAt %}Set <time datetime="{{ member.passwordSetAt|date('c') }}" data-localtime-format="day">{{ member.passwordSetAt|date('j M') }}</time> &middot; the{% else %}The{% endif %} current one first, so nobody at an unlocked screen changes it</span></span></div>
+            <div class="crgrid" style="margin-top:12px">
+                <div class="crfield grow"><span class="crlab">Current password</span><input type="password" class="fld" name="currentPassword" autocomplete="current-password" required aria-label="Current password"><span class="zfrag">The one you sign in with today</span></div>
+            </div>
+            <div class="crgrid" style="margin-top:12px">
+                <div class="crfield grow"><span class="crlab">New password</span><input type="password" class="fld" name="newPassword" autocomplete="new-password" minlength="12" required aria-label="New password"><span class="zfrag">At least 12 characters</span></div>
+                <div class="crfield grow"><span class="crlab">Again</span><input type="password" class="fld" name="again" autocomplete="new-password" minlength="12" required aria-label="New password again"><span class="zfrag">The same, to be sure</span></div>
+            </div>
+            <div class="staddrow"><span class="chg"><b>no changes</b><span class="to">the phones signed in as you stay signed in</span></span><span class="sp"></span><button type="reset" class="btn">Discard</button><button type="submit" class="cta">Change my password</button></div>
+        </form>
+    </div>
+
+    <div class="c">
+        <span class="tab">Signed in<span class="src">&middot; where you are signed in &middot; {{ 1 + handsets|length }}</span></span>
+        <div class="mb-danger" style="margin-top:6px">
+            <div class="mb-drow"><div class="dt"><b>This browser</b><em>{% if member.lastSignedInAt %}signed in <time datetime="{{ member.lastSignedInAt|date('c') }}" data-localtime-format="daystamp">{{ member.lastSignedInAt|date('j M · H:i') }}</time>{% else %}signed in now{% endif %}</em></div><span class="mono d" style="font-size:11px">this session</span></div>
+            {% for handset in handsets %}
+                <div class="mb-drow"><div class="dt"><b>{{ handset.deviceName ?? 'A phone' }}</b><em>{% if handset.lastUsedAt %}last reported <time datetime="{{ handset.lastUsedAt|date('c') }}" data-localtime-format="daystamp">{{ handset.lastUsedAt|date('j M · H:i') }}</time>{% else %}signed in, not used yet{% endif %} &middot; a phone you no longer carry can still record as you</em></div>
+                    <form method="post" action="{{ path('team_profile_handset_sign_out', {id: handset.id}) }}"><input type="hidden" name="_token" value="{{ csrfToken }}"><button class="softbtn danger" type="submit">{{ bits.icon_off() }} Sign out</button></form></div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<div class="col">
+    {{ include('@Team/team/_stationed_at.html.twig', {stationedAt: stationedAt, postingDoor: postingDoor, stationPlate: stationPlate}) }}
+    <div class="c">
+        <span class="tab">What you hold<span class="src">&middot; set by your Admin</span></span>
+        <div class="pms-row"><span class="k">position</span><span class="v"><b>{{ member.position ? member.position.name : 'none' }}</b>{% if member.positionSince %} <span class="zfrag">since <time datetime="{{ member.positionSince|date('c') }}" data-localtime-format="day">{{ member.positionSince|date('j M Y') }}</time></span>{% endif %}</span></div>
+        {% if usesRanks %}<div class="pms-row"><span class="k">rank</span><span class="v"><b>{{ rankNow ? rankNow.rank.name : 'none' }}</b>{% if rankNow %} <span class="zfrag">since <time datetime="{{ rankNow.since|date('Y-m-d') }}" data-localtime-format="day">{{ rankNow.since|date('j M Y') }}</time></span>{% endif %}</span></div>{% endif %}
+        {#- The whole set, one chip each: this is the person's own record, where a
+            list's "first +2" fragment would hide what they hold. -#}
+        <div class="pms-row"><span class="k">where</span><span class="v">
+            {%- if placement is null %}nowhere yet
+            {%- elseif placement.areas is null %}<span class="chip">The whole organization</span>
+            {%- else %}{% for area in placement.areas %}<span class="chip">{{ area.name }}</span>{% else %}nowhere yet{% endfor %}{% endif -%}
+        </span></div>
+        <div class="pms-row"><span class="k">departments</span><span class="v">
+            {%- if placement is null %}none
+            {%- elseif placement.departments is null %}<span class="chip">All departments</span>
+            {%- else %}{% for department in placement.departments %}<span class="chip">{{ department.name }}</span>{% else %}none{% endfor %}{% endif -%}
+        </span></div>
+        <p class="use" style="margin:10px 0 0">To change any of these, ask an Admin.</p>
+    </div>
+    {{ include('@Team/team/_history_card.html.twig') }}
+</div>
+</div>
+{% endblock %}

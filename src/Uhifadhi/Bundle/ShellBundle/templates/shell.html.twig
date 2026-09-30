@@ -196,15 +196,20 @@
                                         </span>
                                     </span>
                                     {%- endset -%}
-                                    {#- SIGN OUT IS ON THE NAME: the card opens a menu whose
-                                        item is the firewall's own logout path. With no
-                                        firewall it stays a plain card. -#}
+                                    {#- MY PROFILE AND SIGN OUT ARE ON THE NAME: the card opens a
+                                        menu of the badge's profile page (#69) and the firewall's
+                                        own logout path. With neither it stays a plain card. -#}
                                     {%- set _out = shell_sign_out_url() -%}
-                                    {%- if _out -%}
+                                    {%- if _out or _badge.profileUrl -%}
                                         <details class="umenu">
                                             <summary aria-label="Account menu">{{ _card }}</summary>
                                             <div class="umenu-pop" role="menu">
+                                                {%- if _badge.profileUrl %}
+                                                <a class="umenu-i" role="menuitem" href="{{ _badge.profileUrl }}">{{ ux_icon('shell:user', {width: 14, height: 14}) }} My profile</a>
+                                                {%- endif %}
+                                                {%- if _out %}
                                                 <a class="umenu-i" role="menuitem" href="{{ _out }}">{{ ux_icon('shell:power', {width: 14, height: 14}) }} Sign out</a>
+                                                {%- endif %}
                                             </div>
                                         </details>
                                     {%- else -%}

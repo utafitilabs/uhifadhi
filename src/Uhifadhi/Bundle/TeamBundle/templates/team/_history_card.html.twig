@@ -1,0 +1,12 @@
+{# THE ACCOUNT'S HISTORY, latest first - the record's and My profile's. #}
+<div class="c">
+    <span class="tab">History<span class="src">&middot; latest {{ history|length }} of {{ historyTotal }}</span></span>
+    <a class="more" href="#">View all &rarr;</a>
+    <div class="hlist">
+        {% for event in history %}
+            <div class="hrow"><span class="w"><time datetime="{{ event.when|date('c') }}" data-localtime-format="daystamp">{{ event.when|date('j M Y · H:i') }}</time></span><span class="t">{{ event.title }}</span><span class="by">{{ event.note ?: '&mdash;'|raw }}</span></div>
+        {% else %}
+            <div class="hrow"><span class="w">&mdash;</span><span class="t">Nothing dated yet</span><span class="by">&mdash;</span></div>
+        {% endfor %}
+    </div>
+</div>

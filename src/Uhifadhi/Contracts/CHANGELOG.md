@@ -6,6 +6,9 @@
 
 ## 1.0.0
 
+ * `Shell\UserBadge` carries an optional `profileUrl`, the page where the signed-in person
+   edits their own account; `fromName()` takes it as a third argument.
+
  * `Deletion\LinkedRecordsInterface`: a record whose delete takes records others link to
    by id lists those ids, so a module linking to one keeps its record and drops the link
    (ruled 28 Sep, #48: an incident filed from a deleted patrol stays, losing its link).

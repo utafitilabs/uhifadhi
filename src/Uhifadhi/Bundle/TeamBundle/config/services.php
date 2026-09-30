@@ -1029,7 +1029,7 @@ return static function (ContainerConfigurator $container): void {
      * and it is harmlessly inert.
      */
     $services->set('team.user_badge_source', UserBadgeSource::class)
-        ->args([service('security.token_storage')]);
+        ->args([service('security.token_storage'), service('router')->nullOnInvalid()]);
     $services->alias('shell.user_badge_source', 'team.user_badge_source');
 
     /*
@@ -1258,6 +1258,9 @@ return static function (ContainerConfigurator $container): void {
             service('team.sign_in_card'),
             service('team.deletion_page'),
             service('team.deletions'),
+            service(ApiTokenRepository::class),
+            service('team.api_token.manager'),
+            service('security.helper'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(MemberController::class, 'team.controller.member')->public();

@@ -117,6 +117,26 @@ final readonly class Mail
      * is the second one, so that a caller added later cannot make the failure
      * silent by forgetting.
      */
+    /** A new sign-in address, confirmed from that address before it is used (ruled 30 Sep, #69). */
+    public function sendEmailChange(string $newEmail, string $confirmUrl): void
+    {
+        $this->send(
+            $newEmail,
+            \sprintf('Confirm your new %s address', $this->installationName),
+            <<<TEXT
+                Somebody asked to sign in to {$this->installationName} with this address
+                from now on.
+
+                If that was you, confirm it here:
+
+                {$confirmUrl}
+
+                The link is good for ONE DAY. Until it is opened, sign-in stays on the
+                old address. If it was not you, ignore this letter and nothing changes.
+                TEXT,
+        );
+    }
+
     private function send(string $to, string $subject, string $body): void
     {
         if (null === $this->mailer || '' === $this->from) {

@@ -17,6 +17,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
@@ -150,8 +151,9 @@ final class SignInTest extends WebTestCase
         $menu = $page->filter('header.topbar details.umenu');
         self::assertCount(1, $menu);
         self::assertCount(1, $menu->filter('summary span.user'), 'the name is what opens it');
-        $out = $menu->filter('a.umenu-i');
-        self::assertSame('/logout', $out->attr('href'));
+        $items = $menu->filter('a.umenu-i');
+        self::assertSame(['/me/profile', '/logout'], $items->each(static fn (Crawler $a): string => (string) $a->attr('href')), 'My profile, then Sign out');
+        $out = $items->last();
         self::assertStringContainsString('Sign out', $out->text());
 
         $this->client->request('GET', '/logout');

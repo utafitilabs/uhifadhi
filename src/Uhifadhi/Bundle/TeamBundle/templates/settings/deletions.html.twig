@@ -1,0 +1,20 @@
+{#
+   SETTINGS › DELETIONS (ruled 30 Sep, #48, option B: a timeline by day,
+   uhifadhi-web/settings/variants-deletions/b.html). One line per delete
+   under the day it happened; the record is gone, so nothing links to it.
+#}
+{% extends '@Shell/settings/_section.html.twig' %}
+
+{% block shell_page %}
+    {% for day, lines in days %}
+        <h2 class="zone"><time datetime="{{ lines[0].deletedAt|date('c') }}" data-localtime-format="day">{{ lines[0].deletedAt|date('j M') }}</time></h2>
+        <div class="c">
+            {% for line in lines %}
+                <div class="rln"><span><span class="mono d"><time datetime="{{ line.deletedAt|date('c') }}" data-localtime-format="time">{{ line.deletedAt|date('H:i') }}</time></span> &nbsp;<span class="chip">{{ line.kind }}</span> <b>{{ line.title }}</b> deleted by {{ line.byName }}</span><span class="mono d">{{ line.whatWent }}</span></div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="c"><div class="rln"><span class="d">Nothing has been deleted on this installation.</span></div></div>
+    {% endfor %}
+    <p class="use" style="margin:10px 0 0">A delete removes the record and everything under it; this line is all that stays. Nothing here links to the record, because the record is gone.</p>
+{% endblock %}

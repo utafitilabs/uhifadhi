@@ -50,6 +50,13 @@ enum SettingsTab: string
     case Organization = 'organization';
 
     /**
+     * Every delete a Super Admin made (ruled 28 Sep, #48; drawn as a timeline
+     * by day, ruled 30 Sep). Drawn by whoever keeps the deletes, and shown to
+     * nobody who may not delete.
+     */
+    case Deletions = 'deletions';
+
+    /**
      * The first screen — the one the sidebar row and the section's own name
      * open on, and the one drawn at the bare address.
      */
@@ -72,6 +79,7 @@ enum SettingsTab: string
             self::Installation => 'Installation',
             self::Modules => 'Modules',
             self::Organization => 'Organization',
+            self::Deletions => 'Deletions',
         };
     }
 
@@ -87,6 +95,7 @@ enum SettingsTab: string
             self::Installation => 'What is installed, at what version, which areas run it, and whether any of it needs attention. This is the page that used to be the front door.',
             self::Modules => 'The catalogue: every module this installation can run, what it does, and which areas run it.',
             self::Organization => 'Who this installation belongs to: the name it is known by, its mark, and where in the world it is.',
+            self::Deletions => 'Every delete a Super Admin made: who, what, when, and what went with it. The records themselves are gone; these lines are all that stays.',
         };
     }
 

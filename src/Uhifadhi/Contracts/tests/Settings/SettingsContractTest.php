@@ -151,7 +151,7 @@ final class SettingsContractTest extends TestCase
     public function testTheScreensAreDeclaredInTheOrderTheSectionIsRead(): void
     {
         self::assertSame(
-            ['overview', 'installation', 'modules', 'organization'],
+            ['overview', 'installation', 'modules', 'organization', 'deletions'],
             array_column(SettingsTab::cases(), 'value'),
         );
     }

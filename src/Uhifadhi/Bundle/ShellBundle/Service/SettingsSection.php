@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\ShellBundle\Service;
 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
 use Uhifadhi\Bundle\ShellBundle\Model\SettingsScreen;
 use Uhifadhi\Contracts\Settings\SettingsTab;
@@ -56,7 +57,19 @@ final class SettingsSection
     public function __construct(
         private readonly UrlGeneratorInterface $urls,
         private readonly SettingsReading $reading,
+        /** WHO MAY READ THE DELETIONS: a Super Admin, where deleting is installed at all. */
+        private readonly ?DeletionPageInterface $deletions = null,
     ) {
+    }
+
+    /**
+     * WHETHER THIS VIEWER IS SHOWN THE SCREEN. Every screen is, but Deletions,
+     * which is a Super Admin's alone and does not exist where nothing deletes
+     * (ruled 28 Sep, #48). The strip and the sidebar both ask here.
+     */
+    public function shows(SettingsTab $tab): bool
+    {
+        return SettingsTab::Deletions !== $tab || ($this->deletions?->mayDelete() ?? false);
     }
 
     /**
@@ -69,7 +82,9 @@ final class SettingsSection
     public function screen(?string $segment): ?SettingsScreen
     {
         $tab = null === $segment ? SettingsTab::first() : SettingsTab::tryFrom($segment);
-        if (null === $tab) {
+        // DELETIONS IS DRAWN BY WHOEVER KEEPS THE DELETES, on a route of its
+        // own at the same address; here it is no screen.
+        if (null === $tab || SettingsTab::Deletions === $tab) {
             return null;
         }
 
@@ -106,7 +121,9 @@ final class SettingsSection
     {
         $tabs = [];
         foreach (SettingsTab::cases() as $tab) {
-            $tabs[] = new AreaTab($tab->label(), $this->addressOf($tab), $tab === $current);
+            if ($this->shows($tab)) {
+                $tabs[] = new AreaTab($tab->label(), $this->addressOf($tab), $tab === $current);
+            }
         }
 
         return $tabs;

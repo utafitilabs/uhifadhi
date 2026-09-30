@@ -43,6 +43,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\RankConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\RankController;
 use Uhifadhi\Bundle\TeamBundle\Controller\SecurityController;
+use Uhifadhi\Bundle\TeamBundle\Controller\SettingsDeletionsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
@@ -348,6 +349,12 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.deletion_page', DeletionPage::class)
         ->args([service('team.deletions'), service('twig'), service('security.csrf.token_manager')]);
     $services->alias(DeletionPageInterface::SERVICE, 'team.deletion_page');
+
+    // SETTINGS › DELETIONS: the line every delete keeps, by day (ruled 30 Sep, #48).
+    $services->set('team.controller.settings_deletions', SettingsDeletionsController::class)
+        ->args([service('twig'), service('shell.settings.section'), service('team.deletions'), service(DeletionRecordRepository::class)])
+        ->tag('controller.service_arguments');
+    $services->alias(SettingsDeletionsController::class, 'team.controller.settings_deletions')->public();
 
     // THE TEAM'S OWN RECORDS, and what of the Team's an area's delete reaches.
     $services->set('team.deletion.position', PositionDeletion::class)

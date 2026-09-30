@@ -46,9 +46,28 @@ final class SettingsSectionTest extends ShellKernelTestCase
      */
     public static function screens(): \Generator
     {
-        foreach (SettingsTab::cases() as $tab) {
+        foreach (self::shellScreens() as $tab) {
             yield $tab->value => [$tab];
         }
+    }
+
+    /**
+     * THE SCREENS THE SHELL DRAWS: every one but Deletions, which whoever
+     * keeps the deletes serves and which this kernel - with nothing that
+     * deletes - never shows (ruled 28 Sep, #48).
+     *
+     * @return list<SettingsTab>
+     */
+    private static function shellScreens(): array
+    {
+        $screens = [];
+        foreach (SettingsTab::cases() as $tab) {
+            if (SettingsTab::Deletions !== $tab) {
+                $screens[] = $tab;
+            }
+        }
+
+        return $screens;
     }
 
     /**
@@ -95,7 +114,7 @@ final class SettingsSectionTest extends ShellKernelTestCase
         $tabs = $this->get($this->address($tab))->filter('div.atabs a');
 
         self::assertSame(
-            array_map(static fn (SettingsTab $one): string => $one->label(), SettingsTab::cases()),
+            array_map(static fn (SettingsTab $one): string => $one->label(), self::shellScreens()),
             $tabs->each(static fn (Crawler $one): string => trim($one->text())),
         );
         self::assertCount(1, $tabs->filter('.on'));
@@ -142,7 +161,7 @@ final class SettingsSectionTest extends ShellKernelTestCase
 
         $children = $crawler->filter('nav.nav .ntree a')->each(static fn (Crawler $one): string => trim($one->text()));
         self::assertSame(
-            array_map(static fn (SettingsTab $one): string => $one->label(), SettingsTab::cases()),
+            array_map(static fn (SettingsTab $one): string => $one->label(), self::shellScreens()),
             $children,
         );
     }

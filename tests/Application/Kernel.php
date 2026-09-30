@@ -408,6 +408,10 @@ class Kernel extends BaseKernel
         // configuration entry through it.
         $routes->import(ShellBundle::CONFIGURE_ROUTES);
 
+        // THE SETTINGS SECTION, as the starter's config/routes/shell.yaml
+        // imports it: the Deletions screen joins its strip (ruled 30 Sep, #48).
+        $routes->import(ShellBundle::SETTINGS_ROUTES);
+
         // THE LIVENESS ROUTE, which an installation puts behind the proxy's
         // healthcheck and this application owns for the same reason: it answers
         // out of the container alone, with no database, no session and no

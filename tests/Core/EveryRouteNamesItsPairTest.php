@@ -143,6 +143,8 @@ final class EveryRouteNamesItsPairTest extends KernelTestCase
         'team_department_delete' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
         'area_station_delete' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
         'area_delete' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
+        'team_settings_deletions' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
+        'settings' => 'ShellBundle\\Controller\\SettingsController — settings.read, asked by the controller for every screen of the section',
     ];
 
     public function testEveryRouteEitherNamesAPairOrIsDeliberatelyOpen(): void

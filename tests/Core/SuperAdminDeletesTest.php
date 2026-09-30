@@ -106,6 +106,35 @@ final class SuperAdminDeletesTest extends FieldApiTestCase
         self::assertSame('Department Ecology', $this->lastLine()->getTitle());
     }
 
+    /** SETTINGS › DELETIONS (ruled 30 Sep, #48, B): the line, under its day, for a Super Admin. */
+    public function testTheLineIsReadUnderItsDayInSettings(): void
+    {
+        $area = $this->area('Kilimani Game Reserve');
+        $department = $this->areaDepartment('Ecology', $area);
+        $this->confirm($this->pageFor('/departments/'.$department->getUuidString().'/delete'), 'Ecology');
+
+        $settings = $this->client->request('GET', '/settings');
+        self::assertContains('Deletions', $settings->filter('.atabs a')->each(static fn ($a): string => trim($a->text())));
+
+        $page = $this->client->request('GET', '/settings/deletions');
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $page->filter('h2.zone'), 'one day');
+        self::assertStringContainsString('Department Ecology deleted by Naomi Kileo', $page->filter('.rln')->first()->text());
+        self::assertStringContainsString('1 department', $page->filter('.rln')->first()->text());
+    }
+
+    public function testAnAdminIsShownNoDeletionsTabAndIsRefusedThePage(): void
+    {
+        $admin = $this->officeStaff('Desta', 'Haile')->setTeamRole(TeamRoleEnum::Admin);
+        $this->em->flush();
+        $this->client->loginUser($admin);
+
+        $settings = $this->client->request('GET', '/settings');
+        self::assertNotContains('Deletions', $settings->filter('.atabs a')->each(static fn ($a): string => trim($a->text())));
+        $this->client->request('GET', '/settings/deletions');
+        self::assertResponseStatusCodeSame(403);
+    }
+
     public function testAnAdminIsRefusedEveryDeletePage(): void
     {
         $area = $this->area('Kilimani Game Reserve');

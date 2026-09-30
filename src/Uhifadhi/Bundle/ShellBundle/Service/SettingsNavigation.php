@@ -85,6 +85,9 @@ final readonly class SettingsNavigation implements NavigationSourceInterface
         try {
             $children = [];
             foreach (SettingsTab::cases() as $tab) {
+                if (!$this->section->shows($tab)) {
+                    continue;
+                }
                 $address = $this->section->addressOf($tab);
                 $children[] = new NavItem(
                     label: $tab->label(),
@@ -93,6 +96,10 @@ final readonly class SettingsNavigation implements NavigationSourceInterface
                 );
             }
         } catch (RouteNotFoundException) {
+            return;
+        }
+
+        if ([] === $children) {
             return;
         }
 

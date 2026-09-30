@@ -289,6 +289,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('router'),
             service('shell.settings.reading'),
+            service(DeletionPageInterface::SERVICE)->nullOnInvalid(),
         ]);
 
     /*

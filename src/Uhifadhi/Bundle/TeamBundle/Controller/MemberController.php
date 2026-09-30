@@ -32,6 +32,8 @@ use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
+use Uhifadhi\Bundle\TeamBundle\Deletion\DeletionPage;
+use Uhifadhi\Bundle\TeamBundle\Deletion\DeletionService;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\Rank;
@@ -181,6 +183,9 @@ final readonly class MemberController
         private ?AuthorizationCheckerInterface $authorization = null,
         /** THE SIGN-IN CARD on the record, for whoever holds Sign-in help (ruled 30 Sep, #67). */
         private ?SignInCard $signInCard = null,
+        /** A SUPER ADMIN DELETES A PERSON (ruled 28 Sep, #48): the page, and who may. */
+        private ?DeletionPage $deletionPage = null,
+        private ?DeletionService $deletions = null,
     ) {
     }
 
@@ -294,6 +299,7 @@ final readonly class MemberController
             'historyTotal' => \count($history),
             'mailReady' => $this->mail->isConfigured(),
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
+            'mayDelete' => ($this->deletions?->mayDelete() ?? false) && $member->getId() !== $this->signedIn()?->getId(),
         ]));
     }
 
@@ -556,6 +562,30 @@ final readonly class MemberController
      * stays, everything they recorded keeps its author, and reactivating is one
      * click.
      */
+    /**
+     * DELETING A PERSON (ruled 28 Sep, #48: people too, and what they recorded
+     * goes with them, counted first). Never oneself, and never the last active
+     * Super Admin: the installation always keeps somebody who can administer it.
+     */
+    #[Route('/team/{uuid}/delete', name: 'team_member_delete', requirements: ['uuid' => Requirement::UUID], methods: ['GET', 'POST'])]
+    public function delete(Request $request, string $uuid): Response
+    {
+        $member = $this->member($uuid);
+        if (null === $this->deletionPage || !($this->deletions?->mayDelete() ?? false)) {
+            throw new AccessDeniedException('Only a Super Admin deletes.');
+        }
+
+        $signedIn = $this->signedIn();
+        if ($member === $signedIn || $member->getId() === $signedIn?->getId()) {
+            return $this->back($request, $member, 'Nobody deletes their own account.', 'error');
+        }
+        if ($this->invariant->isLastActiveSuperAdmin($member)) {
+            return $this->back($request, $member, 'The last active Super Admin cannot be deleted.', 'error');
+        }
+
+        return $this->deletionPage->respond($request, $member);
+    }
+
     #[Route('/team/{uuid}/deactivate', name: 'team_member_deactivate', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
     #[IsGranted('directory.manage')]
     public function deactivate(Request $request, string $uuid): Response

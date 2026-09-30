@@ -3758,3 +3758,24 @@ form.c { display: block; margin-bottom: 20px; }
 .signin-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px;
     border-top: 1px solid var(--c-ln); margin-top: 10px; padding-top: 10px; font-size: 12px; color: rgb(var(--c-dim)); }
 .signin-foot .softbtn { white-space: nowrap; flex: none; }
+
+/* The delete page (ruled 28 Sep, #48, design C): what goes and stays on the
+   left, the typed confirmation and the audit line on the right. */
+.dgrid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.dgrid .col { display: flex; flex-direction: column; gap: 18px; }
+.dcounts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 12px 0 4px; }
+.dcnt { border: 1px solid color-mix(in srgb, rgb(var(--c-fail)) 32%, transparent); background: color-mix(in srgb, rgb(var(--c-fail)) 6%, transparent); border-radius: 10px; padding: 9px 11px; }
+.dcnt b { display: block; font-size: 19px; line-height: 1.15; }
+.dcnt span { font: 600 10px 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; color: rgb(var(--c-fog)); }
+.dlist { margin-top: 12px; }
+.dconfirm .use { margin: 6px 0 10px; }
+.dconfirm label { display: block; font-size: 13px; color: rgb(var(--c-fog)); margin: 6px 0 8px; }
+.dconfirm label b { color: rgb(var(--c-tx)); font-family: 'JetBrains Mono', monospace; }
+.dconfirm .row { display: flex; gap: 10px; }
+.dconfirm .fld { flex: 1; }
+.dconfirm .go { display: inline-flex; align-items: center; gap: 7px; color: rgb(var(--c-failT)); background: rgb(var(--c-fail)); border: 0; border-radius: 9px; padding: 0 16px; font-weight: 700; cursor: pointer; }
+.dconfirm .go[disabled] { opacity: .45; cursor: default; }
+.dconfirm .go svg { width: 13px; height: 13px; }
+.dwrong { color: rgb(var(--c-fail)); font-size: 13px; margin: 0 0 8px; }
+.dfine { font: 600 10px 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; color: rgb(var(--c-dim)); margin-top: 10px; }
+@media (max-width: 1100px) { .dgrid { grid-template-columns: 1fr; } .dcounts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

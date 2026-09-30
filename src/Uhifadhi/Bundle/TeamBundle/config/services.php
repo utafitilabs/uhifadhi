@@ -47,6 +47,9 @@ use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamRolesController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamSectionController;
+use Uhifadhi\Bundle\TeamBundle\Deletion\DeletionPage;
+use Uhifadhi\Bundle\TeamBundle\Deletion\DeletionService;
+use Uhifadhi\Bundle\TeamBundle\Deletion\PersonDeletion;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ModuleHistoryListener;
@@ -67,6 +70,7 @@ use Uhifadhi\Bundle\TeamBundle\Performance\OrganizationBand;
 use Uhifadhi\Bundle\TeamBundle\Performance\StaffingTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCards;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\DeletionRecordRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentKindRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentPeriodFigureRepository;
@@ -144,6 +148,7 @@ use Uhifadhi\Bundle\TeamBundle\Twig\MatrixRuntime;
 use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
 use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;
+use Uhifadhi\Contracts\Deletion\DeletionContributorInterface;
 use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
 use Uhifadhi\Contracts\Me\MyCardProviderInterface;
 use Uhifadhi\Contracts\People\PeopleFacetProviderInterface;
@@ -322,6 +327,27 @@ return static function (ContainerConfigurator $container): void {
     $services->set(DepartmentPeriodFigureRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
+
+    $services->set(DeletionRecordRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    // A SUPER ADMIN DELETES A RECORD AND EVERYTHING UNDER IT (ruled 28 Sep,
+    // #48); whoever holds rows it reaches answers through the tagged seam.
+    $services->set('team.deletions', DeletionService::class)
+        ->args([
+            tagged_iterator(DeletionContributorInterface::TAG),
+            service('doctrine.orm.entity_manager'),
+            service('security.token_storage'),
+        ]);
+
+    $services->set('team.deletion_page', DeletionPage::class)
+        ->args([service('team.deletions'), service('twig'), service('security.csrf.token_manager')]);
+
+    // THE TEAM OWNS A PERSON: it names them and removes the account last.
+    $services->set('team.deletion.person', PersonDeletion::class)
+        ->args([service('doctrine.orm.entity_manager'), service('router')])
+        ->tag(DeletionContributorInterface::TAG);
 
     $services->set(ApiTokenRepository::class)
         ->args([service('doctrine')])
@@ -1207,6 +1233,8 @@ return static function (ContainerConfigurator $container): void {
             service('team.one_time_password'),
             service('security.authorization_checker'),
             service('team.sign_in_card'),
+            service('team.deletion_page'),
+            service('team.deletions'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(MemberController::class, 'team.controller.member')->public();

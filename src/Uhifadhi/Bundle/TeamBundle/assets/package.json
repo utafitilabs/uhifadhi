@@ -51,6 +51,12 @@
                 "name": "uhifadhi--team-bundle--position-card",
                 "fetch": "lazy",
                 "enabled": true
+            },
+            "delete-confirm": {
+                "main": "controllers/delete_confirm_controller.js",
+                "name": "uhifadhi--team-bundle--delete-confirm",
+                "fetch": "lazy",
+                "enabled": true
             }
         },
         "importmap": {}

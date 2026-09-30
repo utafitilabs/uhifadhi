@@ -138,6 +138,7 @@ final class EveryRouteNamesItsPairTest extends KernelTestCase
         'organization_dashboard' => 'AreaBundle\\Controller\\OrgDashboardController::dashboard — dashboard.read decides WHICH dashboard `/` draws (the organization\'s, or the person\'s own, #19), never whether there is one',
         'shell_area_configure' => 'each section it frames, on its own screen — and whether the frame itself should be gated is unruled',
         'shell_module_configure' => 'the same, for a module surface',
+        'team_member_delete' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
     ];
 
     public function testEveryRouteEitherNamesAPairOrIsDeliberatelyOpen(): void

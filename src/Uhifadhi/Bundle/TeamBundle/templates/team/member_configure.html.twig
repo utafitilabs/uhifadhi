@@ -320,6 +320,17 @@
                         </form>
                     </div>
                 {% endif %}
+                {% if mayDelete|default(false) %}
+                    {# A SUPER ADMIN DELETES (ruled 28 Sep, #48): its own page, counted and typed. #}
+                    <div class="mb-drow">
+                        <div class="dt"><b>Delete the person</b><em>Super Admin only &middot; everything they recorded goes, counted first</em></div>
+                        {% if isLastSuperAdmin %}
+                            <span class="mb-absent">{{ bits.icon_off() }} refused &mdash; the last active Super Admin</span>
+                        {% else %}
+                            <a class="softbtn danger" href="{{ path('team_member_delete', {uuid: member.uuidString}) }}">{{ bits.icon_off() }} Delete</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
         </div>
 

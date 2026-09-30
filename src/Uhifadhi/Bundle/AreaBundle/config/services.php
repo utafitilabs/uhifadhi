@@ -16,6 +16,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 use Symfony\Component\Console\Application;
 use Uhifadhi\Bundle\AreaBundle\Access\AreaConcerns;
 use Uhifadhi\Bundle\AreaBundle\Command\PresenceRebuildCommand;
+use Uhifadhi\Bundle\AreaBundle\Deletion\PersonDutyDeletion;
 use Uhifadhi\Bundle\AreaBundle\Devkit\AreaContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\StationContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\ZoneContentProvider;
@@ -81,6 +82,7 @@ use Uhifadhi\Contracts\Area\LivePositionsInterface;
 use Uhifadhi\Contracts\Area\PresenceProviderInterface;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;
 use Uhifadhi\Contracts\Area\StationSectionsInterface;
+use Uhifadhi\Contracts\Deletion\DeletionContributorInterface;
 use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Contracts\People\PeopleFacetProviderInterface;
@@ -777,4 +779,9 @@ return static function (ContainerConfigurator $container): void {
             service('doctrine.orm.entity_manager'),
         ])
         ->tag('uhifadhi.devkit.content_provider');
+
+    // WHAT OF THE AREA'S GOES WITH A DELETED PERSON (ruled 28 Sep, #48).
+    $services->set('area.deletion.person_duty', PersonDutyDeletion::class)
+        ->args([service('doctrine.orm.entity_manager')])
+        ->tag(DeletionContributorInterface::TAG);
 };

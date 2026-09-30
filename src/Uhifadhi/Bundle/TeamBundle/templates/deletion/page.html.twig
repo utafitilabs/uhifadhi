@@ -1,0 +1,70 @@
+{#
+   THE DELETE PAGE (ruled 28 Sep, #48, design C, drawn for a patrol in
+   uhifadhi-web/areas/kilimani/modules/patrols/delete.html): what goes,
+   counted then named; what stays; the typed confirmation; the audit line.
+#}
+{% extends '@Shell/page.html.twig' %}
+{% import '@Team/team/_bits.html.twig' as bits %}
+{% set subject = plan.subject %}
+
+{% block title %}Delete {{ subject.kind }} {{ subject.reference }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_page_tabs %}{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_index') }}">uhifadhi</a> / <a href="{{ subject.afterUrl }}">{{ subject.register }}</a> / <a href="{{ subject.recordUrl }}">{{ subject.reference|lower }}</a> / delete
+{% endblock %}
+
+{% block shell_page_head %}
+    <div class="pghead"><div><h1 class="pg">Delete {{ subject.kind }} {{ subject.reference }}</h1><p class="pgsub">{{ subject.summary }}. Super Admin only.</p></div>
+        <div class="pgact w-pgact"><a class="tgl" href="{{ subject.recordUrl }}">Back to the {{ subject.kind }}</a></div></div>
+{% endblock %}
+
+{% block shell_page %}
+<div class="dgrid">
+    <div class="col">
+        <div class="c"><span class="tab">What goes<span class="src">&middot; deleted with the {{ subject.kind }}, and nothing brings it back</span></span>
+            <div class="dcounts">
+                {% for line in plan.goes %}<div class="dcnt"><b>{{ line.count|number_format }}</b><span>{{ line.count == 1 and line.singular ? line.singular : line.label }}{% if line.detail %} &middot; {{ line.detail }}{% endif %}</span></div>{% endfor %}
+            </div>
+            {% set named = plan.goes|filter(l => l.items is not empty) %}
+            {% if named is not empty %}
+                <div class="dlist">
+                    {% for line in named %}{% for item in line.items %}<div class="rln"><span>{{ item[0] }}</span><span class="mono d">{{ item[1] }}</span></div>{% endfor %}{% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        <div class="c"><span class="tab">What stays<span class="src">&middot; not part of the {{ subject.kind }}</span></span>
+            {% for line in plan.stays %}
+                {% if line.items is empty %}<div class="rln"><span>{{ line.phrase }}</span>{% if line.detail %}<span class="mono d">{{ line.detail }}</span>{% endif %}</div>{% endif %}
+                {% for item in line.items %}<div class="rln"><span>{{ item[0] }}</span><span class="mono w">{{ item[1] }}</span></div>{% endfor %}
+            {% else %}
+                <div class="rln"><span class="d">Nothing outside the {{ subject.kind }} is linked to it.</span></div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col">
+        <form class="c dconfirm" method="post" data-controller="uhifadhi--team-bundle--delete-confirm" data-uhifadhi--team-bundle--delete-confirm-reference-value="{{ subject.reference }}">
+            <span class="tab">Confirm<span class="src">&middot; typed, not clicked</span></span>
+            <p class="use">For a test {{ subject.kind }} or a duplicate &middot; a {{ subject.kind }} recorded wrongly is corrected, not deleted</p>
+            {% if refusal %}<p class="dwrong">{{ refusal }}</p>{% endif %}
+            <label for="delete-reference">Type <b>{{ subject.reference }}</b> to delete this {{ subject.kind }}</label>
+            <input type="hidden" name="_token" value="{{ token }}">
+            <div class="row">
+                <input class="fld" id="delete-reference" name="reference" autocomplete="off" aria-label="Type the {{ subject.kind }}'s reference" data-uhifadhi--team-bundle--delete-confirm-target="typed" data-action="input->uhifadhi--team-bundle--delete-confirm#check">
+                <button class="go" type="submit" data-uhifadhi--team-bundle--delete-confirm-target="go">{{ bits.icon_off() }} Delete the {{ subject.kind }}</button>
+            </div>
+            <div class="dfine">Cannot be undone &middot; one line is kept in the audit log: who, what, when</div>
+        </form>
+        <div class="c"><span class="tab">The audit line<span class="src">&middot; what stays behind</span></span>
+            <div class="rln"><span class="d"><time datetime="{{ now|date('c') }}" data-localtime-format="daystamp">{{ now|date('H:i · j M') }}</time></span><span>{{ subject.title }} deleted by {{ app.user.fullName|default('') }} &middot; {{ plan.whatGoes }}</span></div>
+            <p class="use">Kept in Settings &rsaquo; Deletions, readable by Super Admins.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

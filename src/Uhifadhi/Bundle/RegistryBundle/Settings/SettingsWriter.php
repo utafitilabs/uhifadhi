@@ -32,6 +32,7 @@ final readonly class SettingsWriter
         private SettingValueRepository $values,
         private EntityManagerInterface $em,
         private ClockInterface $clock,
+        private SettingsResolver $resolver,
     ) {
     }
 
@@ -65,6 +66,9 @@ final readonly class SettingsWriter
             }
             $this->em->flush();
         });
+
+        // What the reader held is stale now.
+        $this->resolver->reset();
     }
 
     /** What is set for one setting, for Settings to draw. */

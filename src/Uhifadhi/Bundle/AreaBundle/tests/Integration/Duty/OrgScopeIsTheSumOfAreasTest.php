@@ -22,9 +22,12 @@ use Uhifadhi\Bundle\AreaBundle\Enum\PositionSourceEnum;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
+use Uhifadhi\Bundle\AreaBundle\Settings\CoreSettings;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\HostPerson;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\IntegrationTestCase;
+use Uhifadhi\Bundle\RegistryBundle\Entity\SettingValue;
 use Uhifadhi\Contracts\Area\LivePosition;
+use Uhifadhi\Contracts\Settings\SettingDepth;
 use Uhifadhi\Contracts\Shell\Scope;
 
 /**
@@ -138,7 +141,7 @@ final class OrgScopeIsTheSumOfAreasTest extends IntegrationTestCase
         string $fixAt = '2026-09-19T11:38:00+03:00',
     ): AreaOfInterest {
         $area = $this->anArea($name);
-        $area->setPingIntervalMinutes($pingMinutes);
+        $this->em->persist(new SettingValue(CoreSettings::PING_INTERVAL, SettingDepth::Area, (string) $area->getUuidString(), $pingMinutes, 'admin@example.test', new \DateTimeImmutable()));
 
         $stations = static::getContainer()->get('test_public.area.stations');
         \assert($stations instanceof StationService);

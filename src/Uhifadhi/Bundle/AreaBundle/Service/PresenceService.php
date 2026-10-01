@@ -339,9 +339,9 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
                 distanceM: $distance,
                 batteryPct: $fix->lastFixBatteryPct,
                 pingIntervalMinutes: $stampInterval,
-                // THE AREA'S OWN SILENCE, where it named one; null keeps the
-                // two-interval rule.
-                staleAfterMinutes: $area->getStaleAfterMinutes(),
+                // THE SILENCE IN FORCE HERE (Settings › Core), where one is
+                // set; null keeps the two-interval rule.
+                staleAfterMinutes: $this->pingInterval->staleAfterFor($area),
             );
         }
 

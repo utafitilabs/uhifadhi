@@ -28,7 +28,6 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
-use Uhifadhi\Bundle\AreaBundle\Enum\IntervalUnit;
 use Uhifadhi\Bundle\AreaBundle\Exception\AreaIdentityException;
 use Uhifadhi\Bundle\AreaBundle\Exception\BoundaryImportException;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
@@ -37,11 +36,9 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaMapPayload;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
-use Uhifadhi\Bundle\AreaBundle\Service\PingInterval;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
 use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
-use Uhifadhi\Contracts\Area\LivePresence;
 use Uhifadhi\Contracts\Shell\ConfigurationSection;
 
 /**
@@ -115,10 +112,10 @@ final readonly class AreaEditController
 
         $this->denyUnlessTokenValid($request, self::IDENTITY_TOKEN);
 
-        [$name, $iucn, $established, $tolerance, $pingEvery, $staleAfter] = $this->identityFrom($request);
+        [$name, $iucn, $established, $tolerance] = $this->identityFrom($request);
 
         try {
-            $this->identity->update($area, $name, $iucn, $established, $tolerance, $pingEvery, $staleAfter);
+            $this->identity->update($area, $name, $iucn, $established, $tolerance);
         } catch (AreaIdentityException $e) {
             return $this->render($area, identityError: $e->getMessage(), status: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
@@ -205,49 +202,22 @@ final readonly class AreaEditController
      * it. A blank IUCN or year is null — unrecorded — never the empty string.
      *
      * A blank tolerance is null too — "not set", which reads as the platform's
-     * default rather than as zero. So is a blank Ping every; a typed one is a
-     * number and a unit, kept as whole minutes. A unit the form does not offer
-     * reads as minutes, and a number that is not one reads as zero, which the
-     * identity refuses with its reason.
+     * default rather than as zero.
      *
-     * @return array{0: string, 1: string|null, 2: int|null, 3: float|null, 4: int|null, 5: int|null}
+     * @return array{0: string, 1: string|null, 2: int|null, 3: float|null}
      */
     private function identityFrom(Request $request): array
     {
         $iucn = trim($request->request->getString('iucn'));
         $established = trim($request->request->getString('established'));
         $tolerance = trim($request->request->getString('zoneOverlapTolerance'));
-        $pingEvery = trim($request->request->getString('pingEvery'));
-        $pingUnit = IntervalUnit::tryFrom($request->request->getString('pingEveryUnit')) ?? IntervalUnit::Minutes;
-        $staleAfter = trim($request->request->getString('staleAfter'));
-        $staleUnit = IntervalUnit::tryFrom($request->request->getString('staleAfterUnit')) ?? IntervalUnit::Minutes;
 
         return [
             $request->request->getString('name'),
             '' === $iucn ? null : $iucn,
             '' === $established ? null : (int) $established,
             '' === $tolerance ? null : (float) $tolerance,
-            '' === $pingEvery ? null : $pingUnit->toMinutes(is_numeric($pingEvery) ? (float) $pingEvery : 0.0),
-            '' === $staleAfter ? null : $staleUnit->toMinutes(is_numeric($staleAfter) ? (float) $staleAfter : 0.0),
         ];
-    }
-
-    /** @return array{number: int|null, unit: IntervalUnit} */
-    private static function pingEveryOf(AreaOfInterest $area): array
-    {
-        return self::asNumberAndUnit($area->getPingIntervalMinutes());
-    }
-
-    /** @return array{number: int|null, unit: IntervalUnit} */
-    private static function asNumberAndUnit(?int $minutes): array
-    {
-        if (null === $minutes) {
-            return ['number' => null, 'unit' => IntervalUnit::Minutes];
-        }
-
-        $unit = IntervalUnit::largestWholeFor($minutes);
-
-        return ['number' => intdiv($minutes, $unit->minutes()), 'unit' => $unit];
     }
 
     private function denyUnlessTokenValid(Request $request, string $id): void
@@ -268,16 +238,6 @@ final readonly class AreaEditController
                 'area' => $area,
                 'areaKm2' => $this->register->areaKm2($area),
                 'defaultZoneOverlapTolerance' => ZoneOverlapService::DEFAULT_TOLERANCE_PCT,
-                'defaultPingInterval' => PingInterval::DEFAULT_MINUTES,
-                // A SET INTERVAL IS OFFERED BACK IN THE LARGEST UNIT IT IS A
-                // WHOLE COUNT OF; an unset one leaves the field blank, so the
-                // placeholder can say what blank means.
-                'pingEvery' => self::pingEveryOf($area),
-                // STALE AFTER, offered back the same way; blank says what it
-                // reads as — two of this area's pings.
-                'staleAfter' => self::asNumberAndUnit($area->getStaleAfterMinutes()),
-                'defaultStaleAfter' => LivePresence::STALE_AFTER_INTERVALS * ($area->getPingIntervalMinutes() ?? PingInterval::DEFAULT_MINUTES),
-                'intervalUnits' => IntervalUnit::cases(),
                 'zoneCount' => $this->zones->countFor($area),
                 'map' => $this->areaMap->overview($this->mapPayload->forArea($area)),
                 'identityError' => $identityError,

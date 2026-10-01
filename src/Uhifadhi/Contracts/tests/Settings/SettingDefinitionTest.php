@@ -67,6 +67,25 @@ final class SettingDefinitionTest extends TestCase
     }
 
     /**
+     * A NUMBER MAY BE LEFT UNSET, when its owner computes the value from
+     * something else until an Admin sets one — stale-after is two ping
+     * intervals until it is set. The definition then says what unset means,
+     * so Settings can print it, and the reader answers null for the owner to
+     * compute.
+     */
+    public function testANumberMayBeLeftUnsetIfItSaysWhatUnsetMeans(): void
+    {
+        $stale = new SettingDefinition('core.stale_after', 'core', 'Presence', 'Stale after',
+            'A position older than this shows as stale.', SettingType::Number, null, SettingDepth::Area,
+            unit: 'min', min: 1, max: 2880, unsetMeans: 'two ping intervals');
+
+        self::assertNull($stale->default);
+        self::assertSame('two ping intervals', $stale->unsetMeans);
+        self::assertTrue($stale->accepts(45));
+        self::assertFalse($stale->accepts(null), 'Unset is reached by a reset, never stored.');
+    }
+
+    /**
      * THE DEPTH IS HOW FAR DOWN A SETTING MAY BE CUSTOMISED. One value for the
      * organization, or the organization's value with a custom value per area,
      * or per area and per department. The organization always holds a value.
@@ -100,6 +119,7 @@ final class SettingDefinitionTest extends TestCase
             'min' => 1,
             'max' => 120,
             'choices' => [],
+            'unsetMeans' => null,
         ], $overrides);
 
         $this->expectException(\InvalidArgumentException::class);
@@ -125,6 +145,9 @@ final class SettingDefinitionTest extends TestCase
         yield 'toggle with a number default' => [['type' => SettingType::Toggle, 'default' => 1, 'unit' => null, 'min' => null, 'max' => null], 'A toggle defaults to on or off.'];
         yield 'toggle with a unit' => [['type' => SettingType::Toggle, 'default' => true, 'min' => null, 'max' => null], 'A toggle has no unit.'];
         yield 'choice without choices' => [['type' => SettingType::Choice, 'default' => 'TZS', 'unit' => null, 'min' => null, 'max' => null], 'A choice needs its choices.'];
+        yield 'unset without saying what it means' => [['default' => null], 'Settings would print nothing for it.'];
+        yield 'a switch left unset' => [['type' => SettingType::Toggle, 'default' => null, 'unit' => null, 'min' => null, 'max' => null, 'unsetMeans' => 'something'], 'Only a number may be left unset.'];
+        yield 'what unset means, with a default' => [['unsetMeans' => 'two ping intervals'], 'A default and an unset meaning cannot both hold.'];
         yield 'choice default outside its choices' => [['type' => SettingType::Choice, 'default' => 'EUR', 'unit' => null, 'min' => null, 'max' => null, 'choices' => ['TZS']], 'The default must be one of the choices.'];
     }
 

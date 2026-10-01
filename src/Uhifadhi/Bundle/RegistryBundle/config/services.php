@@ -140,7 +140,8 @@ return static function (ContainerConfigurator $container): void {
         ->args([tagged_iterator(SettingDefinitionSourceInterface::TAG)]);
 
     $services->set('registry.settings.reader', SettingsResolver::class)
-        ->args([service('registry.settings.catalogue'), service(SettingValueRepository::class)]);
+        ->args([service('registry.settings.catalogue'), service(SettingValueRepository::class)])
+        ->tag('kernel.reset', ['method' => 'reset']);
     $services->alias(SettingsReaderInterface::class, 'registry.settings.reader');
 
     $services->set('registry.settings.writer', SettingsWriter::class)
@@ -149,6 +150,7 @@ return static function (ContainerConfigurator $container): void {
             service(SettingValueRepository::class),
             service('doctrine.orm.entity_manager'),
             service('clock'),
+            service('registry.settings.reader'),
         ]);
     $services->alias(SettingsWriter::class, 'registry.settings.writer');
 

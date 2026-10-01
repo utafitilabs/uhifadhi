@@ -20,6 +20,9 @@ use Uhifadhi\Bundle\AreaBundle\Controller\AreaEditController;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaIdentity;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
+use Uhifadhi\Bundle\AreaBundle\Settings\CoreSettings;
+use Uhifadhi\Bundle\RegistryBundle\Entity\SettingValue;
+use Uhifadhi\Contracts\Settings\SettingDepth;
 
 /**
  * THE EDIT SCREEN — an area's identity, edited in place, and its boundary,
@@ -213,153 +216,34 @@ final class AreaEditTest extends WebTestCase
     }
 
     /**
-     * PING EVERY IS A NUMBER AND A UNIT, stored as minutes, offered back in
-     * the largest unit it is a whole count of, and read on the settings
-     * section's record beside the other settings.
+     * PING EVERY AND STALE AFTER ARE SETTINGS › CORE'S (ruled 1 Oct 2026): the
+     * edit screen no longer offers them, and the area's record reads the
+     * values in force from the settings store, saying where they are set.
      */
-    public function testThePingIntervalRoundTripsAsANumberAndAUnit(): void
+    public function testTheEditScreenNoLongerOffersPingEveryOrStaleAfter(): void
     {
         $this->boot();
         $this->signIn();
         $area = $this->anArea('Northern Reserve');
 
-        $this->browser()->request('POST', $this->editUrl($area), [
-            'name' => 'Northern Reserve',
-            'pingEvery' => '2',
-            'pingEveryUnit' => 'hours',
-            '_token' => $this->tokenOn($this->editUrl($area), 'area_edit'),
-        ]);
+        $form = $this->body($this->editUrl($area));
 
-        self::assertSame(302, $this->browser()->getResponse()->getStatusCode());
-
-        $this->em->clear();
-        $fresh = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Northern Reserve']);
-        self::assertInstanceOf(AreaOfInterest::class, $fresh);
-        self::assertSame(120, $fresh->getPingIntervalMinutes());
-
-        $form = $this->body($this->editUrl($fresh));
-        self::assertMatchesRegularExpression('/name="pingEvery"\s+value="2"/', $form);
-        self::assertMatchesRegularExpression('/<option value="hours" selected>hours<\/option>/', $form);
-
-        $settings = $this->body('/areas/'.$fresh->getUuidString().'/configure/settings');
-        self::assertMatchesRegularExpression('#<th>Ping every</th>\s*<td class="num">2 hours</td>#', $settings);
+        self::assertStringNotContainsString('name="pingEvery"', $form);
+        self::assertStringNotContainsString('name="staleAfter"', $form);
     }
 
-    /** Blank is NOT SET: the record reads the default and says it is the default. */
-    public function testABlankPingIntervalIsNotSetAndReadsAsTheDefault(): void
+    public function testTheAreaSettingsReadTheValuesInForceFromTheSettingsStore(): void
     {
         $this->boot();
         $this->signIn();
         $area = $this->anArea('Northern Reserve');
-        $area->setPingIntervalMinutes(15);
+        $this->em->persist(new SettingValue(CoreSettings::PING_INTERVAL, SettingDepth::Area, (string) $area->getUuidString(), 120, 'admin@example.test', new \DateTimeImmutable()));
         $this->em->flush();
 
-        $this->browser()->request('POST', $this->editUrl($area), [
-            'name' => 'Northern Reserve',
-            'pingEvery' => '',
-            'pingEveryUnit' => 'minutes',
-            '_token' => $this->tokenOn($this->editUrl($area), 'area_edit'),
-        ]);
+        $settings = $this->body('/areas/'.$area->getUuidString().'/configure/settings');
 
-        $this->em->clear();
-        $fresh = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Northern Reserve']);
-        self::assertInstanceOf(AreaOfInterest::class, $fresh);
-        self::assertNull($fresh->getPingIntervalMinutes());
-
-        $settings = $this->body('/areas/'.$fresh->getUuidString().'/configure/settings');
-        self::assertMatchesRegularExpression('#<th>Ping every</th>\s*<td class="num">30 minutes <span class="chip">default</span></td>#', $settings);
-    }
-
-    /** Below one minute is no interval, so the form says so and nothing is saved. */
-    public function testAPingIntervalBelowOneMinuteIsRefusedAndTheAreaIsUnchanged(): void
-    {
-        $this->boot();
-        $this->signIn();
-        $area = $this->anArea('Northern Reserve');
-        $area->setPingIntervalMinutes(20);
-        $this->em->flush();
-
-        $this->browser()->request('POST', $this->editUrl($area), [
-            'name' => 'Northern Reserve',
-            'pingEvery' => '0',
-            'pingEveryUnit' => 'minutes',
-            '_token' => $this->tokenOn($this->editUrl($area), 'area_edit'),
-        ]);
-
-        self::assertSame(422, $this->browser()->getResponse()->getStatusCode());
-        self::assertStringContainsString('at least one minute', $this->errorOn($this->browser()->getResponse()));
-
-        $this->em->clear();
-        $fresh = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Northern Reserve']);
-        self::assertInstanceOf(AreaOfInterest::class, $fresh);
-        self::assertSame(20, $fresh->getPingIntervalMinutes());
-    }
-
-    /**
-     * STALE AFTER SITS BESIDE PING EVERY, a number and a unit stored as
-     * minutes; blank is not set and reads as two intervals, which the record
-     * says in so many words.
-     */
-    public function testStaleAfterRoundTripsAndBlankReadsAsTwoIntervals(): void
-    {
-        $this->boot();
-        $this->signIn();
-        $area = $this->anArea('Northern Reserve');
-
-        $this->browser()->request('POST', $this->editUrl($area), [
-            'name' => 'Northern Reserve',
-            'pingEvery' => '30',
-            'pingEveryUnit' => 'minutes',
-            'staleAfter' => '2',
-            'staleAfterUnit' => 'hours',
-            '_token' => $this->tokenOn($this->editUrl($area), 'area_edit'),
-        ]);
-        self::assertSame(302, $this->browser()->getResponse()->getStatusCode());
-
-        $this->em->clear();
-        $fresh = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Northern Reserve']);
-        self::assertInstanceOf(AreaOfInterest::class, $fresh);
-        self::assertSame(120, $fresh->getStaleAfterMinutes());
-        self::assertMatchesRegularExpression('/name="staleAfter"\s+value="2"/', $this->body($this->editUrl($fresh)));
-        self::assertMatchesRegularExpression('#<th>Stale after</th>\s*<td class="num">2 hours</td>#', $this->body('/areas/'.$fresh->getUuidString().'/configure/settings'));
-
-        $this->browser()->request('POST', $this->editUrl($fresh), [
-            'name' => 'Northern Reserve',
-            'pingEvery' => '30',
-            'pingEveryUnit' => 'minutes',
-            'staleAfter' => '',
-            'staleAfterUnit' => 'minutes',
-            '_token' => $this->tokenOn($this->editUrl($fresh), 'area_edit'),
-        ]);
-        self::assertMatchesRegularExpression('#<th>Stale after</th>\s*<td class="num">1 hour <span class="chip">two pings</span></td>#', $this->body('/areas/'.$fresh->getUuidString().'/configure/settings'));
-    }
-
-    /**
-     * SHORTER THAN ONE PING IS REFUSED: every ranger would read stale in the
-     * quiet between two pings that both arrived on time.
-     */
-    public function testAStaleAfterShorterThanThePingIntervalIsRefused(): void
-    {
-        $this->boot();
-        $this->signIn();
-        $area = $this->anArea('Northern Reserve');
-
-        $this->browser()->request('POST', $this->editUrl($area), [
-            'name' => 'Northern Reserve',
-            'pingEvery' => '30',
-            'pingEveryUnit' => 'minutes',
-            'staleAfter' => '20',
-            'staleAfterUnit' => 'minutes',
-            '_token' => $this->tokenOn($this->editUrl($area), 'area_edit'),
-        ]);
-
-        self::assertSame(422, $this->browser()->getResponse()->getStatusCode());
-        self::assertStringContainsString('at least as long as Ping every', $this->errorOn($this->browser()->getResponse()));
-
-        $this->em->clear();
-        $fresh = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Northern Reserve']);
-        self::assertInstanceOf(AreaOfInterest::class, $fresh);
-        self::assertNull($fresh->getStaleAfterMinutes());
+        self::assertMatchesRegularExpression('#<th>Ping every</th>\s*<td class="num">2 hours <span class="chip">set in Settings &rsaquo; Core</span></td>#', $settings);
+        self::assertMatchesRegularExpression('#<th>Stale after</th>\s*<td class="num">4 hours <span class="chip">two pings</span>#', $settings, 'Unset, it keeps the two-ping rule.');
     }
 
     /** Clearing the gazetted facts is allowed — they are optional and a blank means unrecorded. */

@@ -17,10 +17,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Service\DutyRosterService;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceService;
-use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
-use Uhifadhi\Bundle\TeamBundle\Entity\Position;
+use Uhifadhi\Bundle\AreaBundle\Settings\CoreSettings;
+use Uhifadhi\Bundle\RegistryBundle\Entity\SettingValue;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Contracts\Settings\SettingDepth;
 
 /**
  * THE TWO READS THE DUTY TAB LIVES ON — API-CONTRACT.md §13D and §13E.
@@ -129,15 +129,14 @@ final class FieldDutyReadsTest extends FieldApiTestCase
     }
 
     /**
-     * A BATTERY BUDGET THE ORGANIZATION OWNS. An area that works long
-     * patrols out of radio range says so once and every handset in it
-     * reads the new figure at the next sync, with no release.
+     * A BATTERY BUDGET THE ORGANIZATION OWNS. An Admin sets it once in
+     * Settings › Core and every handset reads the new figure at the next
+     * sync, with no release.
      */
-    public function testAnAreaThatSetsAnIntervalIsObeyed(): void
+    public function testTheOrganizationsIntervalIsWhatEveryHandsetReads(): void
     {
         $area = $this->area('Northern Conservation Reserve');
-        $area->setPingIntervalMinutes(10);
-        $this->em->flush();
+        $this->setting(CoreSettings::PING_INTERVAL, SettingDepth::Organization, null, 10);
 
         $body = $this->get($this->roster($area), $this->tokenFor($this->onDuty()));
 
@@ -145,38 +144,30 @@ final class FieldDutyReadsTest extends FieldApiTestCase
     }
 
     /**
-     * THE AREA SETTINGS' ONE WRITE IS WHAT THE HANDSET READS. Somebody with
-     * `areas.configure` types "2 hours" on Edit area, and the next roster
-     * read tells the phone 120 — and the live reading judges freshness
-     * against the same number.
+     * AN AREA'S CUSTOM VALUE WINS THERE. An area that works long patrols out
+     * of radio range is given its own interval, the next roster read tells
+     * the phone 120, and the live reading judges freshness against the same
+     * number.
      */
-    public function testSavingTheAreaSettingsChangesWhatTheHandsetReads(): void
+    public function testAnAreasCustomIntervalIsWhatItsHandsetsAndItsLiveReadingUse(): void
     {
         $area = $this->area('Northern Conservation Reserve');
         $uuid = (string) $area->getUuidString();
-        $ranger = $this->onDuty();
-        $token = $this->tokenFor($ranger);
+        $this->setting(CoreSettings::PING_INTERVAL, SettingDepth::Organization, null, 10);
+        $this->setting(CoreSettings::PING_INTERVAL, SettingDepth::Area, $uuid, 120);
 
-        $this->client->loginUser($this->configurer());
-        $this->client->request('GET', '/areas/'.$uuid.'/edit');
-        self::assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
-        $matched = preg_match('#name="_token" value="([^"]+)"[^>]*data-token="area_edit"#', (string) $this->client->getResponse()->getContent(), $m);
-        self::assertSame(1, $matched, 'The edit screen carries its identity token.');
-
-        $this->client->request('POST', '/areas/'.$uuid.'/edit', [
-            'name' => 'Northern Conservation Reserve',
-            'pingEvery' => '2',
-            'pingEveryUnit' => 'hours',
-            '_token' => $m[1],
-        ]);
-        self::assertSame(Response::HTTP_FOUND, $this->client->getResponse()->getStatusCode());
-
-        $body = $this->get($this->roster($area), $token);
+        $body = $this->get($this->roster($area), $this->tokenFor($this->onDuty()));
         self::assertSame(120, self::leaf($body, 'pingIntervalMinutes'));
 
         $presence = static::getContainer()->get('area.presence');
         self::assertInstanceOf(PresenceService::class, $presence);
         self::assertSame(120, $presence->liveIn($uuid, new \DateTimeImmutable('2026-09-25 10:30'))->pingIntervalMinutes);
+    }
+
+    private function setting(string $key, SettingDepth $level, ?string $place, int $value): void
+    {
+        $this->em->persist(new SettingValue($key, $level, $place, $value, 'admin@example.test', new \DateTimeImmutable()));
+        $this->em->flush();
     }
 
     /**
@@ -366,32 +357,6 @@ final class FieldDutyReadsTest extends FieldApiTestCase
     private function onDuty(): User
     {
         return $this->ranger('sl-0142', [...self::READS_THE_PARK, 'duty.record']);
-    }
-
-    /** Somebody who may change how an area runs: the pair the settings' write asks. */
-    private function configurer(): User
-    {
-        $position = new Position()->setName('Area Warden');
-        $pairs = [...self::READS_THE_PARK, 'areas.configure'];
-        $position->setGrantValues($pairs, $pairs);
-        $this->em->persist($position);
-
-        $placement = new Placement()->acrossTheOrganization()->acrossAllDepartments();
-        $this->em->persist($placement);
-
-        $user = new User()
-            ->setEmail('warden@example.test')
-            ->setFirstName('Asha')
-            ->setLastName('Kombo')
-            ->setPassword('x')
-            ->setTeamRole(TeamRoleEnum::Staff)
-            ->setVerified(true);
-        $user->setPosition($position);
-        $user->setPlacement($placement);
-        $this->em->persist($user);
-        $this->em->flush();
-
-        return $user;
     }
 
     private function roster(AreaOfInterest $area): string

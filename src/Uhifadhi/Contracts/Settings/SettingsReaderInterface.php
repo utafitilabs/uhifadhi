@@ -18,12 +18,13 @@ namespace Uhifadhi\Contracts\Settings;
  * department's custom value if it has one, else the area's, else the
  * organization's, else the definition's default — each level only where the
  * setting's depth reaches it. Pass the area and the department the reading is
- * about; either may be null.
+ * about; either may be null. Null comes back only for a number left unset
+ * ({@see SettingDefinition::\$unsetMeans}): its owner computes the value.
  */
 interface SettingsReaderInterface
 {
     /**
      * @throws \InvalidArgumentException when no definition has this key
      */
-    public function value(string $key, ?string $areaUuid = null, ?string $departmentUuid = null): int|bool|string;
+    public function value(string $key, ?string $areaUuid = null, ?string $departmentUuid = null): int|bool|string|null;
 }

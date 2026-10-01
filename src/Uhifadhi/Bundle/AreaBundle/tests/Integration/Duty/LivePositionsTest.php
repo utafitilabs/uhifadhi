@@ -23,10 +23,13 @@ use Uhifadhi\Bundle\AreaBundle\Enum\PositionSourceEnum;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
+use Uhifadhi\Bundle\AreaBundle\Settings\CoreSettings;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\HostPerson;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\IntegrationTestCase;
+use Uhifadhi\Bundle\RegistryBundle\Entity\SettingValue;
 use Uhifadhi\Contracts\Area\DayState;
 use Uhifadhi\Contracts\Area\LivePresence;
+use Uhifadhi\Contracts\Settings\SettingDepth;
 
 /**
  * WHERE EVERYBODY IS — the read a live map is made of, against a real
@@ -166,7 +169,7 @@ final class LivePositionsTest extends IntegrationTestCase
     public function testTheAreasPingIntervalTravelsWithTheAnswer(): void
     {
         [$area, $station] = $this->anAreaWithAPost(catchment: 300);
-        $area->setPingIntervalMinutes(5);
+        $this->em->persist(new SettingValue(CoreSettings::PING_INTERVAL, SettingDepth::Area, (string) $area->getUuidString(), 5, 'admin@example.test', new \DateTimeImmutable()));
         $checkIn = $this->aClaim($area, $station);
         $this->aPing($checkIn, -29.7501, -3.2001, '2026-09-19T06:40:00+03:00');
         $this->em->flush();

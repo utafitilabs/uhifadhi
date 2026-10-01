@@ -14,35 +14,40 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Service;
 
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Settings\CoreSettings;
+use Uhifadhi\Contracts\Settings\SettingsReaderInterface;
 
 /**
- * HOW OFTEN AN AREA'S HANDSETS REPORT A POSITION — the area's number, or half
- * an hour where it set none.
- *
- * THE AREA'S FACT, READ IN ONE PLACE. The check-in, the pings and the presence
- * derived from them are the area's, so the interval is `AreaOfInterest`'s own
- * column, written by the area settings' one write ({@see AreaIdentity}) and
- * read here by everything that counts from it: the handset's roster read
- * ({@see DutyRosterService}), the live reading ({@see PresenceService}) and any
- * module whose own thresholds are measured in intervals.
- *
- * ZERO AND BELOW ARE NOT AN INTERVAL. A phone given one would either never
- * ping or ping continuously, and both are worse than the default.
+ * HOW OFTEN AN AREA'S HANDSETS REPORT, and when a silent one goes stale — the
+ * value in force for the area, from Settings › Core (the organization's, or
+ * the area's custom one). One reading for the handset, the presence derivation
+ * and any module that counts from it.
  */
 final readonly class PingInterval
 {
     /**
-     * HALF AN HOUR, UNTIL AN AREA SAYS OTHERWISE — often enough that a watch
-     * has a track rather than two points, rare enough that a day's duty does
-     * not flatten the phone.
+     * HALF AN HOUR, UNTIL AN ADMIN SAYS OTHERWISE — often enough that a watch
+     * shows its people, rarely enough that a phone lasts the shift.
      */
     public const int DEFAULT_MINUTES = 30;
 
-    /** What this area set, or the default where it set nothing usable. */
+    public function __construct(private SettingsReaderInterface $settings)
+    {
+    }
+
+    /** The interval in force for this area; anything below a minute reads as the default. */
     public function for(AreaOfInterest $area): int
     {
-        $set = $area->getPingIntervalMinutes();
+        $set = $this->settings->value(CoreSettings::PING_INTERVAL, $area->getUuidString());
 
-        return null === $set || $set < 1 ? self::DEFAULT_MINUTES : $set;
+        return \is_int($set) && $set >= 1 ? $set : self::DEFAULT_MINUTES;
+    }
+
+    /** The area's stale-after in minutes, or null: unset keeps the two-interval rule. */
+    public function staleAfterFor(AreaOfInterest $area): ?int
+    {
+        $set = $this->settings->value(CoreSettings::STALE_AFTER, $area->getUuidString());
+
+        return \is_int($set) && $set >= 1 ? $set : null;
     }
 }

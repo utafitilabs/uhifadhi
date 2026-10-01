@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\RegistryBundle\Settings;
 
+use Symfony\Contracts\Service\ResetInterface;
 use Uhifadhi\Bundle\RegistryBundle\Repository\SettingValueRepository;
 use Uhifadhi\Contracts\Settings\SettingDepth;
 use Uhifadhi\Contracts\Settings\SettingsReaderInterface;
@@ -22,22 +23,31 @@ use Uhifadhi\Contracts\Settings\SettingsReaderInterface;
  * organization's, else the definition's default — each level read only where
  * the setting's depth reaches it, so a stray row at a level the setting does
  * not reach is never believed.
+ *
+ * ONE QUERY A REQUEST, WHATEVER IS ASKED: a live read asks for every person's
+ * area, so the rows are read once — all of them, they are few — and held until
+ * the request ends (kernel.reset) or a save changes them ({@see reset()}).
  */
-final readonly class SettingsResolver implements SettingsReaderInterface
+final class SettingsResolver implements SettingsReaderInterface, ResetInterface
 {
+    /** @var array<string, int|bool|string>|null keyed "key|level|place" */
+    private ?array $set = null;
+
     public function __construct(
-        private SettingsCatalogue $catalogue,
-        private SettingValueRepository $values,
+        private readonly SettingsCatalogue $catalogue,
+        private readonly SettingValueRepository $values,
     ) {
     }
 
-    public function value(string $key, ?string $areaUuid = null, ?string $departmentUuid = null): int|bool|string
+    public function reset(): void
+    {
+        $this->set = null;
+    }
+
+    public function value(string $key, ?string $areaUuid = null, ?string $departmentUuid = null): int|bool|string|null
     {
         $definition = $this->catalogue->get($key);
-        $set = [];
-        foreach ($this->values->forKey($key) as $row) {
-            $set[$row->getLevel()->value.'|'.($row->getPlaceUuid() ?? '')] = $row->getValue();
-        }
+        $set = $this->set ??= $this->load();
 
         $candidates = [
             [SettingDepth::Department, $departmentUuid],
@@ -48,12 +58,25 @@ final readonly class SettingsResolver implements SettingsReaderInterface
             if (!$definition->depth->reaches($level) || (SettingDepth::Organization !== $level && null === $place)) {
                 continue;
             }
-            $found = $set[$level->value.'|'.($place ?? '')] ?? null;
+            $found = $set[$key.'|'.$level->value.'|'.($place ?? '')] ?? null;
             if (null !== $found) {
                 return $found;
             }
         }
 
         return $definition->default;
+    }
+
+    /**
+     * @return array<string, int|bool|string>
+     */
+    private function load(): array
+    {
+        $set = [];
+        foreach ($this->values->findAll() as $row) {
+            $set[$row->getKey().'|'.$row->getLevel()->value.'|'.($row->getPlaceUuid() ?? '')] = $row->getValue();
+        }
+
+        return $set;
     }
 }

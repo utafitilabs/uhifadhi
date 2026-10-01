@@ -26,7 +26,9 @@ namespace Uhifadhi\Contracts\Settings;
 final readonly class SettingDefinition
 {
     /**
-     * @param list<string> $choices the accepted values of a Choice setting, in the order shown
+     * @param list<string> $choices    the accepted values of a Choice setting, in the order shown
+     * @param string|null  $unsetMeans for a Number left unset (default null): what unset means, as Settings prints it —
+     *                                 "two ping intervals" — the owner computing the value until an Admin sets one
      */
     public function __construct(
         public string $key,
@@ -35,13 +37,14 @@ final readonly class SettingDefinition
         public string $label,
         public string $description,
         public SettingType $type,
-        public int|bool|string $default,
+        public int|bool|string|null $default,
         public SettingDepth $depth,
         public ?string $unit = null,
         public ?int $min = null,
         public ?int $max = null,
         public array $choices = [],
         public int $position = 0,
+        public ?string $unsetMeans = null,
     ) {
         if (1 !== preg_match('/^[a-z][a-z0-9]*(\.[a-z][a-z0-9_]*)+$/', $key)) {
             throw new \InvalidArgumentException(\sprintf('A setting key is "<owner>.<name>" in lower case; "%s" is not.', $key));
@@ -53,6 +56,10 @@ final readonly class SettingDefinition
 
         if ('' === trim($label) || '' === trim($description) || '' === trim($group)) {
             throw new \InvalidArgumentException(\sprintf('The setting "%s" needs a label, a description and a group: its row would say nothing.', $key));
+        }
+
+        if ((null === $default) !== (null !== $unsetMeans && '' !== trim($unsetMeans))) {
+            throw new \InvalidArgumentException(\sprintf('The setting "%s" has a default or says what unset means — one of the two.', $key));
         }
 
         match ($type) {
@@ -91,7 +98,7 @@ final readonly class SettingDefinition
             throw new \InvalidArgumentException(\sprintf('The setting "%s" accepts nothing: its minimum is above its maximum.', $this->key));
         }
 
-        if (!$this->accepts($this->default)) {
+        if (null !== $this->default && !$this->accepts($this->default)) {
             throw new \InvalidArgumentException(\sprintf('The setting "%s" must default to a whole number within its limits.', $this->key));
         }
     }

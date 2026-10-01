@@ -37,9 +37,9 @@ use Uhifadhi\Bundle\AreaBundle\Exception\AreaIdentityException;
  * null is written through.
  *
  * AND THE AREA'S TWO SETTINGS SAVE WITH IT, because the settings section has
- * one write: the zone overlap tolerance, and how often the area's handsets
- * report a position ({@see PingInterval}). A blank is "not set" for both and
- * reads as the product's default.
+ * one write: the zone overlap tolerance. A blank is "not set" and reads as
+ * the product's default. (How often handsets report, and when they go stale,
+ * moved to Settings › Core on 1 Oct 2026.)
  */
 final readonly class AreaIdentity
 {
@@ -51,10 +51,7 @@ final readonly class AreaIdentity
      * Save an area's identity. The name is required and trimmed; the gazetted
      * facts are optional and a null clears them back to unrecorded.
      *
-     * @param int|null $pingIntervalMinutes null is "not set" and reads as {@see PingInterval::DEFAULT_MINUTES}
-     * @param int|null $staleAfterMinutes   null is "not set" and reads as two intervals
-     *
-     * @throws AreaIdentityException when the name is blank, the tolerance is out of range, or the interval is under a minute
+     * @throws AreaIdentityException when the name is blank or the tolerance is out of range
      */
     public function update(
         AreaOfInterest $area,
@@ -62,8 +59,6 @@ final readonly class AreaIdentity
         ?string $iucnCategory,
         ?int $establishedYear,
         ?float $zoneOverlapTolerancePct = null,
-        ?int $pingIntervalMinutes = null,
-        ?int $staleAfterMinutes = null,
     ): AreaOfInterest {
         $name = trim($name);
         if ('' === $name) {
@@ -81,32 +76,11 @@ final readonly class AreaIdentity
             throw new AreaIdentityException(\sprintf('Zone overlap tolerance is a percentage between 0 and %s. Past that, the answer is to fix the scheme rather than to accept the overlap.', (string) ZoneOverlapService::MAX_TOLERANCE_PCT));
         }
 
-        /*
-         * BELOW A MINUTE IS NO INTERVAL, AND IT IS REFUSED RATHER THAN
-         * DEFAULTED. A phone told zero would never ping or never stop; saving
-         * the default instead would leave whoever typed it believing it held.
-         */
-        if (null !== $pingIntervalMinutes && $pingIntervalMinutes < 1) {
-            throw new AreaIdentityException('Ping every is at least one minute. Leave it blank to run at the default of '.PingInterval::DEFAULT_MINUTES.' minutes.');
-        }
-
-        /*
-         * SHORTER THAN ONE PING IS NO THRESHOLD: every ranger would read stale
-         * in the quiet between two pings that both arrived on time. Refused,
-         * naming the interval it is measured against.
-         */
-        $interval = $pingIntervalMinutes ?? PingInterval::DEFAULT_MINUTES;
-        if (null !== $staleAfterMinutes && $staleAfterMinutes < $interval) {
-            throw new AreaIdentityException(\sprintf('Stale after is at least as long as Ping every (%d minutes here): a ranger is not stale between two pings that arrived on time. Leave it blank for two pings.', $interval));
-        }
-
         $area
             ->setName($name)
             ->setIucnCategory($iucnCategory)
             ->setEstablishedYear($establishedYear)
-            ->setZoneOverlapTolerancePct($zoneOverlapTolerancePct)
-            ->setPingIntervalMinutes($pingIntervalMinutes)
-            ->setStaleAfterMinutes($staleAfterMinutes);
+            ->setZoneOverlapTolerancePct($zoneOverlapTolerancePct);
 
         $this->entityManager->flush();
 

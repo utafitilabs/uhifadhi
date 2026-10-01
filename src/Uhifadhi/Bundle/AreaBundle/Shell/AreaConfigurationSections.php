@@ -176,10 +176,12 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
                     'area' => $area,
                     'areaKm2' => $this->register->areaKm2($area),
                     'defaultZoneOverlapTolerance' => ZoneOverlapService::DEFAULT_TOLERANCE_PCT,
+                    // THE VALUES IN FORCE HERE, read-only: Super Admins and
+                    // Admins set them in Settings › Core (ruled 1 Oct 2026).
                     'pingEvery' => IntervalUnit::say($this->pingInterval->for($area)),
-                    // WHAT THIS AREA CALLS STALE: its own figure, or two of
-                    // its pings where it named none.
-                    'staleAfter' => IntervalUnit::say($area->getStaleAfterMinutes() ?? LivePresence::STALE_AFTER_INTERVALS * $this->pingInterval->for($area)),
+                    // Stale-after left unset keeps the two-ping rule.
+                    'staleAfter' => IntervalUnit::say($this->pingInterval->staleAfterFor($area) ?? LivePresence::STALE_AFTER_INTERVALS * $this->pingInterval->for($area)),
+                    'staleIsTwoPings' => null === $this->pingInterval->staleAfterFor($area),
                     'zoneCount' => $this->zones->countFor($area),
                 ],
             );

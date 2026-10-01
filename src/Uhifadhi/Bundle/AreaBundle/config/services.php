@@ -74,6 +74,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneStationService;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaModuleMatrix;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetup;
+use Uhifadhi\Bundle\AreaBundle\Settings\CoreSettings;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaOverviewWidgets;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
@@ -93,6 +94,8 @@ use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 use Uhifadhi\Contracts\People\RankLadderInterface;
 use Uhifadhi\Contracts\Roster\WatchProviderInterface;
 use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
+use Uhifadhi\Contracts\Settings\SettingDefinitionSourceInterface;
+use Uhifadhi\Contracts\Settings\SettingsReaderInterface;
 
 /*
  * The bundle's static service wiring.
@@ -476,8 +479,15 @@ return static function (ContainerConfigurator $container): void {
      * reusable bundle's services are:
      * https://symfony.com/doc/current/bundles/best_practices.html#services
      */
-    $services->set('area.ping_interval', PingInterval::class);
+    // HOW OFTEN HANDSETS REPORT AND WHEN THEY GO STALE, read from Settings ›
+    // Core through the contract's reader (the registry answers it), and the
+    // core's own settings declared for that page.
+    $services->set('area.ping_interval', PingInterval::class)
+        ->args([service(SettingsReaderInterface::class)]);
     $services->alias(PingInterval::class, 'area.ping_interval');
+
+    $services->set('area.settings.core', CoreSettings::class)
+        ->tag(SettingDefinitionSourceInterface::TAG);
 
     /*
      * HOW A DAY READS — the one derivation, published so the roster

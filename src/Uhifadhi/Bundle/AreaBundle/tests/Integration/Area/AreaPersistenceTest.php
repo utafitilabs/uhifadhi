@@ -126,12 +126,12 @@ final class AreaPersistenceTest extends IntegrationTestCase
      * This test is the shape of the rule, not just the removal of one column: no
      * property on this entity may be another module's measurement.
      *
-     * A SETTING IS NOT A MEASUREMENT. `zoneOverlapTolerancePct` and
-     * `pingIntervalMinutes` are here for the opposite reason `treeCoverPct` is
-     * not: neither is a figure somebody else computed about this ground. They
-     * are this area's own answers to questions only it can answer — how
-     * carefully its zone scheme was drawn, and what its handsets may spend on
-     * battery — and the zones and the posts they govern are this bundle's.
+     * A SETTING IS NOT A MEASUREMENT. `zoneOverlapTolerancePct` is here for the
+     * opposite reason `treeCoverPct` is not: it is no figure somebody else
+     * computed about this ground, but how carefully its zone scheme was drawn,
+     * and the zones it governs are this bundle's. (How often handsets report
+     * and when they go stale left this entity for Settings › Core on 1 Oct
+     * 2026.)
      */
     public function testTheAreaHoldsNoForeignModulesFigure(): void
     {
@@ -144,7 +144,7 @@ final class AreaPersistenceTest extends IntegrationTestCase
         self::assertSame(
             [
                 'id', 'name', 'geom', 'source', 'iucnCategory', 'establishedYear',
-                'zoneOverlapTolerancePct', 'pingIntervalMinutes', 'staleAfterMinutes', 'createdAt', 'updatedAt', 'uuid',
+                'zoneOverlapTolerancePct', 'createdAt', 'updatedAt', 'uuid',
             ],
             $properties,
             'an area is a name, a boundary, where it came from, its registry facts and how its own ground is read — nothing else',

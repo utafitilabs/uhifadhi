@@ -160,6 +160,52 @@ final class RankFilteredPresenceTest extends WebTestCase
         self::assertCount(1, $chief->positions);
     }
 
+    /*
+     * WHO A LIVE MARK IS (#16 C): the sheet answers for exactly the marks the
+     * viewer's plate draws, and for nobody else - typing a uuid by hand gets
+     * the same "not found" as any refusal.
+     */
+    public function testASheetAnswersForAMarkTheViewerIsDrawn(): void
+    {
+        [, $people] = $this->aGroundWithFivePeopleOnIt();
+        $this->viewAs($people['sergeant']);
+
+        $sheet = $this->sheet($people['ranger']);
+
+        self::assertSame($people['ranger']->getFullName(), $sheet['title']);
+        self::assertSame('Today', $sheet['rows'][0]['label']);
+        self::assertSame('Last pings', $sheet['rows'][1]['label'] ?? null);
+    }
+
+    public function testASheetIsNotFoundForSomebodyTheViewerIsNotDrawn(): void
+    {
+        [, $people] = $this->aGroundWithFivePeopleOnIt();
+        $this->viewAs($people['sergeant']);
+
+        $this->browser()->request('GET', '/live/'.$people['chief']->getUuidString());
+
+        self::assertSame(404, $this->browser()->getResponse()->getStatusCode());
+    }
+
+    public function testTheControlRoomGetsAnybodysSheet(): void
+    {
+        [, $people] = $this->aGroundWithFivePeopleOnIt([...self::ALL_AREA_PERMISSIONS, 'locations.read']);
+        $this->viewAs($people['recruit']);
+
+        self::assertSame($people['chief']->getFullName(), $this->sheet($people['chief'])['title']);
+    }
+
+    /** @return array{title: string, rows: list<array{label: string}>} */
+    private function sheet(HostUser $person): array
+    {
+        $this->browser()->request('GET', '/live/'.$person->getUuidString());
+        self::assertSame(200, $this->browser()->getResponse()->getStatusCode(), mb_substr(strip_tags((string) $this->browser()->getResponse()->getContent()), 0, 600));
+        /** @var array{title: string, rows: list<array{label: string}>} $sheet */
+        $sheet = json_decode((string) $this->browser()->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+
+        return $sheet;
+    }
+
     /**
      * @param list<string> $grants
      *

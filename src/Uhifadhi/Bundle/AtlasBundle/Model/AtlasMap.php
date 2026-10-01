@@ -169,12 +169,14 @@ final class AtlasMap
      * and a caller left to remember the second would ship a plate that is
      * silent about the people it is not showing.
      *
-     * @param int $withoutPosition how many people the caller knows of that this
-     *                             read had no fix for
+     * @param int         $withoutPosition how many people the caller knows of that this
+     *                                     read had no fix for
+     * @param string|null $sheet           where a click on a mark asks who it is
+     *                                     (`{id}` = the person's uuid; #16 C)
      */
-    public function livePositions(LivePresence $presence, int $withoutPosition = 0): self
+    public function livePositions(LivePresence $presence, int $withoutPosition = 0, ?string $sheet = null): self
     {
-        $this->addLayer(LiveMarks::layer($presence));
+        $this->addLayer(LiveMarks::layer($presence, sheet: $sheet));
         foreach (LiveMarks::key($presence, $withoutPosition) as $row) {
             $this->addLegendItem($row);
         }

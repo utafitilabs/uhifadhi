@@ -8,6 +8,16 @@
 
 Not released yet.
 
+ * A CLICK ON A MARK OPENS A SHEET (ruled 30 Sep, #16 C): a layer may name a sheet
+   address (`GeoJsonLayer::$sheet`, `{id}` for the feature's id); a click flies the
+   plate to the feature (zoom 15) and draws the JSON answer - `AtlasSheet`: a mark,
+   a title and subtitle, rows, doors - as a bounded sheet over the plate's bottom
+   band, with "Whole area" at the top left; Esc, the close and "Whole area" put the
+   plate back on its frame, and the mark wears an ink ring while its sheet is open.
+   `AtlasMap::livePositions()` takes the address as its third argument.
+   `LiveMarks::initials()` and `::age()` are public, so a sheet spells a person the
+   way the mark does.
+
  * A live mark's `staleAfterSeconds` is `LivePresence::staleAfterSeconds()`, so
    an area's own "stale after" reaches the plate's clock; the legend reads
    "Stale · past the area’s stale after".

@@ -134,6 +134,7 @@ final class EveryRouteNamesItsPairTest extends KernelTestCase
      * @var array<string, string>
      */
     private const array GATED_ELSEWHERE = [
+        'area_live_sheet' => 'AreaBundle\\Service\\LiveSheet — the person\'s area must be readable (areas.read) and the person within the viewer\'s live sight (LiveVisibility), as on every plate (#16 C)',
         '_api_/me_get' => 'TeamBundle\\Api\\State\\MeProvider',
         '_api_/areas/mine_get' => 'AreaBundle\\Api\\State\\AreasMineProvider::PERMISSION',
         '_api_/areas/{areaUuid}/stations_get' => 'AreaBundle\\Api — the duty context',

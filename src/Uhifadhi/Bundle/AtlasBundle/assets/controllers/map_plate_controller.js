@@ -78,6 +78,12 @@ const ZOOM_SNAP = 0.25;
  * where the surface did not say. */
 const POINT_ZOOM = 13;
 
+/**
+ * HOW CLOSE A CLICK ON A MARK FLIES (#16 C): street level, so the person and
+ * their post read apart - `map.flyTo(latlng, 15)`, as the ruled design says.
+ */
+const SHEET_ZOOM = 15;
+
 /** How each shape is drawn. One answer for the whole platform. */
 const STYLES = {
     line: (color) => ({ color, weight: 2.2, opacity: 0.95, fill: false }),
@@ -349,6 +355,9 @@ export default class extends Controller {
 
     disconnect() {
         this.unsubscribe();
+        if (this.onSheetKey) {
+            document.removeEventListener('keydown', this.onSheetKey);
+        }
         document.removeEventListener('click', this.onSwapClick);
         document.removeEventListener('click', this.onPickClick);
         document.removeEventListener('change', this.onPickTyped);
@@ -620,6 +629,105 @@ export default class extends Controller {
     }
 
     /**
+     * THE SHEET AT THE FOOT OF THE PLATE (ruled 30 Sep, #16 C). A click on a
+     * feature whose layer names a sheet flies the plate to it and draws the
+     * answer - `AtlasSheet`: a mark, a title and subtitle, rows, doors - as a
+     * bounded sheet over the plate's bottom band, with "Whole area" at the
+     * top left. Esc, the close and "Whole area" all put the plate back on its
+     * own frame. An answer that is not there (a refusal, a person gone) opens
+     * nothing.
+     */
+    async openSheet(layer, feature, drawnFeature) {
+        const latlng = drawnFeature.getLatLng?.();
+        if (!this.map || !latlng) {
+            return;
+        }
+        this.selectMark(drawnFeature);
+        this.map.flyTo(latlng, Math.max(this.map.getZoom(), SHEET_ZOOM), { duration: 0.42 });
+
+        let answer = null;
+        try {
+            const response = await fetch(layer.sheet.replace('{id}', encodeURIComponent(String(feature.id))), {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+            answer = response.ok ? await response.json() : null;
+        } catch (error) {
+            answer = null;
+        }
+        if (!answer) {
+            this.closeSheet();
+
+            return;
+        }
+
+        const { sheet } = this.sheetParts();
+        const rows = (answer.rows ?? []).map((row) => {
+            let value = escapeHtml(row.value ?? '');
+            (row.at ?? []).forEach((iso, index) => {
+                const reading = escapeHtml(String(iso).slice(11, 16));
+                value = value.replace(`{${index}}`, `<time datetime="${escapeHtml(iso)}" data-localtime-format="time">${reading}</time>`);
+            });
+
+            return `<span class="k">${escapeHtml(row.label ?? '')}</span><span>${value}</span>`;
+        }).join('');
+        const doors = (answer.doors ?? []).map((door) => `<a class="${door.primary ? 'cta' : 'more'}" href="${escapeHtml(door.url)}">${escapeHtml(door.label)} &rarr;</a>`).join('');
+        sheet.innerHTML = '<button type="button" class="x" aria-label="Close" data-atlas-sheet-close>&times;</button>'
+            + `<span class="av">${escapeHtml(answer.initials ?? '')}</span>`
+            + `<span><b>${escapeHtml(answer.title ?? '')}</b><span class="s">${escapeHtml(answer.subtitle ?? '')}</span></span>`
+            + `<span>${rows}</span>`
+            + `<span class="ft">${doors}</span>`;
+        sheet.classList.add('on');
+        this.sheetHome.classList.add('on');
+    }
+
+    /** The sheet and the way home, made once per plate inside the map's own box. */
+    sheetParts() {
+        if (!this.sheetEl) {
+            const container = this.map.getContainer();
+            this.sheetEl = document.createElement('div');
+            this.sheetEl.className = 'atlas-sheet';
+            this.sheetEl.setAttribute('role', 'dialog');
+            this.sheetEl.setAttribute('aria-label', 'Who this is');
+            this.sheetHome = document.createElement('button');
+            this.sheetHome.type = 'button';
+            this.sheetHome.className = 'tgl atlas-home';
+            this.sheetHome.textContent = '← Whole area';
+            // Clicks on the sheet are the sheet's, not the map's: no pan, no pick.
+            this.L.DomEvent.disableClickPropagation(this.sheetEl);
+            this.L.DomEvent.disableClickPropagation(this.sheetHome);
+            this.sheetEl.addEventListener('click', (event) => {
+                if (event.target.closest('[data-atlas-sheet-close]')) {
+                    this.closeSheet();
+                }
+            });
+            this.sheetHome.addEventListener('click', () => this.closeSheet());
+            container.append(this.sheetEl, this.sheetHome);
+            this.onSheetKey = (event) => {
+                if ('Escape' === event.key && this.sheetEl?.classList.contains('on')) {
+                    this.closeSheet();
+                }
+            };
+            document.addEventListener('keydown', this.onSheetKey);
+        }
+
+        return { sheet: this.sheetEl };
+    }
+
+    closeSheet() {
+        this.sheetEl?.classList.remove('on');
+        this.sheetHome?.classList.remove('on');
+        this.selectMark(null);
+        this.refit();
+    }
+
+    /** The ink ring on the mark the sheet is about, and on no other. */
+    selectMark(drawnFeature) {
+        this.element.querySelectorAll('.livedot.sel').forEach((mark) => mark.classList.remove('sel'));
+        drawnFeature?.getElement?.()?.querySelector('.livedot')?.classList.add('sel');
+    }
+
+    /**
      * WHAT ONE FEATURE IS DRAWN WITH — the shape's own answer, then the layer's
      * base style, then every rule the feature's properties satisfy, each merged
      * over the last in the order the module wrote them.
@@ -747,6 +855,12 @@ export default class extends Controller {
         const hovered = layer.tooltip ? properties[layer.tooltip] : null;
         if (hovered) {
             drawnFeature.bindTooltip(String(hovered), { sticky: true, direction: 'top' });
+        }
+
+        // A FEATURE WITH A SHEET OPENS IT (#16 C): a click flies the plate to
+        // the feature and asks the layer's sheet address who it is.
+        if (layer.sheet && undefined !== feature?.id) {
+            drawnFeature.on('click', () => this.openSheet(layer, feature, drawnFeature));
         }
 
         if (layer.popup) {

@@ -104,6 +104,37 @@ final class LivePlateTest extends TestCase
     }
 
     /**
+     * WHO A MARK IS (#16 C): the address a click asks travels with the layer,
+     * `{id}` standing for the person; a plate handed none draws marks that
+     * open nothing.
+     */
+    public function testTheLayerCarriesWhereAClickAsksWhoTheMarkIs(): void
+    {
+        $with = self::payload(static fn (AtlasMap $map) => $map->livePositions(self::presence(), sheet: '/live/{id}'));
+        $without = self::payload(static fn (AtlasMap $map) => $map->livePositions(self::presence()));
+
+        self::assertSame('/live/{id}', self::liveLayer($with)['sheet']);
+        self::assertNull(self::liveLayer($without)['sheet']);
+    }
+
+    /**
+     * @param array<mixed> $atlas
+     *
+     * @return array<mixed>
+     */
+    private static function liveLayer(array $atlas): array
+    {
+        foreach (self::arr($atlas['layers'] ?? null) as $layer) {
+            $layer = self::arr($layer);
+            if (LiveMarks::LAYER_ID === ($layer['id'] ?? null)) {
+                return $layer;
+            }
+        }
+
+        self::fail('the live layer is in the payload the plate reads');
+    }
+
+    /**
      * THE KEY UNDER THE PLATE, in the design's own group and its own words:
      * the live position, the one nobody should believe, and the people who
      * are not on the ground at all.

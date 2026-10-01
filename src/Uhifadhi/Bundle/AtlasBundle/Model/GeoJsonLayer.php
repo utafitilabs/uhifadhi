@@ -80,6 +80,14 @@ final readonly class GeoJsonLayer
         public ?string $featureId = null,
         /** Whether a feature that names itself (`properties.label`) wears its name as a permanent label — off where the shapes are the ground under another subject. */
         public bool $labels = true,
+        /**
+         * A SHEET A CLICK OPENS (ruled 30 Sep, #16 C): the address of a JSON
+         * answer about one feature, `{id}` standing for the feature's id. The
+         * plate flies to the feature and draws the answer as a bounded sheet at
+         * its foot - title, subtitle, rows and doors (`AtlasSheet`) - so the
+         * plate knows the shape of a sheet and nothing of what it is about.
+         */
+        public ?string $sheet = null,
     ) {
         if (null === $features && null === $url) {
             throw new LayerException(\sprintf('The layer "%s" names no source: give it either "features" or "url".', $id));
@@ -152,6 +160,7 @@ final readonly class GeoJsonLayer
             'popup' => $this->popup?->toArray(),
             'featureId' => $this->featureId,
             'labels' => $this->labels,
+            'sheet' => $this->sheet,
         ];
     }
 }

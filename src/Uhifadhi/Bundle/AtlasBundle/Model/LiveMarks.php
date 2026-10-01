@@ -51,7 +51,7 @@ final class LiveMarks
      * The layer: one point per position the contract carries, each marked
      * stale or not by the contract's own reading of its age.
      */
-    public static function layer(LivePresence $presence, string $label = 'Live position'): GeoJsonLayer
+    public static function layer(LivePresence $presence, string $label = 'Live position', ?string $sheet = null): GeoJsonLayer
     {
         $features = [];
         $live = 0;
@@ -69,6 +69,7 @@ final class LiveMarks
             shape: LayerShape::Live,
             count: $live,
             group: self::GROUP,
+            sheet: $sheet,
         );
     }
 
@@ -170,7 +171,7 @@ final class LiveMarks
      * rather than borrowing the second from inside the word, which reads as a
      * different person's initials.
      */
-    private static function initials(string $name): string
+    public static function initials(string $name): string
     {
         $letters = '';
         foreach (preg_split('/\s+/u', trim($name)) ?: [] as $word) {
@@ -194,7 +195,7 @@ final class LiveMarks
      * not handed to the shell's `<time>` element: the marker is saying how
      * long ago the phone spoke, and that number is the same in every timezone.
      */
-    private static function age(int $seconds): string
+    public static function age(int $seconds): string
     {
         $minutes = intdiv(max(0, $seconds), 60);
         if ($minutes < 60) {

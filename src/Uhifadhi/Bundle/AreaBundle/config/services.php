@@ -630,7 +630,7 @@ return static function (ContainerConfigurator $container): void {
      * JavaScript: this builds the map, and render_map() puts it on the page.
      */
     $services->set('area.map', AreaMapService::class)
-        ->args([service(MapBuilderInterface::class)]);
+        ->args([service(MapBuilderInterface::class), service('router')->nullOnInvalid()]);
     $services->alias(AreaMapService::class, 'area.map');
 
     /*

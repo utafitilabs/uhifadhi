@@ -124,7 +124,8 @@
             "tooltip": null,
             "popup": null,
             "featureId": null,
-            "labels": true
+            "labels": true,
+            "sheet": null
         },
         {
             "id": "patrols.live",
@@ -161,7 +162,8 @@
             "tooltip": null,
             "popup": null,
             "featureId": null,
-            "labels": true
+            "labels": true,
+            "sheet": null
         },
         {
             "id": "patrols.buffer",
@@ -178,7 +180,8 @@
             "tooltip": null,
             "popup": null,
             "featureId": null,
-            "labels": true
+            "labels": true,
+            "sheet": null
         }
     ],
     "boundary": {

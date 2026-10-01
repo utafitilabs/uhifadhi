@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\Service;
 
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\UX\Map\Icon\Icon;
 use Symfony\UX\Map\InfoWindow;
 use Symfony\UX\Map\Marker;
 use Symfony\UX\Map\Point;
+use Uhifadhi\Bundle\AreaBundle\Controller\LiveSheetController;
 use Uhifadhi\Bundle\AreaBundle\Overview\MapLayer;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
@@ -66,7 +68,14 @@ final readonly class AreaMapService
 
     public function __construct(
         private MapBuilderInterface $maps,
+        /** Where a click on a live mark asks who it is (#16 C); absent, the marks open nothing. */
+        private ?UrlGeneratorInterface $urls = null,
     ) {
+    }
+
+    private function sheetAddress(): ?string
+    {
+        return null === $this->urls ? null : LiveSheetController::addressTemplate($this->urls);
     }
 
     /**
@@ -118,7 +127,7 @@ final readonly class AreaMapService
         // plate has. A stream with nothing drawn first is an empty plate
         // until somebody's phone next pings.
         if (null !== $presence) {
-            $map->livePositions($presence);
+            $map->livePositions($presence, sheet: $this->sheetAddress());
         }
 
         if (null !== $stream) {
@@ -144,7 +153,7 @@ final readonly class AreaMapService
      */
     public function organization(array $areas, LivePresence $presence, int $withoutPosition = 0, ?LiveStream $stream = null): AtlasMap
     {
-        $map = $this->register($areas)->livePositions($presence, $withoutPosition);
+        $map = $this->register($areas)->livePositions($presence, $withoutPosition, $this->sheetAddress());
         if (null !== $stream) {
             $map->liveStream($stream);
         }

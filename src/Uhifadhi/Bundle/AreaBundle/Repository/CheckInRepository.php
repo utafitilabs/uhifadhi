@@ -149,6 +149,28 @@ class CheckInRepository extends ServiceEntityRepository
     }
 
     /**
+     * THE WATCH A PERSON HAS OPEN NOW, in whichever area — what a live mark's
+     * sheet is about (#16 C). The newest, should two ever be open.
+     */
+    public function findOpenAnywhereFor(string $personUuid): ?CheckIn
+    {
+        // No collection fetched: a row limit over a fetch-joined collection
+        // would cut the collection, not the watches.
+        /** @var CheckIn|null $row */
+        $row = $this->createQueryBuilder('c')
+            ->join('c.person', 'person')
+            ->andWhere('person.uuid = :person')
+            ->andWhere('c.endedAt IS NULL')
+            ->setParameter('person', $personUuid)
+            ->orderBy('c.occurredAt', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $row;
+    }
+
+    /**
      * ONE PERSON'S LATEST CLAIMS, in every area, newest first — their own
      * dashboard's check-ins and their duty log (#19).
      *

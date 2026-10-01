@@ -63,6 +63,26 @@ class PersonPositionRepository extends ServiceEntityRepository
     }
 
     /**
+     * THE LATEST PINGS OF ONE WATCH, newest first — what a live mark's sheet
+     * reads as "Last pings" (#16 C).
+     *
+     * @return list<PersonPosition>
+     */
+    public function latestFor(CheckIn $checkIn, int $limit): array
+    {
+        /** @var list<PersonPosition> $rows */
+        $rows = $this->createQueryBuilder('p')
+            ->andWhere('p.checkIn = :checkin')
+            ->setParameter('checkin', $checkIn)
+            ->orderBy('p.recordedAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return $rows;
+    }
+
+    /**
      * THE PINGS OF ONE WATCH, oldest first — the watch's own trail.
      *
      * @return list<PersonPosition>

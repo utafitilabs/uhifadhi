@@ -48,6 +48,7 @@ final class GeoJsonLayerTest extends TestCase
             'popup' => null,
             'featureId' => null,
             'labels' => true,
+            'sheet' => null,
         ], $layer->toArray());
     }
 
@@ -75,6 +76,7 @@ final class GeoJsonLayerTest extends TestCase
             'popup' => null,
             'featureId' => null,
             'labels' => true,
+            'sheet' => null,
         ], $layer->toArray());
     }
 

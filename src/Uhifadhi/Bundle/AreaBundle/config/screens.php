@@ -19,6 +19,7 @@ use Uhifadhi\Bundle\AreaBundle\Controller\AreaCreateController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaModulesController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaWidgetsController;
+use Uhifadhi\Bundle\AreaBundle\Controller\LiveSheetController;
 use Uhifadhi\Bundle\AreaBundle\Controller\MeController;
 use Uhifadhi\Bundle\AreaBundle\Controller\OrgDashboardController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationConfigureController;
@@ -36,11 +37,13 @@ use Uhifadhi\Bundle\AreaBundle\People\AreaPersonPostings;
 use Uhifadhi\Bundle\AreaBundle\People\AreaStationPlates;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\CheckInRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\PersonPositionRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
+use Uhifadhi\Bundle\AreaBundle\Service\LiveSheet;
 use Uhifadhi\Bundle\AreaBundle\Service\MyDashboard;
 use Uhifadhi\Bundle\AreaBundle\Service\OrgOverviewCatalogue;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceStreamService;
@@ -225,6 +228,22 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag('controller.service_arguments');
     $services->alias(MeController::class, 'area.controller.me')->public();
+
+    // WHO A LIVE MARK IS (#16 C): the sheet a click on a mark opens, on every plate.
+    $services->set('area.live_sheet', LiveSheet::class)
+        ->args([
+            service(CheckInRepository::class),
+            service(PersonPositionRepository::class),
+            service('area.presence'),
+            service('area.live_visibility'),
+            service('area.person_facets'),
+            service('security.authorization_checker'),
+            service('router'),
+        ]);
+    $services->set('area.controller.live_sheet', LiveSheetController::class)
+        ->args([service('area.live_sheet'), service('clock')])
+        ->tag('controller.service_arguments');
+    $services->alias(LiveSheetController::class, 'area.controller.live_sheet')->public();
 
     $services->set('area.twig.my', MyExtension::class)->tag('twig.extension');
 

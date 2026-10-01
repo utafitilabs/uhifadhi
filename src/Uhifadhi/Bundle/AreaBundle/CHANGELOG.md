@@ -18,6 +18,15 @@
 
 Not released yet.
 
+ * WHO A LIVE MARK IS (ruled 30 Sep, #16 C): `GET /live/{person}` (`area_live_sheet`)
+   answers the sheet a click on a live mark opens - who, their seat and post, today's
+   state and check-in time, the last three pings, and "Open record" for a viewer who
+   reads the directory. It answers only for a mark the viewer's plate would draw: the
+   person's area readable and the person within the viewer's live sight
+   (`Service\LiveSheet`, through `LiveVisibility`); anybody else is not found. The
+   area overview and the organization dashboard pass the address to their plates
+   (`LiveSheetController::addressTemplate()`).
+
  * THE AREAS REGISTER LISTS ONLY WHAT THE VIEWER MAY OPEN (`areas.read` asked
    of each area, as the area page asks it); the organization dashboard's area
    figures and map read the same rows, so they count only that ground too.

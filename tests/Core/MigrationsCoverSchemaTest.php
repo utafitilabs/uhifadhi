@@ -99,6 +99,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'posting',
                 'registry_schedule_lock',
                 'registry_schedule_state',
+                'setting_value',
                 'spatial_ref_sys',
                 'station',
                 'station_event',
@@ -212,6 +213,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260930130000',
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260930140000',
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260930160000',
+                'Uhifadhi\\Bundle\\RegistryBundle\\Migrations\\Version20261001000100',
             ],
             $this->plannedVersions(),
         );

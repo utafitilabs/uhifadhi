@@ -31,6 +31,7 @@ use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\RegistryBundle\Repository\FigureFactRepository;
 use Uhifadhi\Bundle\RegistryBundle\Repository\ModuleRepository;
+use Uhifadhi\Bundle\RegistryBundle\Repository\SettingValueRepository;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleLedger;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 use Uhifadhi\Bundle\RegistryBundle\Service\FactRebuildService;
@@ -40,12 +41,17 @@ use Uhifadhi\Bundle\RegistryBundle\Service\ModuleRouteGate;
 use Uhifadhi\Bundle\RegistryBundle\Service\ProviderCatalogueMapper;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
 use Uhifadhi\Bundle\RegistryBundle\Settings\CatalogueFigure;
+use Uhifadhi\Bundle\RegistryBundle\Settings\SettingsCatalogue;
+use Uhifadhi\Bundle\RegistryBundle\Settings\SettingsResolver;
+use Uhifadhi\Bundle\RegistryBundle\Settings\SettingsWriter;
 use Uhifadhi\Bundle\RegistryBundle\Version\DependencyOrderComparator;
 use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Facts\FactProviderInterface;
 use Uhifadhi\Contracts\Facts\FactReaderInterface;
 use Uhifadhi\Contracts\Facts\RecomputeFacts;
+use Uhifadhi\Contracts\Settings\SettingDefinitionSourceInterface;
 use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
+use Uhifadhi\Contracts\Settings\SettingsReaderInterface;
 
 /*
  * The bundle's static service wiring.
@@ -118,6 +124,34 @@ return static function (ContainerConfigurator $container): void {
      * service a page or a module asks, published under the contract's
      * interface so a module type-hints the contract and never this bundle.
      */
+    /*
+     * THE SETTINGS STORE. Every setting the core and the modules declare (the
+     * tagged definition sources), the values Super Admins and Admins set for
+     * the organization, an area or a department, the reader a module asks for
+     * the value in force — published under the contract's interface, so a
+     * module type-hints the contract and never this bundle — and the writer
+     * Settings › Configure saves a reviewed batch through.
+     */
+    $services->set(SettingValueRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    $services->set('registry.settings.catalogue', SettingsCatalogue::class)
+        ->args([tagged_iterator(SettingDefinitionSourceInterface::TAG)]);
+
+    $services->set('registry.settings.reader', SettingsResolver::class)
+        ->args([service('registry.settings.catalogue'), service(SettingValueRepository::class)]);
+    $services->alias(SettingsReaderInterface::class, 'registry.settings.reader');
+
+    $services->set('registry.settings.writer', SettingsWriter::class)
+        ->args([
+            service('registry.settings.catalogue'),
+            service(SettingValueRepository::class),
+            service('doctrine.orm.entity_manager'),
+            service('clock'),
+        ]);
+    $services->alias(SettingsWriter::class, 'registry.settings.writer');
+
     $services->set(FigureFactRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');

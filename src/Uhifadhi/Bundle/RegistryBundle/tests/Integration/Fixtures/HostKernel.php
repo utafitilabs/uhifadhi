@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\TestKernel;
+use Uhifadhi\Contracts\Settings\SettingDefinitionSourceInterface;
 
 /**
  * A HOST, MINIMALLY: the registry, plus the three things a real installation
@@ -84,6 +85,10 @@ class HostKernel extends TestKernel
         // module's answers are code it runs, not values baked into a compiled
         // container, and reading them live is what makes uninstalling a bundle
         // observable at all.
+        // A module with three settings of three depths, for the settings store's tests.
+        $services->set('test.settings.field', FieldSettings::class)
+            ->tag(SettingDefinitionSourceInterface::TAG);
+
         foreach (array_keys(self::$modules) as $slug) {
             $services->set('test.module.'.$slug, SpecModuleProvider::class)
                 ->args([$slug])
@@ -97,6 +102,8 @@ class HostKernel extends TestKernel
             'registry.area_module_ledger',
             'registry.entry_routes',
             'registry.sync',
+            'registry.settings.reader',
+            'registry.settings.writer',
         ] as $id) {
             $services->alias('test.'.$id, $id)->public();
         }

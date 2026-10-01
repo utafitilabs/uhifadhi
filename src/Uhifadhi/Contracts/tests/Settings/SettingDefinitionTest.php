@@ -1,0 +1,137 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Contracts\Tests\Settings;
+
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
+use Uhifadhi\Contracts\Settings\SettingDefinition;
+use Uhifadhi\Contracts\Settings\SettingDepth;
+use Uhifadhi\Contracts\Settings\SettingType;
+
+/**
+ * A SETTING, AS ITS OWNER DECLARES IT — the core or a module says what can be
+ * set, what it means, what it accepts and how far down it may be customised.
+ * Settings › Core and Settings › Modules › <module> draw from these, and the
+ * store refuses anything a definition does not accept.
+ *
+ * Pinned here: a definition cannot be built in a state a Configure page would
+ * have to guess about, a value is checked against the definition before it is
+ * stored, and the depth says exactly which levels may hold a custom value.
+ */
+final class SettingDefinitionTest extends TestCase
+{
+    public function testANumberSettingCarriesItsUnitAndLimits(): void
+    {
+        $late = self::lateThreshold();
+
+        self::assertSame('roster.late_threshold', $late->key);
+        self::assertSame(15, $late->default);
+        self::assertSame('1–120 min', $late->limits());
+        self::assertTrue($late->accepts(20));
+        self::assertFalse($late->accepts(0), 'Below the minimum.');
+        self::assertFalse($late->accepts(121), 'Above the maximum.');
+        self::assertFalse($late->accepts('20'), 'A number setting takes an integer, not text.');
+        self::assertFalse($late->accepts(true), 'A number setting takes an integer, not a switch.');
+    }
+
+    public function testAToggleTakesOnlyOnOrOff(): void
+    {
+        $toggle = new SettingDefinition('roster.announce_vacancies', 'roster', 'Roster', 'Announce vacancies',
+            'An unfilled watch is announced to the station.', SettingType::Toggle, true, SettingDepth::Area);
+
+        self::assertTrue($toggle->accepts(false));
+        self::assertFalse($toggle->accepts(1));
+        self::assertNull($toggle->limits());
+    }
+
+    public function testAChoiceTakesOnlyOneOfItsChoices(): void
+    {
+        $currency = new SettingDefinition('incidents.currency', 'incidents', 'Incidents', 'Currency',
+            'Fines and compensation are recorded in.', SettingType::Choice, 'TZS', SettingDepth::Organization,
+            choices: ['TZS', 'KES', 'USD']);
+
+        self::assertTrue($currency->accepts('KES'));
+        self::assertFalse($currency->accepts('EUR'));
+        self::assertSame('TZS · KES · USD', $currency->limits());
+    }
+
+    /**
+     * THE DEPTH IS HOW FAR DOWN A SETTING MAY BE CUSTOMISED. One value for the
+     * organization, or the organization's value with a custom value per area,
+     * or per area and per department. The organization always holds a value.
+     */
+    public function testTheDepthSaysWhichLevelsMayHoldACustomValue(): void
+    {
+        self::assertTrue(SettingDepth::Organization->reaches(SettingDepth::Organization));
+        self::assertFalse(SettingDepth::Organization->reaches(SettingDepth::Area));
+        self::assertTrue(SettingDepth::Area->reaches(SettingDepth::Area));
+        self::assertFalse(SettingDepth::Area->reaches(SettingDepth::Department));
+        self::assertTrue(SettingDepth::Department->reaches(SettingDepth::Department));
+        self::assertTrue(SettingDepth::Department->reaches(SettingDepth::Organization));
+    }
+
+    /**
+     * @param array<string, mixed> $overrides
+     */
+    #[DataProvider('refusals')]
+    public function testADefinitionAConfigurePageWouldHaveToGuessAboutIsRefused(array $overrides, string $why): void
+    {
+        $arguments = array_replace([
+            'key' => 'roster.late_threshold',
+            'owner' => 'roster',
+            'group' => 'Roster',
+            'label' => 'Late threshold',
+            'description' => 'A check-in later than this counts as late.',
+            'type' => SettingType::Number,
+            'default' => 15,
+            'depth' => SettingDepth::Department,
+            'unit' => 'min',
+            'min' => 1,
+            'max' => 120,
+            'choices' => [],
+        ], $overrides);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        new SettingDefinition(...$arguments); // @phpstan-ignore argument.type (the cases feed deliberately wrong shapes)
+
+        self::fail($why);
+    }
+
+    /**
+     * @return \Generator<string, array{array<string, mixed>, string}>
+     */
+    public static function refusals(): \Generator
+    {
+        yield 'key without its owner' => [['key' => 'late_threshold'], 'A key is owner.name.'];
+        yield 'key under another owner' => [['key' => 'patrols.late_threshold'], 'The key starts with its owner.'];
+        yield 'key with capitals' => [['key' => 'roster.LateThreshold'], 'Keys are lower case.'];
+        yield 'empty label' => [['label' => ' '], 'The row says nothing.'];
+        yield 'empty description' => [['description' => ''], 'The row explains nothing.'];
+        yield 'number default not an integer' => [['default' => '15'], 'A number defaults to an integer.'];
+        yield 'number default below its minimum' => [['default' => 0], 'The default must be acceptable.'];
+        yield 'minimum above maximum' => [['min' => 200], 'Limits that accept nothing.'];
+        yield 'toggle with a number default' => [['type' => SettingType::Toggle, 'default' => 1, 'unit' => null, 'min' => null, 'max' => null], 'A toggle defaults to on or off.'];
+        yield 'toggle with a unit' => [['type' => SettingType::Toggle, 'default' => true, 'min' => null, 'max' => null], 'A toggle has no unit.'];
+        yield 'choice without choices' => [['type' => SettingType::Choice, 'default' => 'TZS', 'unit' => null, 'min' => null, 'max' => null], 'A choice needs its choices.'];
+        yield 'choice default outside its choices' => [['type' => SettingType::Choice, 'default' => 'EUR', 'unit' => null, 'min' => null, 'max' => null, 'choices' => ['TZS']], 'The default must be one of the choices.'];
+    }
+
+    private static function lateThreshold(): SettingDefinition
+    {
+        return new SettingDefinition('roster.late_threshold', 'roster', 'Roster', 'Late threshold',
+            'A check-in later than this counts as late.', SettingType::Number, 15, SettingDepth::Department,
+            unit: 'min', min: 1, max: 120);
+    }
+}

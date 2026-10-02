@@ -91,25 +91,6 @@ class AreaOfInterest implements AreaInterface
     #[ORM\Column(nullable: true)]
     private ?int $establishedYear = null;
 
-    /**
-     * HOW MUCH SHARED GROUND BETWEEN TWO OF THIS AREA'S ZONES IS A SLIVER
-     * rather than an overlap, as a percentage of the smaller of the two rings.
-     *
-     * AN AREA'S OWN, BECAUSE THE ANSWER IS ABOUT ITS SURVEY. A scheme digitised
-     * from a clean cadastre meets exactly; one traced off a scanned map does
-     * not, and the product has no business deciding which of the two an
-     * installation is holding. What it does decide is the shape of the
-     * question: a percentage of the smaller ring, never an absolute the
-     * installation has to convert.
-     *
-     * NULL IS NOT ZERO, it is "not set", and it reads as the default —
-     * {@see \Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService::DEFAULT_TOLERANCE_PCT}.
-     * Shipping the default as a column value would freeze today's number into
-     * every row and make changing it a migration.
-     */
-    #[ORM\Column(nullable: true)]
-    private ?float $zoneOverlapTolerancePct = null;
-
     public function getId(): ?int
     {
         return $this->id;
@@ -182,18 +163,6 @@ class AreaOfInterest implements AreaInterface
     public function setEstablishedYear(?int $establishedYear): static
     {
         $this->establishedYear = $establishedYear;
-
-        return $this;
-    }
-
-    public function getZoneOverlapTolerancePct(): ?float
-    {
-        return $this->zoneOverlapTolerancePct;
-    }
-
-    public function setZoneOverlapTolerancePct(?float $zoneOverlapTolerancePct): static
-    {
-        $this->zoneOverlapTolerancePct = $zoneOverlapTolerancePct;
 
         return $this;
     }

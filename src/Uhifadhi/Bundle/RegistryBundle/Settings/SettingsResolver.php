@@ -30,7 +30,7 @@ use Uhifadhi\Contracts\Settings\SettingsReaderInterface;
  */
 final class SettingsResolver implements SettingsReaderInterface, ResetInterface
 {
-    /** @var array<string, int|bool|string>|null keyed "key|level|place" */
+    /** @var array<string, int|float|bool|string>|null keyed "key|level|place" */
     private ?array $set = null;
 
     public function __construct(
@@ -44,7 +44,7 @@ final class SettingsResolver implements SettingsReaderInterface, ResetInterface
         $this->set = null;
     }
 
-    public function value(string $key, ?string $areaUuid = null, ?string $departmentUuid = null): int|bool|string|null
+    public function value(string $key, ?string $areaUuid = null, ?string $departmentUuid = null): int|float|bool|string|null
     {
         $definition = $this->catalogue->get($key);
         $set = $this->set ??= $this->load();
@@ -68,7 +68,7 @@ final class SettingsResolver implements SettingsReaderInterface, ResetInterface
     }
 
     /**
-     * @return array<string, int|bool|string>
+     * @return array<string, int|float|bool|string>
      */
     private function load(): array
     {

@@ -27,6 +27,7 @@ final readonly class SettingDefinition
 {
     /**
      * @param list<string> $choices    the accepted values of a Choice setting, in the order shown
+     * @param int          $decimals   for a Number, how many decimal places it takes — 0 is whole numbers
      * @param string|null  $unsetMeans for a Number left unset (default null): what unset means, as Settings prints it —
      *                                 "two ping intervals" — the owner computing the value until an Admin sets one
      */
@@ -37,7 +38,7 @@ final readonly class SettingDefinition
         public string $label,
         public string $description,
         public SettingType $type,
-        public int|bool|string|null $default,
+        public int|float|bool|string|null $default,
         public SettingDepth $depth,
         public ?string $unit = null,
         public ?int $min = null,
@@ -45,6 +46,7 @@ final readonly class SettingDefinition
         public array $choices = [],
         public int $position = 0,
         public ?string $unsetMeans = null,
+        public int $decimals = 0,
     ) {
         if (1 !== preg_match('/^[a-z][a-z0-9]*(\.[a-z][a-z0-9_]*)+$/', $key)) {
             throw new \InvalidArgumentException(\sprintf('A setting key is "<owner>.<name>" in lower case; "%s" is not.', $key));
@@ -73,7 +75,7 @@ final readonly class SettingDefinition
     public function accepts(mixed $value): bool
     {
         return match ($this->type) {
-            SettingType::Number => \is_int($value)
+            SettingType::Number => (\is_int($value) || (\is_float($value) && $this->decimals > 0 && self::hasPlaces($value, $this->decimals)))
                 && (null === $this->min || $value >= $this->min)
                 && (null === $this->max || $value <= $this->max),
             SettingType::Toggle => \is_bool($value),
@@ -92,8 +94,19 @@ final readonly class SettingDefinition
         };
     }
 
+    private static function hasPlaces(float $value, int $places): bool
+    {
+        $scaled = $value * 10 ** $places;
+
+        return is_finite($value) && abs($scaled - round($scaled)) < 1e-9;
+    }
+
     private function checkNumber(): void
     {
+        if ($this->decimals < 0 || $this->decimals > 6) {
+            throw new \InvalidArgumentException(\sprintf('The setting "%s" takes between 0 and 6 decimal places.', $this->key));
+        }
+
         if (null !== $this->min && null !== $this->max && $this->min > $this->max) {
             throw new \InvalidArgumentException(\sprintf('The setting "%s" accepts nothing: its minimum is above its maximum.', $this->key));
         }
@@ -105,7 +118,7 @@ final readonly class SettingDefinition
 
     private function checkToggle(): void
     {
-        if (null !== $this->unit || null !== $this->min || null !== $this->max || [] !== $this->choices) {
+        if (null !== $this->unit || null !== $this->min || null !== $this->max || [] !== $this->choices || 0 !== $this->decimals) {
             throw new \InvalidArgumentException(\sprintf('The switch "%s" has no unit, limits or choices.', $this->key));
         }
 
@@ -116,6 +129,10 @@ final readonly class SettingDefinition
 
     private function checkChoice(): void
     {
+        if (0 !== $this->decimals) {
+            throw new \InvalidArgumentException(\sprintf('The choice "%s" has no decimals.', $this->key));
+        }
+
         if ([] === $this->choices) {
             throw new \InvalidArgumentException(\sprintf('The choice "%s" needs its choices.', $this->key));
         }

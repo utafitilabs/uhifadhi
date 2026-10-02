@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Service;
 
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Settings\CoreSettings;
+use Uhifadhi\Contracts\Settings\SettingsReaderInterface;
 
 /**
  * WHEN SHARED GROUND BETWEEN TWO ZONES IS A SLIVER, AND WHEN IT IS AN OVERLAP.
@@ -38,12 +40,17 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
  * id — so the question "which zone is this in?" has one stable answer without
  * anybody editing geometry to produce it.
  *
- * A STATELESS RULE with no collaborators, so it is unit-testable without a
+ * A RULE WHOSE ONE COLLABORATOR IS THE SETTINGS READER — the tolerance in
+ * force for the area, from Settings › Core — so it is unit-testable without a
  * kernel and the same sentence decides for an import, for a redrawn ring and
  * for anything that writes a zone later.
  */
 final readonly class ZoneOverlapService
 {
+    public function __construct(private SettingsReaderInterface $settings)
+    {
+    }
+
     /**
      * WHAT AN AREA GETS WHEN IT HAS NOT SAID. One percent of the smaller ring
      * is below anything a surveyor draws on purpose and above what two passes
@@ -65,9 +72,12 @@ final readonly class ZoneOverlapService
      */
     public const float FLOOR_KM2 = 1.0;
 
+    /** The tolerance in force for this area (Settings › Core), in percent. */
     public function toleranceOf(AreaOfInterest $area): float
     {
-        return $area->getZoneOverlapTolerancePct() ?? self::DEFAULT_TOLERANCE_PCT;
+        $set = $this->settings->value(CoreSettings::ZONE_OVERLAP_TOLERANCE, $area->getUuidString());
+
+        return \is_int($set) || \is_float($set) ? (float) $set : self::DEFAULT_TOLERANCE_PCT;
     }
 
     /**

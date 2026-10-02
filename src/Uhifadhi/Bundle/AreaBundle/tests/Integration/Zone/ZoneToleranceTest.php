@@ -21,7 +21,12 @@ use Uhifadhi\Bundle\AreaBundle\Model\ZoneImportPlan;
 use Uhifadhi\Bundle\AreaBundle\Model\ZoneSetView;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
+use Uhifadhi\Bundle\AreaBundle\Settings\CoreSettings;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\IntegrationTestCase;
+use Uhifadhi\Bundle\RegistryBundle\Entity\SettingValue;
+use Uhifadhi\Bundle\RegistryBundle\Settings\SettingsResolver;
+use Uhifadhi\Contracts\Settings\SettingDepth;
+use Uhifadhi\Contracts\Settings\SettingsReaderInterface;
 
 /**
  * WHAT A ZONE MAY DO THAT IT COULD NOT BEFORE, AND WHAT IT STILL MAY NOT.
@@ -165,19 +170,24 @@ final class ZoneToleranceTest extends IntegrationTestCase
         self::assertMatchesRegularExpression('/^overlaps Crater by [\d,]+ km²$/u', $plan->flagged()[0]->why());
     }
 
-    /** The area's own number decides: the same rings, refused at one percent and taken at five. */
-    public function testTheToleranceIsTheAreasOwn(): void
+    /**
+     * The tolerance in force for the area decides: a ring sharing five percent
+     * of the smaller zone is an overlap at the default one percent, and is
+     * taken once an Admin allows ten for this area in Settings › Core.
+     */
+    public function testTheToleranceIsTheOneInForceForTheArea(): void
     {
         $area = $this->anArea();
-        $area->setZoneOverlapTolerancePct(80.0);
-        $this->em->flush();
         $this->aZone($area, 'Crater', self::A_WEST_HALF);
+        $ring = $this->collection([$this->feature('Crater East', self::A_RING_OVERLAPPING_BY_FIVE_PERCENT)]);
 
-        $plan = $this->plan($area, $this->collection([
-            $this->feature('Crater North', self::A_STRADDLING_RING),
-        ]));
+        self::assertSame([], $this->plan($area, $ring)->arrivingNames(), 'At one percent, five is an overlap.');
 
-        self::assertSame(['Crater North'], $plan->arrivingNames());
+        $this->em->persist(new SettingValue(CoreSettings::ZONE_OVERLAP_TOLERANCE, SettingDepth::Area, (string) $area->getUuidString(), 10.0, 'admin@example.test', new \DateTimeImmutable()));
+        $this->em->flush();
+        $this->settingsReader()->reset();
+
+        self::assertSame(['Crater East'], $this->plan($area, $ring)->arrivingNames(), 'At ten percent, it is taken.');
     }
 
     /** Two features of one file are held to the same rule, and the reason says the size. */
@@ -205,6 +215,9 @@ final class ZoneToleranceTest extends IntegrationTestCase
     private const array A_RING_ACROSS_THE_EDGE = [[[-29.5, -3.6], [-28.75, -3.6], [-28.75, -2.8], [-29.5, -2.8], [-29.5, -3.6]]];
 
     /** The eastern half reaching one ten-thousandth of a degree into the western one. */
+    /** Five percent of the west half's ground: 0.025° of its 0.5° width, the full height. */
+    private const array A_RING_OVERLAPPING_BY_FIVE_PERCENT = [[[-29.525, -3.6], [-29.0, -3.6], [-29.0, -2.8], [-29.525, -2.8], [-29.525, -3.6]]];
+
     private const array A_RING_OVERLAPPING_BY_A_SLIVER = [[[-29.5001, -3.6], [-29.0, -3.6], [-29.0, -2.8], [-29.5001, -2.8], [-29.5001, -3.6]]];
 
     private function importer(): ZoneImportService
@@ -238,6 +251,14 @@ final class ZoneToleranceTest extends IntegrationTestCase
         $plan = $this->plan($area, $document);
 
         return $this->importer()->apply($area, $plan, $plan->arrivingNames());
+    }
+
+    private function settingsReader(): SettingsResolver
+    {
+        $reader = static::getContainer()->get(SettingsReaderInterface::class);
+        \assert($reader instanceof SettingsResolver);
+
+        return $reader;
     }
 
     /**

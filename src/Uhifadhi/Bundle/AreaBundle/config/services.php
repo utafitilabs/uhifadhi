@@ -218,7 +218,8 @@ return static function (ContainerConfigurator $container): void {
      * so the same sentence decides for an import, for a redrawn ring and for
      * anything that writes a zone later.
      */
-    $services->set('area.zone_overlaps', ZoneOverlapService::class);
+    $services->set('area.zone_overlaps', ZoneOverlapService::class)
+        ->args([service(SettingsReaderInterface::class)]);
     $services->alias(ZoneOverlapService::class, 'area.zone_overlaps');
 
     /*

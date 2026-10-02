@@ -21,11 +21,11 @@ namespace Uhifadhi\Bundle\RegistryBundle\Settings;
 final readonly class SettingValues
 {
     /**
-     * @param array<string, int|bool|string> $areas
-     * @param array<string, int|bool|string> $departments
+     * @param array<string, int|float|bool|string> $areas
+     * @param array<string, int|float|bool|string> $departments
      */
     public function __construct(
-        public int|bool|string|null $organization,
+        public int|float|bool|string|null $organization,
         public array $areas,
         public array $departments,
     ) {

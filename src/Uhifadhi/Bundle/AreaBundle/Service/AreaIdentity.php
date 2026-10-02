@@ -37,9 +37,8 @@ use Uhifadhi\Bundle\AreaBundle\Exception\AreaIdentityException;
  * null is written through.
  *
  * AND THE AREA'S TWO SETTINGS SAVE WITH IT, because the settings section has
- * one write: the zone overlap tolerance. A blank is "not set" and reads as
- * the product's default. (How often handsets report, and when they go stale,
- * moved to Settings › Core on 1 Oct 2026.)
+ * one write. (The zone overlap tolerance, how often handsets report and when
+ * they go stale moved to Settings › Core on 1 Oct 2026.)
  */
 final readonly class AreaIdentity
 {
@@ -51,36 +50,23 @@ final readonly class AreaIdentity
      * Save an area's identity. The name is required and trimmed; the gazetted
      * facts are optional and a null clears them back to unrecorded.
      *
-     * @throws AreaIdentityException when the name is blank or the tolerance is out of range
+     * @throws AreaIdentityException when the name is blank
      */
     public function update(
         AreaOfInterest $area,
         string $name,
         ?string $iucnCategory,
         ?int $establishedYear,
-        ?float $zoneOverlapTolerancePct = null,
     ): AreaOfInterest {
         $name = trim($name);
         if ('' === $name) {
             throw new AreaIdentityException('An area needs a name — as its official record names it.');
         }
 
-        /*
-         * A TOLERANCE OUT OF RANGE IS REFUSED RATHER THAN CLAMPED. Somebody who
-         * typed 50 meant something, and half a zone is a decision about the
-         * ground; silently saving 10 would leave them believing they had made
-         * it.
-         */
-        if (null !== $zoneOverlapTolerancePct
-            && ($zoneOverlapTolerancePct < 0.0 || $zoneOverlapTolerancePct > ZoneOverlapService::MAX_TOLERANCE_PCT)) {
-            throw new AreaIdentityException(\sprintf('Zone overlap tolerance is a percentage between 0 and %s. Past that, the answer is to fix the scheme rather than to accept the overlap.', (string) ZoneOverlapService::MAX_TOLERANCE_PCT));
-        }
-
         $area
             ->setName($name)
             ->setIucnCategory($iucnCategory)
-            ->setEstablishedYear($establishedYear)
-            ->setZoneOverlapTolerancePct($zoneOverlapTolerancePct);
+            ->setEstablishedYear($establishedYear);
 
         $this->entityManager->flush();
 

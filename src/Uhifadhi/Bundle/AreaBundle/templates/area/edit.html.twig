@@ -83,22 +83,10 @@
                         </div>
                     </div>
 
-                    {# THE ONE SETTING ON THIS SCREEN THAT IS NOT A RECORD OF
-                       FACT: how carefully this area's zone scheme was drawn.
-                       Blank is "not set" and reads as the platform's default,
-                       which is why the field is not pre-filled with it. #}
-                    <div style="margin-top:14px">
-                        <label class="fldlab" for="area-zonetol">Zone overlap tolerance</label>
-                        <input class="fld" id="area-zonetol" name="zoneOverlapTolerance"
-                               value="{{ area.zoneOverlapTolerancePct }}" inputmode="decimal"
-                               placeholder="{{ defaultZoneOverlapTolerance }}"
-                               aria-label="Zone overlap tolerance, percent">
-                        <span class="zfnote">% of the smaller zone &middot; slivers below this are accepted</span>
-                    </div>
-
-                    {# PING EVERY and STALE AFTER moved to Settings › Core (ruled
-                       1 Oct 2026): set by Super Admins and Admins for the
-                       organization and customised per area there. #}
+                    {# ZONE OVERLAP TOLERANCE, PING EVERY and STALE AFTER moved to
+                       Settings › Core (ruled 1 Oct 2026): set by Super Admins
+                       and Admins for the organization and customised per area
+                       there. This screen keeps the record of fact. #}
                     <div class="rln" style="margin-top:16px">
                         <span class="fog">Area (derived from boundary)</span>
                         <span class="mono d">{% if area.hasBoundary %}{{ areaKm2|number_format }} km&sup2; &middot; not editable{% else %}&mdash; &middot; no boundary yet{% endif %}</span>

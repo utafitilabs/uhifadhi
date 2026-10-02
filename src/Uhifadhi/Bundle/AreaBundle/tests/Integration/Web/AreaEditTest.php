@@ -142,85 +142,12 @@ final class AreaEditTest extends WebTestCase
     }
 
     /**
-     * THE ONE SETTING ON THIS SCREEN ROUND-TRIPS: typed, saved, and read back
-     * on the record beside the facts it is not one of.
+     * PING EVERY, STALE AFTER AND THE ZONE OVERLAP TOLERANCE ARE SETTINGS ›
+     * CORE'S (ruled 1 Oct 2026): the edit screen no longer offers them, and
+     * the area's record reads the values in force from the settings store,
+     * saying where they are set.
      */
-    public function testTheZoneOverlapToleranceRoundTrips(): void
-    {
-        $this->boot();
-        $this->signIn();
-        $area = $this->anArea('Northern Reserve');
-
-        $this->browser()->request('POST', $this->editUrl($area), [
-            'name' => 'Northern Reserve',
-            'zoneOverlapTolerance' => '2.5',
-            '_token' => $this->tokenOn($this->editUrl($area), 'area_edit'),
-        ]);
-
-        self::assertSame(302, $this->browser()->getResponse()->getStatusCode());
-
-        $this->em->clear();
-        $fresh = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Northern Reserve']);
-        self::assertInstanceOf(AreaOfInterest::class, $fresh);
-        self::assertSame(2.5, $fresh->getZoneOverlapTolerancePct());
-
-        // And the form offers it back, so a second edit is not a retype.
-        $this->browser()->request('GET', $this->editUrl($fresh));
-        self::assertMatchesRegularExpression(
-            '/name="zoneOverlapTolerance"\s+value="2\.5"/',
-            (string) $this->browser()->getResponse()->getContent(),
-        );
-    }
-
-    /** Blank is NOT SET, which reads as the platform's default rather than as zero. */
-    public function testABlankToleranceIsNotSet(): void
-    {
-        $this->boot();
-        $this->signIn();
-        $area = $this->anArea('Northern Reserve');
-        $area->setZoneOverlapTolerancePct(4.0);
-        $this->em->flush();
-
-        $this->browser()->request('POST', $this->editUrl($area), [
-            'name' => 'Northern Reserve',
-            'zoneOverlapTolerance' => '',
-            '_token' => $this->tokenOn($this->editUrl($area), 'area_edit'),
-        ]);
-
-        $this->em->clear();
-        $fresh = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Northern Reserve']);
-        self::assertInstanceOf(AreaOfInterest::class, $fresh);
-        self::assertNull($fresh->getZoneOverlapTolerancePct());
-    }
-
-    /** Past ten percent the answer is to fix the scheme, so the form says so instead of clamping. */
-    public function testAToleranceOutOfRangeIsRefusedAndTheAreaIsUnchanged(): void
-    {
-        $this->boot();
-        $this->signIn();
-        $area = $this->anArea('Northern Reserve');
-
-        $this->browser()->request('POST', $this->editUrl($area), [
-            'name' => 'Northern Reserve',
-            'zoneOverlapTolerance' => '50',
-            '_token' => $this->tokenOn($this->editUrl($area), 'area_edit'),
-        ]);
-
-        self::assertSame(422, $this->browser()->getResponse()->getStatusCode());
-        self::assertStringContainsString('between 0 and 10', (string) $this->browser()->getResponse()->getContent());
-
-        $this->em->clear();
-        $fresh = $this->em->getRepository(AreaOfInterest::class)->findOneBy(['name' => 'Northern Reserve']);
-        self::assertInstanceOf(AreaOfInterest::class, $fresh);
-        self::assertNull($fresh->getZoneOverlapTolerancePct());
-    }
-
-    /**
-     * PING EVERY AND STALE AFTER ARE SETTINGS › CORE'S (ruled 1 Oct 2026): the
-     * edit screen no longer offers them, and the area's record reads the
-     * values in force from the settings store, saying where they are set.
-     */
-    public function testTheEditScreenNoLongerOffersPingEveryOrStaleAfter(): void
+    public function testTheEditScreenOffersTheRecordOfFactAndNoSetting(): void
     {
         $this->boot();
         $this->signIn();
@@ -230,6 +157,7 @@ final class AreaEditTest extends WebTestCase
 
         self::assertStringNotContainsString('name="pingEvery"', $form);
         self::assertStringNotContainsString('name="staleAfter"', $form);
+        self::assertStringNotContainsString('name="zoneOverlapTolerance"', $form);
     }
 
     public function testTheAreaSettingsReadTheValuesInForceFromTheSettingsStore(): void
@@ -244,6 +172,7 @@ final class AreaEditTest extends WebTestCase
 
         self::assertMatchesRegularExpression('#<th>Ping every</th>\s*<td class="num">2 hours <span class="chip">set in Settings &rsaquo; Core</span></td>#', $settings);
         self::assertMatchesRegularExpression('#<th>Stale after</th>\s*<td class="num">4 hours <span class="chip">two pings</span>#', $settings, 'Unset, it keeps the two-ping rule.');
+        self::assertMatchesRegularExpression('#<th>Zone overlap tolerance</th>\s*<td class="num">1 % <span class="chip">set in Settings &rsaquo; Core</span>#', $settings, 'Unset, the default.');
     }
 
     /** Clearing the gazetted facts is allowed — they are optional and a blank means unrecorded. */

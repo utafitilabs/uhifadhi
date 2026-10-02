@@ -67,6 +67,24 @@ final class SettingDefinitionTest extends TestCase
     }
 
     /**
+     * A NUMBER MAY CARRY DECIMALS — the zone overlap tolerance is 2.5 % — and
+     * then takes a decimal value to that many places; a whole-number setting
+     * still refuses one.
+     */
+    public function testANumberWithDecimalsTakesThemToItsPlaces(): void
+    {
+        $tolerance = new SettingDefinition('core.zone_overlap_tolerance', 'core', 'Zones', 'Zone overlap tolerance',
+            'Slivers of overlap below this share of the smaller zone are accepted.', SettingType::Number, 1.0, SettingDepth::Area,
+            unit: '%', min: 0, max: 10, decimals: 1);
+
+        self::assertTrue($tolerance->accepts(2.5));
+        self::assertTrue($tolerance->accepts(3), 'A whole number is a number with no decimals.');
+        self::assertFalse($tolerance->accepts(2.55), 'Two places where one is allowed.');
+        self::assertFalse($tolerance->accepts(10.5));
+        self::assertFalse(self::lateThreshold()->accepts(15.5), 'A whole-number setting takes no decimals.');
+    }
+
+    /**
      * A NUMBER MAY BE LEFT UNSET, when its owner computes the value from
      * something else until an Admin sets one — stale-after is two ping
      * intervals until it is set. The definition then says what unset means,
@@ -120,6 +138,7 @@ final class SettingDefinitionTest extends TestCase
             'max' => 120,
             'choices' => [],
             'unsetMeans' => null,
+            'decimals' => 0,
         ], $overrides);
 
         $this->expectException(\InvalidArgumentException::class);
@@ -145,6 +164,8 @@ final class SettingDefinitionTest extends TestCase
         yield 'toggle with a number default' => [['type' => SettingType::Toggle, 'default' => 1, 'unit' => null, 'min' => null, 'max' => null], 'A toggle defaults to on or off.'];
         yield 'toggle with a unit' => [['type' => SettingType::Toggle, 'default' => true, 'min' => null, 'max' => null], 'A toggle has no unit.'];
         yield 'choice without choices' => [['type' => SettingType::Choice, 'default' => 'TZS', 'unit' => null, 'min' => null, 'max' => null], 'A choice needs its choices.'];
+        yield 'decimals on a switch' => [['type' => SettingType::Toggle, 'default' => true, 'unit' => null, 'min' => null, 'max' => null, 'decimals' => 1], 'Only a number has decimals.'];
+        yield 'a decimal default on a whole number' => [['default' => 15.5], 'The default must be acceptable.'];
         yield 'unset without saying what it means' => [['default' => null], 'Settings would print nothing for it.'];
         yield 'a switch left unset' => [['type' => SettingType::Toggle, 'default' => null, 'unit' => null, 'min' => null, 'max' => null, 'unsetMeans' => 'something'], 'Only a number may be left unset.'];
         yield 'what unset means, with a default' => [['unsetMeans' => 'two ping intervals'], 'A default and an unset meaning cannot both hold.'];

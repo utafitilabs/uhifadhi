@@ -49,7 +49,7 @@ class SettingValue
     private ?string $placeUuid;
 
     #[ORM\Column(name: 'value', type: 'json')]
-    private int|bool|string $value;
+    private int|float|bool|string $value;
 
     #[ORM\Column(name: 'set_by', length: 180)]
     private string $setBy;
@@ -57,7 +57,7 @@ class SettingValue
     #[ORM\Column(name: 'set_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $setAt;
 
-    public function __construct(string $key, SettingDepth $level, ?string $placeUuid, int|bool|string $value, string $setBy, \DateTimeImmutable $setAt)
+    public function __construct(string $key, SettingDepth $level, ?string $placeUuid, int|float|bool|string $value, string $setBy, \DateTimeImmutable $setAt)
     {
         $this->key = $key;
         $this->level = $level;
@@ -87,7 +87,7 @@ class SettingValue
         return $this->placeUuid;
     }
 
-    public function getValue(): int|bool|string
+    public function getValue(): int|float|bool|string
     {
         return $this->value;
     }
@@ -102,7 +102,7 @@ class SettingValue
         return $this->setAt;
     }
 
-    public function change(int|bool|string $value, string $setBy, \DateTimeImmutable $setAt): void
+    public function change(int|float|bool|string $value, string $setBy, \DateTimeImmutable $setAt): void
     {
         $this->value = $value;
         $this->setBy = $setBy;

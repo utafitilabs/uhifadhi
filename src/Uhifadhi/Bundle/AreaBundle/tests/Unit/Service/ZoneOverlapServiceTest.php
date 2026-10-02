@@ -17,6 +17,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
+use Uhifadhi\Bundle\AreaBundle\Settings\CoreSettings;
+use Uhifadhi\Contracts\Settings\SettingsReaderInterface;
 
 /**
  * WHEN SHARED GROUND IS A SLIVER AND WHEN IT IS AN OVERLAP.
@@ -42,16 +44,15 @@ use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
 #[CoversClass(ZoneOverlapService::class)]
 final class ZoneOverlapServiceTest extends TestCase
 {
-    public function testAnAreaThatNamesNoToleranceGetsOnePercent(): void
+    public function testNothingSetGetsOnePercent(): void
     {
-        self::assertSame(1.0, new ZoneOverlapService()->toleranceOf(new AreaOfInterest()));
+        self::assertSame(1.0, self::ruleReading(null)->toleranceOf(new AreaOfInterest()));
     }
 
-    public function testAnAreaNamesItsOwnTolerance(): void
+    /** The tolerance in force for the area — Settings › Core's, organization or custom — decides. */
+    public function testTheToleranceInForceIsObeyed(): void
     {
-        $area = new AreaOfInterest()->setZoneOverlapTolerancePct(2.5);
-
-        self::assertSame(2.5, new ZoneOverlapService()->toleranceOf($area));
+        self::assertSame(2.5, self::ruleReading(2.5)->toleranceOf(new AreaOfInterest()));
     }
 
     /** Under a percent of the smaller ring at the default: a sliver. */
@@ -95,6 +96,20 @@ final class ZoneOverlapServiceTest extends TestCase
 
     private function rule(): ZoneOverlapService
     {
-        return new ZoneOverlapService();
+        return self::ruleReading(null);
+    }
+
+    private static function ruleReading(?float $tolerance): ZoneOverlapService
+    {
+        return new ZoneOverlapService(new readonly class($tolerance) implements SettingsReaderInterface {
+            public function __construct(private ?float $tolerance)
+            {
+            }
+
+            public function value(string $key, ?string $areaUuid = null, ?string $departmentUuid = null): ?float
+            {
+                return CoreSettings::ZONE_OVERLAP_TOLERANCE === $key ? ($this->tolerance ?? ZoneOverlapService::DEFAULT_TOLERANCE_PCT) : null;
+            }
+        });
     }
 }

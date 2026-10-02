@@ -26,7 +26,7 @@ final readonly class SettingChange
         public string $key,
         public SettingDepth $level,
         public ?string $placeUuid,
-        public int|bool|string|null $value,
+        public int|float|bool|string|null $value,
     ) {
     }
 

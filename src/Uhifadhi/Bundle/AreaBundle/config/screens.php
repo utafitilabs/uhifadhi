@@ -623,6 +623,7 @@ return static function (ContainerConfigurator $container): void {
                 service(ZoneRepository::class),
                 service('security.authorization_checker'),
                 service('area.ping_interval'),
+                service('area.zone_overlaps'),
                 tagged_iterator('uhifadhi.area_sections'),
             ])
             ->tag('uhifadhi.configuration_sections');

@@ -66,6 +66,8 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
         private AuthorizationCheckerInterface $authorization,
         // THE AREA'S PING INTERVAL, read the way the handset reads it.
         private PingInterval $pingInterval,
+        // THE TOLERANCE IN FORCE, read the way an import judges it.
+        private ZoneOverlapService $overlaps,
         /**
          * WHAT OTHER BUNDLES CONFIGURE ABOUT AN AREA. Departments are the
          * first: they belong to the team bundle, and an area naming them
@@ -175,7 +177,7 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
                 [
                     'area' => $area,
                     'areaKm2' => $this->register->areaKm2($area),
-                    'defaultZoneOverlapTolerance' => ZoneOverlapService::DEFAULT_TOLERANCE_PCT,
+                    'zoneTolerance' => $this->overlaps->toleranceOf($area),
                     // THE VALUES IN FORCE HERE, read-only: Super Admins and
                     // Admins set them in Settings › Core (ruled 1 Oct 2026).
                     'pingEvery' => IntervalUnit::say($this->pingInterval->for($area)),

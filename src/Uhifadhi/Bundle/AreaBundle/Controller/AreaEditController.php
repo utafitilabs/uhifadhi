@@ -36,7 +36,6 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaMapPayload;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
-use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
 use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
 use Uhifadhi\Contracts\Shell\ConfigurationSection;
@@ -112,10 +111,10 @@ final readonly class AreaEditController
 
         $this->denyUnlessTokenValid($request, self::IDENTITY_TOKEN);
 
-        [$name, $iucn, $established, $tolerance] = $this->identityFrom($request);
+        [$name, $iucn, $established] = $this->identityFrom($request);
 
         try {
-            $this->identity->update($area, $name, $iucn, $established, $tolerance);
+            $this->identity->update($area, $name, $iucn, $established);
         } catch (AreaIdentityException $e) {
             return $this->render($area, identityError: $e->getMessage(), status: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
@@ -201,22 +200,17 @@ final readonly class AreaEditController
      * The typed identity, read in the order {@see AreaIdentity::update()} takes
      * it. A blank IUCN or year is null — unrecorded — never the empty string.
      *
-     * A blank tolerance is null too — "not set", which reads as the platform's
-     * default rather than as zero.
-     *
-     * @return array{0: string, 1: string|null, 2: int|null, 3: float|null}
+     * @return array{0: string, 1: string|null, 2: int|null}
      */
     private function identityFrom(Request $request): array
     {
         $iucn = trim($request->request->getString('iucn'));
         $established = trim($request->request->getString('established'));
-        $tolerance = trim($request->request->getString('zoneOverlapTolerance'));
 
         return [
             $request->request->getString('name'),
             '' === $iucn ? null : $iucn,
             '' === $established ? null : (int) $established,
-            '' === $tolerance ? null : (float) $tolerance,
         ];
     }
 
@@ -237,7 +231,6 @@ final readonly class AreaEditController
             $this->twig->render('@Area/area/edit.html.twig', [
                 'area' => $area,
                 'areaKm2' => $this->register->areaKm2($area),
-                'defaultZoneOverlapTolerance' => ZoneOverlapService::DEFAULT_TOLERANCE_PCT,
                 'zoneCount' => $this->zones->countFor($area),
                 'map' => $this->areaMap->overview($this->mapPayload->forArea($area)),
                 'identityError' => $identityError,

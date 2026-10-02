@@ -26,5 +26,5 @@ interface SettingsReaderInterface
     /**
      * @throws \InvalidArgumentException when no definition has this key
      */
-    public function value(string $key, ?string $areaUuid = null, ?string $departmentUuid = null): int|bool|string|null;
+    public function value(string $key, ?string $areaUuid = null, ?string $departmentUuid = null): int|float|bool|string|null;
 }

@@ -140,6 +140,7 @@ final class MigrationsRunInDependencyOrderTest extends MigrationsTestCase
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260930160000',
                 'Uhifadhi\\Bundle\\RegistryBundle\\Migrations\\Version20261001000100',
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20261001000200',
+                'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20261002000200',
                 self::INSTALLATION_VERSION,
             ],
             $this->plannedVersions(),

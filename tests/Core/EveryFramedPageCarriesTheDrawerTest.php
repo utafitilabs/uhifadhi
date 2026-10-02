@@ -27,6 +27,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Bundle\TeamBundle\Tests\FilesInADepartment;
 use Uhifadhi\Core\Tests\Application\Kernel;
 
 /**
@@ -49,6 +50,8 @@ use Uhifadhi\Core\Tests\Application\Kernel;
 #[CoversNothing]
 final class EveryFramedPageCarriesTheDrawerTest extends WebTestCase
 {
+    use FilesInADepartment;
+
     /** The four kinds of page the owner named, by route. */
     private const array MUST_REACH = ['team_member', 'area_show', 'team_index', 'area_zones_configure'];
 
@@ -224,7 +227,7 @@ final class EveryFramedPageCarriesTheDrawerTest extends WebTestCase
         $catalogue = static::getContainer()->get('test_public.'.ConcernCatalogue::class);
         self::assertInstanceOf(ConcernCatalogue::class, $catalogue);
 
-        $placement = new Placement()->acrossTheOrganization()->acrossAllDepartments();
+        $placement = new Placement()->acrossTheOrganization()->inDepartment($this->homeDepartment($this->em));
         $position = new Position()
             ->setName('Holds everything')
             ->setGrantValues($catalogue->pairs(), $catalogue->pairs());

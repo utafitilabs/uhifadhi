@@ -214,17 +214,18 @@ final class SeedOrganizationTest extends IntegrationTestCase
         self::assertInstanceOf(User::class, $analyst);
         self::assertSame('Analyst', $analyst->getPosition()?->getName());
 
+        self::assertSame('Ecology', $analyst->getDepartment()?->getName(), 'the first named is the one they belong to');
         self::assertSame(
-            ['Ecology', 'Protection Service'],
-            array_map(static fn (Department $d): ?string => $d->getName(), $analyst->getDepartments() ?? []),
+            ['Protection Service'],
+            array_map(static fn (Department $d): ?string => $d->getName(), $analyst->getSupportedDepartments()),
         );
-        self::assertSame('Ecology +1', $analyst->getDepartmentLabel());
+        self::assertSame('Ecology · supports Protection Service', $analyst->getDepartmentLabel());
     }
 
     /**
      * AND SO IS THE OTHER END OF IT. The person holding nothing is placed
      * nowhere either, which is the state the model refuses everything in —
-     * an empty list of departments rather than the null that means "all".
+     * no department, so nothing reaches them.
      */
     public function testTheUnseatedPersonIsPlacedNowhere(): void
     {
@@ -236,7 +237,7 @@ final class SeedOrganizationTest extends IntegrationTestCase
 
         self::assertNull($yara->getPosition());
         self::assertNull($yara->getPlacement());
-        self::assertSame([], $yara->getDepartments(), 'no placement is no departments, never all of them');
+        self::assertNull($yara->getDepartment(), 'no placement is no department, and reaches nothing.');
     }
 
     /**

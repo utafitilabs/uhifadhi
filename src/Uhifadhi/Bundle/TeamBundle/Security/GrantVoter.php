@@ -128,10 +128,15 @@ final class GrantVoter extends Voter
             return false;
         }
 
-        // 2. Does the placement cover the area? No placement reaches no
-        //    ground, which is the model failing closed rather than a gap.
+        // 2. Does the placement reach anything, and this area? No placement,
+        //    or one {@see Placement::reachesNothing()} — no ground, or no
+        //    department, since everybody but the tiers belongs to one (ruled
+        //    2 Oct 2026) — is the model failing closed rather than a gap. The
+        //    same predicate {@see AreaAuthority} asks, so the two never drift.
         $placement = $user->getPlacement();
-        if (null === $placement) {
+        if (null === $placement || $placement->reachesNothing()) {
+            $vote?->addReason('their placement reaches nothing: no ground, or no department yet.');
+
             return false;
         }
 
@@ -164,7 +169,7 @@ final class GrantVoter extends Voter
 
         $placement = $user->getPlacement();
         foreach ($running as $department) {
-            if ($placement?->coversDepartment($department) ?? false) {
+            if ($placement?->serves($department) ?? false) {
                 return true;
             }
         }

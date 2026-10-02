@@ -25,13 +25,15 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * TWO DIMENSIONS, AND THEY ARE ANSWERED SEPARATELY:
  *
  *   - THE GROUND: the whole organization, or one or more named areas.
- *   - THE DEPARTMENTS: all of them, or a named set, and several are allowed.
+ *   - THE DEPARTMENT: exactly one, the one they belong and report to — and
+ *     any number of others they SUPPORT without belonging to them.
  *
- * The case that settles the second is the ordinary one. A data scientist
- * supporting Ecology and Protection but not ICT is still ONE position - Data
- * Analyst - placed against two departments. So DEPARTMENT MEMBERSHIP FOLLOWS
- * THE PLACEMENT: somebody is in the departments their placement names, and in
- * no others.
+ * Ruled 2 Oct 2026: everyone but Super Admins and Admins belongs to exactly
+ * one department. An ICT data scientist working for Ecology stays in ICT and
+ * supports Ecology; a ranger supporting Ecology belongs to Protection Service.
+ * Belonging is the reporting line ({@see belongsTo()}); serving — their own
+ * department or one they support — is where their permissions and their
+ * modules reach ({@see serves()}).
  *
  * IT FAILS CLOSED, AND THE TWO BOOLEANS ARE WHY. "Everywhere" is a thing
  * somebody decided and wrote down, not the shape an empty list happens to
@@ -64,22 +66,30 @@ class Placement
     #[ORM\InverseJoinColumn(name: 'area_id', onDelete: 'CASCADE')]
     private Collection $areas;
 
-    /** Whether every department is covered. False means {@see $departments} is the answer. */
-    #[ORM\Column(name: 'all_departments', options: ['default' => false])]
-    private bool $allDepartments = false;
+    /**
+     * THE ONE DEPARTMENT THEY BELONG TO. Null is an unfinished record — never
+     * a mode — and fails closed; deleting the department leaves it null.
+     */
+    #[ORM\ManyToOne(targetEntity: Department::class)]
+    #[ORM\JoinColumn(name: 'department_id', nullable: true, onDelete: 'SET NULL')]
+    private ?Department $department = null;
 
-    /** @var Collection<int, Department> */
+    /**
+     * THE DEPARTMENTS THEY SUPPORT, never their own.
+     *
+     * @var Collection<int, Department>
+     */
     #[ORM\ManyToMany(targetEntity: Department::class)]
-    #[ORM\JoinTable(name: 'team_placement_department')]
+    #[ORM\JoinTable(name: 'team_placement_support')]
     #[ORM\JoinColumn(name: 'placement_id', onDelete: 'CASCADE')]
     #[ORM\InverseJoinColumn(name: 'department_id', onDelete: 'CASCADE')]
     #[ORM\OrderBy(['name' => 'ASC'])]
-    private Collection $departments;
+    private Collection $supports;
 
     public function __construct()
     {
         $this->areas = new ArrayCollection();
-        $this->departments = new ArrayCollection();
+        $this->supports = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -168,40 +178,20 @@ class Placement
         return false;
     }
 
-    // --- the departments --------------------------------------------------
+    // --- the department and what it supports -----------------------------
 
-    public function isAllDepartments(): bool
+    public function getDepartment(): ?Department
     {
-        return $this->allDepartments;
+        return $this->department;
     }
 
-    public function acrossAllDepartments(): static
+    /** Their one department. Moving into a department they supported ends the support. */
+    public function inDepartment(Department $department): static
     {
-        $this->allDepartments = true;
-        $this->departments->clear();
-
-        return $this;
-    }
-
-    /**
-     * A named set, and several are allowed - that is the whole reason a
-     * department stopped being something a position carried.
-     *
-     * @param list<Department> $departments
-     *
-     * @throws \InvalidArgumentException when no department is named
-     */
-    public function inDepartments(array $departments): static
-    {
-        if ([] === $departments) {
-            throw new \InvalidArgumentException('A placement against named departments names at least one. To place somebody across all of them, say so - an empty list is not a way of saying "all".');
-        }
-
-        $this->allDepartments = false;
-        $this->departments->clear();
-        foreach ($departments as $department) {
-            if (!$this->departments->contains($department)) {
-                $this->departments->add($department);
+        $this->department = $department;
+        foreach ($this->supports->toArray() as $supported) {
+            if (self::sameDepartment($supported, $department)) {
+                $this->supports->removeElement($supported);
             }
         }
 
@@ -209,33 +199,61 @@ class Placement
     }
 
     /**
-     * THE DEPARTMENTS THIS PERSON IS IN, or null when they are in all of them.
+     * The departments they support — their own is never one of them.
      *
-     * @return list<Department>|null
+     * @param list<Department> $departments
      */
-    public function getDepartments(): ?array
+    public function supporting(array $departments): static
     {
-        return $this->allDepartments ? null : array_values($this->departments->toArray());
+        $this->supports->clear();
+        foreach ($departments as $department) {
+            if (null !== $this->department && self::sameDepartment($department, $this->department)) {
+                continue;
+            }
+            if (!$this->supports->contains($department)) {
+                $this->supports->add($department);
+            }
+        }
+
+        return $this;
     }
 
     /**
-     * THE THIRD QUESTION: does the placement cover this department? A null
-     * department is a concern that belongs to none, and the question does not
-     * arise - so it is answered yes, by the same reasoning that makes the
-     * question conditional in the ruling.
+     * @return list<Department>
      */
-    public function coversDepartment(?Department $department): bool
+    public function getSupports(): array
+    {
+        return array_values($this->supports->toArray());
+    }
+
+    /** Whether this is their own department — the reporting line, not where they help. */
+    public function belongsTo(?Department $department): bool
+    {
+        return null !== $department && null !== $this->department && self::sameDepartment($this->department, $department);
+    }
+
+    /**
+     * WHETHER THEIR WORK REACHES THIS DEPARTMENT: their own, or one they
+     * support. A null department is a concern that belongs to none, and the
+     * question does not arise — so it is answered yes. A placement with no
+     * department of its own serves nothing.
+     */
+    public function serves(?Department $department): bool
     {
         if (null === $department) {
             return true;
         }
 
-        if ($this->allDepartments) {
+        if (null === $this->department) {
+            return false;
+        }
+
+        if (self::sameDepartment($this->department, $department)) {
             return true;
         }
 
-        foreach ($this->departments as $placed) {
-            if ($placed === $department || (null !== $placed->getId() && $placed->getId() === $department->getId())) {
+        foreach ($this->supports as $supported) {
+            if (self::sameDepartment($supported, $department)) {
                 return true;
             }
         }
@@ -244,29 +262,21 @@ class Placement
     }
 
     /**
-     * THE DEPARTMENTS IN ONE FRAGMENT, for the places a row has one cell for
-     * them - a board, a directory facet, a chip.
-     *
-     * HERE RATHER THAN IN A TEMPLATE, because several surfaces have to spell
-     * it the same way and a person may now be in more than one department:
-     * the first name plus a count is the fragment, the full set is the
-     * person's record.
+     * THE DEPARTMENT IN ONE FRAGMENT, for the places a row has one cell for it
+     * — a board, a directory facet, a chip: theirs, and what they support.
      */
     public function departmentsLabel(): ?string
     {
-        if ($this->allDepartments) {
-            return 'All departments';
+        if (null === $this->department) {
+            return null;
         }
 
-        $names = array_values(array_map(
-            static fn (Department $d): string => (string) $d->getName(),
-            $this->departments->toArray(),
-        ));
+        $supported = array_values(array_map(static fn (Department $d): string => (string) $d->getName(), $this->supports->toArray()));
 
-        return match (\count($names)) {
-            0 => null,
-            1 => $names[0],
-            default => \sprintf('%s +%d', $names[0], \count($names) - 1),
+        return (string) $this->department->getName().match (\count($supported)) {
+            0 => '',
+            1 => ' · supports '.$supported[0],
+            default => \sprintf(' · supports %s +%d', $supported[0], \count($supported) - 1),
         };
     }
 
@@ -297,13 +307,14 @@ class Placement
     }
 
     /**
-     * WHETHER IT REACHES ANYTHING AT ALL. A placement whose ground is nowhere
-     * and whose departments are none is a row that grants its holder nothing,
-     * and a surface says so in those words rather than drawing an empty list.
+     * WHETHER IT REACHES ANYTHING AT ALL. A placement whose ground is nowhere,
+     * or that belongs to no department, is a row that grants its holder
+     * nothing, and a surface says so in those words rather than drawing an
+     * empty list.
      */
     public function reachesNothing(): bool
     {
-        return !$this->wholeOrganization && $this->areas->isEmpty();
+        return null === $this->department || (!$this->wholeOrganization && $this->areas->isEmpty());
     }
 
     /**
@@ -322,5 +333,10 @@ class Placement
         $oneId = $one->getId();
 
         return null !== $oneId && $oneId === $other->getId();
+    }
+
+    private static function sameDepartment(Department $one, Department $other): bool
+    {
+        return $one === $other || (null !== $one->getId() && $one->getId() === $other->getId());
     }
 }

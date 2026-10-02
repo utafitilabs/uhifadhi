@@ -79,11 +79,15 @@
             {%- elseif placement.areas is null %}<span class="chip">The whole organization</span>
             {%- else %}{% for area in placement.areas %}<span class="chip">{{ area.name }}</span>{% else %}nowhere yet{% endfor %}{% endif -%}
         </span></div>
-        <div class="pms-row"><span class="k">departments</span><span class="v">
-            {%- if placement is null %}none
-            {%- elseif placement.departments is null %}<span class="chip">All departments</span>
-            {%- else %}{% for department in placement.departments %}<span class="chip">{{ department.name }}</span>{% else %}none{% endfor %}{% endif -%}
+        <div class="pms-row"><span class="k">belongs to</span><span class="v">
+            {%- if placement is null or placement.department is null %}no department yet
+            {%- else %}<span class="chip">{{ placement.department.name }}</span>{% endif -%}
         </span></div>
+        {% if placement and placement.supports is not empty %}
+        <div class="pms-row"><span class="k">supports</span><span class="v">
+            {%- for department in placement.supports %}<span class="chip">{{ department.name }}</span>{% endfor -%}
+        </span></div>
+        {% endif %}
         <p class="use" style="margin:10px 0 0">To change any of these, ask an Admin.</p>
     </div>
     {{ include('@Team/team/_history_card.html.twig') }}

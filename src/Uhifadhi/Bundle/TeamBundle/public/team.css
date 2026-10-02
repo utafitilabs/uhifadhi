@@ -3395,7 +3395,7 @@ label.pm-box:focus-within i { outline: 2px solid rgb(var(--c-acc)); outline-offs
 .pmb:has(input:checked) { border-color:color-mix(in srgb,var(--acc) 45%,transparent) }
 .pmb:has(input:checked) span { color:var(--acc) }
 .pmfr > summary > .pmx-n { margin-left:auto }
-.staddrow .chg { display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0; font-family:var(--font-mono);font-size:9.5px;letter-spacing:.05em; color:var(--dim) }
+.staddrow .chg { flex:1 1 0;display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0; font-family:var(--font-mono);font-size:9.5px;letter-spacing:.05em; color:var(--dim) }
 .staddrow .chg > b { color:var(--tx);font-weight:700;letter-spacing:.1em;text-transform:uppercase }
 .staddrow .chg .add { color:var(--acc) }
 .staddrow .chg .rem { color:var(--warn) }
@@ -3779,3 +3779,17 @@ form.c { display: block; margin-bottom: 20px; }
 .dwrong { color: rgb(var(--c-fail)); font-size: 13px; margin: 0 0 8px; }
 .dfine { font: 600 10px 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; color: rgb(var(--c-dim)); margin-top: 10px; }
 @media (max-width: 1100px) { .dgrid { grid-template-columns: 1fr; } .dcounts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* THE POSITION CARD'S DEPARTMENTS — one they belong to, any they support
+   (ruled 2 Oct 2026). The two columns step in under their label; no panel. */
+.dp-two { display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:2px;padding-left:16px }
+.dp-two .colh { font-size:11px;line-height:1.4;font-weight:500;color:var(--dim);margin-bottom:2px }
+.dp-two .colh b { color:var(--fog);font-weight:600 }
+.dp-list { list-style:none;margin:0;padding:0 }
+.dp-list input { accent-color:var(--acc);margin:0 }
+.dp-list li { display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px dashed var(--ln);font-size:13px }
+.dp-list li:last-child { border-bottom:0 }
+.dp-list li label { display:flex;align-items:center;gap:8px;cursor:pointer }
+.dp-list li:has(input:disabled) label { cursor:default;color:var(--dim) }
+.dp-list li em { font-style:normal;font-family:var(--font-mono);font-size:10px;font-weight:500;color:var(--dim);margin-left:auto }
+@media (max-width:700px) { .dp-two { grid-template-columns:1fr } }

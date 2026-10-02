@@ -115,7 +115,7 @@ final class RosterQueryTest extends IntegrationTestCase
     private function placedIn(?array $departments): Placement
     {
         $placement = (new Placement())->acrossTheOrganization();
-        null === $departments ? $placement->acrossAllDepartments() : $placement->inDepartments($departments);
+        null === $departments ? $placement->inDepartment($this->homeDepartment($this->em)) : $placement->inDepartment($departments[0])->supporting(\array_slice($departments, 1));
         $this->em->persist($placement);
 
         return $placement;
@@ -287,11 +287,9 @@ final class RosterQueryTest extends IntegrationTestCase
     }
 
     /**
-     * THE DEPARTMENT NARROWS THROUGH THE PLACEMENT. It used to narrow through
-     * the position — a position belonged to a department, so the filter was a
-     * fact about the job. The ruling moved the department onto the person, and
-     * the visible difference is here: one Analyst appears under BOTH the
-     * departments he supports, without a second position existing to carry him.
+     * THE DEPARTMENT NARROWS TO THE PEOPLE WHO BELONG TO IT. The Analyst
+     * belongs to Ecology and supports Protection Service, so he is listed
+     * under Ecology alone: supporting is not belonging.
      */
     public function testTheDepartmentNarrowsThroughThePlacement(): void
     {
@@ -303,30 +301,30 @@ final class RosterQueryTest extends IntegrationTestCase
         );
 
         self::assertSame(
-            ['e.mtui@example.test', 'g.ndosi@example.test', 'j.mrema@example.test'],
+            ['g.ndosi@example.test', 'j.mrema@example.test'],
             $this->emails(new RosterQuery(department: $this->departmentUuid('Protection Service'))),
-            'the Analyst supporting both departments is listed under each of them',
+            'the Analyst who only supports Protection Service is not one of its people',
         );
     }
 
     /**
-     * SOMEBODY PLACED ACROSS ALL DEPARTMENTS MATCHES EVERY DEPARTMENT FILTER.
-     * That is what their placement says, and a list that quietly left them out
-     * of each department would disagree with the voter about the same person.
+     * A PLACEMENT WITHOUT ITS DEPARTMENT IS AN UNFINISHED RECORD, and the
+     * "no department" filter finds it beside the unplaced.
      */
-    public function testAPersonPlacedAcrossAllDepartmentsMatchesEveryDepartmentFilter(): void
+    public function testAPlacementWithoutADepartmentIsListedUnderNoDepartment(): void
     {
         $this->seedCast();
 
         $warden = (new Position())->setName('Chief Warden');
         $this->em->persist($warden);
-        $this->person('Amina', 'Lyimo', 'a.lyimo@example.test')
-            ->setPosition($warden)->setPlacement($this->placedIn(null));
+        $placement = (new Placement())->acrossTheOrganization();
+        $this->em->persist($placement);
+        $this->person('Amina', 'Lyimo', 'a.lyimo@example.test')->setPosition($warden)->setPlacement($placement);
         $this->em->flush();
         $this->em->clear();
 
-        self::assertContains('a.lyimo@example.test', $this->emails(new RosterQuery(department: $this->departmentUuid('Ecology'))));
-        self::assertContains('a.lyimo@example.test', $this->emails(new RosterQuery(department: $this->departmentUuid('Protection Service'))));
+        self::assertContains('a.lyimo@example.test', $this->emails(new RosterQuery(department: RosterQuery::NO_DEPARTMENT)));
+        self::assertNotContains('a.lyimo@example.test', $this->emails(new RosterQuery(department: $this->departmentUuid('Ecology'))));
     }
 
     /** AN UNPLACED PERSON IS IN NO DEPARTMENT, so no department filter finds them. */

@@ -649,7 +649,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
             ->findOneBy(['email' => 't.njau@example.test']);
         self::assertInstanceOf(\Uhifadhi\Bundle\TeamBundle\Entity\User::class, $tumaini);
         self::assertSame('Analyst', $tumaini->getPosition()?->getName());
-        self::assertTrue($tumaini->getPlacement()?->coversDepartment($ecology));
+        self::assertTrue($tumaini->getPlacement()?->belongsTo($ecology));
 
         // Greyed in the register.
         self::assertStringContainsString('dcinactive', (string) $this->row($crawler, 'Ecology')->attr('class'));

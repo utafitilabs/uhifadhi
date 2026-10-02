@@ -146,7 +146,7 @@ final readonly class AreaAuthority
         }
 
         return $this->covers($department->getArea())
-            && ($this->actor()?->getPlacement()?->coversDepartment($department) ?? false);
+            && ($this->actor()?->getPlacement()?->serves($department) ?? false);
     }
 
     /**

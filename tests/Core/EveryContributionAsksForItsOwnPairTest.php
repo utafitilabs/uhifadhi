@@ -29,6 +29,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Bundle\TeamBundle\Tests\FilesInADepartment;
 use Uhifadhi\Core\Tests\Application\Kernel;
 
 /**
@@ -46,6 +47,8 @@ use Uhifadhi\Core\Tests\Application\Kernel;
 #[CoversNothing]
 final class EveryContributionAsksForItsOwnPairTest extends WebTestCase
 {
+    use FilesInADepartment;
+
     private const string BOUNDARY = '{"type":"MultiPolygon","coordinates":[[[[-30.0,-3.6],[-29.0,-3.6],[-29.0,-2.8],[-30.0,-2.8],[-30.0,-3.6]]]]}';
 
     private KernelBrowser $client;
@@ -97,7 +100,7 @@ final class EveryContributionAsksForItsOwnPairTest extends WebTestCase
     {
         $here = $this->area('Kilimani');
         $this->area('Tambarare Plains');
-        $this->signIn($this->composed(['areas.read'], new Placement()->inAreas([$here])->acrossAllDepartments()));
+        $this->signIn($this->composed(['areas.read'], new Placement()->inAreas([$here])->inDepartment($this->homeDepartment($this->em))));
 
         $nav = $this->nav($this->client->request('GET', '/areas/'.$here->getUuidString()));
 
@@ -250,7 +253,7 @@ final class EveryContributionAsksForItsOwnPairTest extends WebTestCase
      */
     private function composed(array $pairs, ?Placement $placement = null): User
     {
-        $placement ??= new Placement()->acrossTheOrganization()->acrossAllDepartments();
+        $placement ??= new Placement()->acrossTheOrganization()->inDepartment($this->homeDepartment($this->em));
 
         $catalogue = static::getContainer()->get('test_public.'.ConcernCatalogue::class);
         self::assertInstanceOf(ConcernCatalogue::class, $catalogue);

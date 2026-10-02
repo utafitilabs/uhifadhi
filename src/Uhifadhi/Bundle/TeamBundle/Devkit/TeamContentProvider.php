@@ -404,7 +404,8 @@ final readonly class TeamContentProvider implements ContentProviderInterface
     /**
      * SOMEBODY, THEIR POSITION AND WHERE THEY ARE PLACED. The seed places
      * everybody across the organization, because this content seeds no areas
-     * of its own; the departments are the dimension it does exercise.
+     * of its own; the departments are the dimension it does exercise — the
+     * first is the one they belong to, any after it ones they support.
      *
      * @param list<Department> $departments
      */
@@ -416,6 +417,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
             return;
         }
 
-        $this->accounts->place($person, new Placement()->acrossTheOrganization()->inDepartments($departments));
+        // The first is the one they belong to; any after it, ones they support.
+        $this->accounts->place($person, new Placement()->acrossTheOrganization()->inDepartment($departments[0])->supporting(\array_slice($departments, 1)));
     }
 }

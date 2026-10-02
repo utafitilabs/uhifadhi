@@ -448,20 +448,20 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
         return $this;
     }
 
-    /**
-     * THE DEPARTMENTS THIS PERSON IS IN - read off the placement, and nowhere
-     * else. A department is a placement, not something a position owns, so
-     * membership follows where somebody was put.
-     *
-     * Three answers, and they are different facts: null means every
-     * department (placed across all of them); an empty list means none, which
-     * is what an unplaced person has; a list is the named set.
-     *
-     * @return list<Department>|null
-     */
-    public function getDepartments(): ?array
+    /** The one department they belong to, or null for an unfinished record. */
+    public function getDepartment(): ?Department
     {
-        return null === $this->placement ? [] : $this->placement->getDepartments();
+        return $this->placement?->getDepartment();
+    }
+
+    /**
+     * The departments they support, never their own.
+     *
+     * @return list<Department>
+     */
+    public function getSupportedDepartments(): array
+    {
+        return null === $this->placement ? [] : $this->placement->getSupports();
     }
 
     /**

@@ -2,7 +2,7 @@
 <div class="c" data-me="record"><span class="tab">My record<span class="src">&middot; {{ person.fullName }}{% if person.rangerCode %} &middot; {{ person.rangerCode|upper }}{% endif %}</span></span>
     <div class="rln"><span>Position</span><span class="mono d">{{ person.position ? person.position.name : 'no position' }}</span></div>
     {% if rank %}<div class="rln"><span>Rank</span><span class="mono d">{{ rank.rank.name }} &middot; since <time datetime="{{ rank.since|date('c') }}" data-localtime-format="day">{{ rank.since|date('j M Y') }}</time></span></div>{% endif %}
-    <div class="rln"><span>Department</span><span class="mono d">{{ person.placement and person.placement.departmentsLabel ? person.placement.departmentsLabel : 'all departments' }}</span></div>
+    <div class="rln"><span>Department</span><span class="mono d">{{ person.placement and person.placement.departmentsLabel ? person.placement.departmentsLabel : 'no department yet' }}</span></div>
     {% if posting %}<div class="rln"><span>Posted at</span><span class="mono d">{{ posting.stationName }} &middot; since <time datetime="{{ posting.since|date('c') }}" data-localtime-format="day">{{ posting.since|date('j M Y') }}</time></span></div>{% endif %}
     {% if mayOpen %}<div class="sxfoot"><span class="sp"></span><a class="tgl" href="{{ path('team_member', {uuid: person.uuidString}) }}">My record &rarr;</a></div>{% endif %}
 </div>

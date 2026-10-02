@@ -197,16 +197,15 @@ class UserRepository extends ServiceEntityRepository
         }
 
         if (RosterQuery::NO_DEPARTMENT === $query->department) {
-            // PLACED NOWHERE: no placement, so no department either.
-            $qb->andWhere('u.placement IS NULL');
+            // AN UNFINISHED RECORD: no placement, or a placement without its
+            // one department.
+            $qb->andWhere('u.placement IS NULL OR pl.department IS NULL');
         } elseif (null !== $query->department) {
             $uuid = Uuid::isValid($query->department) ? Uuid::fromString($query->department) : null;
             if (null !== $uuid) {
-                // EITHER PLACED ACROSS ALL DEPARTMENTS OR NAMED IN THIS ONE.
-                // Somebody placed everywhere is in this department too, and a
-                // filter that left them out would disagree with the voter.
-                $qb->leftJoin('pl.departments', 'pd')
-                    ->andWhere('pl.allDepartments = true OR pd.uuid = :department')
+                // THE PEOPLE WHO BELONG TO IT — their one department.
+                $qb->leftJoin('pl.department', 'pd')
+                    ->andWhere('pd.uuid = :department')
                     ->setParameter('department', $uuid, UuidType::NAME);
             } else {
                 $qb->andWhere('1 = 0');

@@ -22,6 +22,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Bundle\TeamBundle\Tests\FilesInADepartment;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\TestKernel;
 
 /**
@@ -36,6 +37,8 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\TestKernel;
  */
 final class TeamPageTest extends WebTestCase
 {
+    use FilesInADepartment;
+
     /**
      * NAMED IN CODE, not by KERNEL_CLASS. One repository holds several
      * packages, so one env var could only ever name one of their kernels.
@@ -149,7 +152,7 @@ final class TeamPageTest extends WebTestCase
         // somebody placed nowhere reaches nothing however much they hold.
         $placement = new Placement();
         $placement->acrossTheOrganization();
-        $placement->acrossAllDepartments();
+        $placement->inDepartment($this->homeDepartment($this->em));
         $this->em->persist($placement);
         $grace->setPlacement($placement);
         $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);

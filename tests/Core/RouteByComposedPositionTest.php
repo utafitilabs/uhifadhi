@@ -28,6 +28,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Bundle\TeamBundle\Tests\FilesInADepartment;
 use Uhifadhi\Contracts\Access\ScopeKind;
 use Uhifadhi\Core\Tests\Application\Kernel;
 
@@ -64,6 +65,8 @@ use Uhifadhi\Core\Tests\Application\Kernel;
 #[CoversNothing]
 final class RouteByComposedPositionTest extends WebTestCase
 {
+    use FilesInADepartment;
+
     private KernelBrowser $client;
     private EntityManagerInterface $em;
 
@@ -179,7 +182,7 @@ final class RouteByComposedPositionTest extends WebTestCase
         $here = $this->area('Kilimani');
         $elsewhere = $this->area('Tambarare');
 
-        $this->signIn($this->composed(['areas.read'], new Placement()->inAreas([$elsewhere])->acrossAllDepartments()));
+        $this->signIn($this->composed(['areas.read'], new Placement()->inAreas([$elsewhere])->inDepartment($this->homeDepartment($this->em))));
 
         self::assertFalse(
             $this->checker()->isGranted('areas.read', $here),
@@ -192,7 +195,7 @@ final class RouteByComposedPositionTest extends WebTestCase
     {
         $here = $this->area('Kilimani');
 
-        $this->signIn($this->composed(['areas.read'], new Placement()->inAreas([$here])->acrossAllDepartments()));
+        $this->signIn($this->composed(['areas.read'], new Placement()->inAreas([$here])->inDepartment($this->homeDepartment($this->em))));
 
         self::assertTrue($this->checker()->isGranted('areas.read', $here));
     }
@@ -235,7 +238,7 @@ final class RouteByComposedPositionTest extends WebTestCase
             // Re-read the ground each time: the sign-in below reboots the
             // kernel and detaches whatever the last one held.
             $elsewhere = $this->area('Tambarare');
-            $this->signIn($this->composed($pairs, new Placement()->inAreas([$elsewhere])->acrossAllDepartments()));
+            $this->signIn($this->composed($pairs, new Placement()->inAreas([$elsewhere])->inDepartment($this->homeDepartment($this->em))));
             $this->client->request('GET', str_replace('{uuid}', $hereUuid, $path));
 
             if (403 !== $this->client->getResponse()->getStatusCode()) {
@@ -304,7 +307,7 @@ final class RouteByComposedPositionTest extends WebTestCase
 
         self::assertGreaterThan(0, $runs->getModules()->count(), 'the fixture department has to run the module, or the third question has nothing to refuse for.');
 
-        $person = $this->composed([$pair], new Placement()->acrossTheOrganization()->inDepartments([$doesNot]));
+        $person = $this->composed([$pair], new Placement()->acrossTheOrganization()->inDepartment($doesNot));
         $this->signIn($person);
 
         self::assertFalse(
@@ -312,7 +315,7 @@ final class RouteByComposedPositionTest extends WebTestCase
             \sprintf('Placed only in ICT, this person holds %s. The third question — does the placement cover the department — is not being asked.', $pair),
         );
 
-        $inIt = $this->composed([$pair], new Placement()->acrossTheOrganization()->inDepartments([$runs]));
+        $inIt = $this->composed([$pair], new Placement()->acrossTheOrganization()->inDepartment($runs));
         $this->signIn($inIt);
 
         self::assertTrue(
@@ -332,7 +335,7 @@ final class RouteByComposedPositionTest extends WebTestCase
      */
     private function composed(array $pairs, ?Placement $placement = null): User
     {
-        $placement ??= new Placement()->acrossTheOrganization()->acrossAllDepartments();
+        $placement ??= new Placement()->acrossTheOrganization()->inDepartment($this->homeDepartment($this->em));
 
         $position = new Position()
             ->setName('Composed '.substr(md5(implode('|', $pairs).spl_object_hash($placement)), 0, 10))

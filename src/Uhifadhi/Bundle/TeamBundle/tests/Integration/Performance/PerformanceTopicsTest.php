@@ -419,7 +419,7 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         \Uhifadhi\Bundle\TeamBundle\Entity\Department $department,
     ): void {
         $placement = new \Uhifadhi\Bundle\TeamBundle\Entity\Placement()
-            ->acrossTheOrganization()->inDepartments([$department]);
+            ->acrossTheOrganization()->inDepartment($department);
         $this->em->persist($placement);
 
         $person = new \Uhifadhi\Bundle\TeamBundle\Entity\User()

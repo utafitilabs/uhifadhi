@@ -94,7 +94,7 @@ final class GrantVoterTest extends IntegrationTestCase
         $kilimani = $this->area('Kilimani');
         $person = $this->staff(
             $this->positionGranting('Sergeant', ['directory.read']),
-            new Placement()->inAreas([$kilimani])->acrossAllDepartments(),
+            new Placement()->inAreas([$kilimani])->inDepartment($this->homeDepartment($this->em)),
         );
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($person, ['directory.read'], $kilimani));
@@ -105,7 +105,7 @@ final class GrantVoterTest extends IntegrationTestCase
         $kilimani = $this->area('Kilimani');
         $person = $this->staff(
             $this->positionGranting('Sergeant', ['directory.read']),
-            new Placement()->inAreas([$kilimani])->acrossAllDepartments(),
+            new Placement()->inAreas([$kilimani])->inDepartment($this->homeDepartment($this->em)),
         );
 
         self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($person, ['directory.manage'], $kilimani));
@@ -120,7 +120,7 @@ final class GrantVoterTest extends IntegrationTestCase
     {
         $person = $this->staff(
             $this->positionGranting('Coordinator', ['directory.read', 'directory.manage']),
-            new Placement()->acrossTheOrganization()->acrossAllDepartments(),
+            new Placement()->acrossTheOrganization()->inDepartment($this->homeDepartment($this->em)),
         );
         $vote = new Vote();
 
@@ -140,7 +140,7 @@ final class GrantVoterTest extends IntegrationTestCase
         $kilimani = $this->area('Kilimani');
         $person = (new User())->setEmail('n@example.test')->setFirstName('N')->setLastName('P')
             ->setPassword('x')->setTeamRole(TeamRoleEnum::Staff)
-            ->setPlacement(new Placement()->acrossTheOrganization()->acrossAllDepartments());
+            ->setPlacement(new Placement()->acrossTheOrganization()->inDepartment($this->homeDepartment($this->em)));
 
         self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($person, ['directory.read'], $kilimani));
     }
@@ -157,7 +157,7 @@ final class GrantVoterTest extends IntegrationTestCase
         $kilimani = $this->area('Kilimani');
         $room = $this->positionGranting('Radio Operator', ['locations.read']);
         $this->em->persist($room);
-        $person = $this->persistedStaff($room, new Placement()->acrossTheOrganization()->acrossAllDepartments());
+        $person = $this->persistedStaff($room, new Placement()->acrossTheOrganization()->inDepartment($this->homeDepartment($this->em)));
 
         self::assertContains('locations.read', $room->getGrantValues(), 'the pair is on the seat');
         self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($person, ['locations.read'], $kilimani));
@@ -168,7 +168,7 @@ final class GrantVoterTest extends IntegrationTestCase
         $kilimani = $this->area('Kilimani');
         $room = $this->positionGranting('Radio Operator', []);
         $this->em->persist($room);
-        $person = $this->persistedStaff($room, new Placement()->acrossTheOrganization()->acrossAllDepartments());
+        $person = $this->persistedStaff($room, new Placement()->acrossTheOrganization()->inDepartment($this->homeDepartment($this->em)));
         $naomi = $this->superAdmin();
 
         $this->positions()->grantException($room, 'locations.read', 'The radio room coordinates every rescue.', $naomi);
@@ -185,7 +185,7 @@ final class GrantVoterTest extends IntegrationTestCase
         $mbuyu = $this->area('Tambarare');
         $room = $this->positionGranting('Radio Operator', []);
         $this->em->persist($room);
-        $person = $this->persistedStaff($room, new Placement()->inAreas([$kilimani])->acrossAllDepartments());
+        $person = $this->persistedStaff($room, new Placement()->inAreas([$kilimani])->inDepartment($this->homeDepartment($this->em)));
         $this->positions()->grantException($room, 'locations.read', 'The radio room coordinates every rescue.', $this->superAdmin());
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($person, ['locations.read'], $kilimani));
@@ -200,7 +200,7 @@ final class GrantVoterTest extends IntegrationTestCase
         $ranger = $this->positionGranting('Ranger', ['directory.read']);
         $this->em->persist($room);
         $this->em->persist($ranger);
-        $person = $this->persistedStaff($room, new Placement()->acrossTheOrganization()->acrossAllDepartments());
+        $person = $this->persistedStaff($room, new Placement()->acrossTheOrganization()->inDepartment($this->homeDepartment($this->em)));
         $this->positions()->grantException($room, 'locations.read', 'The radio room coordinates every rescue.', $this->superAdmin());
 
         $person->setPosition($ranger);
@@ -262,7 +262,7 @@ final class GrantVoterTest extends IntegrationTestCase
         $mbuyu = $this->area('Tambarare');
         $person = $this->staff(
             $this->positionGranting('Sergeant', ['directory.read']),
-            new Placement()->inAreas([$kilimani])->acrossAllDepartments(),
+            new Placement()->inAreas([$kilimani])->inDepartment($this->homeDepartment($this->em)),
         );
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($person, ['directory.read'], $kilimani));
@@ -273,7 +273,7 @@ final class GrantVoterTest extends IntegrationTestCase
     {
         $person = $this->staff(
             $this->positionGranting('Sergeant', ['directory.read']),
-            new Placement()->acrossTheOrganization()->acrossAllDepartments(),
+            new Placement()->acrossTheOrganization()->inDepartment($this->homeDepartment($this->em)),
         );
 
         // Gazetted after the placement was written, which is why the breadth
@@ -313,15 +313,15 @@ final class GrantVoterTest extends IntegrationTestCase
 
         $position = $this->positionGranting('Data Analyst', ['surveys.read']);
 
-        $inEcology = $this->staff($position, new Placement()->inAreas([$kilimani])->inDepartments([$ecology]));
+        $inEcology = $this->staff($position, new Placement()->inAreas([$kilimani])->inDepartment($ecology));
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($inEcology, ['surveys.read'], $kilimani));
 
         // Protection runs the module too, so somebody placed there is granted
         // by the same rule from the other side.
-        $inProtection = $this->staff($position, new Placement()->inAreas([$kilimani])->inDepartments([$protection]));
+        $inProtection = $this->staff($position, new Placement()->inAreas([$kilimani])->inDepartment($protection));
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($inProtection, ['surveys.read'], $kilimani));
 
-        $elsewhere = $this->staff($position, new Placement()->inAreas([$kilimani])->inDepartments([$this->department('ICT', null)]));
+        $elsewhere = $this->staff($position, new Placement()->inAreas([$kilimani])->inDepartment($this->department('ICT', null)));
         self::assertSame(
             VoterInterface::ACCESS_DENIED,
             $this->vote($elsewhere, ['surveys.read'], $kilimani),
@@ -342,7 +342,7 @@ final class GrantVoterTest extends IntegrationTestCase
 
         $person = $this->staff(
             $this->positionGranting('Sergeant', ['directory.read']),
-            new Placement()->inAreas([$kilimani])->inDepartments([$this->department('ICT', null)]),
+            new Placement()->inAreas([$kilimani])->inDepartment($this->department('ICT', null)),
         );
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($person, ['directory.read'], $kilimani));
@@ -357,24 +357,41 @@ final class GrantVoterTest extends IntegrationTestCase
         $kilimani = $this->area('Kilimani');
         $person = $this->staff(
             $this->positionGranting('Data Analyst', ['surveys.read']),
-            new Placement()->inAreas([$kilimani])->inDepartments([$this->department('ICT', null)]),
+            new Placement()->inAreas([$kilimani])->inDepartment($this->department('ICT', null)),
         );
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($person, ['surveys.read'], $kilimani));
     }
 
-    /** Somebody placed across all departments is in every one of them. */
-    public function testAPlacementAcrossAllDepartmentsCoversTheOneRunningTheModule(): void
+    /**
+     * SUPPORTING REACHES THE SUPPORTED DEPARTMENT'S MODULES (ruled 2 Oct
+     * 2026): an ICT analyst supporting Ecology may use what Ecology runs,
+     * without belonging to it.
+     */
+    public function testSupportingTheDepartmentRunningTheModuleCoversIt(): void
     {
         $kilimani = $this->area('Kilimani');
-        $this->department('Ecology', 'surveys');
+        $ecology = $this->department('Ecology', 'surveys');
 
         $person = $this->staff(
             $this->positionGranting('Data Analyst', ['surveys.read']),
-            new Placement()->inAreas([$kilimani])->acrossAllDepartments(),
+            new Placement()->inAreas([$kilimani])->inDepartment($this->department('ICT', null))->supporting([$ecology]),
         );
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($person, ['surveys.read'], $kilimani));
+    }
+
+    /** NO DEPARTMENT, NO ACCESS: a placement without its department reaches nothing. */
+    public function testAPlacementWithoutADepartmentIsRefused(): void
+    {
+        $kilimani = $this->area('Kilimani');
+
+        $person = $this->staff(
+            $this->positionGranting('Data Analyst', ['directory.read']),
+            new Placement()->inAreas([$kilimani]),
+        );
+
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($person, ['directory.read'], $kilimani));
     }
 
     // --- above the matrix, and outside it ---------------------------------
@@ -402,7 +419,7 @@ final class GrantVoterTest extends IntegrationTestCase
     {
         $person = $this->staff(
             $this->positionGranting('Sergeant', ['directory.read']),
-            new Placement()->acrossTheOrganization()->acrossAllDepartments(),
+            new Placement()->acrossTheOrganization()->inDepartment($this->homeDepartment($this->em)),
         );
 
         self::assertSame(VoterInterface::ACCESS_ABSTAIN, $this->vote($person, ['nothing-declares.read']));

@@ -8,8 +8,12 @@ import { Controller } from '@hotwired/stimulus';
  * was chosen. Now it compares every field with its SAVED state — the one the
  * browser already keeps on each element (`defaultSelected`, `defaultChecked`,
  * `defaultValue`), so the markup needs no `data-was` — and names what moved:
- * "2 changes · position → Ranger · 3 departments", beside the reach and the
- * departments counted from the boxes as they stand.
+ * "2 changes · position → Ranger · department", beside the reach, the
+ * department they belong to and the ones they support, as the form stands.
+ *
+ * THEIR OWN DEPARTMENT IS TICKED AND LOCKED UNDER SUPPORTS — they support
+ * the department they belong to — and says "their own" there (ruled 2 Oct
+ * 2026); the stored list holds only the others.
  *
  * IT WRITES NOTHING. Nothing reaches the database until Save; Discard is the
  * form's own reset, after which the foot reads "no changes" again.
@@ -62,18 +66,39 @@ export default class extends Controller {
         if (where.length > 0) {
             moved.push('where it applies');
         }
-        const departments = boxes.filter((b) => (b.name === 'all_departments' || b.name === 'departments[]') && b.checked !== b.defaultChecked);
-        if (departments.length > 0) {
-            moved.push('departments');
+        const radios = [...form.querySelectorAll('input[type="radio"][name="department"]')];
+        const own = radios.find((r) => r.checked);
+        if (radios.some((r) => r.checked !== r.defaultChecked)) {
+            moved.push('department');
         }
 
-        const every = boxes.filter((b) => b.name === 'departments[]');
-        const all = boxes.find((b) => b.name === 'all_departments');
-        const chosen = all?.checked ? every.length : every.filter((b) => b.checked).length;
+        const supports = boxes.filter((b) => b.name === 'supports[]');
+        for (const box of supports) {
+            const isOwn = own !== undefined && box.value === own.value;
+            // Their own is ticked and locked — they support it — and, being
+            // disabled, is never sent; leaving it restores the saved state.
+            if (isOwn) {
+                box.checked = true;
+            } else if (box.disabled) {
+                box.checked = this.#savedSupport(box);
+            }
+            box.disabled = isOwn;
+            const where = box.closest('li')?.querySelector('em');
+            if (where) {
+                where.textContent = isOwn ? 'their own' : (box.dataset.where ?? '');
+            }
+        }
+        if (supports.some((b) => !b.disabled && b.checked !== this.#savedSupport(b))) {
+            moved.push('supports');
+        }
 
+        const supported = supports.filter((b) => b.checked && !b.disabled).map((b) => this.#nameOf(b));
         const option = position?.selectedOptions[0];
         const reach = Number(option?.dataset.reach ?? 0);
-        const tail = `<span class="to">reaches <b>${reach}</b> ${reach === 1 ? 'person' : 'people'} · <b>${chosen}</b> of ${every.length} departments</span>`;
+        const tail = `<span class="to">reaches <b>${reach}</b> ${reach === 1 ? 'person' : 'people'}`
+            + (own ? ` · in <b>${this.#nameOf(own)}</b>` : '')
+            + (supported.length > 0 ? ` · supports <b>${supported.join(', ')}</b>` : '')
+            + '</span>';
 
         if (moved.length === 0) {
             this.previewTarget.innerHTML = `<b>no changes</b>${tail}`;
@@ -86,6 +111,16 @@ export default class extends Controller {
             ...moved.map((text) => `<span class="nm">${text}</span>`),
             tail,
         ].join('');
+    }
+
+    // Whether the box was a stored support — the saved own department's box
+    // is drawn ticked (data-own) but was never one.
+    #savedSupport(box) {
+        return box.defaultChecked && !box.hasAttribute('data-own');
+    }
+
+    #nameOf(input) {
+        return input?.closest('label')?.textContent.trim() ?? '';
     }
 
     #selectMoved(select) {

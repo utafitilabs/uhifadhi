@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
@@ -74,17 +75,23 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
         self::assertStringContainsString('The record', $crawler->filter('.pgact')->text());
     }
 
-    /** WHERE IS THE ORGANIZATION OR NAMED AREAS; departments all or a chosen few — as chips, only the kinds the position allows. */
-    public function testThePositionCardOffersWhereAndDepartmentsAsChips(): void
+    /**
+     * WHERE IS THE ORGANIZATION OR NAMED AREAS, as chips, only the kinds the
+     * position allows; the departments are two columns — the one they belong
+     * to, and any they support — organization-wide first, then each area's.
+     */
+    public function testThePositionCardOffersWhereAsChipsAndTheDepartmentsAsTwoColumns(): void
     {
         $this->signedInAdministrator();
         $sergeant = $this->position('Sergeant', ['surveys.read'], [ScopeKind::Organization, ScopeKind::Area]);
-        $this->area('Kilimani');
+        $kilimani = $this->area('Kilimani');
         $this->area('Tambarare');
-        $this->department('Ecology');
-        $this->department('Protection Service');
+        $protection = $this->department('Protection Service');
+        $ecology = $this->department('Ecology');
+        $tourism = $this->department('Tourism')->setArea($kilimani);
         $frank = $this->person('Frank', 'Massawe');
         $frank->setPosition($sergeant);
+        $this->place($frank, null, [$protection, $ecology]);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', $this->configureUrl($frank));
@@ -98,12 +105,24 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
         self::assertContains('The whole organization every area at once', $labels);
         self::assertContains('Kilimani', $labels);
         self::assertContains('Tambarare', $labels);
-        self::assertContains('All departments', $labels);
-        self::assertContains('Ecology', $labels);
-        self::assertContains('Protection Service', $labels);
         self::assertCount(1, $crawler->filter('.pwchips input[name="where"][value="organization"]'));
         self::assertCount(2, $crawler->filter('.pwchips input[name="areas[]"]'));
-        self::assertCount(2, $crawler->filter('.pwchips input[name="departments[]"]'));
+
+        $rows = static fn (Crawler $list): array => $list->filter('li')->each(static fn (Crawler $li): string => trim($li->filter('label')->text()).' '.trim($li->filter('em')->text()));
+        $columns = $crawler->filter('.dp-two > div');
+        self::assertCount(2, $columns);
+        self::assertSame('Belongs to · one', trim($columns->eq(0)->filter('.colh')->text()));
+        self::assertSame('Supports · any number', trim($columns->eq(1)->filter('.colh')->text()));
+        self::assertSame(['Ecology org-wide', 'Protection Service org-wide', 'Tourism Kilimani'], $rows($columns->eq(0)), 'organization-wide first, then each area\'s.');
+        self::assertSame(['Ecology org-wide', 'Protection Service their own', 'Tourism Kilimani'], $rows($columns->eq(1)));
+
+        self::assertSame($protection->getUuidString(), $crawler->filter('input[name="department"]:checked')->attr('value'));
+        $own = $crawler->filter('input[name="supports[]"][value="'.$protection->getUuidString().'"]');
+        self::assertNotNull($own->attr('disabled'), 'their own department is locked under Supports …');
+        self::assertNotNull($own->attr('checked'), '… and ticked: they support the department they belong to.');
+        self::assertNotNull($crawler->filter('input[name="supports[]"][value="'.$ecology->getUuidString().'"]')->attr('checked'));
+        self::assertNull($crawler->filter('input[name="supports[]"][value="'.$tourism->getUuidString().'"]')->attr('checked'));
+        self::assertStringContainsString('in Protection Service · supports Ecology', preg_replace('/\s+/', ' ', $crawler->filter('form[action$="/position"] .chg')->text()) ?? '');
     }
 
     /** A POSITION THAT ALLOWS ONLY AREAS OFFERS NO ORGANIZATION CHIP — absent, not disabled. */
@@ -123,7 +142,7 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
         self::assertCount(0, $crawler->filter('.pwchips input[disabled]'));
     }
 
-    /** SAVING THE POSITION WRITES THE SEAT, WHERE, AND THE DEPARTMENTS in one go. */
+    /** SAVING THE POSITION WRITES THE SEAT, WHERE, THEIR DEPARTMENT AND WHAT THEY SUPPORT in one go. */
     public function testSavingThePositionWritesTheSeatWhereAndTheDepartments(): void
     {
         $this->signedInAdministrator();
@@ -142,7 +161,8 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
             'position' => $sergeant->getUuidString(),
             'where' => 'areas',
             'areas' => [$kilimani->getUuidString()],
-            'departments' => [$ecology->getUuidString(), $protection->getUuidString()],
+            'department' => $protection->getUuidString(),
+            'supports' => [$ecology->getUuidString(), $protection->getUuidString()],
             'return' => 'configure',
         ]);
         self::assertResponseRedirects($this->configureUrl($frank));
@@ -155,11 +175,12 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
         self::assertNotNull($placement);
         self::assertFalse($placement->isWholeOrganization());
         self::assertSame(['Kilimani'], array_map(static fn ($a): string => (string) $a->getName(), $placement->getAreas() ?? []));
-        self::assertSame('Ecology +1', $placement->departmentsLabel());
+        self::assertSame('Protection Service', $placement->getDepartment()?->getName());
+        self::assertSame(['Ecology'], array_map(static fn ($d): string => (string) $d->getName(), $placement->getSupports()), 'their own department, sent as supported too, is dropped from the list.');
     }
 
-    /** THE WHOLE ORGANIZATION AND ALL DEPARTMENTS are each one word, and win over the named ones. */
-    public function testTheWholeOrganizationAndAllDepartmentsAreEachOneChoice(): void
+    /** THE WHOLE ORGANIZATION is one word, and wins over the named areas. */
+    public function testTheWholeOrganizationIsOneChoice(): void
     {
         $this->signedInAdministrator();
         $sergeant = $this->position('Sergeant', ['surveys.read']);
@@ -174,15 +195,52 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
             'position' => $sergeant->getUuidString(),
             'where' => 'organization',
             'areas' => [$kilimani->getUuidString()],
-            'all_departments' => '1',
-            'departments' => [$ecology->getUuidString()],
+            'department' => $ecology->getUuidString(),
         ]);
 
         $this->em->clear();
         $placement = $this->em->getRepository(User::class)->find($frank->getId())?->getPlacement();
         self::assertNotNull($placement);
         self::assertTrue($placement->isWholeOrganization());
-        self::assertTrue($placement->isAllDepartments());
+    }
+
+    /**
+     * EVERYBODY BELONGS TO ONE DEPARTMENT (ruled 2 Oct 2026): a save that
+     * names none is refused in those words, and so is an area's department
+     * where they are not placed.
+     */
+    #[DataProvider('departmentRefusals')]
+    public function testADepartmentTheyCannotHaveIsRefused(string $case, string $refusal): void
+    {
+        $this->signedInAdministrator();
+        $sergeant = $this->position('Sergeant', ['surveys.read']);
+        $kilimani = $this->area('Kilimani');
+        $tambarare = $this->area('Tambarare');
+        $tourism = $this->department('Tourism')->setArea($tambarare);
+        $frank = $this->person('Frank', 'Massawe');
+        $this->em->flush();
+
+        $token = $this->tokenFrom($this->configureUrl($frank), 'form[action$="/position"] input[name="_token"]');
+        $this->client->request('POST', '/team/'.$frank->getUuidString().'/position', [
+            '_token' => $token,
+            'position' => $sergeant->getUuidString(),
+            'where' => 'areas',
+            'areas' => [$kilimani->getUuidString()],
+            ...('none' === $case ? [] : ['department' => $tourism->getUuidString()]),
+            'return' => 'configure',
+        ]);
+        $this->client->followRedirect();
+
+        self::assertSelectorTextContains('.flashes', $refusal);
+        $this->em->clear();
+        self::assertNull($this->em->getRepository(User::class)->find($frank->getId())?->getPlacement(), 'nothing was written.');
+    }
+
+    /** @return \Generator<string, array{string, string}> */
+    public static function departmentRefusals(): \Generator
+    {
+        yield 'no department of their own' => ['none', 'Choose the one department they belong to'];
+        yield 'an area they are not placed in' => ['elsewhere', 'Tourism runs in Tambarare, where they are not placed'];
     }
 
     /** A FULL POSITION IS LISTED WITH ITS HOLDER AND REFUSED, naming who holds it. */
@@ -194,6 +252,7 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
         $holder = $this->person('Sarah', 'Kimaro');
         $holder->setPosition($chief);
         $frank = $this->person('Frank', 'Massawe');
+        $ecology = $this->department('Ecology');
         $this->em->flush();
 
         $crawler = $this->client->request('GET', $this->configureUrl($frank));
@@ -208,7 +267,7 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
             '_token' => $token,
             'position' => $chief->getUuidString(),
             'where' => 'organization',
-            'all_departments' => '1',
+            'department' => $ecology->getUuidString(),
             'return' => 'configure',
         ]);
         $this->client->followRedirect();

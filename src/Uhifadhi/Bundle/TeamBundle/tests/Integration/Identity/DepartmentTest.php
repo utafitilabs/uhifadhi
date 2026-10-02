@@ -94,9 +94,8 @@ final class DepartmentTest extends IntegrationTestCase
 
     /**
      * A DEPARTMENT'S POSITIONS ARE DERIVED, not filed. They are the distinct
-     * positions held by the people placed in it, which is why somebody
-     * supporting two departments shows up in both lists holding the one
-     * position they actually hold.
+     * positions held by the people who belong to it. Somebody who supports
+     * another department is not in its list: supporting is not belonging.
      */
     public function testADepartmentSeesThePositionsItsMembersHold(): void
     {
@@ -124,38 +123,34 @@ final class DepartmentTest extends IntegrationTestCase
             array_map(static fn (Position $p): ?string => $p->getName(), $membership->positionsIn($ecology)),
         );
         self::assertSame(
-            ['Analyst', 'Sergeant'],
+            ['Sergeant'],
             array_map(static fn (Position $p): ?string => $p->getName(), $membership->positionsIn($protection)),
         );
     }
 
     /**
-     * SOMEBODY PLACED ACROSS ALL DEPARTMENTS IS IN EVERY ONE OF THEM — the
-     * answer the voter gives, so the answer a department's list has to give
-     * too.
+     * SUPPORTING IS NOT BELONGING (ruled 2 Oct 2026): a ranger who supports
+     * Ecology is a member of Protection Service, their own, and of no other.
      */
-    public function testAPersonPlacedAcrossAllDepartmentsIsAMemberOfEachOne(): void
+    public function testSupportingADepartmentIsNotMembershipOfIt(): void
     {
         $ecology = (new Department())->setName('Ecology');
         $protection = (new Department())->setName('Protection Service');
         $this->em->persist($ecology);
         $this->em->persist($protection);
 
-        $warden = (new Position())->setName('Chief Warden');
-        $this->em->persist($warden);
-        $this->placePerson('Grace', 'Ngowi', $warden, null);
+        $ranger = (new Position())->setName('Ranger');
+        $this->em->persist($ranger);
+        $this->placePerson('Grace', 'Ngowi', $ranger, [$protection, $ecology]);
         $this->em->flush();
 
         $membership = new DepartmentMembership($this->service(UserRepository::class));
 
         self::assertSame(
             ['Grace Ngowi'],
-            array_map(static fn (User $u): string => $u->getFullName(), $membership->membersOf($ecology)),
-        );
-        self::assertSame(
-            ['Grace Ngowi'],
             array_map(static fn (User $u): string => $u->getFullName(), $membership->membersOf($protection)),
         );
+        self::assertSame([], $membership->membersOf($ecology));
     }
 
     /**
@@ -242,7 +237,7 @@ final class DepartmentTest extends IntegrationTestCase
     private function placePerson(string $first, string $last, Position $position, ?array $departments): User
     {
         $placement = (new Placement())->acrossTheOrganization();
-        null === $departments ? $placement->acrossAllDepartments() : $placement->inDepartments($departments);
+        null === $departments ? $placement->inDepartment($this->homeDepartment($this->em)) : $placement->inDepartment($departments[0])->supporting(\array_slice($departments, 1));
         $this->em->persist($placement);
 
         $user = (new User())

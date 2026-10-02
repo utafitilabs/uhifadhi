@@ -46,7 +46,7 @@ final class PlacementTest extends TestCase
 
     public function testAcrossTheOrganizationCoversEveryAreaIncludingOneNobodyNamed(): void
     {
-        $placement = new Placement()->acrossTheOrganization();
+        $placement = new Placement()->acrossTheOrganization()->inDepartment(new Department()->setName('Protection Service'));
 
         self::assertTrue($placement->isWholeOrganization());
         self::assertNull($placement->getAreas(), 'null is the ruled shape for "the whole organization", and it cannot be confused with "nothing was named".');
@@ -99,60 +99,66 @@ final class PlacementTest extends TestCase
         new Placement()->inAreas([]);
     }
 
-    // --- the departments -------------------------------------------------
+    // --- the department and what it supports ----------------------------
 
     /**
-     * THE CASE THE RULING EXISTS FOR: a data scientist supporting Ecology and
-     * Protection but not ICT is still ONE position, placed against two
-     * departments.
+     * ONE DEPARTMENT EACH, ANY NUMBER SUPPORTED (ruled 2 Oct 2026). A ranger
+     * belongs to Protection Service and may support Ecology without belonging
+     * to it: belonging is the reporting line, serving is where their work and
+     * their modules reach.
      */
-    public function testAPlacementNamesSeveralDepartmentsAndCoversExactlyThose(): void
+    public function testAPlacementBelongsToOneDepartmentAndServesTheOnesItSupports(): void
     {
-        $ecology = new Department()->setName('Ecology');
         $protection = new Department()->setName('Protection Service');
+        $ecology = new Department()->setName('Ecology');
         $ict = new Department()->setName('ICT');
 
-        $placement = new Placement()->acrossTheOrganization()->inDepartments([$ecology, $protection]);
+        $placement = new Placement()->acrossTheOrganization()->inDepartment($protection)->supporting([$ecology]);
 
-        self::assertTrue($placement->coversDepartment($ecology));
-        self::assertTrue($placement->coversDepartment($protection));
-        self::assertFalse($placement->coversDepartment($ict), "her ground is every area and her departments are two, so ICT's figures are not hers to read anywhere.");
-        self::assertSame([$ecology, $protection], $placement->getDepartments());
+        self::assertSame($protection, $placement->getDepartment());
+        self::assertSame([$ecology], $placement->getSupports());
+        self::assertTrue($placement->belongsTo($protection));
+        self::assertFalse($placement->belongsTo($ecology), 'supporting is not belonging.');
+        self::assertTrue($placement->serves($protection));
+        self::assertTrue($placement->serves($ecology));
+        self::assertFalse($placement->serves($ict));
     }
 
-    public function testAcrossAllDepartmentsCoversOneNobodyNamed(): void
+    /** Their own department is never also on the list they support. */
+    public function testTheirOwnDepartmentIsNeverAlsoSupported(): void
     {
-        $placement = new Placement()->acrossAllDepartments();
+        $protection = new Department()->setName('Protection Service');
+        $ecology = new Department()->setName('Ecology');
 
-        self::assertTrue($placement->isAllDepartments());
-        self::assertNull($placement->getDepartments());
-        self::assertTrue($placement->coversDepartment(new Department()->setName('Written this morning')));
+        $placement = new Placement()->inDepartment($protection)->supporting([$protection, $ecology]);
+        self::assertSame([$ecology], $placement->getSupports());
+
+        $placement->inDepartment($ecology);
+        self::assertSame([], $placement->getSupports(), 'moving into the department they supported ends the support.');
     }
 
     /**
-     * The third question is CONDITIONAL: when the concern belongs to no
+     * The department question is CONDITIONAL: when the concern belongs to no
      * department, it does not arise, and a question that does not arise is
      * not a refusal.
      */
     public function testAConcernBelongingToNoDepartmentIsNotRefusedByTheDepartmentQuestion(): void
     {
-        self::assertTrue(new Placement()->coversDepartment(null));
+        self::assertTrue(new Placement()->serves(null));
     }
 
-    public function testNoDepartmentNamedMeansNoneRatherThanAll(): void
+    /**
+     * NO DEPARTMENT IS AN UNFINISHED RECORD, and it fails closed: the person
+     * belongs nowhere, serves nothing and reaches nothing, whatever ground
+     * they were given.
+     */
+    public function testWithoutADepartmentItServesNothingAndReachesNothing(): void
     {
         $placement = new Placement()->acrossTheOrganization();
 
-        self::assertSame([], $placement->getDepartments());
-        self::assertFalse($placement->coversDepartment(new Department()->setName('Ecology')));
-    }
-
-    public function testAnEmptyDepartmentSetIsRefusedBecauseItIsNotAWayOfSayingAll(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageMatches('/names at least one/');
-
-        new Placement()->inDepartments([]);
+        self::assertNull($placement->getDepartment());
+        self::assertFalse($placement->serves(new Department()->setName('Ecology')));
+        self::assertTrue($placement->reachesNothing());
     }
 
     public function testChoosingOneBreadthClearsTheOther(): void
@@ -168,14 +174,15 @@ final class PlacementTest extends TestCase
 
     // --- the fragment ----------------------------------------------------
 
-    public function testTheDepartmentFragmentIsTheFirstNameAndACount(): void
+    public function testTheDepartmentFragmentNamesTheirsAndWhatTheySupport(): void
     {
-        $ecology = new Department()->setName('Ecology');
         $protection = new Department()->setName('Protection Service');
+        $ecology = new Department()->setName('Ecology');
+        $ict = new Department()->setName('ICT');
 
         self::assertNull(new Placement()->departmentsLabel(), 'in none.');
-        self::assertSame('All departments', new Placement()->acrossAllDepartments()->departmentsLabel());
-        self::assertSame('Ecology', new Placement()->inDepartments([$ecology])->departmentsLabel());
-        self::assertSame('Ecology +1', new Placement()->inDepartments([$ecology, $protection])->departmentsLabel());
+        self::assertSame('Protection Service', new Placement()->inDepartment($protection)->departmentsLabel());
+        self::assertSame('Protection Service · supports Ecology', new Placement()->inDepartment($protection)->supporting([$ecology])->departmentsLabel());
+        self::assertSame('Protection Service · supports Ecology +1', new Placement()->inDepartment($protection)->supporting([$ecology, $ict])->departmentsLabel());
     }
 }

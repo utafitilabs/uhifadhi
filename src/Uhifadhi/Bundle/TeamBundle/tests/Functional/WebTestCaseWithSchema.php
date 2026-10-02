@@ -24,6 +24,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Bundle\TeamBundle\Tests\FilesInADepartment;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\TestKernel;
 use Uhifadhi\Contracts\Access\ScopeKind;
@@ -41,6 +42,8 @@ use Uhifadhi\Contracts\Access\ScopeKind;
  */
 abstract class WebTestCaseWithSchema extends WebTestCase
 {
+    use FilesInADepartment;
+
     protected KernelBrowser $client;
     protected EntityManagerInterface $em;
 
@@ -182,7 +185,7 @@ abstract class WebTestCaseWithSchema extends WebTestCase
     {
         $placement = new Placement();
         null === $areas ? $placement->acrossTheOrganization() : $placement->inAreas($areas);
-        null === $departments ? $placement->acrossAllDepartments() : $placement->inDepartments($departments);
+        null === $departments ? $placement->inDepartment($this->homeDepartment($this->em)) : $placement->inDepartment($departments[0])->supporting(\array_slice($departments, 1));
 
         $this->em->persist($placement);
         $person->setPlacement($placement);

@@ -117,15 +117,20 @@
                         {%- elseif placement.wholeOrganization %}<span class="pmx-sk on">The whole organization</span><span class="zfrag">every area at once</span>
                         {%- else %}{% for area in placement.areas %}<span class="pmx-sk on">{{ area.name }}</span>{% endfor %}<span class="zfrag">not the whole organization</span>{% endif -%}
                     </div>
-                    <span class="pcol-k">Departments</span>
-                    <div class="pmx-sc">
-                        {%- if placement is null %}<span class="pmx-sk none">&mdash;</span>
-                        {%- elseif placement.allDepartments %}<span class="pmx-sk on">All departments</span><span class="zfrag">{{ departmentsTotal }} of {{ departmentsTotal }}</span>
-                        {%- else %}{% for department in placement.departments %}<span class="pmx-sk on">{{ department.name }}</span>{% endfor %}<span class="zfrag">{{ placement.departments|length }} of {{ departmentsTotal }}</span>{% endif -%}
+                    <span class="pcol-k">Belongs to</span>
+                    <div class="pmx-sc" style="justify-content:flex-start">
+                        {%- if placement is null or placement.department is null %}<span class="pmx-sk none">&mdash;</span><span class="zfrag">no department yet &middot; nothing reaches them until they have one</span>
+                        {%- else %}<span class="pmx-sk on">{{ placement.department.name }}</span>{% endif -%}
                     </div>
+                    {% if placement and placement.supports is not empty %}
+                    <span class="pcol-k">Supports</span>
+                    <div class="pmx-sc" style="justify-content:flex-start">
+                        {%- for department in placement.supports %}<span class="pmx-sk on">{{ department.name }}</span>{% endfor %}<span class="zfrag">{{ placement.supports|length == 1 ? 'its modules too' : 'their modules too' }}</span>
+                    </div>
+                    {% endif %}
                 </div>
                 {% if usesRanks and ranks is not empty %}{{ _self.rank_history(ranks) }}{% endif %}
-                <div class="pcard-foot">reaches <b>{{ reach }}</b> {{ reach == 1 ? 'person' : 'people' }}<span>&middot;</span><b>{{ placement and not placement.allDepartments ? placement.departments|length : departmentsTotal }}</b> of {{ departmentsTotal }} departments<span class="sp"></span>{% if door('directory.manage') and mayConfigure %}<a class="ov-open" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}#position">Change the position{% if usesRanks %} or rank{% endif %} {{ ux_icon('shell:chevron-right') }}</a>{% endif %}</div>
+                <div class="pcard-foot">reaches <b>{{ reach }}</b> {{ reach == 1 ? 'person' : 'people' }}{% if placement and placement.department %}<span>&middot;</span>in <b>{{ placement.department.name }}</b>{% endif %}{% if placement and placement.supports is not empty %}<span>&middot;</span>supports <b>{{ placement.supports|map(d => d.name)|join(', ') }}</b>{% endif %}<span class="sp"></span>{% if door('directory.manage') and mayConfigure %}<a class="ov-open" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}#position">Change the position{% if usesRanks %} or rank{% endif %} {{ ux_icon('shell:chevron-right') }}</a>{% endif %}</div>
             {% else %}
                 <div class="pcard"><div class="pmx-zero"><span><b>Holds no position.</b> Sign-in only &middot; nothing granted, read included</span></div>{% if usesRanks %}{{ _self.rank_line(rankNow) }}{% endif %}</div>
                 {% if usesRanks and ranks is not empty %}{{ _self.rank_history(ranks) }}{% endif %}

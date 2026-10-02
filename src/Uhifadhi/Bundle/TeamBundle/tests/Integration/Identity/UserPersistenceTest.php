@@ -128,7 +128,7 @@ final class UserPersistenceTest extends IntegrationTestCase
         $position = (new Position())->setName('Analyst');
         $this->em->persist($position);
 
-        $placement = (new Placement())->acrossTheOrganization()->inDepartments([$ecology, $protection]);
+        $placement = (new Placement())->acrossTheOrganization()->inDepartment($ecology)->supporting([$protection]);
         $this->em->persist($placement);
 
         $analyst = (new User())->setEmail('analyst@example.test')->setFirstName('Thabo')->setLastName('Ndlovu')
@@ -145,11 +145,12 @@ final class UserPersistenceTest extends IntegrationTestCase
         // Null areas is the whole organization — "everywhere" is an answer
         // somebody wrote down, not an empty list.
         self::assertNull($stored->getPlacement()->getAreas());
+        self::assertSame('Ecology', $stored->getDepartment()?->getName());
         self::assertSame(
-            ['Ecology', 'Protection Service'],
-            array_map(static fn (Department $d): ?string => $d->getName(), $stored->getDepartments() ?? []),
+            ['Protection Service'],
+            array_map(static fn (Department $d): ?string => $d->getName(), $stored->getSupportedDepartments()),
         );
-        self::assertSame('Ecology +1', $stored->getDepartmentLabel());
+        self::assertSame('Ecology · supports Protection Service', $stored->getDepartmentLabel());
     }
 
     public function testASuperAdminHoldsTheTierRolesWithoutAPosition(): void

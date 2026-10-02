@@ -126,7 +126,7 @@ final class CheckInOwnershipTest extends FieldApiTestCase
         $person = new User()->setEmail($rangerCode.'@example.test')->setFirstName('Colleague')->setLastName($rangerCode)
             ->setPassword('x')->setTeamRole(TeamRoleEnum::Staff)->setVerified(true)->setRangerCode($rangerCode);
         $person->setPosition($owner->getPosition());
-        $placement = new Placement()->acrossTheOrganization()->acrossAllDepartments();
+        $placement = new Placement()->acrossTheOrganization()->inDepartment($this->homeDepartment($this->em));
         $this->em->persist($placement);
         $person->setPlacement($placement);
         $this->em->persist($person);

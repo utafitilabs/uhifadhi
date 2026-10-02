@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Uhifadhi\Bundle\TeamBundle\Tests\FilesInADepartment;
 
 /**
  * KernelTestCase over {@see TestKernel}, against the real database named by
@@ -24,6 +25,8 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
  */
 abstract class IntegrationTestCase extends KernelTestCase
 {
+    use FilesInADepartment;
+
     protected EntityManagerInterface $em;
 
     /**

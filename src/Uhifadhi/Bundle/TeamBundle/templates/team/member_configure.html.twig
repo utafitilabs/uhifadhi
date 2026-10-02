@@ -20,7 +20,7 @@
    | Position: picker with seats, holders, full  | control | POST team_member_position      | done   |
    | Position: rank select + From date (ranks on)| control | rank, since on the same save   | done   |
    | Position: where chips (org / areas)         | control | where, areas[]                 | done   |
-   | Position: departments chips (all / named)   | control | all_departments, departments[] | done   |
+   | Position: Belongs to · one / Supports · any  | control | department, supports[]         | done   |
    | Position bar: reaches N · M of K depts      | data    | reach, placement               | done   |
    | Stationed at (read-only)                    | data    | stationedAt                    | done   |
    | Account: reset · switch · deactivate        | control | the three routes               | done   |
@@ -58,8 +58,8 @@
 {% block shell_page %}
 {{ include('@Team/team/_scope_banner.html.twig') }}
 
-{% set departmentsTotal = departments|length %}
-{% set chosenDepartments = placement and not placement.allDepartments ? placement.departments|length : departmentsTotal %}
+{% set ownDepartment = placement ? placement.department : null %}
+{% set supported = placement ? placement.supports : [] %}
 
 <div class="recgrid">
     <div class="col">
@@ -227,16 +227,36 @@
                             {% endfor %}
                         </div>
                     {% endif %}
-                    <span class="pcol-k">Departments &middot; several allowed</span>
-                    <div class="pmk-chips pwchips">
-                        <label class="pmb"><input type="checkbox" name="all_departments" value="1"{{ placement is null or placement.allDepartments ? ' checked' : '' }}><span>All departments</span></label>
-                        {% for department in departments %}
-                            <label class="pmb"><input type="checkbox" name="departments[]" value="{{ department.uuidString }}"{{ placement and not placement.allDepartments and department in placement.departments ? ' checked' : '' }}><span>{{ department.name }}{% if department.area %} <em>{{ department.area.name }}</em>{% endif %}</span></label>
-                        {% endfor %}
+                    {# ONE DEPARTMENT EACH, ANY NUMBER SUPPORTED (ruled 2 Oct 2026):
+                       belonging is the reporting line; supporting reaches the
+                       supported departments' modules without belonging. Their
+                       own department is ticked and locked under Supports —
+                       they support it — and is never stored there. #}
+                    <span class="pcol-k">Departments</span>
+                    <div class="dp-two">
+                        <div>
+                            <div class="colh"><b>Belongs to</b> &middot; one</div>
+                            <ul class="dp-list">
+                                {% for department in departments %}
+                                    <li><label><input type="radio" name="department" value="{{ department.uuidString }}"{{ ownDepartment and ownDepartment.id == department.id ? ' checked' : '' }} required> {{ department.name }}</label><em>{{ department.area ? department.area.name : 'org-wide' }}</em></li>
+                                {% else %}
+                                    <li class="dim">no department yet &middot; <a href="{{ path('team_departments') }}">create one</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="colh"><b>Supports</b> &middot; any number</div>
+                            <ul class="dp-list">
+                                {% for department in departments %}
+                                    {% set isOwn = ownDepartment and ownDepartment.id == department.id %}
+                                    <li><label><input type="checkbox" name="supports[]" value="{{ department.uuidString }}" data-where="{{ department.area ? department.area.name : 'org-wide' }}"{{ isOwn ? ' checked disabled data-own' : (department in supported ? ' checked' : '') }}> {{ department.name }}</label><em>{{ isOwn ? 'their own' : (department.area ? department.area.name : 'org-wide') }}</em></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="staddrow">
-                    <span class="chg" data-uhifadhi--team-bundle--position-card-target="preview"><b>no changes</b><span class="to">reaches <b>{{ reach }}</b> {{ reach == 1 ? 'person' : 'people' }} &middot; <b>{{ chosenDepartments }}</b> of {{ departmentsTotal }} departments</span></span>
+                    <span class="chg" data-uhifadhi--team-bundle--position-card-target="preview"><b>no changes</b><span class="to">reaches <b>{{ reach }}</b> {{ reach == 1 ? 'person' : 'people' }}{% if ownDepartment %} &middot; in <b>{{ ownDepartment.name }}</b>{% endif %}{% if supported is not empty %} &middot; supports <b>{{ supported|map(d => d.name)|join(', ') }}</b>{% endif %}</span></span>
                     <span class="sp"></span>
                     <button type="reset" class="btn">Discard</button>
                     <button type="submit" class="cta">Save the position</button>

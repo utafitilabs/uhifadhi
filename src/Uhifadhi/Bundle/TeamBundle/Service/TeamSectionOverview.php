@@ -390,7 +390,7 @@ final readonly class TeamSectionOverview
             $placement = $person->getPlacement();
             $in = [];
             foreach ($departments as $department) {
-                if (null !== $placement && $placement->coversDepartment($department)) {
+                if (null !== $placement && $placement->belongsTo($department)) {
                     $in[] = (string) $department->getName();
                 }
             }
@@ -440,7 +440,7 @@ final readonly class TeamSectionOverview
             $seen = [];
             foreach ($people as $person) {
                 $position = $person->getPosition();
-                if (null === $position || !($person->getPlacement()?->coversDepartment($department) ?? false)) {
+                if (null === $position || !($person->getPlacement()?->belongsTo($department) ?? false)) {
                     continue;
                 }
                 $seen[(int) $position->getId()] = true;

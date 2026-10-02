@@ -122,7 +122,7 @@ final class OnePositionPerPersonTest extends IntegrationTestCase
             $this->em->persist($entity);
         }
 
-        $placement = new Placement()->acrossTheOrganization()->inDepartments([$ecology, $protection]);
+        $placement = new Placement()->acrossTheOrganization()->inDepartment($ecology)->supporting([$protection]);
         $this->em->persist($placement);
 
         $person = $this->person()->setPosition($ecologist)->setPlacement($placement);
@@ -146,10 +146,8 @@ final class OnePositionPerPersonTest extends IntegrationTestCase
     }
 
     /**
-     * UNPLACED IS A STATE, AND IT IS EMPTY RATHER THAN OPEN. Null would mean
-     * "all departments", which is what a person who has not been placed at all
-     * must never read as, so the empty list is the answer and the label has
-     * nothing to say.
+     * UNPLACED IS A STATE, AND IT IS EMPTY RATHER THAN OPEN: no department,
+     * nothing supported, and the label has nothing to say.
      */
     public function testAPersonWhoHasNotBeenPlacedIsInNoDepartment(): void
     {
@@ -159,16 +157,21 @@ final class OnePositionPerPersonTest extends IntegrationTestCase
 
         self::assertNull($person->getPosition());
         self::assertNull($person->getPlacement());
-        self::assertSame([], $person->getDepartments());
+        self::assertNull($person->getDepartment());
+        self::assertSame([], $person->getSupportedDepartments());
         self::assertNull($person->getDepartmentLabel());
     }
 
-    /** @return list<string> */
+    /**
+     * Their department, then the ones they support.
+     *
+     * @return list<string>
+     */
     private function departmentNames(User $user): array
     {
         return array_map(
             static fn (Department $d): string => (string) $d->getName(),
-            $user->getDepartments() ?? [],
+            [...(null === $user->getDepartment() ? [] : [$user->getDepartment()]), ...$user->getSupportedDepartments()],
         );
     }
 }

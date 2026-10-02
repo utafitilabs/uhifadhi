@@ -71,10 +71,12 @@ final readonly class DepartmentDeletion implements DeletionContributorInterface
 
     public function whatStays(object $record): array
     {
-        $placed = (int) $this->entityManager->createQuery(\sprintf('SELECT COUNT(p) FROM %s p JOIN p.departments d WHERE d = :department', Placement::class))
+        $placed = (int) $this->entityManager->createQuery(\sprintf('SELECT COUNT(p) FROM %s p WHERE p.department = :department', Placement::class))
             ->setParameter('department', $record)->getSingleScalarResult();
 
-        return $placed > 0 ? [new DeletionLine('people placed in it', $placed, detail: 'stay, placed in the departments they have left', singular: 'person placed in it')] : [];
+        // THEY STAY, WITHOUT A DEPARTMENT: an unfinished record that reaches
+        // nothing until somebody files them in another.
+        return $placed > 0 ? [new DeletionLine('people who belong to it', $placed, detail: 'stay, without a department until they are filed in another', singular: 'person who belongs to it')] : [];
     }
 
     public function delete(object $record): void

@@ -141,7 +141,7 @@ final class PerformanceSnapshotCommandTest extends IntegrationTestCase
     /** Somebody holding a position and placed in this one department. */
     private function placedInEcology(string $first, string $last, Position $position, Department $department): User
     {
-        $placement = new Placement()->acrossTheOrganization()->inDepartments([$department]);
+        $placement = new Placement()->acrossTheOrganization()->inDepartment($department);
         $this->em->persist($placement);
 
         $person = new User()

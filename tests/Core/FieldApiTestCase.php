@@ -28,6 +28,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
+use Uhifadhi\Bundle\TeamBundle\Tests\FilesInADepartment;
 use Uhifadhi\Core\Tests\Application\Kernel;
 
 /**
@@ -49,6 +50,8 @@ use Uhifadhi\Core\Tests\Application\Kernel;
  */
 abstract class FieldApiTestCase extends WebTestCase
 {
+    use FilesInADepartment;
+
     /** The rectangle every area here is measured and drawn from — roughly 9,900 km². */
     protected const string A_BOUNDARY = '{"type":"MultiPolygon","coordinates":[[[[-30.0,-3.6],[-29.0,-3.6],[-29.0,-2.8],[-30.0,-2.8],[-30.0,-3.6]]]]}';
 
@@ -191,7 +194,7 @@ abstract class FieldApiTestCase extends WebTestCase
         $placement = new Placement();
         $area = $department?->getArea();
         null === $area ? $placement->acrossTheOrganization() : $placement->inAreas([$area]);
-        null === $department ? $placement->acrossAllDepartments() : $placement->inDepartments([$department]);
+        $placement->inDepartment($department ?? $this->homeDepartment($this->em));
         $this->em->persist($placement);
         $user->setPlacement($placement);
 

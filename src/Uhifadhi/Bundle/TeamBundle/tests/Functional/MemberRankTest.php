@@ -52,7 +52,7 @@ final class MemberRankTest extends WebTestCaseWithSchema
 
         $card = $crawler->filter('#position');
         self::assertStringStartsWith('Position and rank', trim($card->filter('.tab')->text()));
-        self::assertSame(['Assigned position', 'Rank', 'Where', 'Departments', 'Rank history'], $card->filter('.pcol-k')->each(static fn (Crawler $k): string => trim($k->text())));
+        self::assertSame(['Assigned position', 'Rank', 'Where', 'Belongs to', 'Rank history'], $card->filter('.pcol-k')->each(static fn (Crawler $k): string => trim($k->text())));
         $rows = $card->filter('.rkh .rkh-row');
         self::assertCount(2, $rows);
         self::assertStringContainsString('now', $rows->eq(0)->attr('class') ?? '');
@@ -97,6 +97,7 @@ final class MemberRankTest extends WebTestCaseWithSchema
         [, $scr] = $this->ladder();
         $sergeant = $this->position('Sergeant');
         $joseph = $this->person('Joseph', 'Mollel');
+        $this->homeDepartment($this->em);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/'.$joseph->getUuidString().'/configure');
@@ -104,7 +105,7 @@ final class MemberRankTest extends WebTestCaseWithSchema
         self::assertSame('Position and rank', trim(explode('·', $card->filter('.tab')->text())[0]));
         $form = $card->filter('form[action$="/position"]');
         self::assertCount(1, $form, 'one form, one save');
-        self::assertSame(['Assigned position', 'Rank', 'Organization', 'Areas', 'Departments · several allowed'], $card->filter('.pcol-k')->each(static fn (Crawler $k): string => trim($k->text())));
+        self::assertSame(['Assigned position', 'Rank', 'Organization', 'Areas', 'Departments'], $card->filter('.pcol-k')->each(static fn (Crawler $k): string => trim($k->text())));
         self::assertSame(['— no rank —', 'CR II · Conservation Ranger II', 'SCR · Senior Conservation Ranger'], $form->filter('select[name="rank"] option')->each(static fn (Crawler $o): string => trim($o->text())));
         self::assertCount(1, $form->filter('input[type="date"][name="since"]'));
         self::assertCount(0, $crawler->filter('form[action$="/rank"]'), 'no card of its own');
@@ -116,7 +117,7 @@ final class MemberRankTest extends WebTestCaseWithSchema
             'return' => 'configure',
             'position' => $sergeant->getUuidString(),
             'where' => 'organization',
-            'all_departments' => '1',
+            'department' => $this->homeDepartment($this->em)->getUuidString(),
             'rank' => $scr->getUuidString(),
             'since' => '2026-06-12',
         ]);
@@ -165,11 +166,12 @@ final class MemberRankTest extends WebTestCaseWithSchema
         [$cr, $scr] = $this->ladder();
         $sergeant = $this->position('Sergeant');
         $joseph = $this->person('Joseph', 'Mollel');
+        $this->homeDepartment($this->em);
         $this->em->flush();
         $this->ranks()->assign($joseph, $cr, new \DateTimeImmutable('2024-01-09'), $naomi);
         $token = $this->tokenFrom('/team/'.$joseph->getUuidString().'/configure', 'form[action$="/position"] input[name="_token"]');
 
-        $this->client->request('POST', '/team/'.$joseph->getUuidString().'/position', ['_token' => $token, 'return' => 'configure', 'position' => $sergeant->getUuidString(), 'where' => 'organization', 'all_departments' => '1']);
+        $this->client->request('POST', '/team/'.$joseph->getUuidString().'/position', ['_token' => $token, 'return' => 'configure', 'position' => $sergeant->getUuidString(), 'where' => 'organization', 'department' => $this->homeDepartment($this->em)->getUuidString()]);
         $this->em->clear();
         $person = $this->em->getRepository(User::class)->find((int) $joseph->getId());
         self::assertInstanceOf(User::class, $person);

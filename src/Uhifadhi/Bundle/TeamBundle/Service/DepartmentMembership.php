@@ -51,7 +51,7 @@ final readonly class DepartmentMembership
     {
         return array_values(array_filter(
             $this->users->findAllByName(),
-            static fn (User $user): bool => $user->getPlacement()?->coversDepartment($department) ?? false,
+            static fn (User $user): bool => $user->getPlacement()?->belongsTo($department) ?? false,
         ));
     }
 
@@ -78,11 +78,11 @@ final readonly class DepartmentMembership
     }
 
     /**
-     * WHETHER ONE PERSON IS IN ONE DEPARTMENT - the same question the third
-     * of the three checks asks, asked from a screen.
+     * WHETHER ONE PERSON BELONGS TO ONE DEPARTMENT — the reporting line, not
+     * the departments they support.
      */
     public function covers(User $user, Department $department): bool
     {
-        return $user->getPlacement()?->coversDepartment($department) ?? false;
+        return $user->getPlacement()?->belongsTo($department) ?? false;
     }
 }

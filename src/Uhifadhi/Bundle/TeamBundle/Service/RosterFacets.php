@@ -70,7 +70,7 @@ final readonly class RosterFacets
         foreach ($departments as $department) {
             $count = 0;
             foreach ($everybody as $person) {
-                if (null !== $person->getPlacement() && $person->getPlacement()->coversDepartment($department)) {
+                if (null !== $person->getPlacement() && $person->getPlacement()->belongsTo($department)) {
                     ++$count;
                 }
             }

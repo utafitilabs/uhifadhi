@@ -37,6 +37,7 @@ use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
 use Uhifadhi\Bundle\TeamBundle\Deletion\DeletionPage;
 use Uhifadhi\Bundle\TeamBundle\Deletion\DeletionService;
 use Uhifadhi\Bundle\TeamBundle\Entity\ApiToken;
+use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\Rank;
@@ -228,7 +229,6 @@ final readonly class MemberController
             'mayConfigure' => (bool) $this->authorization?->isGranted(MemberVoter::CONFIGURE, $member),
             'figures' => $this->figures($card, $byTier = $member->getTeamRole()->canManageContent() && TierSight::sees($this->signedIn(), $member)),
             'byTier' => $byTier,
-            'departmentsTotal' => \count($this->departments->findAllActiveOrdered()),
             'stationedAt' => $postings[0] ?? null,
             'stationPlate' => $this->plateFor($postings[0] ?? null),
             'postingDoor' => $this->postingDoor->url(self::placedAreaUuids($member)),
@@ -277,7 +277,7 @@ final readonly class MemberController
             'tiers' => TeamRoleEnum::cases(),
             'choices' => $this->choices(),
             'areas' => $this->areas(),
-            'departments' => $this->departments->findAllActiveOrdered(),
+            'departments' => $this->departmentsInOrder(),
             'allowsOrganization' => null === $position || \in_array(ScopeKind::Organization, $position->getAllowedKinds(), true),
             'allowsArea' => null === $position || \in_array(ScopeKind::Area, $position->getAllowedKinds(), true),
             'isLastSuperAdmin' => $this->invariant->isLastActiveSuperAdmin($member),
@@ -532,7 +532,7 @@ final readonly class MemberController
         // WHERE IT APPLIES, AND WHICH DEPARTMENTS — the placement's two
         // dimensions, written in the same save as the seat. A request that
         // says nothing about them keeps the placement that stands.
-        if ($request->request->has('where') || $request->request->has('all_departments') || $request->request->has('departments')) {
+        if ($request->request->has('where') || $request->request->has('department') || $request->request->has('supports')) {
             try {
                 $this->accounts->place($member, $this->placementFrom($request, $position));
             } catch (\InvalidArgumentException $refusal) {
@@ -923,7 +923,7 @@ final readonly class MemberController
      * THE PLACEMENT AS THE FORM SAYS IT. Where is the organization OR named
      * areas — the first pill is exclusive with the rest, and a kind the
      * position does not allow is refused in the entity's own words.
-     * Departments are all OR a chosen few, several allowed.
+     * One department they belong to, required; any number they support.
      *
      * @throws \InvalidArgumentException when the form names nowhere, or a kind the position does not allow
      */
@@ -953,23 +953,49 @@ final readonly class MemberController
             $placement->inAreas($areas);
         }
 
-        if ($request->request->getBoolean('all_departments')) {
-            $placement->acrossAllDepartments();
-        } else {
-            $chosen = [];
-            foreach ($this->departments->findAllActiveOrdered() as $department) {
-                if (\in_array((string) $department->getUuidString(), $this->listOf($request, 'departments'), true)) {
-                    $chosen[] = $department;
-                }
+        // ONE DEPARTMENT, REQUIRED, AND ANY THEY SUPPORT (ruled 2 Oct 2026).
+        // An area's department is theirs to belong to or support only where
+        // their ground reaches that area.
+        $own = null;
+        $supports = [];
+        $chosenOwn = (string) $request->request->get('department', '');
+        $chosenSupports = $this->listOf($request, 'supports');
+        foreach ($this->departments->findAllActiveOrdered() as $department) {
+            $uuid = (string) $department->getUuidString();
+            $isOwn = $chosenOwn === $uuid;
+            if (!$isOwn && !\in_array($uuid, $chosenSupports, true)) {
+                continue;
             }
-            if ([] === $chosen) {
-                $placement->acrossAllDepartments();
+            if ($department->isAreaLevel() && !$placement->coversArea($department->getArea())) {
+                throw new \InvalidArgumentException(\sprintf('%s runs in %s, where they are not placed — place them there, or choose another department.', (string) $department->getName(), (string) $department->getArea()?->getName()));
+            }
+            if ($isOwn) {
+                $own = $department;
             } else {
-                $placement->inDepartments($chosen);
+                $supports[] = $department;
             }
         }
+        if (null === $own) {
+            throw new \InvalidArgumentException('Choose the one department they belong to — everyone but Super Admins and Admins belongs to one.');
+        }
+        $placement->inDepartment($own)->supporting($supports);
 
         return $placement;
+    }
+
+    /**
+     * THE DEPARTMENTS AS THE CARD LISTS THEM: the organization-wide ones
+     * first, then each area's, by area (ruled 1 Oct 2026).
+     *
+     * @return list<Department>
+     */
+    private function departmentsInOrder(): array
+    {
+        $departments = $this->departments->findAllActiveOrdered();
+        usort($departments, static fn (Department $a, Department $b): int => [$a->isAreaLevel(), (string) $a->getArea()?->getName(), (string) $a->getName()]
+            <=> [$b->isAreaLevel(), (string) $b->getArea()?->getName(), (string) $b->getName()]);
+
+        return $departments;
     }
 
     /** @return list<string> */

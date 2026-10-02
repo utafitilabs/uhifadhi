@@ -67,6 +67,23 @@ final class SettingDefinitionTest extends TestCase
     }
 
     /**
+     * A CHOICE SAYS ITS CHOICES IN WORDS. The stored value is the key; the
+     * Configure page and the read page print the label, falling back to the
+     * key where none is given.
+     */
+    public function testAChoiceNamesItsChoices(): void
+    {
+        $late = new SettingDefinition('roster.late_threshold', 'roster', 'Roster', 'Late threshold',
+            'A check-in later than this after the watch starts counts as late.', SettingType::Choice, 'twice_the_interval', SettingDepth::Area,
+            choices: ['twice_the_interval', 'one_hour'], choiceLabels: ['twice_the_interval' => 'Twice the ping interval', 'one_hour' => 'One hour']);
+
+        self::assertSame('Twice the ping interval', $late->labelOf('twice_the_interval'));
+        self::assertSame('Twice the ping interval · One hour', $late->limits());
+        self::assertSame('KES', new SettingDefinition('incidents.currency', 'incidents', 'Incidents', 'Currency',
+            'Fines are recorded in.', SettingType::Choice, 'TZS', SettingDepth::Organization, choices: ['TZS', 'KES'])->labelOf('KES'));
+    }
+
+    /**
      * A NUMBER MAY CARRY DECIMALS — the zone overlap tolerance is 2.5 % — and
      * then takes a decimal value to that many places; a whole-number setting
      * still refuses one.
@@ -139,6 +156,7 @@ final class SettingDefinitionTest extends TestCase
             'choices' => [],
             'unsetMeans' => null,
             'decimals' => 0,
+            'choiceLabels' => [],
         ], $overrides);
 
         $this->expectException(\InvalidArgumentException::class);
@@ -166,6 +184,8 @@ final class SettingDefinitionTest extends TestCase
         yield 'choice without choices' => [['type' => SettingType::Choice, 'default' => 'TZS', 'unit' => null, 'min' => null, 'max' => null], 'A choice needs its choices.'];
         yield 'decimals on a switch' => [['type' => SettingType::Toggle, 'default' => true, 'unit' => null, 'min' => null, 'max' => null, 'decimals' => 1], 'Only a number has decimals.'];
         yield 'a decimal default on a whole number' => [['default' => 15.5], 'The default must be acceptable.'];
+        yield 'a label for no choice' => [['type' => SettingType::Choice, 'default' => 'TZS', 'unit' => null, 'min' => null, 'max' => null, 'choices' => ['TZS'], 'choiceLabels' => ['EUR' => 'Euro']], 'A label names one of the choices.'];
+        yield 'labels on a number' => [['choiceLabels' => ['15' => 'Fifteen']], 'Only a choice has labels.'];
         yield 'unset without saying what it means' => [['default' => null], 'Settings would print nothing for it.'];
         yield 'a switch left unset' => [['type' => SettingType::Toggle, 'default' => null, 'unit' => null, 'min' => null, 'max' => null, 'unsetMeans' => 'something'], 'Only a number may be left unset.'];
         yield 'what unset means, with a default' => [['unsetMeans' => 'two ping intervals'], 'A default and an unset meaning cannot both hold.'];

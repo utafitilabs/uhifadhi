@@ -26,10 +26,11 @@ namespace Uhifadhi\Contracts\Settings;
 final readonly class SettingDefinition
 {
     /**
-     * @param list<string> $choices    the accepted values of a Choice setting, in the order shown
-     * @param int          $decimals   for a Number, how many decimal places it takes — 0 is whole numbers
-     * @param string|null  $unsetMeans for a Number left unset (default null): what unset means, as Settings prints it —
-     *                                 "two ping intervals" — the owner computing the value until an Admin sets one
+     * @param list<string>          $choices      the accepted values of a Choice setting, in the order shown
+     * @param int                   $decimals     for a Number, how many decimal places it takes — 0 is whole numbers
+     * @param array<string, string> $choiceLabels for a Choice, each choice's label as Settings prints it, keyed by the stored value
+     * @param string|null           $unsetMeans   for a Number left unset (default null): what unset means, as Settings prints it —
+     *                                            "two ping intervals" — the owner computing the value until an Admin sets one
      */
     public function __construct(
         public string $key,
@@ -47,6 +48,7 @@ final readonly class SettingDefinition
         public int $position = 0,
         public ?string $unsetMeans = null,
         public int $decimals = 0,
+        public array $choiceLabels = [],
     ) {
         if (1 !== preg_match('/^[a-z][a-z0-9]*(\.[a-z][a-z0-9_]*)+$/', $key)) {
             throw new \InvalidArgumentException(\sprintf('A setting key is "<owner>.<name>" in lower case; "%s" is not.', $key));
@@ -62,6 +64,10 @@ final readonly class SettingDefinition
 
         if ((null === $default) !== (null !== $unsetMeans && '' !== trim($unsetMeans))) {
             throw new \InvalidArgumentException(\sprintf('The setting "%s" has a default or says what unset means — one of the two.', $key));
+        }
+
+        if ([] !== $choiceLabels && (SettingType::Choice !== $type || [] !== array_diff(array_keys($choiceLabels), $choices))) {
+            throw new \InvalidArgumentException(\sprintf('The setting "%s" labels only its own choices.', $key));
         }
 
         match ($type) {
@@ -90,8 +96,14 @@ final readonly class SettingDefinition
             SettingType::Number => null === $this->min && null === $this->max ? null
                 : trim(\sprintf('%s–%s %s', $this->min ?? '', $this->max ?? '', $this->unit ?? '')),
             SettingType::Toggle => null,
-            SettingType::Choice => implode(' · ', $this->choices),
+            SettingType::Choice => implode(' · ', array_map($this->labelOf(...), $this->choices)),
         };
+    }
+
+    /** A choice's label as Settings prints it — the stored value where none is given. */
+    public function labelOf(string $choice): string
+    {
+        return $this->choiceLabels[$choice] ?? $choice;
     }
 
     private static function hasPlaces(float $value, int $places): bool

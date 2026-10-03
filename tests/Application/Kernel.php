@@ -307,6 +307,8 @@ class Kernel extends BaseKernel
             ->alias('test_public.area.checkin_statuses', 'area.checkin_statuses')
             ->public()
             ->alias('test_public.area.checkins', 'area.checkins')
+            ->public()
+            ->alias('test_public.area.presence_facts', 'area.presence_facts')
             ->public();
 
         // EVERY VOTER, so the build can count how many answer each question.

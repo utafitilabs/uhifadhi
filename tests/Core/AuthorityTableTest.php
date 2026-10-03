@@ -26,6 +26,13 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\CheckIn;
+use Uhifadhi\Bundle\AreaBundle\Entity\CheckInStatus;
+use Uhifadhi\Bundle\AreaBundle\Entity\PersonPosition;
+use Uhifadhi\Bundle\AreaBundle\Entity\Station;
+use Uhifadhi\Bundle\AreaBundle\Enum\PositionSourceEnum;
+use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
+use Uhifadhi\Bundle\AreaBundle\Service\PresenceFactsService;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
@@ -59,6 +66,9 @@ final class AuthorityTableTest extends WebTestCase
     private const string TABLE = __DIR__.'/authority-table.md';
     private const string RECORD = 'UHIFADHI_RECORD_AUTHORITY_TABLE';
 
+    /** What an "own record" address is generated with for the table, printed as {own}. */
+    private const string OWN_SHOWN = '00000000-0000-1000-8000-000000000000';
+
     private KernelBrowser $client;
     private EntityManagerInterface $em;
     private World $world;
@@ -88,6 +98,12 @@ final class AuthorityTableTest extends WebTestCase
         $tool->createSchema($metadata);
 
         $this->world = World::seed($this->em, $this->catalogue()->exceptionPairs()[0] ?? '');
+
+        // ON DUTY NOW, with a fresh ping each, so the live sheet has a mark to
+        // answer about: the colleague at Kilimani and the person out of reach
+        // at Tambarare.
+        $this->onDuty($this->world->member, $this->world->kilimani, $this->world->station);
+        $this->onDuty($this->world->outOfReach, $this->world->tambarare, null);
     }
 
     protected function tearDown(): void
@@ -157,23 +173,29 @@ final class AuthorityTableTest extends WebTestCase
 
     /**
      * A WRITE PROBE IS A REQUEST THAT WOULD SUCCEED. A Super Admin sending it
-     * is never turned away — no 400, no 422, no error, and no 403, which is
-     * also what a wrong token answers — or a cell saying "allowed" would only
-     * mean "got past the gate", and one saying "refused" might be the token's.
+     * is never turned away — no 400, no 422, no error, no 403, which is also
+     * what a wrong token answers, and never sent to sign in — or a cell saying
+     * "allowed" would only mean "got past the gate", and one saying "refused"
+     * might be the token's.
      */
     public function testEveryWriteProbeSendsAFormASuperAdminCanSave(): void
     {
         $turnedAway = [];
 
         foreach (CoreProbes::all($this->world) as $probe) {
-            if ('GET' === $probe->method || isset(CoreProbes::NOT_SAVABLE_HERE[$probe->key()])) {
+            // ABOUT A COLLEAGUE, or about nobody: a Super Admin demoting or
+            // deactivating themselves, or another Super Admin's account, is
+            // refused by design, and that refusal is the table's to show.
+            if ('GET' === $probe->method || isset(CoreProbes::NOT_SAVABLE_HERE[$probe->key()])
+                || !\in_array($probe->target, [null, 'a colleague in reach'], true)) {
                 continue;
             }
 
-            [$status, $error] = $this->send($probe, Person::SuperAdmin, $this->checks($probe));
+            [$status, $error, $location] = $this->send($probe, Person::SuperAdmin, $this->checks($probe));
+            $signedOut = null !== $location && '/login' === parse_url($location, \PHP_URL_PATH) && 'team_login' !== $probe->route;
 
-            if (\in_array($status, [400, 403, 422], true) || null !== $error) {
-                $turnedAway[] = \sprintf('%s %s: %d%s', $probe->method, $probe->route, $status, null === $error ? '' : ' — '.$error);
+            if (\in_array($status, [400, 403, 422], true) || null !== $error || $signedOut) {
+                $turnedAway[] = \sprintf('%s %s: %d%s', $probe->method, $probe->route, $status, null !== $error ? ' — '.$error : ($signedOut ? ' — sent to sign-in' : ''));
             }
         }
 
@@ -209,9 +231,9 @@ final class AuthorityTableTest extends WebTestCase
 
             $lines[] = \sprintf(
                 '| %s | %s %s | %s | %s |',
-                $probe->route,
+                null === $probe->target ? $probe->route : $probe->route.' · '.$probe->target,
                 $probe->method,
-                $this->printed($this->router()->generate($probe->route, $probe->parameters)),
+                $this->printed($this->router()->generate($probe->route, $this->own($probe->parameters, self::OWN_SHOWN))),
                 [] === $checked ? '—' : '`'.implode('`, `', $checked).'`',
                 implode(' | ', $cells),
             );
@@ -227,12 +249,15 @@ final class AuthorityTableTest extends WebTestCase
      */
     private function outcome(Probe $probe, Person $person, array $checked): string
     {
-        [$status, , $location] = $this->send($probe, $person, $checked);
+        [$status, $error, $location, $own] = $this->send($probe, $person, $checked);
 
         if (null !== $location) {
             $to = (string) parse_url($location, \PHP_URL_PATH);
+            $to = null === $own ? $to : str_replace($own, Probe::OWN, $to);
 
-            return '/login' === $to ? 'sign-in' : '→ '.$this->printed($to);
+            // A write refused with a message lands on a page like any other;
+            // the message is what tells the two apart.
+            return ('/login' === $to ? 'sign-in' : '→ '.$this->printed($to)).(null === $error ? '' : ' · error');
         }
 
         return match (true) {
@@ -249,7 +274,7 @@ final class AuthorityTableTest extends WebTestCase
      *
      * @param list<string> $checked the pairs the route checks
      *
-     * @return array{int, ?string, ?string} the status, the error the page reported if any, and where a redirect went
+     * @return array{int, ?string, ?string, ?string} the status, the error the page reported if any, where a redirect went, and the sender's own identifier
      */
     private function send(Probe $probe, Person $person, array $checked): array
     {
@@ -269,6 +294,11 @@ final class AuthorityTableTest extends WebTestCase
             }
 
             $body = $probe->body;
+            foreach ($body as $field => $value) {
+                if (Probe::OWN_NAME === $value) {
+                    $body[$field] = null === $account ? '' : $account->getFullName();
+                }
+            }
             $server = [];
             if (null !== $probe->token) {
                 $token = $this->mint($probe->token);
@@ -288,7 +318,9 @@ final class AuthorityTableTest extends WebTestCase
                 $files[$field] = new UploadedFile($copy, basename($path), 'application/geo+json', null, true);
             }
 
-            $path = $this->router()->generate($probe->route, $probe->parameters);
+            // Somebody signed out has no record of their own; their "own
+            // record" is asked about the colleague's, which they cannot reach either.
+            $path = $this->router()->generate($probe->route, $this->own($probe->parameters, (string) ($account?->getUuidString() ?? $this->world->member)));
             $this->client->request($probe->method, $path, $body, $files, $server, $probe->json);
             $response = $this->client->getResponse();
             $status = $response->getStatusCode();
@@ -306,12 +338,64 @@ final class AuthorityTableTest extends WebTestCase
             $errors = $session instanceof FlashBagAwareSessionInterface ? $session->getFlashBag()->peek('error') : [];
             $error = [] === $errors ? null : implode(' ', array_map(static fn (mixed $e): string => \is_string($e) ? $e : '', $errors));
 
-            return [$status, $error, $response->isRedirection() ? (string) $response->headers->get('Location') : null];
+            return [$status, $error, $response->isRedirection() ? (string) $response->headers->get('Location') : null, $account?->getUuidString()];
         } finally {
             if ($connection->isTransactionActive()) {
                 $connection->rollBack();
             }
+
+            // THE ROLLBACK RESTORES THE DATABASE, NOT WHAT DOCTRINE HOLDS. A
+            // write that changed an account in memory — a new password hash —
+            // would otherwise sign the next probe in with an account the
+            // database no longer has, and the firewall rightly ends that session.
+            $this->em()->clear();
         }
+    }
+
+    /**
+     * The parameters with the sender's own record filled in.
+     *
+     * @param array<string, string> $parameters
+     *
+     * @return array<string, string>
+     */
+    private function own(array $parameters, string $uuid): array
+    {
+        return array_map(static fn (string $value): string => Probe::OWN === $value ? $uuid : $value, $parameters);
+    }
+
+    /**
+     * An open check-in and a ping a minute old, the way the handset records
+     * them, folded into the presence facts the live reads use.
+     */
+    private function onDuty(string $person, string $area, ?string $station): void
+    {
+        $em = $this->em();
+        $account = $em->getRepository(User::class)->findOneBy(['uuid' => $person]);
+        $ground = $em->getRepository(AreaOfInterest::class)->findOneBy(['uuid' => $area]);
+        $post = null === $station ? null : $em->getRepository(Station::class)->findOneBy(['uuid' => $station]);
+        self::assertInstanceOf(User::class, $account);
+        self::assertInstanceOf(AreaOfInterest::class, $ground);
+
+        $statuses = static::getContainer()->get('test_public.area.checkin_statuses');
+        self::assertInstanceOf(CheckInStatusService::class, $statuses);
+        $status = $statuses->offeredBy($ground)[0] ?? null;
+        self::assertInstanceOf(CheckInStatus::class, $status);
+
+        $now = new \DateTimeImmutable();
+        $checkIn = new CheckIn()->setArea($ground)->setPerson($account)->setClientRef('duty-'.$person)
+            ->setLocalDate($now->setTime(0, 0))->setStatus($status)->setStation($post)
+            ->setOccurredAt($now->modify('-1 hour'))->setDeviceId('a phone')->setAppVersion('0.5.5');
+        $ping = new PersonPosition()->setArea($ground)->setPerson($account)->setCheckIn($checkIn)
+            ->setClientRef('ping-'.$person)->setRecordedAt($now->modify('-1 minute'))
+            ->setPosition('{"type":"Point","coordinates":[37.1,-2.8]}')->setAccuracyM(8.0)->setSource(PositionSourceEnum::Gps);
+        $em->persist($checkIn);
+        $em->persist($ping);
+        $em->flush();
+
+        $facts = static::getContainer()->get('test_public.area.presence_facts');
+        self::assertInstanceOf(PresenceFactsService::class, $facts);
+        $facts->recordPings([$ping]);
     }
 
     /** A real token for this id, in the session the browser is about to send. */
@@ -439,7 +523,7 @@ final class AuthorityTableTest extends WebTestCase
      */
     private function printed(string $path): string
     {
-        return (string) preg_replace('/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/', '{new}', strtr($path, $this->world->names()));
+        return (string) preg_replace('/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/', '{new}', strtr($path, [self::OWN_SHOWN => Probe::OWN] + $this->world->names()));
     }
 
     private function router(): RouterInterface

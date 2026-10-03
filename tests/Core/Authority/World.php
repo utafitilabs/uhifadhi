@@ -59,6 +59,14 @@ final readonly class World
     /** Every account's password in the table, so a write that asks for the current one can be sent. */
     public const string PASSPHRASE = 'the authority table passphrase';
 
+    /** The full name each target is typed as on a delete page. */
+    public const array NAMES = [
+        'member' => 'Naserian Lekishon',
+        'outOfReach' => 'Lomayani Laizer',
+        'admin' => 'Upendo Massawe',
+        'superAdmin' => 'Asha Kweka',
+    ];
+
     private function __construct(
         public string $kilimani,
         public string $tambarare,
@@ -70,6 +78,9 @@ final readonly class World
         public string $position,
         public string $controlRoom,
         public string $member,
+        public string $outOfReach,
+        public string $admin,
+        public string $superAdmin,
         public string $invited,
         public string $invitation,
         public string $reset,
@@ -115,6 +126,13 @@ final readonly class World
             ->setPosition($position)
             ->setPlacement(new Placement()->inAreas([$kilimani])->inDepartment($operations));
 
+        // THE OTHER TARGETS a person-route acts on: somebody placed where the
+        // senders' placement does not reach, an Admin, and a Super Admin.
+        $outOfReach = self::staff('Lomayani', 'Laizer', 'lomayani.laizer@unr.example')
+            ->setPosition($position)
+            ->setPlacement(new Placement()->inAreas([$tambarare])->inDepartment($ict));
+        $admin = self::staff('Upendo', 'Massawe', 'upendo.massawe@unr.example')->setTeamRole(TeamRoleEnum::Admin);
+
         $invitation = bin2hex(random_bytes(32));
         $invited = self::staff('Baraka', 'Mollel', 'baraka.mollel@unr.example')
             ->setVerified(false)
@@ -149,7 +167,7 @@ final readonly class World
             new WidgetCustomPreset(AreaIndexWidgets::SURFACE, $member, null, 'Morning'),
         ];
 
-        foreach ([$kilimani, $tambarare, $operations, $ict, $zone, $station, $position, $controlRoom, $chief, ...$reasons, $member, $invited, $resetting, $moving, $goal, $kind, $scale, $otherScale, $rank, $handset, $posting, ...$presets] as $entity) {
+        foreach ([$kilimani, $tambarare, $operations, $ict, $zone, $station, $position, $controlRoom, $chief, ...$reasons, $member, $outOfReach, $admin, $invited, $resetting, $moving, $goal, $kind, $scale, $otherScale, $rank, $handset, $posting, ...$presets] as $entity) {
             $em->persist($entity);
         }
         $em->flush();
@@ -165,6 +183,9 @@ final readonly class World
             position: (string) $position->getUuidString(),
             controlRoom: (string) $controlRoom->getUuidString(),
             member: (string) $member->getUuidString(),
+            outOfReach: (string) $outOfReach->getUuidString(),
+            admin: (string) $admin->getUuidString(),
+            superAdmin: (string) $chief->getUuidString(),
             invited: (string) $invited->getUuidString(),
             invitation: $invitation,
             reset: $reset,
@@ -200,6 +221,9 @@ final readonly class World
             $this->position => '{position}',
             $this->controlRoom => '{control-room}',
             $this->member => '{member}',
+            $this->outOfReach => '{out-of-reach}',
+            $this->admin => '{admin}',
+            $this->superAdmin => '{super-admin}',
             $this->invited => '{invited}',
             $this->invitation => '{invitation}',
             $this->reset => '{reset}',

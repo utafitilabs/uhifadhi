@@ -23,7 +23,7 @@ the same; Staff holding *the pair, elsewhere* — placed at Tambarare in ICT; *A
 | me_station | GET /me/station | — | sign-in | sign-in | allowed | allowed | allowed | allowed | allowed | allowed |
 | me_duty_log | GET /me/duty-log | — | sign-in | sign-in | allowed | allowed | allowed | allowed | allowed | allowed |
 | team_profile | GET /me/profile | — | sign-in | sign-in | allowed | allowed | allowed | allowed | allowed | allowed |
-| team_profile_email_confirm | GET /me/profile/email/{email-change} | — | sign-in | sign-in | → /me/profile | → /me/profile | → /me/profile | → /me/profile | → /me/profile | → /me/profile |
+| team_profile_email_confirm | GET /me/profile/email/{email-change} | — | sign-in | sign-in | → /me/profile · error | → /me/profile · error | → /me/profile · error | → /me/profile · error | → /me/profile · error | → /me/profile · error |
 | organization_widgets | GET /widgets | `dashboard.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | settings | GET /settings | `settings.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_settings_deletions | GET /settings/deletions | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
@@ -33,9 +33,21 @@ the same; Staff holding *the pair, elsewhere* — placed at Tambarare in ICT; *A
 | team_roles | GET /team/roles | `directory.read`, `positions.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_people_export | GET /team/people.csv | `directory.export` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_invite | GET /team/invite | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
-| team_member | GET /team/{member} | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
-| team_member_configure | GET /team/{member}/configure | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
-| team_member_delete | GET /team/{member}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
+| team_member · own record | GET /team/{own} | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
+| team_member · a colleague in reach | GET /team/{member} | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
+| team_member · out of reach | GET /team/{out-of-reach} | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
+| team_member · an Admin's | GET /team/{admin} | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
+| team_member · a Super Admin's | GET /team/{super-admin} | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
+| team_member_configure · own record | GET /team/{own}/configure | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
+| team_member_configure · a colleague in reach | GET /team/{member}/configure | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
+| team_member_configure · out of reach | GET /team/{out-of-reach}/configure | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
+| team_member_configure · an Admin's | GET /team/{admin}/configure | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
+| team_member_configure · a Super Admin's | GET /team/{super-admin}/configure | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
+| team_member_delete · own record | GET /team/{own}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{own} · error |
+| team_member_delete · a colleague in reach | GET /team/{member}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
+| team_member_delete · out of reach | GET /team/{out-of-reach}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
+| team_member_delete · an Admin's | GET /team/{admin}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
+| team_member_delete · a Super Admin's | GET /team/{super-admin}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
 | team_configure_people | GET /team/configure/people | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
 | team_configure_positions | GET /team/configure/positions | `positions.configure` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
 | team_configure_assignments | GET /team/configure/assignments | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
@@ -78,26 +90,62 @@ the same; Staff holding *the pair, elsewhere* — placed at Tambarare in ICT; *A
 | area_zones | GET /areas/{kilimani}/zones | `zones.read` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
 | area_zone_show | GET /areas/{kilimani}/zones/{zone} | `zones.read` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
 | area_zones_export | GET /areas/{kilimani}/zones/export.geojson | `zones.export` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
-| area_live_sheet | GET /live/{member} | `areas.read` | sign-in | sign-in | not found | not found | not found | not found | not found | not found |
+| area_live_sheet · own record | GET /live/{own} | `areas.read` | sign-in | sign-in | not found | not found | not found | not found | not found | not found |
+| area_live_sheet · a colleague in reach | GET /live/{member} | `areas.read` | sign-in | sign-in | not found | not found | not found | not found | allowed | allowed |
+| area_live_sheet · out of reach | GET /live/{out-of-reach} | `areas.read` | sign-in | sign-in | not found | not found | not found | not found | allowed | allowed |
+| area_live_sheet · an Admin's | GET /live/{admin} | `areas.read` | sign-in | sign-in | not found | not found | not found | not found | not found | not found |
+| area_live_sheet · a Super Admin's | GET /live/{super-admin} | `areas.read` | sign-in | sign-in | not found | not found | not found | not found | not found | not found |
 | team_login | POST /login | — | sign-in | sign-in | sign-in | sign-in | sign-in | sign-in | sign-in | sign-in |
 | team_reset_send | POST /reset-password | — | allowed | allowed | allowed | allowed | allowed | allowed | allowed | allowed |
 | team_reset_submit | POST /reset-password/{reset} | — | allowed | allowed | allowed | allowed | allowed | allowed | allowed | allowed |
 | team_invite_accept_submit | POST /invite/{invitation} | — | allowed | allowed | allowed | allowed | allowed | allowed | allowed | allowed |
 | team_profile_details | POST /me/profile/details | — | sign-in | sign-in | → /me/profile | → /me/profile | → /me/profile | → /me/profile | → /me/profile | → /me/profile |
 | team_profile_password | POST /me/profile/password | — | sign-in | sign-in | → /me/profile | → /me/profile | → /me/profile | → /me/profile | → /me/profile | → /me/profile |
-| team_profile_email | POST /me/profile/email | — | sign-in | sign-in | → /me/profile | → /me/profile | → /me/profile | → /me/profile | → /me/profile | → /me/profile |
+| team_profile_email | POST /me/profile/email | — | sign-in | sign-in | → /me/profile · error | → /me/profile · error | → /me/profile · error | → /me/profile · error | → /me/profile · error | → /me/profile · error |
 | team_profile_handset_sign_out | POST /me/profile/handsets/1/sign-out | — | sign-in | sign-in | not found | not found | not found | not found | not found | not found |
 | team_member_create | POST /team | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{new} | → /team/{new} |
-| team_invite_send | POST /team/invite | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/invite | → /team/invite |
-| team_member_update | POST /team/{member} | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
-| team_member_tier | POST /team/{member}/tier | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
-| team_member_position | POST /team/{member}/position | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
-| team_member_reset_link | POST /team/{member}/reset-link | `sign-in-help.manage` | sign-in | sign-in | refused | → /team/{member} | refused | refused | → /team/{member} | → /team/{member} |
-| team_member_one_time_password | POST /team/{member}/one-time-password | `personal-details.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
-| team_member_invite_again | POST /team/{invited}/invite-again | `personal-details.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{invited} | → /team/{invited} |
-| team_member_deactivate | POST /team/{member}/deactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
-| team_member_reactivate | POST /team/{member}/reactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
-| team_member_delete | POST /team/{member}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | → /team |
+| team_invite_send | POST /team/invite | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/invite · error | → /team/invite · error |
+| team_member_update · own record | POST /team/{own} | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{own} | → /team/{own} |
+| team_member_update · a colleague in reach | POST /team/{member} | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
+| team_member_update · out of reach | POST /team/{out-of-reach} | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{out-of-reach} | → /team/{out-of-reach} |
+| team_member_update · an Admin's | POST /team/{admin} | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{admin} | → /team/{admin} |
+| team_member_update · a Super Admin's | POST /team/{super-admin} | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{super-admin} |
+| team_member_tier · own record | POST /team/{own}/tier | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{own} | → /team/{own} |
+| team_member_tier · a colleague in reach | POST /team/{member}/tier | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
+| team_member_tier · out of reach | POST /team/{out-of-reach}/tier | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{out-of-reach} | → /team/{out-of-reach} |
+| team_member_tier · an Admin's | POST /team/{admin}/tier | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{admin} | → /team/{admin} |
+| team_member_tier · a Super Admin's | POST /team/{super-admin}/tier | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{super-admin} |
+| team_member_position · own record | POST /team/{own}/position | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{own} | → /team/{own} |
+| team_member_position · a colleague in reach | POST /team/{member}/position | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
+| team_member_position · out of reach | POST /team/{out-of-reach}/position | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{out-of-reach} | → /team/{out-of-reach} |
+| team_member_position · an Admin's | POST /team/{admin}/position | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{admin} | → /team/{admin} |
+| team_member_position · a Super Admin's | POST /team/{super-admin}/position | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{super-admin} |
+| team_member_reset_link · own record | POST /team/{own}/reset-link | `sign-in-help.manage` | sign-in | sign-in | refused | → /team/{own} · error | refused | → /team/{own} · error | → /team/{own} · error | → /team/{own} · error |
+| team_member_reset_link · a colleague in reach | POST /team/{member}/reset-link | `sign-in-help.manage` | sign-in | sign-in | refused | → /team/{member} · error | refused | refused | → /team/{member} · error | → /team/{member} · error |
+| team_member_reset_link · out of reach | POST /team/{out-of-reach}/reset-link | `sign-in-help.manage` | sign-in | sign-in | refused | refused | refused | → /team/{out-of-reach} · error | → /team/{out-of-reach} · error | → /team/{out-of-reach} · error |
+| team_member_reset_link · an Admin's | POST /team/{admin}/reset-link | `sign-in-help.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{admin} · error | → /team/{admin} · error |
+| team_member_reset_link · a Super Admin's | POST /team/{super-admin}/reset-link | `sign-in-help.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{super-admin} · error |
+| team_member_one_time_password · own record | POST /team/{own}/one-time-password | `personal-details.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | refused |
+| team_member_one_time_password · a colleague in reach | POST /team/{member}/one-time-password | `personal-details.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
+| team_member_one_time_password · out of reach | POST /team/{out-of-reach}/one-time-password | `personal-details.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{out-of-reach} | → /team/{out-of-reach} |
+| team_member_one_time_password · an Admin's | POST /team/{admin}/one-time-password | `personal-details.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{admin} | → /team/{admin} |
+| team_member_one_time_password · a Super Admin's | POST /team/{super-admin}/one-time-password | `personal-details.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{super-admin} |
+| team_member_invite_again | POST /team/{invited}/invite-again | `personal-details.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{invited} · error | → /team/{invited} · error |
+| team_member_deactivate · own record | POST /team/{own}/deactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{own} | → /team/{own} |
+| team_member_deactivate · a colleague in reach | POST /team/{member}/deactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
+| team_member_deactivate · out of reach | POST /team/{out-of-reach}/deactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{out-of-reach} | → /team/{out-of-reach} |
+| team_member_deactivate · an Admin's | POST /team/{admin}/deactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{admin} | → /team/{admin} |
+| team_member_deactivate · a Super Admin's | POST /team/{super-admin}/deactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{super-admin} |
+| team_member_reactivate · own record | POST /team/{own}/reactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{own} | → /team/{own} |
+| team_member_reactivate · a colleague in reach | POST /team/{member}/reactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
+| team_member_reactivate · out of reach | POST /team/{out-of-reach}/reactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{out-of-reach} | → /team/{out-of-reach} |
+| team_member_reactivate · an Admin's | POST /team/{admin}/reactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{admin} | → /team/{admin} |
+| team_member_reactivate · a Super Admin's | POST /team/{super-admin}/reactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{super-admin} |
+| team_member_delete · own record | POST /team/{own}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{own} · error |
+| team_member_delete · a colleague in reach | POST /team/{member}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | → /team |
+| team_member_delete · out of reach | POST /team/{out-of-reach}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | → /team |
+| team_member_delete · an Admin's | POST /team/{admin}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | → /team |
+| team_member_delete · a Super Admin's | POST /team/{super-admin}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | → /team |
 | team_configure_people_save | POST /team/configure/people | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/configure/people | → /team/configure/people |
 | team_configure_assignments_save | POST /team/configure/assignments | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/configure/assignments | → /team/configure/assignments |
 | team_position_create | POST /team/positions | `positions.configure` | sign-in | sign-in | refused | refused | refused | refused | → /team/positions | → /team/positions |

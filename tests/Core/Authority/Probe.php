@@ -20,6 +20,12 @@ namespace Uhifadhi\Core\Tests\Core\Authority;
  */
 final readonly class Probe
 {
+    /** A parameter or field filled in at sending with the sender's own identifier. */
+    public const string OWN = '{own}';
+
+    /** A field filled in at sending with the sender's own full name. */
+    public const string OWN_NAME = '{own name}';
+
     /**
      * @param array<string, string> $parameters the route's parameters, with identifiers from the world
      * @param list<string>          $asks       the pairs its controller asks where no attribute shows them
@@ -39,7 +45,19 @@ final readonly class Probe
         public array $files = [],
         public string $tokenField = '_token',
         public ?string $json = null,
+        public ?string $target = null,
     ) {
+    }
+
+    /**
+     * The same request about another person: the route's person parameter
+     * set to them, and the row named for whom it is about.
+     *
+     * @param array<string, mixed> $body
+     */
+    public function about(string $target, string $parameter, string $person, array $body = []): self
+    {
+        return new self($this->route, $this->method, [$parameter => $person] + $this->parameters, $this->asks, $body + $this->body, $this->token, $this->files, $this->tokenField, $this->json, $target);
     }
 
     /**

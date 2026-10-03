@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Uhifadhi\Bundle\TeamBundle\Entity\Trait\TimestampableTrait;
@@ -59,7 +60,7 @@ use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'team_user')]
 #[ORM\HasLifecycleCallbacks]
-class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, UserInterface
+class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, UserInterface, EquatableInterface
 {
     use TimestampableTrait;
     use UuidTrait;
@@ -724,5 +725,71 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
         $this->passwordResetRequestedAt = $passwordResetRequestedAt;
 
         return $this;
+    }
+
+    /**
+     * WHETHER THE ACCOUNT A SESSION HOLDS IS STILL THIS ONE. Every request reads
+     * the account back and asks this; a "no" ends the session there and then.
+     *
+     * Implementing {@see EquatableInterface} replaces the framework's own
+     * comparison whole — the password, the identifier and the roles — so all
+     * three are compared here, and the active flag beside them: deactivating
+     * somebody changes none of the three, and without it an open session kept
+     * every page that asks no permission until it expired. The roles stand for
+     * the tier and the stored roles together, which is all they come from.
+     *
+     * @see https://symfony.com/doc/current/security.html#comparing-users-manually-with-equatableinterface
+     * @see vendor/symfony/security-http/Firewall/ContextListener.php — hasUserChanged(), the comparison this replaces
+     */
+    public function isEqualTo(UserInterface $user): bool
+    {
+        if (!$user instanceof self) {
+            return false;
+        }
+
+        $mine = $this->getRoles();
+        $theirs = $user->getRoles();
+        sort($mine);
+        sort($theirs);
+
+        return $user->getUserIdentifier() === $this->getUserIdentifier()
+            && $this->hasPasswordOf($user)
+            && $mine === $theirs
+            && $user->isActive() === $this->isActive;
+    }
+
+    /**
+     * What a session keeps of the account: everything but the password hash,
+     * which is replaced by its checksum. A session store is a file or a cache
+     * an installation may guard less closely than its database, and a checksum
+     * cannot be cracked back into a password. A password changed since still
+     * ends the session, because the new hash's checksum differs.
+     *
+     * @return array<array-key, mixed>
+     *
+     * @see vendor/symfony/security-core/User/PasswordAuthenticatedUserInterface.php — the crc32c checksum, "the only algorithm supported"
+     */
+    public function __serialize(): array
+    {
+        $data = (array) $this;
+        $data["\0".self::class."\0password"] = null === $this->password ? null : hash('crc32c', $this->password);
+
+        return $data;
+    }
+
+    /**
+     * Whether the other account has this one's password: the same hash, or,
+     * when this one was read back from a session, the hash its checksum was
+     * taken of — the same test the framework makes when it compares accounts.
+     */
+    private function hasPasswordOf(self $other): bool
+    {
+        $theirs = $other->getPassword();
+        if ($theirs === $this->password) {
+            return true;
+        }
+
+        return null !== $this->password && null !== $theirs
+            && 8 === \strlen($this->password) && hash('crc32c', $theirs) === $this->password;
     }
 }

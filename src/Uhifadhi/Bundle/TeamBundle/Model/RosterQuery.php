@@ -101,6 +101,8 @@ final readonly class RosterQuery
          * @var list<string>|null
          */
         public ?array $only = null,
+        /** Whether the search box matches sign-in addresses — only for a viewer who reads them. */
+        public bool $byAddress = true,
     ) {
     }
 
@@ -163,7 +165,17 @@ final readonly class RosterQuery
      */
     public function withoutTier(): self
     {
-        return new self($this->q, null, $this->position, $this->state, $this->department, $this->page, $this->rank, $this->station, $this->facets, $this->only);
+        return new self($this->q, null, $this->position, $this->state, $this->department, $this->page, $this->rank, $this->station, $this->facets, $this->only, $this->byAddress);
+    }
+
+    /**
+     * The same query with the search box no longer matching addresses: a
+     * search that matched on an address the page masks would answer the
+     * question the mask refuses.
+     */
+    public function withoutAddressSearch(): self
+    {
+        return new self($this->q, $this->tier, $this->position, $this->state, $this->department, $this->page, $this->rank, $this->station, $this->facets, $this->only, false);
     }
 
     /** Whether anything is narrowing the list — what the "showing N of M" line turns on. */

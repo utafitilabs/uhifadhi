@@ -19,6 +19,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
+use Uhifadhi\Bundle\TeamBundle\Access\AddressSight;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
 use Uhifadhi\Bundle\TeamBundle\Entity\RankHolding;
@@ -108,6 +109,8 @@ final readonly class TeamController
         private PeopleFacetService $seamFacets,
         /** WHO SEES A TIER — Admins and Super Admins only (ruled 28 Sep 2026). */
         private TierSight $tierSight,
+        /** WHO READS A SIGN-IN ADDRESS whole — whoever holds personal-details.read. */
+        private AddressSight $addressSight,
     ) {
     }
 
@@ -267,6 +270,9 @@ final readonly class TeamController
         // A tier the viewer does not see is no filter at all (ruled 28 Sep 2026).
         if (null !== $query->tier && !\in_array($query->tier, $this->tierSight->visibleTiers(), true)) {
             $query = $query->withoutTier();
+        }
+        if (!$this->addressSight->readsAddresses()) {
+            $query = $query->withoutAddressSearch();
         }
 
         return [$seam->narrow($query), $seam];

@@ -23,6 +23,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Security\Core\Authorization\UserAuthorizationCheckerInterface;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\CheckIn;
@@ -321,6 +322,40 @@ abstract class AuthorityTableTestCase extends WebTestCase
         self::assertSame([], $escalations, "These writes leave somebody holding more than the sender could give:\n".implode("\n", $escalations));
     }
 
+    /**
+     * CANARIES. The colleague's address and phone are values no page prints
+     * by accident. Every page is fetched as every kind of person, and either
+     * value reaching somebody who may not read personal details is a page
+     * that opens correctly and shows too much.
+     */
+    public function testNoPageShowsAPersonsDetailsToSomebodyWhoMayNotReadThem(): void
+    {
+        $leaks = [];
+        $checker = static::getContainer()->get('security.authorization_checker');
+        self::assertInstanceOf(UserAuthorizationCheckerInterface::class, $checker);
+
+        foreach ($this->probes($this->world) as $probe) {
+            if ('GET' !== $probe->method) {
+                continue;
+            }
+
+            foreach (Person::cases() as $person) {
+                $sent = $this->send($probe, $person, $this->checks($probe));
+                $account = null === $sent[3] ? null : $this->em()->getRepository(User::class)->findOneBy(['uuid' => $sent[3]]);
+                $mayRead = $account instanceof User && $account->isActive() && Person::DeactivatedWhileSignedIn !== $person
+                    && $checker->isGrantedForUser($account, 'personal-details.read');
+
+                foreach (['address' => World::CANARY_EMAIL, 'phone' => World::CANARY_PHONE] as $what => $canary) {
+                    if (!$mayRead && str_contains($sent[4], $canary)) {
+                        $leaks[] = \sprintf("%s %s%s shows a person's %s to %s", $probe->method, $probe->route, null === $probe->target ? '' : ' · '.$probe->target, $what, $person->value);
+                    }
+                }
+            }
+        }
+
+        self::assertSame([], $leaks, implode("\n", $leaks));
+    }
+
     private function render(): string
     {
         $people = Person::cases();
@@ -392,7 +427,6 @@ abstract class AuthorityTableTestCase extends WebTestCase
      * after it.
      *
      * @param list<string> $checked the pairs the route checks
-     *
      * @param bool         $watch   whether to read what every account holds before and after
      *
      * @return array{int, ?string, ?string, ?string, string, list<string>} the status, the error the page reported if any, where a redirect went, the sender's own identifier, the page, and what anybody gained beyond what the sender could give

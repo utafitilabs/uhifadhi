@@ -105,7 +105,8 @@ class UserRepository extends ServiceEntityRepository
      * URL that asked for it.
      *
      * THE SEARCH IS ILIKE ACROSS FOUR COLUMNS: first name, last name, email and
-     * ranger code, which is exactly what the box's placeholder promises. A
+     * ranger code, which is exactly what the box's placeholder promises — the
+     * email only for a viewer who reads addresses ({@see RosterQuery::$byAddress}). A
      * search that quietly meant less than its placeholder would be worse than
      * one that promised less. LOWER() over both sides rather than a
      * database-specific ILIKE keyword: the bundle does not get to assume which
@@ -176,8 +177,9 @@ class UserRepository extends ServiceEntityRepository
             ->addOrderBy('u.id', 'ASC');
 
         if (null !== $query->q) {
-            $qb->andWhere(
-                'LOWER(u.firstName) LIKE :q OR LOWER(u.lastName) LIKE :q OR LOWER(u.email) LIKE :q OR LOWER(u.rangerCode) LIKE :q',
+            $qb->andWhere($query->byAddress
+                ? 'LOWER(u.firstName) LIKE :q OR LOWER(u.lastName) LIKE :q OR LOWER(u.email) LIKE :q OR LOWER(u.rangerCode) LIKE :q'
+                : 'LOWER(u.firstName) LIKE :q OR LOWER(u.lastName) LIKE :q OR LOWER(u.rangerCode) LIKE :q',
             )->setParameter('q', '%'.strtolower($query->q).'%');
         }
 

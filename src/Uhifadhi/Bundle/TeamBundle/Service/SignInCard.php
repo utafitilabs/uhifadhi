@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Service;
 
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Uhifadhi\Bundle\TeamBundle\Access\AddressSight;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
@@ -39,6 +40,7 @@ final readonly class SignInCard
         private AuthorizationCheckerInterface $authorization,
         private AreaAuthority $authority,
         private ApiTokenRepository $tokens,
+        private AddressSight $addresses,
     ) {
     }
 
@@ -84,13 +86,6 @@ final readonly class SignInCard
     /** The address as this viewer may read it. */
     public function addressFor(User $member): string
     {
-        $email = (string) $member->getEmail();
-        if ($this->authorization->isGranted('personal-details.read')) {
-            return $email;
-        }
-
-        $at = strrpos($email, '@');
-
-        return false === $at ? '•••' : mb_substr($email, 0, 1).'•••'.substr($email, $at);
+        return $this->addresses->addressOf($member);
     }
 }

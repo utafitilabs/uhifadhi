@@ -48,7 +48,11 @@
         <b>{{ user.fullName }}</b>
         {%- if isYou %}<span class="tm-you">you</span>{% endif -%}
     </div>
+    {%- if reads_addresses() %}
     <a class="tm-mail" href="mailto:{{ user.email }}">{{ user.email }}</a>
+    {%- else %}
+    <span class="tm-mail">{{ address_of(user) }}</span>
+    {%- endif %}
 {% endmacro %}
 
 {# THE THREE-LINE POSITION CELL: the name, then what it grants, then the

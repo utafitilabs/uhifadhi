@@ -20,6 +20,7 @@ use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
+use Uhifadhi\Bundle\TeamBundle\Access\AddressSight;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Access\Door;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
@@ -730,8 +731,13 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('security.token_storage')]);
     $services->alias(TierSight::class, 'team.access.tier_sight');
 
+    // WHO READS A SIGN-IN ADDRESS whole: the register and the sign-in card ask it.
+    $services->set('team.access.address_sight', AddressSight::class)
+        ->args([service('security.authorization_checker')]);
+    $services->alias(AddressSight::class, 'team.access.address_sight');
+
     $services->set('team.twig.door', DoorExtension::class)
-        ->args([service('team.access.door'), service('team.access.tier_sight')])
+        ->args([service('team.access.door'), service('team.access.tier_sight'), service('team.access.address_sight')])
         ->tag('twig.extension');
 
     /*
@@ -1193,6 +1199,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.csv_export'),
             service('team.people_facets'),
             service('team.access.tier_sight'),
+            service('team.access.address_sight'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(TeamController::class, 'team.controller.team')->public();
@@ -1271,6 +1278,7 @@ return static function (ContainerConfigurator $container): void {
             service('security.authorization_checker'),
             service('team.area_authority'),
             service(ApiTokenRepository::class),
+            service('team.access.address_sight'),
         ]);
 
     /*

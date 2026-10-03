@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Twig;
 
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
+use Uhifadhi\Bundle\TeamBundle\Access\AddressSight;
 use Uhifadhi\Bundle\TeamBundle\Access\Door;
 use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
 
@@ -42,6 +43,7 @@ final class DoorExtension extends AbstractExtension
     public function __construct(
         private readonly Door $door,
         private readonly TierSight $tiers,
+        private readonly AddressSight $addresses,
     ) {
     }
 
@@ -54,6 +56,9 @@ final class DoorExtension extends AbstractExtension
             // …this person's tier: never a Super Admin's, but to a Super Admin.
             new TwigFunction('sees_tier', $this->tiers->seesTierOf(...)),
             new TwigFunction('sees_super_admins', $this->tiers->seesSuperAdmins(...)),
+            // Whether this viewer reads sign-in addresses whole, and one as they may read it.
+            new TwigFunction('reads_addresses', $this->addresses->readsAddresses(...)),
+            new TwigFunction('address_of', $this->addresses->addressOf(...)),
         ];
     }
 }

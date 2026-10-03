@@ -94,7 +94,7 @@
             "Uhifadhi\\Bundle\\ShellBundle\\Migrations\\": "src/Uhifadhi/Bundle/ShellBundle/migrations/",
             "Uhifadhi\\Bundle\\TeamBundle\\Migrations\\": "src/Uhifadhi/Bundle/TeamBundle/migrations/",
             "Uhifadhi\\Contracts\\": "src/Uhifadhi/Contracts/",
-            "Uhifadhi\\Testing\\": "src/Uhifadhi/Testing/"
+            "Uhifadhi\\Test\\": "src/Uhifadhi/Test/"
         },
         "exclude-from-classmap": [
             "**/tests/"

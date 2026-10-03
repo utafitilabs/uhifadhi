@@ -33,8 +33,8 @@ use Uhifadhi\Bundle\TeamBundle\Controller\TeamConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Deletion\DeletionPage;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
-use Uhifadhi\Testing\Authority\Probe;
-use Uhifadhi\Testing\Authority\World;
+use Uhifadhi\Test\Authority\Probe;
+use Uhifadhi\Test\Authority\World;
 
 /**
  * A PROBE FOR EVERY ROUTE THE CORE MOUNTS, each with the identifiers of the

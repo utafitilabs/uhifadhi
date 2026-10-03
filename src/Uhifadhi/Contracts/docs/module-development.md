@@ -2550,13 +2550,13 @@ Every route a module ships is called as every kind of person, and the outcomes a
 committed beside the test. A change in who may open what fails the build until the table is recorded
 again and its diff is read — the same proof the core gives for its own routes. The base needs the
 whole core (areas, stations, people, positions), so it lives outside every bundle, in
-`Uhifadhi\Testing\`:
+`Uhifadhi\Test\`:
 
 ```php
 // tests/Functional/AuthorityTableTest.php
-use Uhifadhi\Testing\Authority\Probe;
-use Uhifadhi\Testing\Authority\World;
-use Uhifadhi\Testing\AuthorityTableTestCase;
+use Uhifadhi\Test\Authority\Probe;
+use Uhifadhi\Test\Authority\World;
+use Uhifadhi\Test\AuthorityTableTestCase;
 
 final class AuthorityTableTest extends AuthorityTableTestCase
 {

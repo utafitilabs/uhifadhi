@@ -16,8 +16,8 @@ namespace Uhifadhi\Core\Tests\Core;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Uhifadhi\Core\Tests\Application\Kernel;
 use Uhifadhi\Core\Tests\Core\Authority\CoreProbes;
-use Uhifadhi\Testing\Authority\World;
-use Uhifadhi\Testing\AuthorityTableTestCase;
+use Uhifadhi\Test\Authority\World;
+use Uhifadhi\Test\AuthorityTableTestCase;
 
 /**
  * THE CORE'S AUTHORITY TABLE: every route the core mounts, through the base

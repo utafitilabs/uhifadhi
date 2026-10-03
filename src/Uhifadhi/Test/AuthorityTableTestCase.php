@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Testing;
+namespace Uhifadhi\Test;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -39,9 +39,9 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Contracts\Access\Grant;
-use Uhifadhi\Testing\Authority\Person;
-use Uhifadhi\Testing\Authority\Probe;
-use Uhifadhi\Testing\Authority\World;
+use Uhifadhi\Test\Authority\Person;
+use Uhifadhi\Test\Authority\Probe;
+use Uhifadhi\Test\Authority\World;
 
 /**
  * THE AUTHORITY TABLE A PACKAGE RUNS OVER ITS OWN ROUTES: every route called
@@ -75,6 +75,13 @@ use Uhifadhi\Testing\Authority\World;
  *         protected function probes(World $world): array { return [Probe::get('roster_index', ['uuid' => $world->kilimani])]; }
  *     }
  *
+ * A TEST BASE FOR OTHER PACKAGES SHIPS IN THE PACKAGE'S OWN AUTOLOAD, in a
+ * `Test` namespace — a dependency's autoload-dev is root-only and its tests/
+ * are not in the archive, so nothing else reaches a module's suite.
+ *
+ * @see vendor/symfony/security-core/Test/AccessDecisionStrategyTestCase.php — the same shape: an abstract case in the package's Test namespace, for the strategies other packages write
+ * @see vendor/symfony/framework-bundle/Test/WebTestCase.php — the base this one extends, shipped the same way
+ * @see https://getcomposer.org/doc/04-schema.md#autoload-dev — "autoload-dev (root-only)"
  * @see https://symfony.com/doc/current/testing.html#application-tests — the client sends real requests through the kernel; disableReboot() keeps one kernel, and so one connection, across them
  * @see https://symfony.com/doc/current/testing.html#logging-in-users-authentication — loginUser() signs a person in without the form
  */

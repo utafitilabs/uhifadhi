@@ -25,7 +25,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\MemberVoter;
 use Uhifadhi\Contracts\Access\Grant;
 use Uhifadhi\Contracts\Access\ScopeKind;
 use Uhifadhi\Core\Tests\Application\Kernel;
-use Uhifadhi\Testing\GateReader;
+use Uhifadhi\Test\GateReader;
 
 /**
  * A DECLARED POWER AND AN ENFORCED ONE CANNOT DRIFT APART.

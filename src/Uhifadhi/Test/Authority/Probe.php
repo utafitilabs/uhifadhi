@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Testing\Authority;
+namespace Uhifadhi\Test\Authority;
 
 /**
  * ONE REQUEST THAT WOULD SUCCEED for somebody allowed: a route, the method it

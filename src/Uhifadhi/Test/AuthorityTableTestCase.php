@@ -36,9 +36,11 @@ use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
+use Uhifadhi\Bundle\TeamBundle\Entity\RankHolding;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Contracts\Access\Grant;
+use Uhifadhi\Contracts\Entity\AreaInterface;
 use Uhifadhi\Test\Authority\Person;
 use Uhifadhi\Test\Authority\Probe;
 use Uhifadhi\Test\Authority\World;
@@ -88,6 +90,9 @@ use Uhifadhi\Test\Authority\World;
 abstract class AuthorityTableTestCase extends WebTestCase
 {
     public const string RECORD = 'UHIFADHI_RECORD_AUTHORITY_TABLE';
+
+    /** The tiers from least to most, which is not the order the enum lists them in. */
+    private const array TIERS = ['staff' => 0, 'admin' => 1, 'super_admin' => 2];
 
     /** What an "own record" address is generated with for the table, printed as {own}. */
     private const string OWN_SHOWN = '00000000-0000-1000-8000-000000000000';
@@ -288,6 +293,34 @@ abstract class AuthorityTableTestCase extends WebTestCase
         self::assertSame([], $turnedAway, "These write probes send a form even a Super Admin cannot save:\n".implode("\n", $turnedAway));
     }
 
+    /**
+     * NOBODY ENDS A WRITE HOLDING MORE THAN THE SENDER COULD GIVE. Around
+     * every write, sent as every kind of person, what every account holds —
+     * its tier, its position's pairs, its ground and departments, its rank —
+     * is read before and after. Staff may give nothing that is held: seating,
+     * granting, ranks and tiers are the tiers' alone. An Admin may give all
+     * of it but the Super Admin tier. Only a Super Admin makes a Super Admin.
+     */
+    public function testNoWriteLeavesAnybodyHoldingMoreThanTheSenderCouldGive(): void
+    {
+        $escalations = [];
+
+        foreach ($this->probes($this->world) as $probe) {
+            if ('GET' === $probe->method) {
+                continue;
+            }
+
+            foreach (Person::cases() as $person) {
+                $sent = $this->send($probe, $person, $this->checks($probe), true);
+                foreach ($sent[5] as $gain) {
+                    $escalations[] = \sprintf('%s %s%s as %s: %s', $probe->method, $probe->route, null === $probe->target ? '' : ' · '.$probe->target, $person->value, $gain);
+                }
+            }
+        }
+
+        self::assertSame([], $escalations, "These writes leave somebody holding more than the sender could give:\n".implode("\n", $escalations));
+    }
+
     private function render(): string
     {
         $people = Person::cases();
@@ -360,9 +393,11 @@ abstract class AuthorityTableTestCase extends WebTestCase
      *
      * @param list<string> $checked the pairs the route checks
      *
-     * @return array{int, ?string, ?string, ?string} the status, the error the page reported if any, where a redirect went, and the sender's own identifier
+     * @param bool         $watch   whether to read what every account holds before and after
+     *
+     * @return array{int, ?string, ?string, ?string, string, list<string>} the status, the error the page reported if any, where a redirect went, the sender's own identifier, the page, and what anybody gained beyond what the sender could give
      */
-    private function send(Probe $probe, Person $person, array $checked): array
+    private function send(Probe $probe, Person $person, array $checked, bool $watch = false): array
     {
         $this->client->restart();
         $account = $this->account($person, $checked);
@@ -404,6 +439,8 @@ abstract class AuthorityTableTestCase extends WebTestCase
                 $files[$field] = new UploadedFile($copy, basename($path), 'application/geo+json', null, true);
             }
 
+            $before = $watch ? $this->holdings() : [];
+
             // Somebody signed out has no record of their own; their "own
             // record" is asked about the colleague's, which they cannot reach either.
             $path = $this->router()->generate($probe->route, $this->own($probe->parameters, (string) ($account?->getUuidString() ?? $this->world->member)));
@@ -424,7 +461,9 @@ abstract class AuthorityTableTestCase extends WebTestCase
             $errors = $session instanceof FlashBagAwareSessionInterface ? $session->getFlashBag()->peek('error') : [];
             $error = [] === $errors ? null : implode(' ', array_map(static fn (mixed $e): string => \is_string($e) ? $e : '', $errors));
 
-            return [$status, $error, $response->isRedirection() ? (string) $response->headers->get('Location') : null, $account?->getUuidString()];
+            $gains = $watch ? $this->beyondWhatTheSenderCouldGive($before, $this->holdings(), $account) : [];
+
+            return [$status, $error, $response->isRedirection() ? (string) $response->headers->get('Location') : null, $account?->getUuidString(), (string) $response->getContent(), $gains];
         } finally {
             if ($connection->isTransactionActive()) {
                 $connection->rollBack();
@@ -436,6 +475,91 @@ abstract class AuthorityTableTestCase extends WebTestCase
             // database no longer has, and the firewall rightly ends that session.
             $this->em()->clear();
         }
+    }
+
+    /**
+     * What every account holds, read fresh from the database: its tier, its
+     * position's pairs, its ground and departments, and its ranks.
+     *
+     * @return array<string, array{tier: int, pairs: list<string>, wholeOrganization: bool, areas: list<string>, department: ?int, supports: list<int>, ranks: list<string>}>
+     */
+    private function holdings(): array
+    {
+        $em = $this->em();
+        $em->clear();
+
+        $ranks = [];
+        foreach ($em->getRepository(RankHolding::class)->findAll() as $holding) {
+            $ranks[(string) $holding->getPerson()->getUuidString()][] = $holding->getRank()->getId().'@'.$holding->getSince()->format('Y-m-d').(null === $holding->getUntil() ? '' : '..'.$holding->getUntil()->format('Y-m-d'));
+        }
+
+        $held = [];
+        foreach ($em->getRepository(User::class)->findAll() as $user) {
+            $placement = $user->getPlacement();
+            $uuid = (string) $user->getUuidString();
+            $held[$uuid] = [
+                'tier' => self::TIERS[$user->getTeamRole()->value],
+                'pairs' => $user->getPosition()?->getGrantValues() ?? [],
+                'wholeOrganization' => $placement?->isWholeOrganization() ?? false,
+                'areas' => array_map(static fn (AreaInterface $area): string => (string) $area->getId(), $placement?->getAreas() ?? []),
+                'department' => $placement?->getDepartment()?->getId(),
+                'supports' => array_map(static fn (Department $department): int => (int) $department->getId(), $placement?->getSupports() ?? []),
+                'ranks' => $ranks[$uuid] ?? [],
+            ];
+        }
+
+        return $held;
+    }
+
+    /**
+     * What anybody gained that the sender could not give. Staff give nothing
+     * that is held; an Admin gives anything but the Super Admin tier; a Super
+     * Admin gives anything.
+     *
+     * @param array<string, array{tier: int, pairs: list<string>, wholeOrganization: bool, areas: list<string>, department: ?int, supports: list<int>, ranks: list<string>}> $before
+     * @param array<string, array{tier: int, pairs: list<string>, wholeOrganization: bool, areas: list<string>, department: ?int, supports: list<int>, ranks: list<string>}> $after
+     *
+     * @return list<string>
+     */
+    private function beyondWhatTheSenderCouldGive(array $before, array $after, ?User $sender): array
+    {
+        $senderTier = $sender?->getTeamRole() ?? TeamRoleEnum::Staff;
+        if (TeamRoleEnum::SuperAdmin === $senderTier) {
+            return [];
+        }
+
+        $superAdmin = self::TIERS[TeamRoleEnum::SuperAdmin->value];
+        $nothing = ['tier' => 0, 'pairs' => [], 'wholeOrganization' => false, 'areas' => [], 'department' => null, 'supports' => [], 'ranks' => []];
+        $gains = [];
+
+        foreach ($after as $uuid => $now) {
+            $was = $before[$uuid] ?? $nothing;
+            $who = $this->printed($uuid);
+
+            if ($now['tier'] > $was['tier'] && (TeamRoleEnum::Admin !== $senderTier || $now['tier'] >= $superAdmin)) {
+                $gains[] = $who.' rose to '.(string) array_search($now['tier'], self::TIERS, true);
+            }
+            if (TeamRoleEnum::Admin === $senderTier) {
+                continue;
+            }
+            if ([] !== $new = array_values(array_diff($now['pairs'], $was['pairs']))) {
+                $gains[] = $who.' gained '.implode(', ', $new);
+            }
+            if (($now['wholeOrganization'] && !$was['wholeOrganization']) || [] !== array_diff($now['areas'], $was['areas'])) {
+                $gains[] = $who.' was placed wider';
+            }
+            if (null !== $now['department'] && $now['department'] !== $was['department']) {
+                $gains[] = $who.' moved department';
+            }
+            if ([] !== array_diff($now['supports'], $was['supports'])) {
+                $gains[] = $who.' supports a department more';
+            }
+            if ([] !== array_diff($now['ranks'], $was['ranks'])) {
+                $gains[] = $who.' holds a rank they did not';
+            }
+        }
+
+        return $gains;
     }
 
     /**

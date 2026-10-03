@@ -115,6 +115,8 @@ the same; Staff holding *the pair, elsewhere* — placed at Tambarare in ICT; *A
 | team_member_tier · out of reach | POST /team/{out-of-reach}/tier | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{out-of-reach} | → /team/{out-of-reach} |
 | team_member_tier · an Admin's | POST /team/{admin}/tier | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{admin} | → /team/{admin} |
 | team_member_tier · a Super Admin's | POST /team/{super-admin}/tier | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{super-admin} |
+| team_member_tier · own record, to Super Admin | POST /team/{own}/tier | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{own} |
+| team_member_tier · a colleague, to Super Admin | POST /team/{member}/tier | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{member} |
 | team_member_position · own record | POST /team/{own}/position | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{own} | → /team/{own} |
 | team_member_position · a colleague in reach | POST /team/{member}/position | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
 | team_member_position · out of reach | POST /team/{out-of-reach}/position | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{out-of-reach} | → /team/{out-of-reach} |

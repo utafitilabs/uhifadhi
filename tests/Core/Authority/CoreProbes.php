@@ -222,6 +222,11 @@ final class CoreProbes
             Probe::post('team_invite_send', [], InviteController::CSRF_INVITE, ['email' => 'juma.ally@unr.example', 'position' => '']),
             ...Probe::aboutEachPerson(Probe::post('team_member_update', $member, $person, ['firstName' => 'Naserian', 'lastName' => 'Lekishon', 'email' => 'naserian.l@unr.example', 'rangerCode' => '']), 'uuid', $world),
             ...Probe::aboutEachPerson(Probe::post('team_member_tier', $member, $person, ['tier' => TeamRoleEnum::Admin->value]), 'uuid', $world),
+            // NOBODY RAISES THEMSELVES OR ANYBODY ELSE ABOVE WHAT THEY MAY GIVE:
+            // only a Super Admin makes a Super Admin, an Admin of their own
+            // record included.
+            Probe::post('team_member_tier', $member, $person, ['tier' => TeamRoleEnum::SuperAdmin->value])->about('own record, to Super Admin', 'uuid', Probe::OWN),
+            Probe::post('team_member_tier', $member, $person, ['tier' => TeamRoleEnum::SuperAdmin->value])->about('a colleague, to Super Admin', 'uuid', $world->member),
             ...Probe::aboutEachPerson(Probe::post('team_member_position', $member, $person, ['position' => $world->position, 'where' => 'areas', 'areas' => [$world->kilimani], 'department' => $world->operationsUuid]), 'uuid', $world),
             ...Probe::aboutEachPerson(Probe::post('team_member_reset_link', $member, $person), 'uuid', $world),
             ...Probe::aboutEachPerson(Probe::post('team_member_one_time_password', $member, $person), 'uuid', $world),

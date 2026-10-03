@@ -59,6 +59,13 @@ final readonly class World
     /** Every account's password in the table, so a write that asks for the current one can be sent. */
     public const string PASSPHRASE = 'the authority table passphrase';
 
+    /**
+     * CANARIES: the colleague's address and phone, values no page prints by
+     * accident. Seeing one is seeing a person's personal details.
+     */
+    public const string CANARY_EMAIL = 'naserian.c4f7e1@unr.example';
+    public const string CANARY_PHONE = '+255 700 731 913';
+
     /** The full name each target is typed as on a delete page. */
     public const array NAMES = [
         'member' => 'Naserian Lekishon',
@@ -122,7 +129,8 @@ final readonly class World
         $chief = self::staff('Asha', 'Kweka', 'asha.kweka@unr.example')->setTeamRole(TeamRoleEnum::SuperAdmin);
         $reasons = '' === $exception ? [] : [new GrantJustification($controlRoom, $exception, 'The control room watches every ranger on duty.', $chief, new \DateTimeImmutable())];
 
-        $member = self::staff('Naserian', 'Lekishon', 'naserian.lekishon@unr.example')
+        $member = self::staff('Naserian', 'Lekishon', self::CANARY_EMAIL)
+            ->setPhone(self::CANARY_PHONE)
             ->setPosition($position)
             ->setPlacement(new Placement()->inAreas([$kilimani])->inDepartment($operations));
 

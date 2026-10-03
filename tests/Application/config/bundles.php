@@ -18,6 +18,7 @@ use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\MercureBundle\MercureBundle;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Bundle\TwigBundle\TwigBundle;
+use Symfony\UX\Chartjs\ChartjsBundle;
 use Symfony\UX\Icons\UXIconsBundle;
 use Symfony\UX\Map\UXMapBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
@@ -42,6 +43,7 @@ return [
     UXIconsBundle::class => ['all' => true],
     StimulusBundle::class => ['all' => true],
     UXMapBundle::class => ['all' => true],
+    ChartjsBundle::class => ['all' => true],
     SecurityBundle::class => ['all' => true],
     ApiPlatformBundle::class => ['all' => true],
     MercureBundle::class => ['all' => true],

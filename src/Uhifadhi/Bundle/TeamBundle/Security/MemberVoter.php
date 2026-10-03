@@ -45,6 +45,18 @@ final class MemberVoter extends Voter
     /** The contract's name for it, so any bundle can ask without knowing this voter. */
     public const string CONFIGURE = PersonAccess::CONFIGURE;
 
+    /** @see https://symfony.com/doc/current/security/voters.html#improving-voter-performance */
+    public function supportsAttribute(string $attribute): bool
+    {
+        return self::CONFIGURE === $attribute;
+    }
+
+    /** A Doctrine proxy extends the entity, so the type is matched with is_a(), as the documentation's example does. */
+    public function supportsType(string $subjectType): bool
+    {
+        return is_a($subjectType, User::class, true);
+    }
+
     protected function supports(string $attribute, mixed $subject): bool
     {
         return self::CONFIGURE === $attribute && $subject instanceof User;

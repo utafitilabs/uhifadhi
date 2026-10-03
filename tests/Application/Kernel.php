@@ -28,6 +28,9 @@ use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Contracts\Roster\WatchProviderInterface;
 use Uhifadhi\Core\Tests\Core\FakeRoster;
+use Uhifadhi\Core\Tests\Core\InstalledVoters;
+
+use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 /**
  * THE THROWAWAY APPLICATION the core's own functional tests run inside.
@@ -304,6 +307,14 @@ class Kernel extends BaseKernel
             ->alias('test_public.area.checkin_statuses', 'area.checkin_statuses')
             ->public()
             ->alias('test_public.area.checkins', 'area.checkins')
+            ->public();
+
+        // EVERY VOTER, so the build can count how many answer each question.
+        // The decision manager's own list is private and, in debug, holds
+        // wrappers; the tag is on the voters themselves.
+        $container->services()
+            ->set('test_public.security.voters', InstalledVoters::class)
+            ->args([tagged_iterator('security.voter')])
             ->public();
 
         // The credential a field client carries. The field-API specifications

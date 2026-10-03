@@ -44,6 +44,18 @@ final class CheckInWriteVoter extends Voter
     {
     }
 
+    /** @see https://symfony.com/doc/current/security/voters.html#improving-voter-performance */
+    public function supportsAttribute(string $attribute): bool
+    {
+        return self::WRITE === $attribute;
+    }
+
+    /** A Doctrine proxy extends the entity, so the type is matched with is_a(), as the documentation's example does. */
+    public function supportsType(string $subjectType): bool
+    {
+        return is_a($subjectType, CheckIn::class, true);
+    }
+
     protected function supports(string $attribute, mixed $subject): bool
     {
         return self::WRITE === $attribute && $subject instanceof CheckIn;

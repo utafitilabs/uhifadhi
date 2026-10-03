@@ -44,6 +44,11 @@ use Uhifadhi\Contracts\Access\Verb;
  *     so it can be withheld without withholding the page it sits on.
  *   - EVERY DOOR GOES THROUGH THE HELPER, so the module's doors are
  *     enumerable the same way the core's are.
+ *   - EVERY VOTER SAYS WHICH QUESTIONS IT ANSWERS, through
+ *     `supportsAttribute()`. One that does not is asked every question in
+ *     the installation, and under the affirmative strategy a voter that
+ *     answers a question another already answers can only widen it: a rule
+ *     meant to narrow the grant voter is outvoted by it and does nothing.
  *
  * Usage:
  *
@@ -182,6 +187,36 @@ abstract class AccessConformanceTestCase extends TestCase
         sort($expected);
 
         self::assertSame($expected, $declared, 'a fact about a person or a case is declared sensitive so it can be withheld without withholding the page it sits on; a change here is a change to what an organization can hold back.');
+    }
+
+    /**
+     * A VOTER THAT DOES NOT NAME ITS QUESTIONS CLAIMS EVERY ONE. The decision
+     * manager asks a voter only where its `supportsAttribute()` says yes;
+     * the base class's answer is yes to everything, and a voter that is not
+     * cacheable at all is asked every time.
+     *
+     * @see https://symfony.com/doc/current/security/voters.html#improving-voter-performance
+     * @see vendor/symfony/security-core/Authorization/AccessDecisionManager.php — getVoters()
+     */
+    public function testEveryVoterInThisPackageSaysWhichQuestionsItAnswers(): void
+    {
+        $silent = [];
+
+        foreach (self::shippedSource() as $path) {
+            $code = (string) file_get_contents($path);
+
+            $voter = 1 === preg_match('/\bextends\s+Voter\b/', $code)
+                || 1 === preg_match('/\bimplements\b[^{]*\bCacheableVoterInterface\b/', $code);
+            $bare = 1 === preg_match('/\bimplements\b[^{]*\bVoterInterface\b/', $code);
+
+            if ($voter && !str_contains($code, 'function supportsAttribute(')) {
+                $silent[] = basename($path).' does not override supportsAttribute()';
+            } elseif (!$voter && $bare) {
+                $silent[] = basename($path).' is a VoterInterface the decision manager cannot skip; extend Voter and override supportsAttribute()';
+            }
+        }
+
+        self::assertSame([], $silent, implode("\n", $silent)."\nA voter answers only the questions it names, so no rule beside it can be outvoted.");
     }
 
     /**

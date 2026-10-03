@@ -17,8 +17,11 @@ use PHPUnit\Framework\Attributes\CoversNothing;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\CacheableVoterInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Uhifadhi\Bundle\AreaBundle\Security\CheckInWriteVoter;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Security\MemberVoter;
 use Uhifadhi\Contracts\Access\Grant;
 use Uhifadhi\Contracts\Access\ScopeKind;
 use Uhifadhi\Core\Tests\Application\Kernel;
@@ -43,6 +46,12 @@ use Uhifadhi\Core\Tests\Application\Kernel;
  *      nothing — a promise the product does not keep. Enforcement counts
  *      whether it is a route's gate or a door in a template, because both
  *      are places the pair does work.
+ *   4. EVERY QUESTION HAS EXACTLY ONE VOTER. None is a page shut for
+ *      everybody. Two is a rule that can be outvoted: under the affirmative
+ *      strategy one voter's yes is enough, so a narrower voter added beside
+ *      the grant voter — "only the recorder may change this" — would never
+ *      count. A voter says which questions it answers through
+ *      `supportsAttribute()`; one that does not claims every question.
  *
  * It is a BUILD test rather than a review convention because all three
  * failures look like working code.
@@ -299,6 +308,84 @@ final class EveryRouteNamesItsPairTest extends KernelTestCase
             'declaring that verb until something does.',
             implode(', ', $idle),
         ));
+    }
+
+    public function testEveryPairARouteOrADoorAsksIsAnsweredByExactlyOneVoter(): void
+    {
+        $asked = ['a door in a template' => self::doorPairs()];
+        foreach ($this->appRoutes() as $name => $route) {
+            $asked[$name] = GateReader::pairsOn($route);
+        }
+
+        $wrong = [];
+        foreach ($asked as $where => $attributes) {
+            foreach ($attributes as $attribute) {
+                $claimants = $this->claimants($attribute);
+                if (1 !== \count($claimants)) {
+                    $wrong[] = \sprintf('%s asks "%s", %s', $where, $attribute, self::describe($claimants));
+                }
+            }
+        }
+
+        self::assertSame([], $wrong, implode("\n", $wrong));
+    }
+
+    /**
+     * Not only what a route asks today: every declared pair, and every
+     * question a voter of the core answers by its own rule, so a page added
+     * tomorrow cannot meet a question with two answers.
+     */
+    public function testEveryDeclaredPairAndEveryOwnRuleIsAnsweredByExactlyOneVoter(): void
+    {
+        $wrong = [];
+        foreach ([...$this->catalogue()->pairs(), MemberVoter::CONFIGURE, CheckInWriteVoter::WRITE] as $attribute) {
+            $claimants = $this->claimants($attribute);
+            if (1 !== \count($claimants)) {
+                $wrong[] = \sprintf('"%s": %s', $attribute, self::describe($claimants));
+            }
+        }
+
+        self::assertSame([], $wrong, implode("\n", $wrong));
+    }
+
+    /** A question nothing declares has no voter, so the decision manager refuses it. */
+    public function testAQuestionNothingDeclaresIsAnsweredByNoVoter(): void
+    {
+        self::assertSame([], $this->claimants('zones.confgure'));
+        self::assertSame([], $this->claimants('nothing-declares-this.read'));
+    }
+
+    /**
+     * The voters that claim a question. A voter that does not say which
+     * questions it answers claims every one, because the decision manager
+     * asks it every time.
+     *
+     * @return list<string>
+     *
+     * @see vendor/symfony/security-core/Authorization/AccessDecisionManager.php — getVoters(): a voter that is not a CacheableVoterInterface is always asked; one that is, only where supportsAttribute() is true
+     */
+    private function claimants(string $attribute): array
+    {
+        self::bootKernel();
+        $voters = self::getContainer()->get('test_public.security.voters');
+        self::assertInstanceOf(InstalledVoters::class, $voters);
+
+        $claimants = [];
+        foreach ($voters->all() as $voter) {
+            if (!$voter instanceof CacheableVoterInterface || $voter->supportsAttribute($attribute)) {
+                $claimants[] = $voter::class;
+            }
+        }
+
+        return $claimants;
+    }
+
+    /**
+     * @param list<string> $claimants
+     */
+    private static function describe(array $claimants): string
+    {
+        return [] === $claimants ? 'which no voter answers' : 'which several voters answer: '.implode(', ', $claimants);
     }
 
     /**

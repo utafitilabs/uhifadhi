@@ -73,11 +73,26 @@ final class GrantVoter extends Voter
     ) {
     }
 
-    protected function supports(string $attribute, mixed $subject): bool
+    /**
+     * THE QUESTIONS THIS VOTER ANSWERS: the declared pairs, and nothing else.
+     * Left at the base class's answer it would claim every question in the
+     * installation, so a narrower voter answering a declared pair beside it
+     * could be outvoted under the affirmative strategy. The decision manager
+     * caches this per attribute; the catalogue is fixed for the container's
+     * life, so the cached answer cannot go stale.
+     *
+     * @see https://symfony.com/doc/current/security/voters.html#improving-voter-performance — "this method returns true if the voter applies to the given attribute; if it returns false, Symfony won't call it again for this attribute"
+     */
+    public function supportsAttribute(string $attribute): bool
     {
         $grant = Grant::tryParse($attribute);
 
         return null !== $grant && $this->catalogue->has($grant);
+    }
+
+    protected function supports(string $attribute, mixed $subject): bool
+    {
+        return $this->supportsAttribute($attribute);
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token, ?Vote $vote = null): bool

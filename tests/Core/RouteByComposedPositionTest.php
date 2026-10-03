@@ -31,6 +31,7 @@ use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Tests\FilesInADepartment;
 use Uhifadhi\Contracts\Access\ScopeKind;
 use Uhifadhi\Core\Tests\Application\Kernel;
+use Uhifadhi\Testing\GateReader;
 
 /**
  * EVERY ROUTE, AGAINST POSITIONS COMPOSED FROM THE DECLARATIONS.

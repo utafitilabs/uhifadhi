@@ -33,6 +33,8 @@ use Uhifadhi\Bundle\TeamBundle\Controller\TeamConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Deletion\DeletionPage;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
+use Uhifadhi\Testing\Authority\Probe;
+use Uhifadhi\Testing\Authority\World;
 
 /**
  * A PROBE FOR EVERY ROUTE THE CORE MOUNTS, each with the identifiers of the
@@ -131,9 +133,9 @@ final class CoreProbes
             Probe::get('team_roles'),
             Probe::get('team_people_export'),
             Probe::get('team_invite'),
-            ...self::aboutPeople(Probe::get('team_member', $member), 'uuid', $world),
-            ...self::aboutPeople(Probe::get('team_member_configure', $member), 'uuid', $world),
-            ...self::aboutPeople(Probe::get('team_member_delete', $member), 'uuid', $world),
+            ...Probe::aboutEachPerson(Probe::get('team_member', $member), 'uuid', $world),
+            ...Probe::aboutEachPerson(Probe::get('team_member_configure', $member), 'uuid', $world),
+            ...Probe::aboutEachPerson(Probe::get('team_member_delete', $member), 'uuid', $world),
             Probe::get('team_configure_people'),
             Probe::get('team_configure_positions'),
             Probe::get('team_configure_assignments'),
@@ -178,7 +180,7 @@ final class CoreProbes
             Probe::get('area_zones', $area),
             Probe::get('area_zone_show', $area + ['zone' => $world->zone]),
             Probe::get('area_zones_export', $area),
-            ...self::aboutPeople(Probe::get('area_live_sheet', ['person' => $world->member], ['areas.read']), 'person', $world),
+            ...Probe::aboutEachPerson(Probe::get('area_live_sheet', ['person' => $world->member], ['areas.read']), 'person', $world),
 
             ...self::writes($world),
         ];
@@ -218,15 +220,15 @@ final class CoreProbes
 
             Probe::post('team_member_create', [], InviteController::CSRF_CREATE, ['email' => 'zawadi.mushi@unr.example', 'password' => 'a long new passphrase', 'firstName' => 'Zawadi', 'lastName' => 'Mushi', 'position' => '', 'rangerCode' => '']),
             Probe::post('team_invite_send', [], InviteController::CSRF_INVITE, ['email' => 'juma.ally@unr.example', 'position' => '']),
-            ...self::aboutPeople(Probe::post('team_member_update', $member, $person, ['firstName' => 'Naserian', 'lastName' => 'Lekishon', 'email' => 'naserian.l@unr.example', 'rangerCode' => '']), 'uuid', $world),
-            ...self::aboutPeople(Probe::post('team_member_tier', $member, $person, ['tier' => TeamRoleEnum::Admin->value]), 'uuid', $world),
-            ...self::aboutPeople(Probe::post('team_member_position', $member, $person, ['position' => $world->position, 'where' => 'areas', 'areas' => [$world->kilimani], 'department' => $world->operationsUuid]), 'uuid', $world),
-            ...self::aboutPeople(Probe::post('team_member_reset_link', $member, $person), 'uuid', $world),
-            ...self::aboutPeople(Probe::post('team_member_one_time_password', $member, $person), 'uuid', $world),
+            ...Probe::aboutEachPerson(Probe::post('team_member_update', $member, $person, ['firstName' => 'Naserian', 'lastName' => 'Lekishon', 'email' => 'naserian.l@unr.example', 'rangerCode' => '']), 'uuid', $world),
+            ...Probe::aboutEachPerson(Probe::post('team_member_tier', $member, $person, ['tier' => TeamRoleEnum::Admin->value]), 'uuid', $world),
+            ...Probe::aboutEachPerson(Probe::post('team_member_position', $member, $person, ['position' => $world->position, 'where' => 'areas', 'areas' => [$world->kilimani], 'department' => $world->operationsUuid]), 'uuid', $world),
+            ...Probe::aboutEachPerson(Probe::post('team_member_reset_link', $member, $person), 'uuid', $world),
+            ...Probe::aboutEachPerson(Probe::post('team_member_one_time_password', $member, $person), 'uuid', $world),
             Probe::post('team_member_invite_again', ['uuid' => $world->invited], $person),
-            ...self::aboutPeople(Probe::post('team_member_deactivate', $member, $person), 'uuid', $world),
-            ...self::aboutPeople(Probe::post('team_member_reactivate', $member, $person), 'uuid', $world),
-            ...self::aboutPeople(Probe::post('team_member_delete', $member, $delete), 'uuid', $world, 'reference'),
+            ...Probe::aboutEachPerson(Probe::post('team_member_deactivate', $member, $person), 'uuid', $world),
+            ...Probe::aboutEachPerson(Probe::post('team_member_reactivate', $member, $person), 'uuid', $world),
+            ...Probe::aboutEachPerson(Probe::post('team_member_delete', $member, $delete), 'uuid', $world, 'reference'),
 
             Probe::post('team_configure_people_save', [], TeamConfigureController::CSRF_ID, ['validAmount' => '7', 'validUnit' => 'days', 'uses' => '1', 'withPassword' => 'allowed']),
             Probe::post('team_configure_assignments_save', [], TeamConfigureController::CSRF_ID, ['twoStations' => 'allowed', 'leaders' => '1', 'emptyStation' => 'allowed']),
@@ -286,26 +288,6 @@ final class CoreProbes
             Probe::post('area_zones_clear', $area, ZoneEditController::CLEAR_TOKEN),
             Probe::post('area_zones_import_preview', $area, ZoneImportController::TOKEN, ['nameProperty' => 'name'], ['file' => __DIR__.'/zones.geojson']),
             Probe::post('area_zones_import_confirm', $area, ZoneImportController::TOKEN),
-        ];
-    }
-
-    /**
-     * ONE REQUEST ABOUT A PERSON, sent about each kind of target: the
-     * sender's own record, a colleague their placement reaches, somebody it
-     * does not, an Admin and a Super Admin.
-     *
-     * @return list<Probe>
-     */
-    private static function aboutPeople(Probe $probe, string $parameter, World $world, ?string $nameField = null): array
-    {
-        $named = static fn (string $name): array => null === $nameField ? [] : [$nameField => $name];
-
-        return [
-            $probe->about('own record', $parameter, Probe::OWN, $named(Probe::OWN_NAME)),
-            $probe->about('a colleague in reach', $parameter, $world->member, $named(World::NAMES['member'])),
-            $probe->about('out of reach', $parameter, $world->outOfReach, $named(World::NAMES['outOfReach'])),
-            $probe->about("an Admin's", $parameter, $world->admin, $named(World::NAMES['admin'])),
-            $probe->about("a Super Admin's", $parameter, $world->superAdmin, $named(World::NAMES['superAdmin'])),
         ];
     }
 

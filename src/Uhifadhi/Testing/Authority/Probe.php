@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Core\Tests\Core\Authority;
+namespace Uhifadhi\Testing\Authority;
 
 /**
  * ONE REQUEST THAT WOULD SUCCEED for somebody allowed: a route, the method it
@@ -25,6 +25,13 @@ final readonly class Probe
 
     /** A field filled in at sending with the sender's own full name. */
     public const string OWN_NAME = '{own name}';
+
+    /** The kinds of target a request about a person is sent about, as the table names them. */
+    public const string OWN_RECORD = 'own record';
+    public const string COLLEAGUE = 'a colleague in reach';
+    public const string OUT_OF_REACH = 'out of reach';
+    public const string AN_ADMIN = "an Admin's";
+    public const string A_SUPER_ADMIN = "a Super Admin's";
 
     /**
      * @param array<string, string> $parameters the route's parameters, with identifiers from the world
@@ -47,6 +54,28 @@ final readonly class Probe
         public ?string $json = null,
         public ?string $target = null,
     ) {
+    }
+
+    /**
+     * ONE REQUEST ABOUT A PERSON, sent about each kind of target: the
+     * sender's own record, a colleague their placement reaches, somebody it
+     * does not, an Admin and a Super Admin.
+     *
+     * @param ?string $nameField a field that types the target's full name, as a delete page asks
+     *
+     * @return list<self>
+     */
+    public static function aboutEachPerson(self $probe, string $parameter, World $world, ?string $nameField = null): array
+    {
+        $named = static fn (string $name): array => null === $nameField ? [] : [$nameField => $name];
+
+        return [
+            $probe->about(self::OWN_RECORD, $parameter, self::OWN, $named(self::OWN_NAME)),
+            $probe->about(self::COLLEAGUE, $parameter, $world->member, $named(World::NAMES['member'])),
+            $probe->about(self::OUT_OF_REACH, $parameter, $world->outOfReach, $named(World::NAMES['outOfReach'])),
+            $probe->about(self::AN_ADMIN, $parameter, $world->admin, $named(World::NAMES['admin'])),
+            $probe->about(self::A_SUPER_ADMIN, $parameter, $world->superAdmin, $named(World::NAMES['superAdmin'])),
+        ];
     }
 
     /**

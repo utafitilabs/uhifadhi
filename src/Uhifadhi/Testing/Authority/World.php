@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Core\Tests\Core\Authority;
+namespace Uhifadhi\Testing\Authority;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;

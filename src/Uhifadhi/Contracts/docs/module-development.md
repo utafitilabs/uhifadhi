@@ -2543,6 +2543,54 @@ Without PHPUnit the first check is
 instant in the server's zone. The shapes, and the rule the test enforces, are in
 [theming.md — a time reads in the reader's zone](../../Bundle/ShellBundle/docs/theming.md#a-time-reads-in-the-readers-zone).
 
+
+### The authority table (who may open what, recorded)
+
+Every route a module ships is called as every kind of person, and the outcomes are kept in a table
+committed beside the test. A change in who may open what fails the build until the table is recorded
+again and its diff is read — the same proof the core gives for its own routes. The base needs the
+whole core (areas, stations, people, positions), so it lives outside every bundle, in
+`Uhifadhi\Testing\`:
+
+```php
+// tests/Functional/AuthorityTableTest.php
+use Uhifadhi\Testing\Authority\Probe;
+use Uhifadhi\Testing\Authority\World;
+use Uhifadhi\Testing\AuthorityTableTestCase;
+
+final class AuthorityTableTest extends AuthorityTableTestCase
+{
+    protected static function getKernelClass(): string { return TestKernel::class; }
+    protected static function tableFile(): string { return __DIR__.'/authority-table.md'; }
+    protected static function scope(): string { return 'the sightings module'; }
+    protected static function generator(): string { return 'tests/Functional/AuthorityTableTest.php'; }
+    protected static function controllerNamespace(): ?string { return 'Uhifadhi\\Sightings\\Controller\\'; }
+
+    protected function probes(World $world): array
+    {
+        return [
+            Probe::get('sightings_index', ['uuid' => $world->kilimani]),
+            Probe::post('sightings_record', ['uuid' => $world->kilimani], SightingsController::TOKEN, ['species' => 'Elephant']),
+        ];
+    }
+}
+```
+
+- **A probe is a request that would succeed** for somebody allowed: the route, its real identifiers
+  from the world (Kilimani and Tambarare Game Reserves, a station, a zone, a member of staff…) and,
+  for a write, its form and the id of the CSRF token it carries. The token is minted in the sender's
+  own session, so a refusal is the rules' and never the token's.
+- **Every route of the module has a probe** — `controllerNamespace()` says which routes are yours —
+  or a reason in `pending()`; a new route with neither fails the build.
+- **A write a Super Admin cannot save fails the build** (no 400, 403, 422, error message or sign-in),
+  so "allowed" in the table means the write would have happened. `notSavableHere()` names the
+  exceptions, each with its reason (a write that mails, where the test kernel has no transport).
+- **Every probe runs in a transaction rolled back after it**, so a write leaves nothing behind;
+  `arrange()` makes the records your probes act on, once, before anything is sent.
+- A route about a person is sent about each kind of target with `Probe::aboutEachPerson()`.
+- Record the table with `UHIFADHI_RECORD_AUTHORITY_TABLE=1 vendor/bin/phpunit tests/Functional/AuthorityTableTest.php`
+  and read the diff before committing it: every changed line is a change in who may do what.
+
 ---
 
 ## 11. CI

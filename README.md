@@ -291,7 +291,7 @@ The root [CHANGELOG-1.0.md](CHANGELOG-1.0.md) and [UPGRADE-1.0.md](UPGRADE-1.0.m
 are the release notes; each bundle also keeps its own `CHANGELOG.md`.
 
 **A tag is not done until the fleet gate is green.** The starter repository
-(`utafitilabs/skeleton`) carries `composer fleet-gate`, which creates a project
+(`utafitilabs/uhifadhi-skeleton`) carries `composer fleet-gate`, which creates a project
 with its README's own commands and installs this core and every official module
 into it, one by one, signing in after each. Before tagging, run
 `composer fleet-gate:head` there, which installs from the sibling checkouts on

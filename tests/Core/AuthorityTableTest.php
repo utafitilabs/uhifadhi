@@ -18,7 +18,13 @@ use Doctrine\ORM\Tools\SchemaTool;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
@@ -67,7 +73,12 @@ final class AuthorityTableTest extends WebTestCase
 
     protected function setUp(): void
     {
+        // ONE KERNEL FOR THE WHOLE RUN, so one connection: every probe runs in
+        // a transaction rolled back after it, and a write leaves nothing for
+        // the next probe to find. Between requests the kernel resets its
+        // services, as it does between two requests an installation serves.
         $this->client = self::createClient();
+        $this->client->disableReboot();
         $this->em = $this->entityManager();
         $this->em->getConnection()->executeStatement('CREATE EXTENSION IF NOT EXISTS postgis');
 
@@ -76,7 +87,7 @@ final class AuthorityTableTest extends WebTestCase
         $tool->dropSchema($metadata);
         $tool->createSchema($metadata);
 
-        $this->world = World::seed($this->em);
+        $this->world = World::seed($this->em, $this->catalogue()->exceptionPairs()[0] ?? '');
     }
 
     protected function tearDown(): void
@@ -113,7 +124,7 @@ final class AuthorityTableTest extends WebTestCase
                 }
                 $key = $method.' '.$name;
                 $routes[$key] = true;
-                if (!isset($probed[$key]) && !isset($named[$key]) && !isset(CoreProbes::PENDING_METHODS[$method])) {
+                if (!isset($probed[$key]) && !isset($named[$key])) {
                     $unprobed[] = $key;
                 }
             }
@@ -142,6 +153,31 @@ final class AuthorityTableTest extends WebTestCase
             $table,
             'Who may open what has changed. If the change is intended, record the table with '.self::RECORD.'=1 and review its diff; if it is not, a loophole has opened.',
         );
+    }
+
+    /**
+     * A WRITE PROBE IS A REQUEST THAT WOULD SUCCEED. A Super Admin sending it
+     * is never turned away — no 400, no 422, no error, and no 403, which is
+     * also what a wrong token answers — or a cell saying "allowed" would only
+     * mean "got past the gate", and one saying "refused" might be the token's.
+     */
+    public function testEveryWriteProbeSendsAFormASuperAdminCanSave(): void
+    {
+        $turnedAway = [];
+
+        foreach (CoreProbes::all($this->world) as $probe) {
+            if ('GET' === $probe->method || isset(CoreProbes::NOT_SAVABLE_HERE[$probe->key()])) {
+                continue;
+            }
+
+            [$status, $error] = $this->send($probe, Person::SuperAdmin, $this->checks($probe));
+
+            if (\in_array($status, [400, 403, 422], true) || null !== $error) {
+                $turnedAway[] = \sprintf('%s %s: %d%s', $probe->method, $probe->route, $status, null === $error ? '' : ' — '.$error);
+            }
+        }
+
+        self::assertSame([], $turnedAway, "These write probes send a form even a Super Admin cannot save:\n".implode("\n", $turnedAway));
     }
 
     private function table(): string
@@ -191,48 +227,114 @@ final class AuthorityTableTest extends WebTestCase
      */
     private function outcome(Probe $probe, Person $person, array $checked): string
     {
-        $this->client->restart();
+        [$status, , $location] = $this->send($probe, $person, $checked);
 
-        $account = $this->account($person, $checked);
-        if (null !== $account) {
-            $this->client->loginUser($account);
-        }
-
-        $deactivated = Person::DeactivatedWhileSignedIn === $person && null !== $account;
-        if ($deactivated) {
-            $this->setActive($account, false);
-        }
-
-        $path = $this->router()->generate($probe->route, $probe->parameters);
-        $this->client->request($probe->method, $path);
-        $response = $this->client->getResponse();
-
-        if ($deactivated) {
-            $this->setActive($account, true);
-        }
-
-        $status = $response->getStatusCode();
-        self::assertLessThan(500, $status, \sprintf(
-            '%s %s as %s failed with %d: an error is never an answer. %s',
-            $probe->method,
-            $path,
-            $person->value,
-            $status,
-            rawurldecode((string) $response->headers->get('X-Debug-Exception')).' at '.$response->headers->get('X-Debug-Exception-File'),
-        ));
-
-        if ($response->isRedirection()) {
-            $to = (string) parse_url((string) $response->headers->get('Location'), \PHP_URL_PATH);
+        if (null !== $location) {
+            $to = (string) parse_url($location, \PHP_URL_PATH);
 
             return '/login' === $to ? 'sign-in' : '→ '.$this->printed($to);
         }
 
         return match (true) {
-            $response->isSuccessful() => 'allowed',
+            $status >= 200 && $status < 300 => 'allowed',
             403 === $status => 'refused',
             404 === $status => 'not found',
             default => (string) $status,
         };
+    }
+
+    /**
+     * Sends a probe as a kind of person, inside a transaction rolled back
+     * after it.
+     *
+     * @param list<string> $checked the pairs the route checks
+     *
+     * @return array{int, ?string, ?string} the status, the error the page reported if any, and where a redirect went
+     */
+    private function send(Probe $probe, Person $person, array $checked): array
+    {
+        $this->client->restart();
+        $account = $this->account($person, $checked);
+
+        $connection = $this->em()->getConnection();
+        $connection->beginTransaction();
+
+        try {
+            if (null !== $account) {
+                $this->client->loginUser($account);
+            }
+
+            if (Person::DeactivatedWhileSignedIn === $person && null !== $account) {
+                $connection->executeStatement('UPDATE team_user SET is_active = false WHERE id = ?', [$account->getId()]);
+            }
+
+            $body = $probe->body;
+            $server = [];
+            if (null !== $probe->token) {
+                $token = $this->mint($probe->token);
+                if (null !== $probe->json) {
+                    $server['HTTP_'.strtoupper(str_replace('-', '_', $probe->tokenField))] = $token;
+                    $server['CONTENT_TYPE'] = 'application/json';
+                } else {
+                    $body[$probe->tokenField] = $token;
+                }
+            }
+
+            $files = [];
+            foreach ($probe->files as $field => $path) {
+                $copy = tempnam(sys_get_temp_dir(), 'probe');
+                self::assertIsString($copy);
+                copy($path, $copy);
+                $files[$field] = new UploadedFile($copy, basename($path), 'application/geo+json', null, true);
+            }
+
+            $path = $this->router()->generate($probe->route, $probe->parameters);
+            $this->client->request($probe->method, $path, $body, $files, $server, $probe->json);
+            $response = $this->client->getResponse();
+            $status = $response->getStatusCode();
+
+            self::assertLessThan(500, $status, \sprintf(
+                '%s %s as %s failed with %d: an error is never an answer. %s',
+                $probe->method,
+                $path,
+                $person->value,
+                $status,
+                rawurldecode((string) $response->headers->get('X-Debug-Exception')).' at '.rawurldecode((string) $response->headers->get('X-Debug-Exception-File')),
+            ));
+
+            $session = $this->client->getSession();
+            $errors = $session instanceof FlashBagAwareSessionInterface ? $session->getFlashBag()->peek('error') : [];
+            $error = [] === $errors ? null : implode(' ', array_map(static fn (mixed $e): string => \is_string($e) ? $e : '', $errors));
+
+            return [$status, $error, $response->isRedirection() ? (string) $response->headers->get('Location') : null];
+        } finally {
+            if ($connection->isTransactionActive()) {
+                $connection->rollBack();
+            }
+        }
+    }
+
+    /** A real token for this id, in the session the browser is about to send. */
+    private function mint(string $id): string
+    {
+        $session = $this->client->getSession();
+        self::assertNotNull($session);
+
+        $stack = static::getContainer()->get('request_stack');
+        $manager = static::getContainer()->get('security.csrf.token_manager');
+        self::assertInstanceOf(RequestStack::class, $stack);
+        self::assertInstanceOf(CsrfTokenManagerInterface::class, $manager);
+
+        $request = new Request();
+        $request->setSession($session);
+        $stack->push($request);
+
+        try {
+            return $manager->getToken($id)->getValue();
+        } finally {
+            $stack->pop();
+            $session->save();
+        }
     }
 
     /**
@@ -273,7 +375,7 @@ final class AuthorityTableTest extends WebTestCase
             ->setEmail('person'.(\count($this->accounts) + 1).'@unr.example')
             ->setFirstName('Person')
             ->setLastName((string) (\count($this->accounts) + 1))
-            ->setPassword('a hash, never a password')
+            ->setPassword($this->passphraseHash())
             ->setTeamRole($tier)
             ->setVerified(true);
 
@@ -316,16 +418,28 @@ final class AuthorityTableTest extends WebTestCase
         return array_values(array_unique([...$gate, ...$probe->asks]));
     }
 
-    /** The account's active flag, changed in the database only, behind the open session. */
-    private function setActive(User $account, bool $active): void
+    private ?string $passphraseHash = null;
+
+    /** Every account's password is the world's passphrase, so a write that asks for the current one can be sent. */
+    private function passphraseHash(): string
     {
-        $this->em()->getConnection()->executeStatement('UPDATE team_user SET is_active = ? WHERE id = ?', [$active, $account->getId()], ['boolean', 'integer']);
+        if (null === $this->passphraseHash) {
+            $hasher = static::getContainer()->get('security.user_password_hasher');
+            self::assertInstanceOf(UserPasswordHasherInterface::class, $hasher);
+            $this->passphraseHash = $hasher->hashPassword(new User(), World::PASSPHRASE);
+        }
+
+        return $this->passphraseHash;
     }
 
-    /** An address with the world's identifiers printed as their names. */
+    /**
+     * An address with the world's identifiers printed as their names, and an
+     * identifier the world did not seed — a record the write just made — as
+     * {new}, so the table reads the same on every run.
+     */
     private function printed(string $path): string
     {
-        return strtr($path, $this->world->names());
+        return (string) preg_replace('/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/', '{new}', strtr($path, $this->world->names()));
     }
 
     private function router(): RouterInterface

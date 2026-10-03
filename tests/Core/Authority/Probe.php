@@ -23,13 +23,43 @@ final readonly class Probe
     /**
      * @param array<string, string> $parameters the route's parameters, with identifiers from the world
      * @param list<string>          $asks       the pairs its controller asks where no attribute shows them
+     * @param array<string, mixed>  $body       the form a write sends
+     * @param ?string               $token      the id of the CSRF token it carries, minted in the sender's own session
+     * @param array<string, string> $files      uploaded files, field => path
+     * @param string                $tokenField the form field the token goes in, or the header when the write is JSON
+     * @param ?string               $json       a JSON body, sent instead of the form
      */
     public function __construct(
         public string $route,
         public string $method,
         public array $parameters = [],
         public array $asks = [],
+        public array $body = [],
+        public ?string $token = null,
+        public array $files = [],
+        public string $tokenField = '_token',
+        public ?string $json = null,
     ) {
+    }
+
+    /**
+     * A JSON write, its token carried in a header.
+     *
+     * @param array<string, string> $parameters
+     */
+    public static function json(string $route, array $parameters, string $token, string $json, string $tokenHeader): self
+    {
+        return new self($route, 'POST', $parameters, [], [], $token, [], $tokenHeader, $json);
+    }
+
+    /**
+     * @param array<string, string> $parameters
+     * @param array<string, mixed>  $body
+     * @param array<string, string> $files
+     */
+    public static function post(string $route, array $parameters, ?string $token, array $body = [], array $files = [], string $tokenField = '_token'): self
+    {
+        return new self($route, 'POST', $parameters, [], $body, $token, $files, $tokenField);
     }
 
     /**

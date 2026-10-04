@@ -108,10 +108,13 @@
         </div>
     </div>
     {# THE ONE PAGE ACTION — where the department is changed, per the rule
-       that a record wears its Configure door in the header row. #}
+       that a record wears its Configure door in the header row. It asks what
+       the Configure page asks, so it is drawn only where that page opens. #}
+    {% if door('departments.configure') and mayManage %}
     <div class="pgact w-pgact">
         <a class="tgl w-act" href="{{ path('team_department_configure', {uuid: department.uuidString}) }}">{{ ux_icon('shell:settings', {width: 15, height: 15}) }} Configure</a>
     </div>
+    {% endif %}
 {% endblock %}
 
 {% block shell_page %}

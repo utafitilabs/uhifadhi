@@ -425,6 +425,7 @@ final readonly class DepartmentController
 
         return new Response($this->twig->render('@Team/departments/show.html.twig', [
             'department' => $department,
+            'mayManage' => $this->mayManage($department),
             'mark' => $this->mark((string) $department->getName()),
             'positions' => $positions,
             'headcount' => $this->users->countActiveHoldingAnyPosition($owned),
@@ -462,10 +463,13 @@ final readonly class DepartmentController
      * and a configure page behind it.
      */
     #[Route('/departments/{uuid}/configure', name: self::CONFIGURE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted('departments.read')]
+    #[IsGranted('departments.configure')]
     public function configure(string $uuid): Response
     {
         $department = $this->department($uuid);
+        // THE PAGE ASKS WHAT ITS SAVES ASK, so it never offers a form every
+        // save of which refuses.
+        $this->assertMayManage($department);
         $positions = $this->membership->positionsIn($department);
 
         return new Response($this->twig->render('@Team/departments/record_configure.html.twig', [
@@ -965,15 +969,16 @@ final readonly class DepartmentController
      */
     private function assertMayManage(Department $department): void
     {
-        if ($this->authority->isUnbounded()) {
-            return;
+        if (!$this->mayManage($department)) {
+            throw new AccessDeniedException('An area administrator may manage only the area-level departments in their own area.');
         }
+    }
 
-        if ($department->isAreaLevel() && $this->authority->covers($department->getArea())) {
-            return;
-        }
-
-        throw new AccessDeniedException('An area administrator may manage only the area-level departments in their own area.');
+    /** The reach half of managing a department, asked by its saves, its Configure page and the record's door. */
+    private function mayManage(Department $department): bool
+    {
+        return $this->authority->isUnbounded()
+            || ($department->isAreaLevel() && $this->authority->covers($department->getArea()));
     }
 
     /**

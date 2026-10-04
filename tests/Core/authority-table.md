@@ -65,7 +65,7 @@ the same; Staff holding *the pair, elsewhere* — placed at Tambarare in ICT; *A
 | team_departments_configure_lists | GET /departments/configure/lists | `departments.configure` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | department_widgets | GET /departments/widgets | `departments.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_department_show | GET /departments/{operations} | `departments.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
-| team_department_configure | GET /departments/{operations}/configure | `departments.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
+| team_department_configure | GET /departments/{operations}/configure | `departments.configure` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
 | team_department_delete | GET /departments/{operations}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
 | team_performance | GET /departments/performance | `departments.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_performance_topics | GET /departments/performance/topics | `departments.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |

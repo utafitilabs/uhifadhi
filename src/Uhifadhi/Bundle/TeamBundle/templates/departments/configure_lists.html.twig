@@ -28,7 +28,10 @@
         </div>
 
         {# THE HOUSE CREATE CARD — always open, at the top of the page, never
-           behind a summary and never in a second form. #}
+           behind a summary and never in a second form. The kinds are the whole
+           organization's, so it is offered where that reach is held. #}
+        {% set mayChangeKinds = door('departments.configure', whole_organization()) %}
+        {% if mayChangeKinds %}
         <div class="dcadd" id="add-kind">
             <div class="dcaddhd">{{ ux_icon('shell:plus', {width: 16, height: 16}) }}<b>Add a department kind</b><span class="hint">A kind groups departments for reading; it grants nothing</span></div>
             <form class="crcard" method="post" action="{{ path('team_department_kind_create') }}">
@@ -47,6 +50,7 @@
                 <div class="crhint">{{ ux_icon('shell:info', {width: 15, height: 15}) }}<span>A kind is a <b>lens over the register</b>, never a permission and never a scope. Removing one leaves its departments unkinded, which is legal.</span></div>
             </form>
         </div>
+        {% endif %}
 
         <div class="c">
             <span class="tab">Department kinds<span class="src">&middot; {{ kinds|length }} in use</span></span>
@@ -60,12 +64,14 @@
                         <td class="num">{{ kind.departments|length }}</td>
                         <td><span class="mono d">{{ kind.departments|length > 0 ? kind.departments|map(d => d.name)|join(', ') : '—' }}</span></td>
                         <td>
+                            {% if mayChangeKinds %}
                             <form method="post" action="{{ path('team_department_kind_rename', {uuid: kind.uuidString}) }}" class="moveform">
                                 <input type="hidden" name="_token" value="{{ csrfToken }}">
                                 <input class="fld" type="text" name="name" value="{{ kind.name }}" aria-label="Rename {{ kind.name }}" required>
                                 <input class="fld" type="text" name="meaning" value="{{ kind.meaning }}" aria-label="What {{ kind.name }} means">
                                 <button class="sxq" type="submit">Rename</button>
                             </form>
+                            {% endif %}
                         </td>
                     </tr>
                 {% else %}

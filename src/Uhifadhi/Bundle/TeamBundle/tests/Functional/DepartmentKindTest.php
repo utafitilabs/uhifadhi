@@ -112,6 +112,47 @@ final class DepartmentKindTest extends WebTestCaseWithSchema
         self::assertSame('Add a department kind', $crawler->filter('.dcaddhd b')->text());
     }
 
+    /**
+     * THE KINDS ARE THE WHOLE ORGANIZATION'S VOCABULARY. Somebody who
+     * configures departments at one area reads the list and does not change
+     * it: they are offered no form, and a form sent anyway is refused.
+     */
+    public function testSomebodyConfiguringDepartmentsAtOneAreaDoesNotChangeTheKinds(): void
+    {
+        $kind = (new DepartmentKind())->setName('Operational');
+        $this->em->persist($kind);
+        $warden = $this->person('Baraka', 'Laizer');
+        $warden->setPosition($this->position('Area Warden', ['departments.read', 'departments.configure']));
+        $this->place($warden, [$this->area('Kilimani')]);
+        $this->em->flush();
+        $this->client->loginUser($warden);
+
+        $crawler = $this->client->request('GET', '/departments/configure/lists');
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $crawler->filter('form[action="/departments/configure/lists/kinds"]'), 'no create card');
+        self::assertCount(0, $crawler->filter('form[action$="/rename"]'), 'no rename form');
+        self::assertStringContainsString('Operational', $crawler->filter('main')->text(), 'the kinds are still listed');
+
+        $this->client->request('POST', '/departments/configure/lists/kinds', ['name' => 'Support']);
+        self::assertResponseStatusCodeSame(403);
+
+        $this->client->request('POST', '/departments/configure/lists/kinds/'.$kind->getUuidString().'/rename', ['name' => 'Field']);
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testSomebodyConfiguringDepartmentsAcrossTheOrganizationAddsAKind(): void
+    {
+        $planner = $this->person('Rehema', 'Kimaro');
+        $planner->setPosition($this->position('Planner', ['departments.read', 'departments.configure']));
+        $this->place($planner);
+        $this->em->flush();
+        $this->client->loginUser($planner);
+
+        $this->post('/departments/configure/lists/kinds', ['name' => 'Support']);
+
+        self::assertNotNull($this->em->getRepository(DepartmentKind::class)->findOneBy(['name' => 'Support']));
+    }
+
     private function lists(): Crawler
     {
         $admin = $this->person('Naomi', 'Kileo', TeamRoleEnum::Admin);

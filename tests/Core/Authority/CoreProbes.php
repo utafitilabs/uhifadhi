@@ -155,6 +155,7 @@ final class CoreProbes
             Probe::get('department_widgets'),
             Probe::get('team_department_show', $department),
             Probe::get('team_department_configure', $department),
+            Probe::get('team_department_configure', ['uuid' => $world->fieldPatrol]),
             Probe::get('team_department_delete', $department),
             Probe::get('team_performance'),
             Probe::get('team_performance_topics'),
@@ -256,6 +257,7 @@ final class CoreProbes
 
             Probe::post('team_department_create', [], $team, ['name' => 'Ecology', 'scope' => 'org']),
             Probe::post('team_department_rename', $department, $team, ['name' => 'Field Operations']),
+            Probe::post('team_department_rename', ['uuid' => $world->fieldPatrol], $team, ['name' => 'Kilimani Patrol']),
             Probe::post('team_department_scope', $department, $team, ['reason' => 'It works in one reserve now.', 'area' => $world->kilimani]),
             Probe::post('team_department_goal_declare', $department, $team, ['statement' => 'Record every snare found', 'target' => '20', 'unit' => 'snares', 'direction' => 'at_least', 'owner' => '', 'kpiRef' => '']),
             Probe::post('team_department_goal_withdraw', $department + ['goal' => $world->goal], $team),

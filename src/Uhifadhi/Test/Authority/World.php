@@ -56,6 +56,9 @@ final readonly class World
     public const string OPERATIONS = 'Operations';
     public const string ICT = 'ICT';
 
+    /** A department confined to Kilimani: what somebody placed at Kilimani manages under §5.6. */
+    public const string FIELD_PATROL = 'Field Patrol';
+
     /** Every account's password in the table, so a write that asks for the current one can be sent. */
     public const string PASSPHRASE = 'the authority table passphrase';
 
@@ -80,6 +83,7 @@ final readonly class World
         public int $operations,
         public int $ict,
         public string $operationsUuid,
+        public string $fieldPatrol,
         public string $station,
         public string $zone,
         public string $position,
@@ -115,6 +119,7 @@ final readonly class World
         $tambarare = new AreaOfInterest()->setName(self::TAMBARARE);
         $operations = new Department()->setName(self::OPERATIONS);
         $ict = new Department()->setName(self::ICT);
+        $fieldPatrol = new Department()->setName(self::FIELD_PATROL)->setArea($kilimani);
 
         $zone = new Zone()->setArea($kilimani)->setName('Lone Hills')
             ->setGeom('{"type":"MultiPolygon","coordinates":[[[[37.0,-2.9],[37.2,-2.9],[37.2,-2.7],[37.0,-2.7],[37.0,-2.9]]]]}');
@@ -175,7 +180,7 @@ final readonly class World
             new WidgetCustomPreset(AreaIndexWidgets::SURFACE, $member, null, 'Morning'),
         ];
 
-        foreach ([$kilimani, $tambarare, $operations, $ict, $zone, $station, $position, $controlRoom, $chief, ...$reasons, $member, $outOfReach, $admin, $invited, $resetting, $moving, $goal, $kind, $scale, $otherScale, $rank, $handset, $posting, ...$presets] as $entity) {
+        foreach ([$kilimani, $tambarare, $operations, $ict, $fieldPatrol, $zone, $station, $position, $controlRoom, $chief, ...$reasons, $member, $outOfReach, $admin, $invited, $resetting, $moving, $goal, $kind, $scale, $otherScale, $rank, $handset, $posting, ...$presets] as $entity) {
             $em->persist($entity);
         }
         $em->flush();
@@ -186,6 +191,7 @@ final readonly class World
             operations: (int) $operations->getId(),
             ict: (int) $ict->getId(),
             operationsUuid: (string) $operations->getUuidString(),
+            fieldPatrol: (string) $fieldPatrol->getUuidString(),
             station: (string) $station->getUuidString(),
             zone: (string) $zone->getUuidString(),
             position: (string) $position->getUuidString(),
@@ -224,6 +230,7 @@ final readonly class World
             $this->kilimani => '{kilimani}',
             $this->tambarare => '{tambarare}',
             $this->operationsUuid => '{operations}',
+            $this->fieldPatrol => '{field-patrol}',
             $this->station => '{station}',
             $this->zone => '{zone}',
             $this->position => '{position}',

@@ -1617,6 +1617,7 @@ return static function (ContainerConfigurator $container): void {
             service('security.csrf.token_manager'),
             service('router'),
             service('doctrine.orm.entity_manager'),
+            service('security.authorization_checker'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(DepartmentConfigureController::class, 'team.controller.department_configure')->public();

@@ -22,6 +22,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -34,6 +36,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentKindRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentKindService;
+use Uhifadhi\Contracts\Access\WholeOrganization;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
@@ -81,6 +84,7 @@ final readonly class DepartmentConfigureController
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $router,
         private EntityManagerInterface $entityManager,
+        private AuthorizationCheckerInterface $authorization,
     ) {
     }
 
@@ -165,6 +169,7 @@ final readonly class DepartmentConfigureController
     #[IsGranted('departments.configure')]
     public function createKind(Request $request): RedirectResponse
     {
+        $this->denyUnlessWholeOrganization();
         $this->guard($request);
 
         $name = trim((string) $request->request->get('name'));
@@ -185,6 +190,7 @@ final readonly class DepartmentConfigureController
     #[IsGranted('departments.configure')]
     public function renameKind(Request $request, string $uuid): RedirectResponse
     {
+        $this->denyUnlessWholeOrganization();
         $this->guard($request);
 
         $kind = $this->kinds->findOneByUuid(Uuid::fromString($uuid));
@@ -204,6 +210,18 @@ final readonly class DepartmentConfigureController
         }
 
         return $this->back($request, \sprintf('The kind is called “%s”.', $name), 'success');
+    }
+
+    /**
+     * THE KINDS ARE THE WHOLE ORGANIZATION'S VOCABULARY, so changing them
+     * reaches beyond any one area: somebody configuring departments at one
+     * area reads the list and does not change it.
+     */
+    private function denyUnlessWholeOrganization(): void
+    {
+        if (!$this->authorization->isGranted(self::PAIR, new WholeOrganization())) {
+            throw new AccessDeniedException('The department kinds are changed by somebody whose authority reaches the whole organization.');
+        }
     }
 
     private function guard(Request $request): void

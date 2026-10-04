@@ -8,7 +8,8 @@ The kinds of person: *signed out*; *deactivated* — an Admin deactivated while
 signed in; Staff with *no position*; Staff holding exactly *the pair* the route
 checks, placed at Kilimani in Operations; Staff holding *all but the pair*, placed
 the same; Staff holding *the pair, elsewhere* — placed at Tambarare in ICT; *Admin*;
-*Super Admin*. Records are Kilimani's and Operations'.
+*Super Admin*. Records are Kilimani's and Operations'; Field Patrol is a
+department confined to Kilimani.
 
 | Route | Request | Checks | signed out | deactivated | no position | the pair | all but the pair | the pair, elsewhere | Admin | Super Admin |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -66,6 +67,7 @@ the same; Staff holding *the pair, elsewhere* — placed at Tambarare in ICT; *A
 | department_widgets | GET /departments/widgets | `departments.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_department_show | GET /departments/{operations} | `departments.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_department_configure | GET /departments/{operations}/configure | `departments.configure` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
+| team_department_configure | GET /departments/{field-patrol}/configure | `departments.configure` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
 | team_department_delete | GET /departments/{operations}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
 | team_performance | GET /departments/performance | `departments.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_performance_topics | GET /departments/performance/topics | `departments.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
@@ -166,14 +168,15 @@ the same; Staff holding *the pair, elsewhere* — placed at Tambarare in ICT; *A
 | team_configure_ranks_scale_remove | POST /team/configure/ranks/scales/{other-scale}/remove | `ranks.configure` | sign-in | sign-in | refused | refused | refused | refused | → /team/configure/ranks | → /team/configure/ranks |
 | team_department_create | POST /departments | `departments.configure` | sign-in | sign-in | refused | refused | refused | refused | → /departments | → /departments |
 | team_department_rename | POST /departments/{operations}/rename | `departments.configure` | sign-in | sign-in | refused | refused | refused | refused | → /departments | → /departments |
+| team_department_rename | POST /departments/{field-patrol}/rename | `departments.configure` | sign-in | sign-in | refused | → /departments | refused | refused | → /departments | → /departments |
 | team_department_scope | POST /departments/{operations}/scope | `departments.configure` | sign-in | sign-in | refused | refused | refused | refused | → /departments | → /departments |
 | team_department_goal_declare | POST /departments/{operations}/goals | `departments.configure` | sign-in | sign-in | refused | refused | refused | refused | → /departments/{operations} | → /departments/{operations} |
 | team_department_goal_withdraw | POST /departments/{operations}/goals/{goal}/withdraw | `departments.configure` | sign-in | sign-in | refused | refused | refused | refused | → /departments/{operations} | → /departments/{operations} |
 | team_department_deactivate | POST /departments/{operations}/deactivate | `departments.configure` | sign-in | sign-in | refused | refused | refused | refused | → /departments | → /departments |
 | team_department_reactivate | POST /departments/{operations}/reactivate | `departments.configure` | sign-in | sign-in | refused | refused | refused | refused | → /departments | → /departments |
 | team_department_delete | POST /departments/{operations}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | → /departments |
-| team_department_kind_create | POST /departments/configure/lists/kinds | `departments.configure` | sign-in | sign-in | refused | → /departments/configure/lists | refused | → /departments/configure/lists | → /departments/configure/lists | → /departments/configure/lists |
-| team_department_kind_rename | POST /departments/configure/lists/kinds/{kind}/rename | `departments.configure` | sign-in | sign-in | refused | → /departments/configure/lists | refused | → /departments/configure/lists | → /departments/configure/lists | → /departments/configure/lists |
+| team_department_kind_create | POST /departments/configure/lists/kinds | `departments.configure` | sign-in | sign-in | refused | refused | refused | refused | → /departments/configure/lists | → /departments/configure/lists |
+| team_department_kind_rename | POST /departments/configure/lists/kinds/{kind}/rename | `departments.configure` | sign-in | sign-in | refused | refused | refused | refused | → /departments/configure/lists | → /departments/configure/lists |
 | organization_widgets_save | POST /widgets/save | `dashboard.read` | sign-in | sign-in | refused | 422 | refused | 422 | 422 | 422 |
 | organization_widgets_reset | POST /widgets/reset | `dashboard.read` | sign-in | sign-in | refused | → /widgets | refused | → /widgets | → /widgets | → /widgets |
 | organization_widgets_preset | POST /widgets/preset/a | `dashboard.read` | sign-in | sign-in | refused | → /widgets | refused | → /widgets | → /widgets | → /widgets |

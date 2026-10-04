@@ -29,6 +29,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\GrantVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
+use Uhifadhi\Contracts\Access\WholeOrganization;
 
 /**
  * A CHECK ASKS THREE QUESTIONS, AND IT FAILS CLOSED.
@@ -281,6 +282,34 @@ final class GrantVoterTest extends IntegrationTestCase
         $later = $this->area('Tambarare');
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($person, ['directory.read'], $later));
+    }
+
+    /**
+     * AN ACT ON THE WHOLE ORGANIZATION — an organization-wide department
+     * kind, creating an area — is asked with the organization as its subject, and only
+     * a placement across the whole organization reaches it. Somebody placed at
+     * one area holds the pair there and nowhere beyond it.
+     */
+    public function testTheWholeOrganizationIsReachedOnlyFromAPlacementAcrossIt(): void
+    {
+        $kilimani = $this->area('Kilimani');
+        $bound = $this->staff(
+            $this->positionGranting('Field Head', ['departments.configure']),
+            new Placement()->inAreas([$kilimani])->inDepartment($this->homeDepartment($this->em)),
+        );
+        $everywhere = $this->staff(
+            $this->positionGranting('Planner', ['departments.configure']),
+            new Placement()->acrossTheOrganization()->inDepartment($this->homeDepartment($this->em)),
+        );
+
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($bound, ['departments.configure'], new WholeOrganization()));
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($bound, ['departments.configure'], $kilimani), 'and the same pair still reaches the area the person is placed at');
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($everywhere, ['departments.configure'], new WholeOrganization()));
+    }
+
+    public function testTheTiersReachTheWholeOrganizationByTier(): void
+    {
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($this->superAdmin(), ['departments.configure'], new WholeOrganization()));
     }
 
     /**

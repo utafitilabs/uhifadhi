@@ -12,7 +12,7 @@
             <h1 class="pg">Areas</h1>
             <p class="pgsub">{{ include('@Area/area/widgets/_subtitle.html.twig', {view: 'register'}) }}</p>
         </div>
-        {% if door('areas.configure') %}
+        {% if door('areas.configure', whole_organization()) %}
             <div class="pgact"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a></div>
         {% endif %}
     </div>

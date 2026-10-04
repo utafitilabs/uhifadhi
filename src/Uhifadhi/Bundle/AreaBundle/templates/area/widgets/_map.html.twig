@@ -17,7 +17,7 @@
             <h1 class="pg">Areas</h1>
             <p class="pgsub">{{ include('@Area/area/widgets/_subtitle.html.twig', {view: 'map'}) }}</p>
         </div>
-        {% if door('areas.configure') %}
+        {% if door('areas.configure', whole_organization()) %}
             <div class="pgact"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a></div>
         {% endif %}
     </div>
@@ -72,7 +72,7 @@
                 </a>
             {% endfor %}
         </div>
-        {% if door('areas.configure') %}
+        {% if door('areas.configure', whole_organization()) %}
             <a class="ax-dockadd" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a>
         {% endif %}
     </div>

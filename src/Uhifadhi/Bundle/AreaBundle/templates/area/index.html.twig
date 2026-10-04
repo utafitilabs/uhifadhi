@@ -58,7 +58,7 @@
     <a class="tgl w-act" href="{{ path('area_widgets') }}">{{ ux_icon('shell:layout-grid') }} Widget library</a>
     {# THE BUTTON CARRIES THE PERMISSION, not just the screen behind it: a control
        that opens onto a refusal teaches somebody the product is broken. #}
-    {% if door('areas.configure') %}
+    {% if door('areas.configure', whole_organization()) %}
         <a class="cta" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a>
     {% endif %}
 {% endblock %}
@@ -72,7 +72,7 @@
                 installation manages &mdash; the axis everything else is filed under,
                 so nothing else has anywhere to go until one exists.</p>
             <p class="zeb"><span class="mono d" style="font-size:10.5px">Areas arrive from whatever seeds this installation, or from a boundary import.</span></p>
-            {% if door('areas.configure') %}
+            {% if door('areas.configure', whole_organization()) %}
                 <p class="zeb"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a></p>
             {% endif %}
         </div>

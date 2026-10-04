@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
+use Uhifadhi\Contracts\Access\WholeOrganization;
 
 /**
  * THE `door()` HELPER THE TEAM BUNDLE WOULD REGISTER.
@@ -27,7 +28,7 @@ use Twig\TwigFunction;
  * else's package.
  *
  * So the suite ships the smallest thing that answers, exactly as it does for
- * the voter beside it: one function, the same two arguments, handing the
+ * the voter beside it: the same functions, the same arguments, handing the
  * question to the authorization checker this kernel already has.
  */
 final class DoorFunction extends AbstractExtension
@@ -41,6 +42,7 @@ final class DoorFunction extends AbstractExtension
     {
         return [
             new TwigFunction('door', $this->opens(...)),
+            new TwigFunction('whole_organization', static fn (): WholeOrganization => new WholeOrganization()),
         ];
     }
 

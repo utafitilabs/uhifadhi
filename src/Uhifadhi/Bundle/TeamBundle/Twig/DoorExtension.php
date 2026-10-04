@@ -18,6 +18,7 @@ use Twig\TwigFunction;
 use Uhifadhi\Bundle\TeamBundle\Access\AddressSight;
 use Uhifadhi\Bundle\TeamBundle\Access\Door;
 use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
+use Uhifadhi\Contracts\Access\WholeOrganization;
 
 /**
  * `{% if door('zones.configure', area) %}` — the one way a template asks
@@ -51,6 +52,8 @@ final class DoorExtension extends AbstractExtension
     {
         return [
             new TwigFunction('door', $this->door->opens(...)),
+            // The subject a door asks for an act on the whole organization: `door('areas.configure', whole_organization())`.
+            new TwigFunction('whole_organization', static fn (): WholeOrganization => new WholeOrganization()),
             // Whether this viewer sees a person's tier at all (ruled 28 Sep 2026).
             new TwigFunction('sees_tiers', $this->tiers->seesTiers(...)),
             // …this person's tier: never a Super Admin's, but to a Super Admin.

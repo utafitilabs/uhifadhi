@@ -72,7 +72,7 @@ the same; Staff holding *the pair, elsewhere* — placed at Tambarare in ICT; *A
 | team_performance_briefing | GET /departments/performance/briefing | `departments.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_performance_configure | GET /departments/performance/settings | `departments.configure` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | area_index | GET /areas | `areas.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
-| area_new | GET /areas/new | `areas.configure` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
+| area_new | GET /areas/new | `areas.configure` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
 | area_widgets | GET /areas/widgets | `areas.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | area_show | GET /areas/{kilimani} | `areas.read` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
 | area_edit | GET /areas/{kilimani}/edit | `areas.configure` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
@@ -192,7 +192,7 @@ the same; Staff holding *the pair, elsewhere* — placed at Tambarare in ICT; *A
 | department_widgets_preset_delete | POST /departments/widgets/presets/{department-preset}/delete | `departments.read` | sign-in | sign-in | refused | not found | refused | not found | not found | not found |
 | area_widgets_preset | POST /areas/widgets/preset/wall | `areas.read` | sign-in | sign-in | refused | → /areas/widgets | refused | → /areas/widgets | → /areas/widgets | → /areas/widgets |
 | area_widgets_reset | POST /areas/widgets/reset | `areas.read` | sign-in | sign-in | refused | → /areas/widgets | refused | → /areas/widgets | → /areas/widgets | → /areas/widgets |
-| area_new | POST /areas/new | `areas.configure` | sign-in | sign-in | refused | → /areas/{new} | refused | → /areas/{new} | → /areas/{new} | → /areas/{new} |
+| area_new | POST /areas/new | `areas.configure` | sign-in | sign-in | refused | refused | refused | refused | → /areas/{new} | → /areas/{new} |
 | area_edit | POST /areas/{kilimani}/edit | `areas.configure` | sign-in | sign-in | refused | → /areas/{kilimani}/configure/settings | refused | refused | → /areas/{kilimani}/configure/settings | → /areas/{kilimani}/configure/settings |
 | area_boundary_replace | POST /areas/{kilimani}/boundary/replace | `areas.configure` | sign-in | sign-in | refused | → /areas/{kilimani} | refused | refused | → /areas/{kilimani} | → /areas/{kilimani} |
 | area_delete | POST /areas/{kilimani}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | → /areas |

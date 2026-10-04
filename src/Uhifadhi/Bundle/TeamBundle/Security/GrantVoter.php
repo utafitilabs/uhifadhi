@@ -22,6 +22,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\GrantJustificationRepository;
 use Uhifadhi\Contracts\Access\Grant;
+use Uhifadhi\Contracts\Access\WholeOrganization;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
@@ -58,7 +59,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * one department's. Where a concern's module IS run by some department, the
  * person must be placed in at least one of those departments.
  *
- * @extends Voter<string, ?AreaInterface>
+ * @extends Voter<string, AreaInterface|WholeOrganization|null>
  *
  * @see https://symfony.com/doc/current/security/voters.html — a voter extends Voter, answers supports() and voteOnAttribute()
  * @see vendor/symfony/security-core/Authorization/Voter/Voter.php — the two abstract signatures this class implements, the fourth ?Vote argument included
@@ -155,7 +156,15 @@ final class GrantVoter extends Voter
             return false;
         }
 
-        if (!$placement->coversArea($subject instanceof AreaInterface ? $subject : null)) {
+        // 2a. THE WHOLE ORGANIZATION is reached only from a placement across
+        //     it: a pair held at one area does not reach beyond that area.
+        if ($subject instanceof WholeOrganization) {
+            if (!$placement->isWholeOrganization()) {
+                $vote?->addReason('this reaches the whole organization, and their placement covers only part of it.');
+
+                return false;
+            }
+        } elseif (!$placement->coversArea($subject instanceof AreaInterface ? $subject : null)) {
             return false;
         }
 

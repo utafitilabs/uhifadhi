@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
@@ -29,6 +30,7 @@ use Uhifadhi\Bundle\AreaBundle\Exception\AreaCreationException;
 use Uhifadhi\Bundle\AreaBundle\Exception\BoundaryImportException;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaCreator;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
+use Uhifadhi\Contracts\Access\WholeOrganization;
 
 /**
  * THE CREATE SCREEN — where an installation gets its first area, and the reason
@@ -70,6 +72,7 @@ final readonly class AreaCreateController
         private BoundaryImport $boundaries,
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $urls,
+        private AuthorizationCheckerInterface $authorization,
     ) {
     }
 
@@ -79,9 +82,19 @@ final readonly class AreaCreateController
      * two never compete however they are ordered.
      */
     #[Route('/areas/new', name: 'area_new', methods: ['GET', 'POST'])]
-    #[IsGranted('areas.configure')]
+    #[IsGranted(self::PAIR)]
     public function new(Request $request): Response
     {
+        /*
+         * AN AREA IS ADDED TO THE WHOLE ORGANIZATION. Holding `areas.configure`
+         * at one area keeps that area's identity and boundary; adding another
+         * reaches beyond it, so the pair is asked of the organization itself,
+         * and only somebody whose authority reaches all of it may.
+         */
+        if (!$this->authorization->isGranted(self::PAIR, new WholeOrganization())) {
+            throw new AccessDeniedException('Creating an area reaches the whole organization.');
+        }
+
         if (!$request->isMethod('POST')) {
             return $this->form();
         }
@@ -184,6 +197,9 @@ final readonly class AreaCreateController
 
     /** The token id the create form mints. One screen, one write, one id. */
     public const string TOKEN_ID = 'area_new';
+
+    /** What creating an area asks, of the whole organization. */
+    public const string PAIR = 'areas.configure';
 
     private function denyUnlessTokenValid(Request $request): void
     {

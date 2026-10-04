@@ -279,6 +279,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.boundary_import'),
             service('security.csrf.token_manager'),
             service('router'),
+            service('security.authorization_checker'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaCreateController::class, 'area.controller.create')->public();

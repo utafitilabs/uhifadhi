@@ -325,6 +325,50 @@ final class RouteByComposedPositionTest extends WebTestCase
         );
     }
 
+    /**
+     * CREATING AN AREA REACHES THE WHOLE ORGANIZATION. Somebody placed at
+     * Kilimani holds `areas.configure` there — to keep Kilimani's identity
+     * and boundary — and the same pair does not let them add an area to the
+     * organization; somebody placed across it may. The door asks what the
+     * route asks, so the register offers New area only where it opens.
+     */
+    public function testCreatingAnAreaNeedsAPlacementAcrossTheOrganization(): void
+    {
+        $kilimani = $this->area('Kilimani');
+        $bound = $this->composed(['areas.read', 'areas.configure'], new Placement()->inAreas([$kilimani])->inDepartment($this->homeDepartment($this->em)));
+        $everywhere = $this->composed(['areas.read', 'areas.configure']);
+
+        $this->signIn($bound);
+        $this->client->request('GET', '/areas/new');
+        self::assertResponseStatusCodeSame(403, 'an area-bound holder of areas.configure creates no area');
+        $register = $this->client->request('GET', '/areas');
+        self::assertCount(0, $register->filter('a[href="/areas/new"]'), 'and the register offers them no door to it');
+
+        $this->signIn($everywhere);
+        $this->client->request('GET', '/areas/new');
+        self::assertResponseIsSuccessful();
+        $register = $this->client->request('GET', '/areas');
+        self::assertGreaterThan(0, $register->filter('a[href="/areas/new"]')->count());
+    }
+
+    /**
+     * EVERY DOOR TO NEW AREA ASKS WHAT THE ROUTE ASKS. The register draws the
+     * door in each of its landing designs; one that asked the bare pair would
+     * offer an area-bound holder a page that refuses them.
+     */
+    public function testEveryDoorToANewAreaAsksTheWholeOrganization(): void
+    {
+        $asksTheBarePair = [];
+        foreach (glob(\dirname(__DIR__, 2).'/src/Uhifadhi/Bundle/*/templates/{,*/,*/*/}*.html.twig', \GLOB_BRACE) ?: [] as $template) {
+            $markup = (string) file_get_contents($template);
+            if (str_contains($markup, "path('area_new')") && str_contains($markup, "door('areas.configure')")) {
+                $asksTheBarePair[] = basename(\dirname($template)).'/'.basename($template);
+            }
+        }
+
+        self::assertSame([], $asksTheBarePair, 'These templates draw New area behind door(\'areas.configure\') without whole_organization().');
+    }
+
     // --- the fixtures -----------------------------------------------------
 
     /**

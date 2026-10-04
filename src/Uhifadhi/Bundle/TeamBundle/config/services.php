@@ -1340,6 +1340,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.performance_topics'),
             service('team.performance.departments_band'),
             service('team.department_palette'),
+            service('security.authorization_checker'),
             service(CurrentPeriodInterface::class)->nullOnInvalid(),
             service('team.deletion_page'),
         ])

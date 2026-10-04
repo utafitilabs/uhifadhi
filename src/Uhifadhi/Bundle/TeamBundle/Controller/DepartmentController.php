@@ -23,6 +23,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
@@ -159,6 +160,7 @@ final readonly class DepartmentController
         private PerformanceTopics $topics,
         private DepartmentsBand $band,
         private DepartmentPalette $palette,
+        private AuthorizationCheckerInterface $authorization,
         /**
          * WHAT PERIOD IT IS NOW, from whoever publishes one — rather
          * than the wall clock this read used to ask, which made the
@@ -411,6 +413,10 @@ final readonly class DepartmentController
     public function show(string $uuid): Response
     {
         $department = $this->department($uuid);
+        if (!$this->mayRead($department)) {
+            throw new AccessDeniedException('A department is read by the people who belong to it or support it.');
+        }
+
         $positions = $owned = $this->membership->positionsIn($department);
 
         // THE TWO HALVES OF THE ATTACHMENT CONTROL, split here rather than in
@@ -972,6 +978,18 @@ final readonly class DepartmentController
         if (!$this->mayManage($department)) {
             throw new AccessDeniedException('An area administrator may manage only the area-level departments in their own area.');
         }
+    }
+
+    /**
+     * NEED TO KNOW: a department is read by the people who belong to it or
+     * support it, by somebody placed across the organization, and by somebody
+     * who may manage it — whose Configure page is reached from this record.
+     */
+    private function mayRead(Department $department): bool
+    {
+        return $this->authority->isUnbounded()
+            || ($this->signedIn()?->getPlacement()?->serves($department) ?? false)
+            || ($this->authorization->isGranted('departments.configure') && $this->mayManage($department));
     }
 
     /** The reach half of managing a department, asked by its saves, its Configure page and the record's door. */

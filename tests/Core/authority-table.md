@@ -65,7 +65,8 @@ department confined to Kilimani.
 | team_departments_configure | GET /departments/configure | `departments.configure` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_departments_configure_lists | GET /departments/configure/lists | `departments.configure` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | department_widgets | GET /departments/widgets | `departments.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
-| team_department_show | GET /departments/{operations} | `departments.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
+| team_department_show | GET /departments/{operations} | `departments.read` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
+| team_department_show | GET /departments/{field-patrol} | `departments.read` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
 | team_department_configure | GET /departments/{operations}/configure | `departments.configure` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
 | team_department_configure | GET /departments/{field-patrol}/configure | `departments.configure` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
 | team_department_delete | GET /departments/{operations}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |

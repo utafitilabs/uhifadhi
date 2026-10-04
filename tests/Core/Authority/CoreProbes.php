@@ -154,6 +154,7 @@ final class CoreProbes
             Probe::get('team_departments_configure_lists'),
             Probe::get('department_widgets'),
             Probe::get('team_department_show', $department),
+            Probe::get('team_department_show', ['uuid' => $world->fieldPatrol]),
             Probe::get('team_department_configure', $department),
             Probe::get('team_department_configure', ['uuid' => $world->fieldPatrol]),
             Probe::get('team_department_delete', $department),

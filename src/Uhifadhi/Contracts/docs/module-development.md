@@ -735,6 +735,22 @@ Namespace the concern key by your module so two modules cannot collide on one, a
 `AccessConformanceTestCase` over the declaration in your own suite — it holds the rules the core
 holds itself to.
 
+#### An act on the whole organization
+
+The subject says where an act lands, and an act that lands beyond any one area — a list every
+area reads, a setting of the organization's — names the organization itself:
+
+```php
+if (!$this->authorization->isGranted(self::CONFIGURE, new WholeOrganization())) {
+    throw new AccessDeniedException('This reaches the whole organization.');
+}
+```
+
+`Uhifadhi\Contracts\Access\WholeOrganization` is granted to the tiers, and to Staff only when the
+pair is held and their placement is across the organization; somebody placed at one area holds the
+pair there and nowhere beyond it. The door asks the same, `door(self::CONFIGURE,
+whole_organization())`, so nobody is offered a form the route will refuse.
+
 ### Rendering: generic page or your own
 
 `entryRoute()` returning `null` means the host renders your module through its generic module page.

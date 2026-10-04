@@ -148,6 +148,12 @@ final readonly class ModuleFrameService
             return null;
         }
 
+        // NO DOOR TO A PAGE THAT REFUSES: every section withholds itself from
+        // a viewer it does not open for, and with none left the page refuses.
+        if ([] === $this->sections->sections($surface)) {
+            return null;
+        }
+
         $back = $this->frontDoorUrl($request, $surface);
         if ($this->isConfiguring($request, $surface)) {
             return null === $back

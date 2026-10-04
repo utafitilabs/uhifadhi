@@ -245,6 +245,18 @@ final class ModuleFrameServiceTest extends TestCase
     }
 
     /**
+     * NO DOOR TO A PAGE THAT REFUSES. A surface declares its sections and each
+     * withholds itself from a viewer it does not open for; when every one has,
+     * the configure page would refuse them, so the action is not drawn.
+     */
+    public function testAViewerWhoMayOpenNoSectionHasNoConfigureAction(): void
+    {
+        $frame = $this->frame($this->moduleRequest('patrol_dashboard'), sections: $this->sectionsWithheldFromThisViewer());
+
+        self::assertNull($frame->configure());
+    }
+
+    /**
      * A PAGE INSIDE NO MODULE FALLS BACK TO THE AREA'S OWN SCREENS, which is
      * every page the frame did not change.
      */
@@ -383,6 +395,32 @@ final class ModuleFrameServiceTest extends TestCase
                     ConfigurationSection::page('kinds', 'Observation kinds', '@Fixture/_kinds.html.twig'),
                     ConfigurationSection::page('settings', 'Settings', '@Fixture/_settings.html.twig'),
                 ];
+            }
+        };
+    }
+
+    /** A surface whose every section withholds itself from the viewer asking. */
+    private function sectionsWithheldFromThisViewer(): ConfigurationSectionsInterface
+    {
+        return new class implements ConfigurationSectionsInterface {
+            public function slug(): string
+            {
+                return 'patrols';
+            }
+
+            public function heading(): string
+            {
+                return 'Patrols';
+            }
+
+            public function summary(): ?string
+            {
+                return null;
+            }
+
+            public function sections(): array
+            {
+                return [];
             }
         };
     }

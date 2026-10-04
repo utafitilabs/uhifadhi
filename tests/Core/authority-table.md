@@ -79,7 +79,7 @@ the same; Staff holding *the pair, elsewhere* — placed at Tambarare in ICT; *A
 | area_delete | GET /areas/{kilimani}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
 | area_modules | GET /areas/{kilimani}/modules | `modules.read` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
 | area_departments | GET /areas/{kilimani}/departments | `departments.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
-| shell_area_configure | GET /areas/{kilimani}/configure | — | sign-in | sign-in | not found | not found | allowed | not found | allowed | allowed |
+| shell_area_configure | GET /areas/{kilimani}/configure | — | sign-in | sign-in | refused | refused | allowed | refused | allowed | allowed |
 | area_departments_configure | GET /areas/{kilimani}/configure/departments | `departments.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | area_modules_configure | GET /areas/{kilimani}/configure/modules | `modules.configure` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
 | area_stations_configure | GET /areas/{kilimani}/configure/stations | `stations.read` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |

@@ -352,6 +352,22 @@ final class RouteByComposedPositionTest extends WebTestCase
     }
 
     /**
+     * A CONFIGURE PAGE WITH NOTHING FOR THE VIEWER REFUSES THEM. Every section
+     * of an area's configure page withholds itself from somebody it does not
+     * open for; with all of them withheld the page is the house refusal, not
+     * a page that is not there.
+     */
+    public function testAnAreasConfigurePageRefusesSomebodyWhoMayOpenNoSectionOfIt(): void
+    {
+        $kilimani = $this->area('Kilimani');
+        $outsider = $this->composed(['directory.read'], new Placement()->inAreas([$kilimani])->inDepartment($this->homeDepartment($this->em)));
+
+        $this->signIn($outsider);
+        $this->client->request('GET', '/areas/'.$kilimani->getUuidString().'/configure');
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    /**
      * EVERY DOOR TO NEW AREA ASKS WHAT THE ROUTE ASKS. The register draws the
      * door in each of its landing designs; one that asked the bare pair would
      * offer an area-bound holder a page that refuses them.

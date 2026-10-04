@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Twig\Environment;
 use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
@@ -86,9 +87,18 @@ final readonly class ConfigureController
 
     private function render(Request $request, string $surface): Response
     {
-        $sections = $this->frame->sectionsOf($surface);
-        if ([] === $sections) {
+        $declaration = $this->frame->declarationOf($surface);
+        if (null === $declaration) {
             throw new NotFoundHttpException(\sprintf('Nothing declares a configure page for "%s".', $surface));
+        }
+
+        /*
+         * EVERY SECTION WITHHELD IS A REFUSAL. Each section withholds itself
+         * from a viewer it does not open for; a page with none left for them
+         * is the house refusal, the same answer a section's own address gives.
+         */
+        if ([] === $this->frame->sectionsOf($surface)) {
+            throw new AccessDeniedException(\sprintf('No section of the "%s" configure page opens for this viewer.', $surface));
         }
 
         /*
@@ -119,11 +129,9 @@ final readonly class ConfigureController
             throw new NotFoundHttpException(\sprintf('"%s" is not a section of this configure page.', $named));
         }
 
-        $declaration = $this->frame->declarationOf($surface);
-
         return new Response($this->twig->render('@Shell/configure.html.twig', [
-            'heading' => $declaration?->heading() ?? '',
-            'summary' => $declaration?->summary(),
+            'heading' => $declaration->heading(),
+            'summary' => $declaration->summary(),
             'section' => $section,
             'back' => $this->frame->frontDoorOf($request, $surface),
         ]));

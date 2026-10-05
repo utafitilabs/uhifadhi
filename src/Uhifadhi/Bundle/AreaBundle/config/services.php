@@ -15,7 +15,6 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Symfony\Component\Console\Application;
 use Uhifadhi\Bundle\AreaBundle\Access\AreaConcerns;
-use Uhifadhi\Contracts\Access\PowerSourceInterface;
 use Uhifadhi\Bundle\AreaBundle\Access\AreaPowers;
 use Uhifadhi\Bundle\AreaBundle\Command\PresenceRebuildCommand;
 use Uhifadhi\Bundle\AreaBundle\Deletion\AreaDeletion;
@@ -83,6 +82,7 @@ use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Contracts\Access\ConcernSourceInterface;
+use Uhifadhi\Contracts\Access\PowerSourceInterface;
 use Uhifadhi\Contracts\Area\LivePositionsInterface;
 use Uhifadhi\Contracts\Area\PresenceProviderInterface;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;

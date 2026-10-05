@@ -54,6 +54,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Security\MemberVoter;
+use Uhifadhi\Bundle\TeamBundle\Security\TierChange;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
@@ -289,16 +290,16 @@ final readonly class MemberController
             // else; for an Admin looking at an Admin or a Super Admin it is
             // drawn refused, with the reason on it.
             'showsOneTimePassword' => null !== $this->oneTimePasswords && null !== $viewer && $member->isActive() && $viewer->getTeamRole()->canManageContent() && $viewer->getId() !== $member->getId(),
-            'mayIssueOneTimePassword' => $this->oneTimePasswords?->mayIssue($viewer, $member) ?? false,
+            'mayIssueOneTimePassword' => null !== $this->oneTimePasswords && (bool) $this->authorization?->isGranted(MemberVoter::ONE_TIME_PASSWORD, $member),
             'oneTimePassword' => \is_string($shownCode) ? $shownCode : null,
             'oneTimePasswordHours' => (int) OneTimePasswordService::EXPIRES_AFTER,
             'isSelf' => $this->signedIn()?->getId() === $member->getId(),
-            // WHO CHANGES WHICH TIER — see UserService::mayChangeTier(). One
-            // answer per tier; the card draws only the tiers answered yes, and
-            // the warning an Admin reads before making somebody their peer.
+            // WHO CHANGES WHICH TIER — the voter's question, the one the route
+            // asks. One answer per tier; the card draws only the tiers answered
+            // yes, and the warning an Admin reads before making somebody their peer.
             'tierAllowed' => array_combine(
                 array_map(static fn (TeamRoleEnum $t): string => $t->value, TeamRoleEnum::cases()),
-                array_map(static fn (TeamRoleEnum $t): bool => UserService::mayChangeTier($viewer, $member, $t), TeamRoleEnum::cases()),
+                array_map(fn (TeamRoleEnum $t): bool => (bool) $this->authorization?->isGranted(MemberVoter::TIER, new TierChange($member, $t)), TeamRoleEnum::cases()),
             ),
             'warnsPeer' => TeamRoleEnum::Admin === $viewer?->getTeamRole() && TeamRoleEnum::Staff === $member->getTeamRole(),
             'stationedAt' => $postings[0] ?? null,
@@ -356,6 +357,10 @@ final readonly class MemberController
             throw new AccessDeniedException('No one-time password here.');
         }
         $this->assertMayManage($member);
+
+        if (!(bool) $this->authorization?->isGranted(MemberVoter::ONE_TIME_PASSWORD, $member)) {
+            throw new AccessDeniedException('Only an Admin or a Super Admin issues a one-time password, never for themselves, and only a Super Admin for a Super Admin.');
+        }
 
         if (!$member->isActive()) {
             return $this->back($request, $member, 'No one-time password was issued: the account is deactivated.', 'error');
@@ -448,6 +453,10 @@ final readonly class MemberController
         $tier = TeamRoleEnum::tryFrom((string) $request->request->get('tier'));
         if (null === $tier) {
             return $this->back($request, $member, 'That is not a tier this installation has.', 'error');
+        }
+
+        if (!(bool) $this->authorization?->isGranted(MemberVoter::TIER, new TierChange($member, $tier))) {
+            throw new AccessDeniedException('Only a Super Admin makes a Super Admin or changes one; an Admin makes and unmakes Admins; a position changes no tier.');
         }
 
         try {

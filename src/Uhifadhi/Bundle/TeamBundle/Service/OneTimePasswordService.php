@@ -62,7 +62,7 @@ final readonly class OneTimePasswordService
     }
 
     /** Whether this administrator may issue a one-time password for this person. */
-    public function mayIssue(?User $issuer, User $person): bool
+    public static function mayIssue(?User $issuer, User $person): bool
     {
         if (null === $issuer || !$issuer->getTeamRole()->canManageContent() || $issuer->getId() === $person->getId()) {
             return false;
@@ -82,7 +82,7 @@ final readonly class OneTimePasswordService
      */
     public function issue(User $issuer, User $person): string
     {
-        if (!$this->mayIssue($issuer, $person)) {
+        if (!self::mayIssue($issuer, $person)) {
             throw new AccessDeniedException('Only an administrator above the matrix issues a one-time password, and only a Super Admin for a Super Admin.');
         }
 

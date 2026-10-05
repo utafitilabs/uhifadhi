@@ -309,6 +309,8 @@ class Kernel extends BaseKernel
             ->alias('test_public.area.checkins', 'area.checkins')
             ->public()
             ->alias('test_public.team.permissions.powers', 'team.permissions.powers')
+            ->public()
+            ->alias('test_public.team.permissions.evaluator', 'team.permissions.evaluator')
             ->public();
 
         // EVERY VOTER, so the build can count how many answer each question.

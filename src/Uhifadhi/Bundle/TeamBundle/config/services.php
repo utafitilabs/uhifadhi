@@ -25,6 +25,7 @@ use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Access\Door;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Contracts\Access\PowerSourceInterface;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionEvaluator;
 use Uhifadhi\Bundle\TeamBundle\Permissions\PowerCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamPowers;
 use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
@@ -652,6 +653,13 @@ return static function (ContainerConfigurator $container): void {
         ->tag(PowerSourceInterface::TAG);
     $services->set('team.permissions.powers', PowerCatalogue::class)
         ->args([tagged_iterator(PowerSourceInterface::TAG)]);
+    $services->set('team.permissions.evaluator', PermissionEvaluator::class)
+        ->args([
+            service('team.permissions.powers'),
+            service(UserRepository::class),
+            service(PositionRepository::class),
+            service('security.authorization_checker'),
+        ]);
 
     /*
      * EVERYTHING THERE IS TO HAVE A PERMISSION ABOUT, folded together from

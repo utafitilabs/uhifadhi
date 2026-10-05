@@ -17,8 +17,7 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Bundle\TeamBundle\Access\AddressSight;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
-use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
-use Uhifadhi\Bundle\TeamBundle\Security\MemberVoter;
+use Uhifadhi\Bundle\TeamBundle\Security\SignInHelpVoter;
 
 /**
  * THE SIGN-IN CARD ON A PERSON'S PAGE (ruled 30 Sep, #67, design D): can they
@@ -31,14 +30,13 @@ use Uhifadhi\Bundle\TeamBundle\Security\MemberVoter;
  */
 final readonly class SignInCard
 {
-    public const string PAIR = 'sign-in-help.manage';
+    public const string PAIR = SignInHelpVoter::PAIR;
 
     /** A send this recent is "just now": the page drawn straight after it. */
     private const int JUST_NOW_SECONDS = 60;
 
     public function __construct(
         private AuthorizationCheckerInterface $authorization,
-        private AreaAuthority $authority,
         private ApiTokenRepository $tokens,
         private AddressSight $addresses,
     ) {
@@ -78,9 +76,7 @@ final readonly class SignInCard
     /** Whether the signed-in viewer may send this person a link: the pair, the tier rule, their ground. */
     public function mayHelp(User $member): bool
     {
-        return $this->authorization->isGranted(self::PAIR)
-            && $this->authorization->isGranted(MemberVoter::CONFIGURE, $member)
-            && ($this->authority->isUnbounded() || $this->authority->reachesPerson($member));
+        return $this->authorization->isGranted(SignInHelpVoter::HELP, $member);
     }
 
     /** The address as this viewer may read it. */

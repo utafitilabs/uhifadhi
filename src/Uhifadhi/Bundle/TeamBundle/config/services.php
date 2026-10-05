@@ -97,6 +97,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Security\DepartmentReach;
 use Uhifadhi\Bundle\TeamBundle\Security\GrantVoter;
 use Uhifadhi\Bundle\TeamBundle\Security\MemberVoter;
+use Uhifadhi\Bundle\TeamBundle\Security\SignInHelpVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 use Uhifadhi\Bundle\TeamBundle\Service\CsvExportService;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentDirectory;
@@ -666,6 +667,10 @@ return static function (ContainerConfigurator $container): void {
      */
     // WHO MAY CONFIGURE A PERSON — the tiers on top of the directory grant.
     $services->set('team.access.member_voter', MemberVoter::class)
+        ->tag('security.voter');
+
+    $services->set('team.access.sign_in_help_voter', SignInHelpVoter::class)
+        ->args([service('security.access.decision_manager')])
         ->tag('security.voter');
 
     $services->set('team.access.voter', GrantVoter::class)
@@ -1281,7 +1286,6 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.sign_in_card', SignInCard::class)
         ->args([
             service('security.authorization_checker'),
-            service('team.area_authority'),
             service(ApiTokenRepository::class),
             service('team.access.address_sight'),
         ]);

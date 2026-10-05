@@ -54,6 +54,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Security\MemberVoter;
+use Uhifadhi\Bundle\TeamBundle\Security\SignInHelpVoter;
 use Uhifadhi\Bundle\TeamBundle\Security\TierChange;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
@@ -321,6 +322,9 @@ final readonly class MemberController
         $member = $this->member($uuid);
         $this->assertCsrf($request);
         $this->assertMayManage($member);
+        if (!(bool) $this->authorization?->isGranted(SignInHelpVoter::HELP, $member)) {
+            throw new AccessDeniedException('Sign-in help reaches the people placed in the helper\'s own area.');
+        }
 
         if (!$member->isActive() || !$this->mail->isConfigured()) {
             return $this->back($request, $member, 'No reset link was sent.', 'error');

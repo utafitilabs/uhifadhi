@@ -24,6 +24,9 @@ use Uhifadhi\Bundle\TeamBundle\Access\AddressSight;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Access\Door;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
+use Uhifadhi\Contracts\Access\PowerSourceInterface;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PowerCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Access\TeamPowers;
 use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
 use Uhifadhi\Bundle\TeamBundle\Api\State\MeProvider;
 use Uhifadhi\Bundle\TeamBundle\ArgumentResolver\AreaValueResolver;
@@ -642,6 +645,13 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('team.access.concerns', TeamConcerns::class)
         ->tag(ConcernSourceInterface::TAG);
+
+    // THE POWERS THE PERMISSIONS PAGE ASKS — the team's own, and every other
+    // package's through the same tag.
+    $services->set('team.access.powers', TeamPowers::class)
+        ->tag(PowerSourceInterface::TAG);
+    $services->set('team.permissions.powers', PowerCatalogue::class)
+        ->args([tagged_iterator(PowerSourceInterface::TAG)]);
 
     /*
      * EVERYTHING THERE IS TO HAVE A PERMISSION ABOUT, folded together from

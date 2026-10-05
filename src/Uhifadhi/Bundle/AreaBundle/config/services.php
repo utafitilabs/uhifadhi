@@ -15,6 +15,8 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Symfony\Component\Console\Application;
 use Uhifadhi\Bundle\AreaBundle\Access\AreaConcerns;
+use Uhifadhi\Contracts\Access\PowerSourceInterface;
+use Uhifadhi\Bundle\AreaBundle\Access\AreaPowers;
 use Uhifadhi\Bundle\AreaBundle\Command\PresenceRebuildCommand;
 use Uhifadhi\Bundle\AreaBundle\Deletion\AreaDeletion;
 use Uhifadhi\Bundle\AreaBundle\Deletion\PersonDutyDeletion;
@@ -581,6 +583,10 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('area.access.concerns', AreaConcerns::class)
         ->tag(ConcernSourceInterface::TAG);
+
+    $services->set('area.access.powers', AreaPowers::class)
+        ->args([service(CheckInRepository::class)])
+        ->tag(PowerSourceInterface::TAG);
 
     $services->set('area.zone_set', ZoneSetService::class)
         ->args([

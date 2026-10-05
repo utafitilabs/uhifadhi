@@ -29,6 +29,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Bundle\TeamBundle\Security\DepartmentReach;
 
 /**
  * WHAT THE DEPARTMENTS SECTION'S OVERVIEW READS, AND OWNS NOTHING OF.
@@ -61,6 +62,7 @@ final readonly class DepartmentSectionOverview
         private UserRepository $users,
         private DepartmentGoalRepository $goals,
         private ModuleCatalogue $catalogue,
+        private DepartmentReach $reach,
     ) {
     }
 
@@ -81,7 +83,7 @@ final readonly class DepartmentSectionOverview
      */
     public function read(): array
     {
-        $departments = $this->departments->findAllActiveOrdered();
+        $departments = $this->reach->readable($this->departments->findAllActiveOrdered());
         $held = $this->heldByPosition();
 
         $orgWide = $areaLevel = 0;

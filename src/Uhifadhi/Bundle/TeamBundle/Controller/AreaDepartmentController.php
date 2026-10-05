@@ -30,6 +30,7 @@ use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Bundle\TeamBundle\Security\DepartmentReach;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
@@ -74,6 +75,7 @@ final readonly class AreaDepartmentController
         private RouterInterface $router,
         private ModuleCatalogue $catalogue,
         private DepartmentPalette $palette,
+        private DepartmentReach $reach,
     ) {
     }
 
@@ -84,8 +86,8 @@ final readonly class AreaDepartmentController
         $area = $this->areaByUuid($uuid);
         $query = DepartmentQuery::from($request);
 
-        $own = $query->matching($this->departments->findForArea($area));
-        $inherited = $query->matching($this->departments->findOrgLevelOrdered());
+        $own = $query->matching($this->reach->readable($this->departments->findForArea($area)));
+        $inherited = $query->matching($this->reach->readable($this->departments->findOrgLevelOrdered()));
         $reading = $this->reading([...$own, ...$inherited]);
 
         return new Response($this->twig->render('@Team/departments/area_tab.html.twig', [
@@ -109,8 +111,8 @@ final readonly class AreaDepartmentController
             'areaHref' => $this->tolerant('area_show', ['uuid' => $area->getUuidString()]),
             /* Which card is open is a place, so it is a query a link carries. */
             'openDepartment' => '' === trim($request->query->getString('open')) ? null : trim($request->query->getString('open')),
-            'ownCount' => \count($this->departments->findForArea($area)),
-            'orgCount' => \count($this->departments->findOrgLevelOrdered()),
+            'ownCount' => \count($this->reach->readable($this->departments->findForArea($area))),
+            'orgCount' => \count($this->reach->readable($this->departments->findOrgLevelOrdered())),
             ...$reading,
             // THE BAND'S SECOND FACT IS ABOUT THIS AREA'S OWN DEPARTMENTS.
             // An org-wide department's positions belong to the
@@ -136,8 +138,8 @@ final readonly class AreaDepartmentController
     public function configure(string $uuid): Response
     {
         $area = $this->areaByUuid($uuid);
-        $own = $this->departments->findForArea($area);
-        $inherited = $this->departments->findOrgLevelOrdered();
+        $own = $this->reach->readable($this->departments->findForArea($area));
+        $inherited = $this->reach->readable($this->departments->findOrgLevelOrdered());
 
         return new Response($this->twig->render('@Team/departments/area_configure.html.twig', [
             'area' => $area,

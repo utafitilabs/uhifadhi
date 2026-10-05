@@ -26,6 +26,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
+use Uhifadhi\Bundle\TeamBundle\Security\DepartmentReach;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentSectionOverview;
 use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
 
@@ -59,6 +60,7 @@ final readonly class DepartmentSectionController
         private ModuleCatalogue $catalogue,
         private WidgetService $widgets,
         private WidgetEndpoint $endpoint,
+        private DepartmentReach $reach,
     ) {
     }
 
@@ -113,7 +115,7 @@ final readonly class DepartmentSectionController
     public function modules(): Response
     {
         $modules = $this->catalogue->all();
-        $departments = $this->departments->findAllActiveOrdered();
+        $departments = $this->reach->readable($this->departments->findAllActiveOrdered());
 
         $rows = [];
         $perModule = array_fill_keys(array_map(self::slugOf(...), $modules), 0);

@@ -94,6 +94,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\ActiveUserChecker;
 use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
+use Uhifadhi\Bundle\TeamBundle\Security\DepartmentReach;
 use Uhifadhi\Bundle\TeamBundle\Security\GrantVoter;
 use Uhifadhi\Bundle\TeamBundle\Security\MemberVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
@@ -691,6 +692,10 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('team.area_authority', AreaAuthority::class)
         ->args([service('security.token_storage')]);
+
+    // Which departments the signed-in viewer reads: the record and every list ask it.
+    $services->set('team.department_reach', DepartmentReach::class)
+        ->args([service('team.area_authority'), service('security.authorization_checker'), service(DepartmentRepository::class)]);
 
     /*
      * THE "SCOPED TO <AREA>" BANNER'S ONE INPUT — the area a bounded
@@ -1340,7 +1345,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.performance_topics'),
             service('team.performance.departments_band'),
             service('team.department_palette'),
-            service('security.authorization_checker'),
+            service('team.department_reach'),
             service(CurrentPeriodInterface::class)->nullOnInvalid(),
             service('team.deletion_page'),
         ])
@@ -1364,6 +1369,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.performance.organization_band'),
             service('router'),
             service('doctrine.orm.entity_manager'),
+            service('team.department_reach'),
             service(CurrentPeriodInterface::class)->nullOnInvalid(),
         ])
         ->tag('controller.service_arguments');
@@ -1430,6 +1436,7 @@ return static function (ContainerConfigurator $container): void {
             service(UserRepository::class),
             service(DepartmentGoalRepository::class),
             service('registry.catalogue'),
+            service('team.department_reach'),
         ]);
     $services->alias(DepartmentSectionOverview::class, 'team.department_section_overview');
 
@@ -1577,6 +1584,7 @@ return static function (ContainerConfigurator $container): void {
             service('registry.catalogue'),
             service('shell.widget.service'),
             service('shell.widget.endpoint'),
+            service('team.department_reach'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(DepartmentSectionController::class, 'team.controller.department_section')->public();
@@ -1641,6 +1649,7 @@ return static function (ContainerConfigurator $container): void {
             service('router'),
             service('registry.catalogue'),
             service('team.department_palette'),
+            service('team.department_reach'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaDepartmentController::class, 'team.controller.area_department')->public();

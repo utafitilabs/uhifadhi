@@ -23,7 +23,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
@@ -49,6 +48,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
+use Uhifadhi\Bundle\TeamBundle\Security\DepartmentReach;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
@@ -160,7 +160,7 @@ final readonly class DepartmentController
         private PerformanceTopics $topics,
         private DepartmentsBand $band,
         private DepartmentPalette $palette,
-        private AuthorizationCheckerInterface $authorization,
+        private DepartmentReach $reach,
         /**
          * WHAT PERIOD IT IS NOW, from whoever publishes one — rather
          * than the wall clock this read used to ask, which made the
@@ -187,7 +187,9 @@ final readonly class DepartmentController
     #[IsGranted('departments.read')]
     public function index(Request $request): Response
     {
-        $departments = $this->departments->findAllOrdered();
+        // NEED TO KNOW: the register lists the departments whose records the
+        // viewer may open, and counts only those.
+        $departments = $this->reach->readable($this->departments->findAllOrdered());
         $query = DepartmentQuery::from($request);
         $areas = $this->areas();
 
@@ -413,7 +415,7 @@ final readonly class DepartmentController
     public function show(string $uuid): Response
     {
         $department = $this->department($uuid);
-        if (!$this->mayRead($department)) {
+        if (!$this->reach->reads($department)) {
             throw new AccessDeniedException('A department is read by the people who belong to it or support it.');
         }
 
@@ -978,18 +980,6 @@ final readonly class DepartmentController
         if (!$this->mayManage($department)) {
             throw new AccessDeniedException('An area administrator may manage only the area-level departments in their own area.');
         }
-    }
-
-    /**
-     * NEED TO KNOW: a department is read by the people who belong to it or
-     * support it, by somebody placed across the organization, and by somebody
-     * who may manage it — whose Configure page is reached from this record.
-     */
-    private function mayRead(Department $department): bool
-    {
-        return $this->authority->isUnbounded()
-            || ($this->signedIn()?->getPlacement()?->serves($department) ?? false)
-            || ($this->authorization->isGranted('departments.configure') && $this->mayManage($department));
     }
 
     /** The reach half of managing a department, asked by its saves, its Configure page and the record's door. */

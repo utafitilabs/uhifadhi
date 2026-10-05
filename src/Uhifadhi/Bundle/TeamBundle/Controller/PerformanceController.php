@@ -31,6 +31,7 @@ use Uhifadhi\Bundle\TeamBundle\Performance\PeriodKind;
 use Uhifadhi\Bundle\TeamBundle\Performance\RequiredPeriod;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCard;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCards;
+use Uhifadhi\Bundle\TeamBundle\Security\DepartmentReach;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
 use Uhifadhi\Bundle\TeamBundle\Shell\PerformanceSectionTabs;
 use Uhifadhi\Contracts\Entity\AreaInterface;
@@ -97,6 +98,7 @@ final readonly class PerformanceController
         private OrganizationBand $band,
         private UrlGeneratorInterface $urls,
         private EntityManagerInterface $entityManager,
+        private DepartmentReach $reach,
         /**
          * WHAT PERIOD IT IS NOW, from whoever publishes one — rather
          * than the wall clock this read used to ask, which made the
@@ -135,7 +137,7 @@ final readonly class PerformanceController
             ),
             'matrix' => $this->across->build(
                 $topics,
-                $this->directory->forScope($scope),
+                $this->reach->readableEntries($this->directory->forScope($scope)),
                 $scope,
                 $period,
                 fn (string $uuid): string => $this->urls->generate('team_department_show', ['uuid' => $uuid]),

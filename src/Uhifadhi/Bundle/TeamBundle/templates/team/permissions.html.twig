@@ -1,0 +1,142 @@
+{# TEAM · PERMISSIONS — what every kind of person may do to every other, asked
+   of the rules the app enforces, for real accounts, changing nothing.
+
+   THE BAND IS THE WAY IN: the tiers × the main powers. Picking a person adds
+   their column beside the tiers and their card, and narrows the ledger to
+   them. THE LEDGER HAS EVERY CELL, one row each, with the rule's reason. #}
+{% extends '@Shell/page.html.twig' %}
+{% from '@Team/team/_permissions_bits.html.twig' import mark, who %}
+
+{% block title %}Team · Permissions{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_index') }}">uhifadhi</a> / <a href="{{ path('team_index') }}">team</a> / permissions
+{% endblock %}
+
+{% block shell_page_title %}Team{% endblock %}
+{% block shell_page_subtitle %}What every kind of person may do to every other, asked of the rules the app enforces &mdash; for real accounts, changing nothing.{% endblock %}
+
+{% block shell_page %}
+    <div class="perm-safe">
+        <span class="au-v ok">read-only</span>
+        <span><b>Evaluates, never performs.</b> Each cell asks the rule the button asks, for the real account, and changes nothing.</span>
+    </div>
+
+    <div class="perm-pick">
+        <span class="perm-sub">Beside the tiers:</span>
+        <details class="i-dd" data-facet="person">
+            <summary class="mchip i-ddt{{ person ? ' on' }}">
+                <span class="i-ddval">{{ person ? 'Person · ' ~ person.fullName : 'Pick a person' }}</span>
+                <span class="i-ddcaret">&#9662;</span>
+            </summary>
+            <div class="i-ddmenu">
+                <span class="i-ddhead">person</span>
+                <a class="i-ddopt{{ person is null ? ' on' }}" href="{{ path('team_permissions', query.with('person', null)) }}"><span class="i-dot"></span><span class="i-ddopt-l">Nobody &mdash; the tiers only</span></a>
+                <span class="i-ddsep"></span>
+                {% for someone in people %}
+                    <a class="i-ddopt{{ person and person.id == someone.id ? ' on' }}" href="{{ path('team_permissions', query.with('person', someone.uuidString)) }}"><span class="i-dot"></span><span class="i-ddopt-l">{{ someone.fullName }} &middot; {{ who(someone) }}</span></a>
+                {% endfor %}
+            </div>
+        </details>
+    </div>
+
+    <div class="c perm-band perm-gap">
+        <span class="tab">Who can do what, by tier<span class="src">&middot; the tiers &times; the main powers &middot; the ledger below has every cell</span></span>
+        <table class="tbl">
+            <thead><tr><th>Power</th><th>Staff</th><th>Admin</th><th>Super Admin</th>{% if person %}<th class="me">{{ person.fullName }}</th>{% endif %}</tr></thead>
+            <tbody>
+            {% set last = null %}
+            {% for row in band %}
+                {% if row.group != last %}
+                    <tr><td colspan="{{ person ? 5 : 4 }}" class="perm-g">{{ row.group.label() }}</td></tr>
+                    {% set last = row.group %}
+                {% endif %}
+                <tr data-power="{{ row.power.key }}">
+                    <td class="t"><a href="{{ path('team_permissions', query.with('action', row.power.key)) }}#ledger">{{ row.power.label }}</a></td>
+                    <td>{{ mark(row.staff) }}</td>
+                    <td>{{ mark(row.admin) }}</td>
+                    <td>{{ mark(row.superAdmin) }}</td>
+                    {% if person %}<td class="me">{{ mark(row.person) }}</td>{% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <div class="sxfoot">
+            <span><span class="perm-c ok">yes</span> <span class="perm-c part">within a limit</span> <span class="perm-c no">never</span></span>
+            <span>A Staff answer depends on the position; the ledger names which.</span>
+        </div>
+    </div>
+
+    {% if card %}
+        <div class="c perm-gap">
+            <span class="tab">One person<span class="src">&middot; every answer for {{ person.fullName }}</span></span>
+            <div class="perm-person">
+                <span class="perm-av">{{ person.firstName|first }}{{ person.lastName|first }}</span>
+                <span><b>{{ person.fullName }}</b><br><span class="perm-sub">{{ who(person) }}</span></span>
+                <span class="perm-count"><span class="perm-num">{{ card.count }}</span><span class="perm-sub"> of {{ card.total }}</span><br><span class="perm-sub">actions allowed</span></span>
+            </div>
+            <div class="perm-sub perm-lh">What {{ person.firstName }} can do</div>
+            <ul class="perm-list">
+                {% for line in card.allowed %}
+                    <li><span class="perm-c {{ line.mark.kind }}"></span><span>{{ line.power.label }}{% if line.mark.kind == 'part' %}<span class="perm-sub"> &middot; {{ line.mark.text }}</span>{% endif %}</span></li>
+                {% else %}
+                    <li><span class="perm-sub">Nothing beyond their own record.</span></li>
+                {% endfor %}
+            </ul>
+            <div class="perm-sub perm-lh">Who can act on {{ person.firstName }}</div>
+            <ul class="perm-list">
+                {% for acting in card.actingOn %}
+                    <li><span class="perm-c ok"></span><span><b>{{ acting.actor.fullName }}</b> <span class="perm-sub">{{ who(acting.actor) }}</span> &mdash; {{ acting.powers|join(', ') }}</span></li>
+                {% else %}
+                    <li><span class="perm-c no">nobody</span></li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <div class="lfilt" id="ledger">
+        {% for facet in facets %}
+            {{ include('@Team/team/_facet.html.twig', {facet: facet, chosen: query.chosen(facet.key), route: 'team_permissions'}) }}
+        {% endfor %}
+    </div>
+
+    <div class="c">
+        <span class="tab">Every cell<span class="src">&middot; {{ total }} cells &middot; one row each</span></span>
+        <table class="tbl">
+            <thead><tr><th>Action</th><th>Who acts</th><th>On whom</th><th>Answer</th><th>Why &middot; the rule that decided it</th></tr></thead>
+            <tbody>
+            {% set last = null %}
+            {% for cell in rows %}
+                {% if cell.power.group != last %}
+                    <tr class="au-grp"><td colspan="5">{{ cell.power.group.label() }}<em>{{ cell.power.group.question() }}</em></td></tr>
+                    {% set last = cell.power.group %}
+                {% endif %}
+                <tr class="au-row" data-answer="{{ cell.answer.value }}">
+                    <td>{{ cell.power.label }}</td>
+                    <td class="actor"><b>{{ cell.actor.fullName }}</b><br><span class="au-why">{{ who(cell.actor) }}</span></td>
+                    <td>{{ cell.target }}</td>
+                    <td><span class="au-v {{ cell.answer.value == 'allowed' ? 'ok' : (cell.answer.value == 'refused' ? 'no' : 'na') }}">{{ cell.answer.value == 'no-target' ? 'nobody to ask' : cell.answer.value }}</span></td>
+                    <td>
+                        {% if cell.reasons is not empty %}<span class="au-why">{{ cell.reasons|join(' ') }}</span><br>{% endif %}
+                        {% if cell.refusedBy %}<span class="au-rule">{{ cell.refusedBy }}</span>{% elseif cell.answer.value == 'allowed' %}<span class="au-rule">{{ cell.power.questions|join(' · ') }}</span>{% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5"><span class="perm-sub">No cell matches.</span></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <div class="sxfoot">
+            <span>{{ matching == total ? total ~ ' cells' : matching ~ ' of ' ~ total ~ ' cells match' }} &middot; page {{ page }} of {{ pages }}</span>
+            <span>
+                {% if page > 1 %}<a class="more" href="{{ path('team_permissions', query.onPage(page - 1)) }}#ledger">&larr; Previous</a>{% endif %}
+                {% if page < pages %}<a class="more" href="{{ path('team_permissions', query.onPage(page + 1)) }}#ledger">Next &rarr;</a>{% endif %}
+            </span>
+        </div>
+    </div>
+{% endblock %}

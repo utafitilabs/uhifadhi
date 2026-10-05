@@ -31,7 +31,7 @@ department confined to Kilimani.
 | team_index | GET /team | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_overview | GET /team/overview | `directory.read`, `positions.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_assignments | GET /team/assignments | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
-| team_roles | GET /team/roles | `directory.read`, `positions.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
+| team_permissions | GET /team/permissions | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
 | team_people_export | GET /team/people.csv | `directory.export` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_invite | GET /team/invite | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
 | team_member · own record | GET /team/{own} | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |

@@ -35,7 +35,7 @@ use Uhifadhi\Contracts\Access\PowerTarget;
  * alike, so the ledger asks one holder of each, and one Admin and one Super
  * Admin; any single person is asked in full by forPerson().
  *
- * @see https://symfony.com/doc/current/security.html#checking-for-a-user-other-than-the-current-one
+ * @see https://symfony.com/doc/current/security.html#securing-other-services — "you can use the isGrantedForUser() method to explicitly set the target user"
  */
 final readonly class PermissionEvaluator
 {
@@ -97,17 +97,50 @@ final readonly class PermissionEvaluator
     }
 
     /**
+     * WHO MAY ACT ON THIS PERSON: every actor asked every power that is asked
+     * about somebody else, with this person as the somebody.
+     *
+     * @return list<Cell> the allowed cells only
+     */
+    public function actingOn(User $person): array
+    {
+        $cells = [];
+        foreach ($this->actors() as $actor) {
+            if ($actor->getId() === $person->getId()) {
+                continue;
+            }
+            foreach ($this->powers->all() as $power) {
+                $kind = self::first($power->targets, static fn (PowerTarget $k): bool => $k->isPerson() && PowerTarget::Themselves !== $k);
+                if (null === $kind) {
+                    continue;
+                }
+                $cell = $this->askAbout($actor, $power, $kind, $person);
+                if (CellAnswer::Allowed === $cell->answer) {
+                    $cells[] = $cell;
+                }
+            }
+        }
+
+        return $cells;
+    }
+
+    /**
      * @param list<User>     $people
      * @param list<Position> $positions
      */
     private function ask(User $actor, Power $power, PowerTarget $kind, array $people, array $positions): Cell
     {
         [$found, $target] = $this->target($actor, $kind, $people, $positions);
-        $label = $target instanceof User ? $target->getFullName() : ($target instanceof Position ? (string) $target->getName() : $kind->label());
         if (!$found) {
             return new Cell($actor, $power, $kind, $kind->label(), CellAnswer::NoTarget);
         }
 
+        return $this->askAbout($actor, $power, $kind, $target);
+    }
+
+    private function askAbout(User $actor, Power $power, PowerTarget $kind, User|Position|null $target): Cell
+    {
+        $label = $target instanceof User ? $target->getFullName() : ($target instanceof Position ? (string) $target->getName() : $kind->label());
         $source = $this->powers->sourceOf($power);
         foreach ($power->questions as $question) {
             $decision = new AccessDecision();

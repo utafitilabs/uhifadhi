@@ -735,6 +735,17 @@ Namespace the concern key by your module so two modules cannot collide on one, a
 `AccessConformanceTestCase` over the declaration in your own suite — it holds the rules the core
 holds itself to.
 
+#### Powers: what the Permissions page asks
+
+An action of yours that confers power — writing to somebody else's record, giving something that
+grants — is declared, so a Super Admin reading Team › Permissions sees who may do it. Tag a
+`Uhifadhi\Contracts\Access\PowerSourceInterface` with `PowerSourceInterface::TAG`; each `Power`
+names its group, its label, the questions your routes ask before allowing it, and the targets it is
+asked about, and `subject()` gives each question the subject your voter expects for the target the
+page found (a person, a position, a record of theirs). The page asks it through `isGrantedForUser()`
+as each kind of person, so your voter must read the user the token carries and never the session.
+A route that asks a power-conferring question no declared power asks fails the core's build.
+
 #### An act on the whole organization
 
 The subject says where an act lands, and an act that lands beyond any one area — a list every

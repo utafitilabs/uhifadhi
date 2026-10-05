@@ -1,0 +1,5 @@
+{# The Permissions page's two small marks: a band answer, and who a person is. #}
+
+{% macro mark(m) %}{% if m %}<span class="perm-c {{ m.kind }}">{{ m.text }}</span>{% endif %}{% endmacro %}
+
+{% macro who(person) %}{{ person.teamRole.label() }}{% if person.position %} &middot; {{ person.position.name }}{% endif %}{% endmacro %}

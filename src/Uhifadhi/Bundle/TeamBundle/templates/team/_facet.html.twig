@@ -7,7 +7,8 @@
    under its own head when it has one — and the absence option last.
 
    `facet` is a Model\Facet, `chosen` the value in the address, `query` the
-   RosterQuery that writes the links. #}
+   query that writes the links (with() a facet changed), and `route` the page
+   the links lead to, the People register unless another page names itself. #}
 {% set chosenLabel = facet.labelOf(chosen) %}
 <details class="i-dd{{ facet.opensLeft ? ' r' }}" data-facet="{{ facet.label }}">
     <summary class="mchip i-ddt{{ chosenLabel is not null ? ' on' }}">
@@ -16,17 +17,17 @@
     </summary>
     <div class="i-ddmenu">
         <span class="i-ddhead">{{ facet.label }}</span>
-        <a class="i-ddopt{{ chosenLabel is null ? ' on' }}" href="{{ path('team_index', query.with(facet.key, null)) }}"><span class="i-dot"></span><span class="i-ddopt-l">Any</span><span class="i-ddopt-n">{{ facet.total }}</span></a>
+        <a class="i-ddopt{{ chosenLabel is null ? ' on' }}" href="{{ path(route ?? 'team_index', query.with(facet.key, null)) }}"><span class="i-dot"></span><span class="i-ddopt-l">Any</span><span class="i-ddopt-n">{{ facet.total }}</span></a>
         {% for group in facet.groups %}
             <span class="i-ddsep"></span>
             {% if group.head %}<span class="i-ddhead">{{ group.head }}</span>{% endif %}
             {% for option in group.options %}
-                <a class="i-ddopt{{ chosen == option.value ? ' on' }}" href="{{ path('team_index', query.with(facet.key, option.value)) }}"><span class="i-dot"></span><span class="i-ddopt-l">{{ option.label }}</span><span class="i-ddopt-n">{{ option.count }}</span></a>
+                <a class="i-ddopt{{ chosen == option.value ? ' on' }}" href="{{ path(route ?? 'team_index', query.with(facet.key, option.value)) }}"><span class="i-dot"></span><span class="i-ddopt-l">{{ option.label }}</span><span class="i-ddopt-n">{{ option.count }}</span></a>
             {% endfor %}
         {% endfor %}
         {% if facet.absent %}
             <span class="i-ddsep"></span>
-            <a class="i-ddopt{{ chosen == facet.absent.value ? ' on' }}" href="{{ path('team_index', query.with(facet.key, facet.absent.value)) }}"><span class="i-dot"></span><span class="i-ddopt-l">{{ facet.absent.label }}</span><span class="i-ddopt-n">{{ facet.absent.count }}</span></a>
+            <a class="i-ddopt{{ chosen == facet.absent.value ? ' on' }}" href="{{ path(route ?? 'team_index', query.with(facet.key, facet.absent.value)) }}"><span class="i-dot"></span><span class="i-ddopt-l">{{ facet.absent.label }}</span><span class="i-ddopt-n">{{ facet.absent.count }}</span></a>
         {% endif %}
     </div>
 </details>

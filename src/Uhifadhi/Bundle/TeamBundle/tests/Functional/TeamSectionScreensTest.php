@@ -282,7 +282,7 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
      * a ranger — opens People and Assignments and is refused both of those,
      * which the strip and the sidebar do not offer.
      */
-    public function testTheDirectoryAloneOpensPeopleAndAssignmentsAndNotTheOverviewOrRoles(): void
+    public function testTheDirectoryAloneOpensPeopleAndAssignmentsAndNotTheOverview(): void
     {
         $this->installation();
         $ranger = $this->person('Kofi', 'Mensah');
@@ -293,13 +293,11 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
 
         $crawler = $this->visit('/team');
         self::assertSame(['People', 'Assignments'], $crawler->filter('.atabs a')->each(static fn (Crawler $a): string => trim($a->text())));
-        self::assertCount(0, $crawler->filter('nav.nav a[href="/team/overview"], nav.nav a[href="/team/roles"]'));
+        self::assertCount(0, $crawler->filter('nav.nav a[href="/team/overview"]'));
         $this->visit('/team/assignments');
 
-        foreach (['/team/overview', '/team/roles'] as $path) {
-            $this->client->request('GET', $path);
-            self::assertResponseStatusCodeSame(403, $path);
-        }
+        $this->client->request('GET', '/team/overview');
+        self::assertResponseStatusCodeSame(403);
     }
 
     /** WITH THE POSITIONS REGISTER AS WELL, the whole strip is there. */
@@ -314,10 +312,9 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
 
         $crawler = $this->visit('/team/overview');
         self::assertSame(
-            ['Overview', 'People', 'Positions', 'Assignments', 'Roles'],
+            ['Overview', 'People', 'Positions', 'Assignments'],
             $crawler->filter('.atabs a')->each(static fn (Crawler $a): string => trim($a->text())),
         );
-        $this->visit('/team/roles');
     }
 
     /**

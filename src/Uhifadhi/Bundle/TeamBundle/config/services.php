@@ -41,6 +41,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\MemberController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PasswordResetController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceController;
+use Uhifadhi\Bundle\TeamBundle\Controller\PermissionsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\RankConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\RankController;
@@ -49,7 +50,6 @@ use Uhifadhi\Bundle\TeamBundle\Controller\SettingsDeletionsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
-use Uhifadhi\Bundle\TeamBundle\Controller\TeamRolesController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamSectionController;
 use Uhifadhi\Bundle\TeamBundle\Deletion\AreaTeamDeletion;
 use Uhifadhi\Bundle\TeamBundle\Deletion\DeletionPage;
@@ -77,6 +77,7 @@ use Uhifadhi\Bundle\TeamBundle\Performance\OrganizationBand;
 use Uhifadhi\Bundle\TeamBundle\Performance\StaffingTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCards;
 use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionEvaluator;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionsPage;
 use Uhifadhi\Bundle\TeamBundle\Permissions\PowerCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DeletionRecordRepository;
@@ -127,7 +128,6 @@ use Uhifadhi\Bundle\TeamBundle\Service\PostingBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\PostingDoorService;
 use Uhifadhi\Bundle\TeamBundle\Service\RankBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\RankService;
-use Uhifadhi\Bundle\TeamBundle\Service\RolesBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\RosterFacets;
 use Uhifadhi\Bundle\TeamBundle\Service\RuleExceptionReview;
 use Uhifadhi\Bundle\TeamBundle\Service\SignInCard;
@@ -1483,29 +1483,16 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(TeamPostingsController::class, 'team.controller.postings')->public();
 
     /*
-     * WHAT AUTHORITY EXISTS AND WHO HOLDS IT — the tier and the permission,
-     * aggregated. There is no Role entity and this asks for none.
+     * TEAM › PERMISSIONS — every power asked as each kind of person, through
+     * the evaluator, for a Super Admin to read.
      */
-    $services->set('team.roles_board', RolesBoard::class)
-        ->args([
-            service('team.access.catalogue'),
-            service(PositionRepository::class),
-            service(UserRepository::class),
-            // THE INSTALLED MODULES, for the name on each band and for the
-            // ones that declare nothing: a module drawn with no rows says
-            // "installed and grants nothing", which is a different fact from
-            // being absent. The tag string is the registry's, written out
-            // rather than imported, because this bundle must boot in an
-            // installation that has no registry at all.
-            tagged_iterator('uhifadhi.module'),
-            service('team.access.tier_sight'),
-        ]);
-    $services->alias(RolesBoard::class, 'team.roles_board');
+    $services->set('team.permissions.page', PermissionsPage::class)
+        ->args([service('team.permissions.evaluator'), service('team.permissions.powers'), service(UserRepository::class)]);
 
-    $services->set('team.controller.roles', TeamRolesController::class)
-        ->args([service('twig'), service('team.roles_board')])
+    $services->set('team.controller.permissions', PermissionsController::class)
+        ->args([service('twig'), service('team.permissions.page')])
         ->tag('controller.service_arguments');
-    $services->alias(TeamRolesController::class, 'team.controller.roles')->public();
+    $services->alias(PermissionsController::class, 'team.controller.permissions')->public();
 
     /*
      * WHAT THE SECTION'S OVERVIEW READS. It owns no figure on that page: every

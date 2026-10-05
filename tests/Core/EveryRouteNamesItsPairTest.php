@@ -161,6 +161,7 @@ final class EveryRouteNamesItsPairTest extends KernelTestCase
         'area_station_delete' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
         'area_delete' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
         'team_settings_deletions' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
+        'team_permissions' => 'TeamBundle\\Controller\\PermissionsController — a Super Admin by tier (ROLE_SUPER_ADMIN), never a pair (#66)',
         'settings' => 'ShellBundle\\Controller\\SettingsController — settings.read, asked by the controller for every screen of the section',
     ];
 

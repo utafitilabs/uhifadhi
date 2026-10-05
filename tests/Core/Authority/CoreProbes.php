@@ -130,7 +130,7 @@ final class CoreProbes
             Probe::get('team_index'),
             Probe::get('team_overview'),
             Probe::get('team_assignments'),
-            Probe::get('team_roles'),
+            Probe::get('team_permissions'),
             Probe::get('team_people_export'),
             Probe::get('team_invite'),
             ...Probe::aboutEachPerson(Probe::get('team_member', $member), 'uuid', $world),

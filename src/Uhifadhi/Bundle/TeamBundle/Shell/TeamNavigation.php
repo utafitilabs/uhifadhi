@@ -24,13 +24,13 @@ use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
+use Uhifadhi\Bundle\TeamBundle\Controller\PermissionsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\RankConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\RankController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
-use Uhifadhi\Bundle\TeamBundle\Controller\TeamRolesController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamSectionController;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
@@ -282,7 +282,7 @@ final readonly class TeamNavigation implements NavigationSourceInterface
      * reader who learns one has learnt the other.
      *
      * IT OPENS FOR THE WHOLE SECTION, not just for the register. Standing on
-     * Roles and seeing the tree collapse would say the section had one screen.
+     * Ranks and seeing the tree collapse would say the section had one screen.
      */
     private function teamRow(): ?NavItem
     {
@@ -301,8 +301,8 @@ final readonly class TeamNavigation implements NavigationSourceInterface
 
         $positions = $this->authorization->isGranted(PositionController::READ);
         $screens = array_values(array_filter([
-            // THE OVERVIEW AND THE ROLES MATRIX READ POSITIONS AS WELL AS
-            // PEOPLE, and their routes ask for both.
+            // THE OVERVIEW READS POSITIONS AS WELL AS PEOPLE, and its route
+            // asks for both.
             $positions ? $this->screen('Overview', TeamSectionController::OVERVIEW) : null,
             // A PERSON'S RECORD AND ITS CONFIGURE PAGE ARE THE PEOPLE SCREEN'S,
             // and a position's are the register's: the tree opens the path to
@@ -312,10 +312,11 @@ final readonly class TeamNavigation implements NavigationSourceInterface
                 ? $this->screen('Positions', PositionController::REGISTER, ['team_position_show', 'team_position_configure', TeamConfigureController::POSITIONS])
                 : null,
             $this->screen('Assignments', TeamPostingsController::POSTINGS, [TeamConfigureController::ASSIGNMENTS]),
-            $positions ? $this->screen('Roles', TeamRolesController::ROLES) : null,
             // RANKS ONLY WHERE THE STRIP HAS IT: while the organization uses
             // ranks and the viewer may read them.
             $this->ranksScreen(),
+            // PERMISSIONS, LAST, FOR A SUPER ADMIN: the page is the tier's.
+            $this->authorization->isGranted(PermissionsController::TIER) ? $this->screen('Permissions', PermissionsController::ROUTE) : null,
         ]));
 
         if ([] === $screens) {

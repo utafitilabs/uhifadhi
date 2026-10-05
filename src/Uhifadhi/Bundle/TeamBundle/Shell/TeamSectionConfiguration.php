@@ -29,9 +29,8 @@ use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
  * from their routes. That is a difference of address, not of idiom.
  *
  * ONE SECTION PER SIDEBAR SUB-PAGE THAT HAS A RULE TO SET (ruled 2026-09-24).
- * The Overview sets nothing; Roles sets nothing for the whole team — the tiers
- * are the model's and the matrix is edited per position — so neither has an
- * entry. The three that remain are the register pages whose rules are the
+ * The Overview sets nothing, and Permissions reports the rules rather than
+ * setting any, so neither has an entry. The three that remain are the register pages whose rules are the
  * whole team's, and they answer at the same address shape an area's sections
  * take: /team/configure/<section>.
  *

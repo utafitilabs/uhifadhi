@@ -24,7 +24,8 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeStationDirectory;
  * every tab (the section's name), a subline that says what THIS tab is for,
  * one tab strip between the head and the body with exactly one tab lit, and
  * the one Configure action at the right-hand end of the action row on every
- * tab. The tab set is Overview · People · Positions · Postings · Roles;
+ * tab. The tab set is Overview · People · Positions · Assignments · Ranks, and
+ * Permissions for a Super Admin;
  * Configure is an action and never a tab, and the configure page shows its own
  * sections where a data tab shows the strip.
  *
@@ -35,7 +36,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeStationDirectory;
 final class TeamSectionFrameTest extends WebTestCaseWithSchema
 {
     /** The five tabs of the section, and the label lit on each. */
-    private const array TABS = ['Overview', 'People', 'Positions', 'Assignments', 'Roles', 'Ranks'];
+    private const array TABS = ['Overview', 'People', 'Positions', 'Assignments', 'Ranks', 'Permissions'];
 
     /** @return \Generator<string, array{string, string}> */
     public static function tabs(): \Generator
@@ -44,8 +45,8 @@ final class TeamSectionFrameTest extends WebTestCaseWithSchema
         yield 'people' => ['/team', 'People'];
         yield 'positions' => ['/team/positions', 'Positions'];
         yield 'assignments' => ['/team/assignments', 'Assignments'];
-        yield 'roles' => ['/team/roles', 'Roles'];
         yield 'ranks' => ['/team/ranks', 'Ranks'];
+        yield 'permissions' => ['/team/permissions', 'Permissions'];
     }
 
     #[DataProvider('tabs')]

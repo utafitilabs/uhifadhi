@@ -14,11 +14,11 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Shell;
 
 use Uhifadhi\Bundle\TeamBundle\Access\Door;
+use Uhifadhi\Bundle\TeamBundle\Controller\PermissionsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\RankController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
-use Uhifadhi\Bundle\TeamBundle\Controller\TeamRolesController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamSectionController;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamSettingsService;
 use Uhifadhi\Contracts\Shell\ModuleTab;
@@ -26,7 +26,7 @@ use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
 
 /**
  * THE TEAM SECTION'S TAB SET — Overview · People · Positions · Assignments ·
- * Roles · Ranks.
+ * Ranks, and Permissions for a Super Admin.
  *
  * RANKS IS WITHHELD, NOT DRAWN DEAD: it exists while the organization uses
  * ranks and the viewer may read them, and is absent otherwise — a tab the
@@ -74,8 +74,7 @@ final readonly class TeamSectionTabs implements ModuleTabsInterface
 
         // EVERY TAB ASKS THE PAIRS ITS ROUTE ENFORCES: the directory for
         // the people and where they stand, positions for the register — and
-        // both for the overview and the roles matrix, which read the two
-        // together.
+        // both for the overview, which reads the two together.
         $reads = $this->door->opens(TeamController::READ);
         $positions = $this->door->opens(PositionController::READ);
         if ($reads && $positions) {
@@ -90,12 +89,13 @@ final readonly class TeamSectionTabs implements ModuleTabsInterface
         if ($reads) {
             $tabs[] = new ModuleTab('Assignments', TeamPostingsController::POSTINGS);
         }
-        if ($reads && $positions) {
-            $tabs[] = new ModuleTab('Roles', TeamRolesController::ROLES);
-        }
-
         if ($this->settings->current()->usesRanks() && $this->door->opens(RankController::READ)) {
             $tabs[] = new ModuleTab('Ranks', RankController::REGISTER);
+        }
+
+        // PERMISSIONS IS A SUPER ADMIN'S, by tier, and last.
+        if ($this->door->opens(PermissionsController::TIER)) {
+            $tabs[] = new ModuleTab('Permissions', PermissionsController::ROUTE);
         }
 
         return $tabs;

@@ -82,7 +82,7 @@ final class ContributionsAskForTheirPairTest extends WebTestCaseWithSchema
 
     /**
      * Positions is gated on its own pair, in the strip and in the tree — and
-     * so are the overview and the roles matrix, which read positions too.
+     * so is the overview, which reads positions too.
      */
     public function testThePositionsTabAndItsRowNeedPositionsRead(): void
     {
@@ -93,7 +93,7 @@ final class ContributionsAskForTheirPairTest extends WebTestCaseWithSchema
         self::assertResponseIsSuccessful();
         self::assertSame(['People', 'Assignments'], $this->strip($crawler));
         $rows = $crawler->filter('nav.nav a')->each(static fn (Crawler $a): string => (string) $a->attr('href'));
-        foreach (['/team/positions', '/team/overview', '/team/roles'] as $withheld) {
+        foreach (['/team/positions', '/team/overview'] as $withheld) {
             self::assertNotContains($withheld, $rows);
         }
     }
@@ -104,7 +104,7 @@ final class ContributionsAskForTheirPairTest extends WebTestCaseWithSchema
         $this->reader(['directory.read', 'positions.read']);
 
         self::assertSame(
-            ['Overview', 'People', 'Positions', 'Assignments', 'Roles'],
+            ['Overview', 'People', 'Positions', 'Assignments'],
             $this->strip($this->client->request('GET', '/team')),
         );
     }

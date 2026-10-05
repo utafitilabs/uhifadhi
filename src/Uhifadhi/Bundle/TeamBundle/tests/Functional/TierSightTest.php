@@ -55,7 +55,6 @@ final class TierSightTest extends WebTestCaseWithSchema
             '/team',
             '/team?tier=super_admin',
             '/team/overview',
-            '/team/roles',
             '/team/positions',
             '/team/'.$p['super']->getUuidString(),
             '/team/'.$p['admin']->getUuidString(),
@@ -114,7 +113,7 @@ final class TierSightTest extends WebTestCaseWithSchema
         $this->client->loginUser($this->people['admin']);
         $super = $this->people['super']->getUuidString();
 
-        foreach (['/team', '/team?tier=super_admin', '/team/overview', '/team/roles', '/team/positions', '/team/'.$super] as $url) {
+        foreach (['/team', '/team?tier=super_admin', '/team/overview', '/team/positions', '/team/'.$super] as $url) {
             $this->client->request('GET', $url);
             self::assertResponseIsSuccessful($url);
             $body = (string) $this->client->getResponse()->getContent();

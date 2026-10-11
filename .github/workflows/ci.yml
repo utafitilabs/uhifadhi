@@ -128,7 +128,7 @@ jobs:
             database: incidents_bundle_test
             extensions: ctype, iconv, pdo_pgsql
           - module: storage
-            image: postgres:17
+            image: ghcr.io/utafitilabs/postgis:17
             database: storage_bundle_test
             # gd for the thumbnails, and imagick deliberately absent — the
             # module's own CI exercises the GD-only path on purpose.

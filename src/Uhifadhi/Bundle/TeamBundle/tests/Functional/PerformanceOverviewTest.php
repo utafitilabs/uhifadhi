@@ -14,13 +14,16 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
 use Symfony\Component\DomCrawler\Crawler;
+use Uhifadhi\Bundle\RegistryBundle\Service\FactRebuildService;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Bundle\TeamBundle\Facts\TeamFactProvider;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing;
 use Uhifadhi\Bundle\TeamBundle\Performance\OrganizationBand;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
+use Uhifadhi\Contracts\Facts\FactPeriod;
 
 /**
  * `/departments/performance` — the organization's own page.
@@ -297,6 +300,22 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
         self::assertGreaterThan(0, $crawler->filter('#tp-matrix .legend')->count());
     }
 
+    /**
+     * A FIGURE THE WORKER FILED WHILE ITS PERIOD IS OPEN SAYS WHEN IT WAS
+     * TRUE, in the house fragment the dashboard prints — the page computed
+     * none of it.
+     */
+    public function testARecordsStoredFiguresSayWhenTheyWereTrue(): void
+    {
+        $this->seed();
+
+        $figures = $this->client->request('GET', '/departments/performance/topics/staffing')->filter('.tpk .c.kpi');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('as of', $figures->first()->text());
+        self::assertCount(1, $figures->first()->filter('time[data-localtime-format]'));
+    }
+
     /** A topic this installation does not carry is not an empty page. */
     public function testATopicNobodyPublishesIsNotAPage(): void
     {
@@ -524,6 +543,12 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
         $this->place($this->person('Baraka', 'Msuya')->setPosition($this->position('Ranger')), null, [$protection]);
 
         $this->em->flush();
+
+        // AND WHAT THE SCHEDULED RUN FILES FOR THEM: the page reads the
+        // ledger and counts nothing itself.
+        /** @var FactRebuildService $rebuild */
+        $rebuild = static::getContainer()->get('test_public.'.FactRebuildService::class);
+        $rebuild->rebuild([FactPeriod::month(new \DateTimeImmutable())], TeamFactProvider::SLUG);
 
         $this->administrator();
     }

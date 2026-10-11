@@ -157,6 +157,7 @@ final class PerformanceTopicsTest extends IntegrationTestCase
             $this->departedHolder('Rangers'.$i, $post, $department);
         }
         $this->em->flush();
+        $this->fileTheTeamsFigures();
 
         $staffing = $this->topics()->byKey('staffing', PerformanceScope::organization(), self::period());
         self::assertNotNull($staffing);
@@ -361,16 +362,16 @@ final class PerformanceTopicsTest extends IntegrationTestCase
 
         $departments = $container->get('test_public.'.\Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository::class);
         $goals = $container->get('test_public.'.\Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository::class);
-        $staffing = $container->get('test_public.'.\Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures::class);
+        $facts = $container->get('registry.facts.reader');
 
         \assert($departments instanceof \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository);
         \assert($goals instanceof \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository);
-        \assert($staffing instanceof \Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures);
+        \assert($facts instanceof \Uhifadhi\Contracts\Facts\FactReaderInterface);
 
         return new \Uhifadhi\Bundle\TeamBundle\Performance\AttentionTopic(
             $departments,
             $goals,
-            $staffing,
+            $facts,
             [new FakeTopicProvider('patrols', $departmentUuid)],
         );
     }
@@ -429,6 +430,71 @@ final class PerformanceTopicsTest extends IntegrationTestCase
             ->setPosition($position)->setPlacement($placement);
         $person->deactivate();
         $this->em->persist($person);
+    }
+
+    /**
+     * THE SEATS ARE READ FROM THE FACTS LEDGER, where the worker filed them,
+     * and a figure of a period still open says when it was true.
+     */
+    public function testTheStaffingFiguresAreTheOnesTheWorkerFiled(): void
+    {
+        $department = new \Uhifadhi\Bundle\TeamBundle\Entity\Department()->setName('Protection Service');
+        $this->em->persist($department);
+        $post = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Ranger');
+        $post->setGrantValues([], []);
+        $this->em->persist($post);
+        $this->departedHolder('Mollel', $post, $department);
+        $this->em->flush();
+
+        $this->service(\Uhifadhi\Bundle\RegistryBundle\Repository\FigureFactRepository::class)->upsert([
+            new \Uhifadhi\Contracts\Facts\FactValue(\Uhifadhi\Contracts\Facts\FactSubject::DEPARTMENT, (string) $department->getUuidString(), 'staffing.positions', 7.0),
+            new \Uhifadhi\Contracts\Facts\FactValue(\Uhifadhi\Contracts\Facts\FactSubject::DEPARTMENT, (string) $department->getUuidString(), 'staffing.filled', 5.0),
+        ], '2026-09', new \DateTimeImmutable('2026-09-19 13:00:00'));
+
+        $figures = $this->staffingFigures();
+
+        self::assertSame(7.0, $figures['staffing.positions']->value, 'what the worker filed, not a count made now');
+        self::assertSame(5.0, $figures['staffing.filled']->value);
+        self::assertSame('of 7', $figures['staffing.filled']->caption);
+        self::assertNotNull($figures['staffing.positions']->asOf, 'filed before September ended, so it says when it was true');
+        self::assertNull($figures['staffing.vacant']->value, 'a figure nobody filed is no figure, never a nought');
+    }
+
+    /** BEFORE THE WORKER HAS RUN there is nothing to read, and the page counts nothing itself. */
+    public function testBeforeTheWorkerRanTheSeatsHaveNoFigure(): void
+    {
+        $department = new \Uhifadhi\Bundle\TeamBundle\Entity\Department()->setName('Protection Service');
+        $this->em->persist($department);
+        $post = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Ranger');
+        $post->setGrantValues([], []);
+        $this->em->persist($post);
+        $this->departedHolder('Mollel', $post, $department);
+        $this->em->flush();
+
+        foreach ($this->staffingFigures() as $key => $figure) {
+            self::assertNull($figure->value, $key);
+        }
+    }
+
+    /** @return array<string, TopicKpi> */
+    private function staffingFigures(): array
+    {
+        $staffing = $this->topics()->byKey('staffing', PerformanceScope::organization(), self::period());
+        self::assertNotNull($staffing);
+
+        $figures = [];
+        foreach ($staffing->kpis(PerformanceScope::organization(), self::period()) as $kpi) {
+            $figures[$kpi->key] = $kpi;
+        }
+
+        return $figures;
+    }
+
+    /** What the scheduled run files for the team, for the month the suite reads. */
+    private function fileTheTeamsFigures(): void
+    {
+        $rebuild = $this->service(\Uhifadhi\Bundle\RegistryBundle\Service\FactRebuildService::class);
+        $rebuild->rebuild([\Uhifadhi\Contracts\Facts\FactPeriod::month(self::period()->from)], 'team');
     }
 
     private static function period(): FigurePeriod

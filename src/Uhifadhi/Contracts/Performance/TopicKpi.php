@@ -50,6 +50,13 @@ final readonly class TopicKpi
          * draws it without making any claim about what it means.
          */
         public ?KpiRole $role = null,
+        /**
+         * WHEN THE FIGURE IS TRUE AS OF, for one read from the facts
+         * ledger while its period is still open — the worker computed
+         * it, not this request, and the page says how old it is. Null
+         * for a period's final figure and for one nobody stored.
+         */
+        public ?\DateTimeImmutable $asOf = null,
     ) {
     }
 

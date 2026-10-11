@@ -6,6 +6,9 @@
 
 ## 1.0.0
 
+ * `Performance\TopicKpi` carries an optional `asOf` (last): when a figure read from the
+   facts ledger in a period still open was true, so a performance page says how old it is.
+
  * `Shell\UserBadge` carries an optional `profileUrl`, the page where the signed-in person
    edits their own account; `fromName()` takes it as a third argument.
 

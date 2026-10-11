@@ -58,7 +58,11 @@
                        goes reads as a nought, and a nought is a measurement. #}
                     <b class="disp none">no figure yet</b>
                 {% endif %}
-                {% if kpi.caption %}<span class="sub"><span class="lb">{{ kpi.caption }}</span></span>{% endif %}
+                {% if kpi.caption or kpi.asOf %}<span class="sub">
+                    {%- if kpi.caption %}<span class="lb">{{ kpi.caption }}</span>{% endif %}
+                    {#- WHEN A STORED FIGURE WAS TRUE, while its period is open. -#}
+                    {%- if kpi.asOf %} {{ shell_as_of(kpi.asOf) }}{% endif -%}
+                </span>{% endif %}
             </span>
         {% endfor %}
     </div>

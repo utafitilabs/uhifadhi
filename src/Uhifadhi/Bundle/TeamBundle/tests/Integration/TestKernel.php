@@ -428,6 +428,9 @@ final class TestKernel extends Kernel
             'registry.area_modules' => 'registry.area_modules',
             \Uhifadhi\Bundle\TeamBundle\Service\OneTimePasswordService::class => 'team.one_time_password',
             \Uhifadhi\Bundle\TeamBundle\Me\TeamMyCards::class => 'team.my_cards',
+            \Uhifadhi\Bundle\TeamBundle\Facts\TeamFactProvider::class => 'team.facts.provider',
+            \Uhifadhi\Bundle\RegistryBundle\Facts\FactProviders::class => 'registry.facts.providers',
+            \Uhifadhi\Bundle\RegistryBundle\Service\FactRebuildService::class => 'registry.facts.rebuild',
         ] as $class => $serviceId) {
             $container->services()->alias('test_public.'.$class, $serviceId)->public();
         }

@@ -8,6 +8,14 @@
 
 Not released yet.
 
+ * THE PERFORMANCE PAGES READ STORED FIGURES (#71): `Facts\TeamFactProvider` (tag
+   `uhifadhi.facts`, module `team`) files each department's seats and people and, per
+   area and for the organization, the posts past the threshold; the Staffing topic, the
+   Attention topic's folded line and the matrix read them from the facts ledger in one
+   read a period, and a figure of an open period prints when it was true (`as of 13:00`)
+   on the topic's record. Before the worker's first run the seats have no figure. Every
+   Performance page asks as many queries of a large establishment as of a small one.
+
  * MY PROFILE (ruled 30 Sep, #69, design B with Details above Sign-in): `/me/profile`,
    the signed-in person's own page, apart from what an Admin or a head of station opens.
    Details (name, and a new optional `phone`); Sign-in (a new address waits in

@@ -17,7 +17,10 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentMark;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
+use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
+use Uhifadhi\Contracts\Facts\FactReaderInterface;
+use Uhifadhi\Contracts\Facts\FactSubject;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\ChartKind;
 use Uhifadhi\Contracts\Performance\ChartSeries;
@@ -69,7 +72,7 @@ final readonly class AttentionTopic implements PerformanceTopicProviderInterface
     public function __construct(
         private DepartmentRepository $departments,
         private DepartmentGoalRepository $goals,
-        private StaffingFigures $staffing,
+        private FactReaderInterface $facts,
         private iterable $topics = [],
     ) {
     }
@@ -328,7 +331,7 @@ final readonly class AttentionTopic implements PerformanceTopicProviderInterface
         }
 
         foreach ($folded as $band => $departments) {
-            $rows[] = $this->foldedLine($band, $departments, $columns);
+            $rows[] = $this->foldedLine($band, $departments, $columns, $period);
         }
 
         return new TopicMatrix(
@@ -353,11 +356,14 @@ final readonly class AttentionTopic implements PerformanceTopicProviderInterface
      * @param list<Department>   $departments
      * @param list<MatrixColumn> $columns
      */
-    private function foldedLine(string $band, array $departments, array $columns): MatrixRow
+    private function foldedLine(string $band, array $departments, array $columns, FigurePeriod $period): MatrixRow
     {
+        // THE SEATS ARE WHAT THE WORKER FILED for the period, as the
+        // staffing topic reads them.
+        $uuids = array_values(array_filter(array_map(static fn (Department $department): ?string => $department->getUuidString(), $departments)));
         $seats = 0.0;
-        foreach ($departments as $department) {
-            $seats += $this->staffing->of($department)[StaffingFigures::POSITIONS] ?? 0.0;
+        foreach ([] === $uuids ? [] : $this->facts->batch(FactSubject::DEPARTMENT, $uuids, [StaffingFigures::POSITIONS], PerformanceHistory::keyFor($period)) as $figures) {
+            $seats += $figures[StaffingFigures::POSITIONS]->value ?? 0.0;
         }
 
         $goals = 0;

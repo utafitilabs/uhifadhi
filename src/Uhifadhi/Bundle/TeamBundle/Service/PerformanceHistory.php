@@ -216,6 +216,43 @@ final readonly class PerformanceHistory
     }
 
     /**
+     * SEVERAL FIGURES OF SEVERAL DEPARTMENTS OVER A RUN OF PERIODS, in one
+     * read of the history and one of the ledger per period — so a page
+     * drawing every row's run asks a fixed number of questions however
+     * many departments it holds.
+     *
+     * A written row wins, as everywhere here; the ledger fills a period
+     * nobody wrote down. A figure neither holds is absent, never a nought.
+     *
+     * @param list<Department> $departments
+     * @param list<string>     $figureKeys
+     * @param list<string>     $periodKeys
+     *
+     * @return array<string, array<string, array<string, float|null>>> period key, then department uuid, then figure key
+     */
+    public function across(array $departments, array $figureKeys, array $periodKeys): array
+    {
+        $across = $this->figures->findByDepartmentsAndPeriods($departments, $figureKeys, $periodKeys);
+
+        $uuids = array_values(array_filter(array_map(static fn (Department $department): ?string => $department->getUuidString(), $departments)));
+        if (null === $this->facts || [] === $uuids || [] === $figureKeys) {
+            return $across;
+        }
+
+        foreach (array_values(array_unique($periodKeys)) as $periodKey) {
+            foreach ($this->facts->batch(FactSubject::DEPARTMENT, $uuids, $figureKeys, $periodKey) as $uuid => $filed) {
+                foreach ($filed as $key => $fact) {
+                    if (!\array_key_exists($key, $across[$periodKey][$uuid] ?? [])) {
+                        $across[$periodKey][$uuid][$key] = $fact->value;
+                    }
+                }
+            }
+        }
+
+        return $across;
+    }
+
+    /**
      * ONE FIGURE, ONE PERIOD, EVERY DEPARTMENT — a matrix column in one read.
      *
      * @return array<string, float|null> department uuid to what was written

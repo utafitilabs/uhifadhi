@@ -61,6 +61,7 @@ use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ModuleHistoryListener;
 use Uhifadhi\Bundle\TeamBundle\EventListener\SignedInListener;
+use Uhifadhi\Bundle\TeamBundle\Facts\TeamFactProvider;
 use Uhifadhi\Bundle\TeamBundle\Me\TeamMyCards;
 use Uhifadhi\Bundle\TeamBundle\Message\BackfillModuleHistory;
 use Uhifadhi\Bundle\TeamBundle\MessageHandler\BackfillModuleHistoryHandler;
@@ -161,6 +162,7 @@ use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Access\PowerSourceInterface;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;
 use Uhifadhi\Contracts\Deletion\DeletionContributorInterface;
+use Uhifadhi\Contracts\Facts\FactProviderInterface;
 use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
 use Uhifadhi\Contracts\Me\MyCardProviderInterface;
 use Uhifadhi\Contracts\People\PeopleFacetProviderInterface;
@@ -949,14 +951,31 @@ return static function (ContainerConfigurator $container): void {
     /* A MODULE TYPE-HINTS THE CONTRACT, never this class. */
     $services->alias(DepartmentDirectoryInterface::class, 'team.department_directory');
 
-    $services->set('team.performance.staffing_topic', StaffingTopic::class)
+    /*
+     * THE TEAM'S FIGURES ON THE FACTS LEDGER: seats and people per
+     * department, and the posts past the threshold per scope, filed by the
+     * worker so the performance pages read stored rows.
+     */
+    $services->set('team.facts.provider', TeamFactProvider::class)
         ->args([
+            service('doctrine.orm.entity_manager'),
             service(DepartmentRepository::class),
             service('team.staffing_figures'),
-            service('team.performance_history'),
             service('team.department_membership'),
             service(UserRepository::class),
             service('team.position_vacancy'),
+            service('clock'),
+        ])
+        ->tag(FactProviderInterface::TAG);
+    $services->alias(TeamFactProvider::class, 'team.facts.provider');
+
+    $services->set('team.performance.staffing_topic', StaffingTopic::class)
+        ->args([
+            service(DepartmentRepository::class),
+            service('team.performance_history'),
+            service('team.department_membership'),
+            service('team.position_vacancy'),
+            service('registry.facts.reader'),
         ])
         ->tag(PerformanceTopicProviderInterface::TAG);
     $services->alias(StaffingTopic::class, 'team.performance.staffing_topic');
@@ -992,7 +1011,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service(DepartmentRepository::class),
             service(DepartmentGoalRepository::class),
-            service('team.staffing_figures'),
+            service('registry.facts.reader'),
             tagged_iterator(PerformanceTopicProviderInterface::TAG),
         ])
         ->tag(PerformanceTopicProviderInterface::TAG);

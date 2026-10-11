@@ -73,6 +73,43 @@ final class DepartmentPeriodFigureRepository extends ServiceEntityRepository
     }
 
     /**
+     * SEVERAL FIGURES OF SEVERAL DEPARTMENTS OVER SEVERAL PERIODS, in one
+     * read — what a page drawing a run for every row asks.
+     *
+     * @param list<Department> $departments
+     * @param list<string>     $figureKeys
+     * @param list<string>     $periodKeys
+     *
+     * @return array<string, array<string, array<string, float|null>>> period key, then department uuid, then figure key, to what was written
+     */
+    public function findByDepartmentsAndPeriods(array $departments, array $figureKeys, array $periodKeys): array
+    {
+        if ([] === $departments || [] === $figureKeys || [] === $periodKeys) {
+            return [];
+        }
+
+        /** @var list<array{uuid: \Symfony\Component\Uid\Uuid|string, periodKey: string, figureKey: string, value: float|null}> $rows */
+        $rows = $this->createQueryBuilder('f')
+            ->select('d.uuid AS uuid, f.periodKey AS periodKey, f.figureKey AS figureKey, f.value AS value')
+            ->join('f.department', 'd')
+            ->andWhere('f.department IN (:departments)')
+            ->andWhere('f.figureKey IN (:figures)')
+            ->andWhere('f.periodKey IN (:periods)')
+            ->setParameter('departments', $departments)
+            ->setParameter('figures', $figureKeys)
+            ->setParameter('periods', $periodKeys)
+            ->getQuery()
+            ->getArrayResult();
+
+        $written = [];
+        foreach ($rows as $row) {
+            $written[$row['periodKey']][(string) $row['uuid']][$row['figureKey']] = $row['value'];
+        }
+
+        return $written;
+    }
+
+    /**
      * ONE FIGURE, ONE PERIOD, EVERY DEPARTMENT — what a whole matrix column
      * needs in a single read.
      *

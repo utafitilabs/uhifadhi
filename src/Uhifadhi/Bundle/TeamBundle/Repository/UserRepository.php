@@ -503,6 +503,10 @@ class UserRepository extends ServiceEntityRepository
     {
         /** @var list<User> $users */
         $users = $this->createQueryBuilder('u')
+            // WITH WHERE EACH STANDS AND WHAT EACH HOLDS: the callers ask
+            // every person both, and one read beats one per person.
+            ->leftJoin('u.placement', 'placement')->addSelect('placement')
+            ->leftJoin('u.position', 'position')->addSelect('position')
             ->orderBy('u.firstName', 'ASC')
             ->addOrderBy('u.lastName', 'ASC')
             ->getQuery()

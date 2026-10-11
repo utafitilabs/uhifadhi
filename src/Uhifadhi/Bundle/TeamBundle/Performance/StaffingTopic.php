@@ -14,13 +14,16 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Performance;
 
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Facts\TeamFactProvider;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentMark;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
-use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
+use Uhifadhi\Contracts\Facts\Fact;
+use Uhifadhi\Contracts\Facts\FactReaderInterface;
+use Uhifadhi\Contracts\Facts\FactSubject;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\ChartKind;
 use Uhifadhi\Contracts\Performance\ChartSeries;
@@ -57,6 +60,13 @@ use Uhifadhi\Contracts\Performance\TopicMovementInterface;
  * "↑ 3 on July" is a comparison against a period that has closed, and a
  * closed period cannot be recomputed. Where nothing was written down the
  * figures still draw and their deltas say there is no history yet.
+ *
+ * EVERY FIGURE IS READ, NONE IS COUNTED. The seats and the posts past the
+ * threshold are what the worker filed on the facts ledger
+ * ({@see TeamFactProvider}); a figure of a period still open carries the
+ * time it was true, and one nobody filed yet is no figure. Only the
+ * briefing's decisions name posts, which no figure can carry, and they
+ * read the posts themselves.
  */
 final readonly class StaffingTopic implements PerformanceTopicProviderInterface, TopicDecisionsInterface, TopicMovementInterface
 {
@@ -74,13 +84,20 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
      */
     public const int THRESHOLD_DAYS = 60;
 
+    /** The seats, in the order the matrix and the band read them. */
+    private const array SEATS = [
+        StaffingFigures::POSITIONS,
+        StaffingFigures::FILLED,
+        StaffingFigures::VACANT,
+        StaffingFigures::PEOPLE,
+    ];
+
     public function __construct(
         private DepartmentRepository $departments,
-        private StaffingFigures $staffing,
         private PerformanceHistory $history,
         private DepartmentMembership $membership,
-        private UserRepository $users,
         private PositionVacancy $vacancy,
+        private FactReaderInterface $facts,
     ) {
     }
 
@@ -103,15 +120,16 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
     {
         $departments = $this->departmentsIn($scope);
 
-        $now = [];
-        foreach ($departments as $department) {
-            foreach ($this->staffing->of($department) as $key => $value) {
-                $now[$key] = ($now[$key] ?? 0.0) + $value;
-            }
-        }
+        $filed = $this->filed($departments, $period);
+        $runs = $this->runs($departments, $period);
 
-        $filled = $now[StaffingFigures::FILLED] ?? 0.0;
-        $seats = $now[StaffingFigures::POSITIONS] ?? 0.0;
+        $now = [];
+        foreach (self::SEATS as $key) {
+            $now[$key] = self::sum($filed, $key);
+        }
+        $asOf = self::asOf($filed);
+
+        $seats = $now[StaffingFigures::POSITIONS];
 
         /*
          * FOUR, IN THE DESIGN'S ORDER: the establishment, how much of it
@@ -126,11 +144,11 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
          * the one the other three are about.
          */
         return [
-            $this->figure(StaffingFigures::POSITIONS, 'Positions', $seats, $departments, $period, ColumnPolarity::None,
+            self::figure(StaffingFigures::POSITIONS, 'Positions', $seats, $runs, ColumnPolarity::None, $asOf,
                 \sprintf('across %d %s', \count($departments), 1 === \count($departments) ? 'department' : 'departments')),
-            $this->figure(StaffingFigures::FILLED, 'Filled', $filled, $departments, $period, ColumnPolarity::Up,
-                \sprintf('of %s', self::plainly($seats))),
-            $this->figure(StaffingFigures::VACANT, 'Vacant', $now[StaffingFigures::VACANT] ?? 0.0, $departments, $period, ColumnPolarity::Down),
+            self::figure(StaffingFigures::FILLED, 'Filled', $now[StaffingFigures::FILLED], $runs, ColumnPolarity::Up, $asOf,
+                null === $seats ? '' : \sprintf('of %s', self::plainly($seats))),
+            self::figure(StaffingFigures::VACANT, 'Vacant', $now[StaffingFigures::VACANT], $runs, ColumnPolarity::Down, $asOf),
             /*
              * AND HOW MANY POSTS HAVE STOOD EMPTY TOO LONG — counted from
              * the day each fell vacant, which is written when it falls
@@ -141,7 +159,7 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
              * vacancy in the organization, and counting it either way
              * would be a guess.
              */
-            $this->vacancies($departments, $period),
+            $this->vacancies($scope, $period),
         ];
     }
 
@@ -257,12 +275,13 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
     public function charts(PerformanceScope $scope, FigurePeriod $period): array
     {
         $months = PerformanceHistory::monthsEndingAt($period->from, self::PERIODS);
+        $across = $this->history->across($this->departmentsIn($scope), [StaffingFigures::FILLED, StaffingFigures::VACANT], $months);
 
         $filled = [];
         $vacant = [];
         foreach ($months as $month) {
-            $filled[] = $this->sumAcross(StaffingFigures::FILLED, $month, $scope);
-            $vacant[] = $this->sumAcross(StaffingFigures::VACANT, $month, $scope);
+            $filled[] = self::sum($across[$month] ?? [], StaffingFigures::FILLED);
+            $vacant[] = self::sum($across[$month] ?? [], StaffingFigures::VACANT);
         }
 
         return [
@@ -292,19 +311,23 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
             new MatrixColumn(StaffingFigures::POSITIONS, 'Positions', polarity: ColumnPolarity::None),
         ];
 
+        $departments = $this->departmentsIn($scope);
+        $filed = $this->filed($departments, $period);
+        $across = $this->history->across($departments, self::SEATS, [...$months, $previous]);
+
         $rows = [];
-        foreach ($this->departmentsIn($scope) as $department) {
-            $today = $this->staffing->of($department);
+        foreach ($departments as $department) {
+            $uuid = (string) $department->getUuidString();
 
             $cells = [];
             foreach ($columns as $column) {
-                $was = $this->history->valueAt($department, $column->key, $previous);
-                $value = $today[$column->key] ?? null;
+                $was = $across[$previous][$uuid][$column->key] ?? null;
+                $value = isset($filed[$uuid][$column->key]) ? $filed[$uuid][$column->key]->value : null;
 
                 $cells[$column->key] = new MatrixCell(
                     value: $value,
                     delta: null === $was || null === $value ? null : $value - $was,
-                    history: array_values($this->history->runFor($department, $column->key, $months)),
+                    history: array_map(static fn (string $month): ?float => $across[$month][$uuid][$column->key] ?? null, $months),
                 );
             }
 
@@ -324,49 +347,32 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
     }
 
     /**
-     * THE POSTS THAT HAVE STOOD EMPTY LONGER THAN THE INSTALLATION ALLOWS.
-     *
-     * @param list<Department> $departments
+     * THE POSTS THAT HAVE STOOD EMPTY LONGER THAN THE INSTALLATION ALLOWS —
+     * filed for the page's own scope, because two departments can share a
+     * post and a sum of theirs would count it twice.
      */
-    private function vacancies(array $departments, FigurePeriod $period): TopicKpi
+    private function vacancies(PerformanceScope $scope, FigurePeriod $period): TopicKpi
     {
-        $empty = [];
-        $undated = 0;
-        $seen = [];
-        foreach ($departments as $department) {
-            foreach ($this->membership->positionsIn($department) as $position) {
-                if (isset($seen[(int) $position->getId()])) {
-                    continue;
-                }
-                $seen[(int) $position->getId()] = true;
+        [$kind, $uuid] = $scope->isOrganization()
+            ? [FactSubject::INSTALLATION, FactSubject::INSTALLATION_UUID]
+            : [FactSubject::AREA, (string) $scope->areaUuid];
 
-                if (null === $position->getVacantSince()) {
-                    // HELD, OR EMPTY SINCE BEFORE ANYBODY WROTE THE DAY DOWN.
-                    // Which it is, is answered by whether somebody holds it.
-                    if (0 === $this->users->countActiveHoldingAnyPosition([$position])) {
-                        ++$undated;
-                    }
-
-                    continue;
-                }
-
-                $empty[] = $position;
-            }
-        }
-
-        $over = $this->vacancy->overThreshold($empty, self::THRESHOLD_DAYS);
+        $filed = $this->facts->batch($kind, [$uuid], [TeamFactProvider::OVER_THRESHOLD, TeamFactProvider::VACANT_UNDATED], PerformanceHistory::keyFor($period))[$uuid] ?? [];
+        $over = $filed[TeamFactProvider::OVER_THRESHOLD] ?? null;
+        $undated = (int) ($filed[TeamFactProvider::VACANT_UNDATED]->value ?? 0.0);
 
         return new TopicKpi(
-            key: 'staffing.over_threshold',
+            key: TeamFactProvider::OVER_THRESHOLD,
             // THE LABEL NAMES THE RULE AND THE FRAGMENT NAMES THE NUMBER:
             // "Vacant over 60 days" spent the widest card in the row on a
             // constant, and the row beside it already says Vacant.
             label: 'Over threshold',
-            value: (float) $over,
+            value: $over?->value,
             caption: 0 === $undated
                 ? \sprintf('unfilled past %d days', self::THRESHOLD_DAYS)
                 : \sprintf('unfilled past %d days · %d more stood empty before the day was recorded', self::THRESHOLD_DAYS, $undated),
             polarity: ColumnPolarity::Down,
+            asOf: null === $over || $over->isFinal() ? null : $over->asOf,
         );
     }
 
@@ -374,57 +380,111 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
      * ONE HEADLINE FIGURE, with its movement and its run — both read out
      * of what was written down, because neither can be recomputed.
      *
-     * @param list<Department> $departments
+     * @param array{history: array<string, list<float|null>>, was: array<string, float|null>} $runs
      */
-    private function figure(
+    private static function figure(
         string $key,
         string $label,
-        float $value,
-        array $departments,
-        FigurePeriod $period,
+        ?float $value,
+        array $runs,
         ColumnPolarity $polarity,
+        ?\DateTimeImmutable $asOf,
         string $caption = '',
     ): TopicKpi {
-        $months = PerformanceHistory::monthsEndingAt($period->from, self::PERIODS);
-        $previous = PerformanceHistory::keyFor($period->against());
-
-        $history = [];
-        foreach ($months as $month) {
-            $history[] = $this->sumAcross($key, $month, null, $departments);
-        }
-
-        $was = $this->sumAcross($key, $previous, null, $departments);
+        $was = $runs['was'][$key] ?? null;
 
         return new TopicKpi(
             key: $key,
             label: $label,
             value: $value,
-            delta: null === $was ? null : $value - $was,
-            history: $history,
+            delta: null === $was || null === $value ? null : $value - $was,
+            history: $runs['history'][$key] ?? [],
             caption: $caption,
             polarity: $polarity,
+            asOf: $asOf,
         );
     }
 
     /**
-     * WHAT THE WHOLE SCOPE WAS IN ONE PERIOD — null where nobody wrote any
-     * of it down, because a sum of nothing is not nought.
+     * WHAT THE WORKER FILED FOR EACH DEPARTMENT IN THE PAGE'S PERIOD — one
+     * read for every department and every seat.
      *
-     * @param list<Department>|null $departments the ones already resolved, where the caller has them
+     * @param list<Department> $departments
+     *
+     * @return array<string, array<string, Fact>> department uuid, then figure key
      */
-    private function sumAcross(string $key, string $periodKey, ?PerformanceScope $scope = null, ?array $departments = null): ?float
+    private function filed(array $departments, FigurePeriod $period): array
     {
-        $departments ??= $this->departmentsIn($scope ?? PerformanceScope::organization());
+        $uuids = array_values(array_filter(array_map(static fn (Department $department): ?string => $department->getUuidString(), $departments)));
+        if ([] === $uuids) {
+            return [];
+        }
 
+        return $this->facts->batch(FactSubject::DEPARTMENT, $uuids, self::SEATS, PerformanceHistory::keyFor($period));
+    }
+
+    /**
+     * EACH SEAT'S RUN OF MONTHS AND WHAT IT WAS IN THE COMPARED PERIOD,
+     * summed across the scope — in one read of the history.
+     *
+     * @param list<Department> $departments
+     *
+     * @return array{history: array<string, list<float|null>>, was: array<string, float|null>}
+     */
+    private function runs(array $departments, FigurePeriod $period): array
+    {
+        $months = PerformanceHistory::monthsEndingAt($period->from, self::PERIODS);
+        $previous = PerformanceHistory::keyFor($period->against());
+        $across = $this->history->across($departments, self::SEATS, [...$months, $previous]);
+
+        $runs = ['history' => [], 'was' => []];
+        foreach (self::SEATS as $key) {
+            $runs['history'][$key] = array_map(static fn (string $month): ?float => self::sum($across[$month] ?? [], $key), $months);
+            $runs['was'][$key] = self::sum($across[$previous] ?? [], $key);
+        }
+
+        return $runs;
+    }
+
+    /**
+     * ONE FIGURE SUMMED ACROSS THE DEPARTMENTS THAT HAVE IT — null where
+     * none has, because a sum of nothing is not nought.
+     *
+     * @param array<string, array<string, Fact|float|null>> $byDepartment
+     */
+    private static function sum(array $byDepartment, string $key): ?float
+    {
         $sum = null;
-        foreach ($departments as $department) {
-            $value = $this->history->valueAt($department, $key, $periodKey);
+        foreach ($byDepartment as $figures) {
+            $figure = $figures[$key] ?? null;
+            $value = $figure instanceof Fact ? $figure->value : $figure;
             if (null !== $value) {
                 $sum = ($sum ?? 0.0) + $value;
             }
         }
 
         return $sum;
+    }
+
+    /**
+     * WHEN THE PAGE'S FIGURES ARE TRUE AS OF: the oldest of the ones still
+     * open, since a sum is as old as its oldest part; none when every one
+     * is its period's final figure.
+     *
+     * @param array<string, array<string, Fact>> $filed
+     */
+    private static function asOf(array $filed): ?\DateTimeImmutable
+    {
+        $asOf = null;
+        foreach ($filed as $figures) {
+            foreach ($figures as $fact) {
+                if (!$fact->isFinal()) {
+                    $asOf = null === $asOf || $fact->asOf < $asOf ? $fact->asOf : $asOf;
+                }
+            }
+        }
+
+        return $asOf;
     }
 
     /**

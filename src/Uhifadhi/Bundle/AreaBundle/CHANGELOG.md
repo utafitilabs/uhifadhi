@@ -18,6 +18,11 @@
 
 Not released yet.
 
+ * THE LIVE PLATES SUBSCRIBE IN THE PROTOCOL THE HUB SPEAKS (#61): `PresenceStreamService`
+   states `match` to a hub the installation configured with `protocol_version: '1.0'`, and
+   `topic` to a 0.x hub, so an installation moves to Mercure 1.0 by its own `mercure.yaml` and
+   the platform moves with it.
+
  * WHO A LIVE MARK IS (ruled 30 Sep, #16 C): `GET /live/{person}` (`area_live_sheet`)
    answers the sheet a click on a live mark opens - who, their seat and post, today's
    state and check-in time, the last three pings, and "Open record" for a viewer who

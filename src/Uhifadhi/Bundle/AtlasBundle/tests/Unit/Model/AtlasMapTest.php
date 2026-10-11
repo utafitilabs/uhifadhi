@@ -75,7 +75,7 @@ final class AtlasMapTest extends TestCase
         $atlas = new AtlasMap(self::uxMap())->liveStream($stream);
 
         self::assertSame(
-            ['hub' => 'https://hub.example.test/.well-known/mercure', 'topics' => ['area/a/presence']],
+            ['hub' => 'https://hub.example.test/.well-known/mercure', 'topics' => ['area/a/presence'], 'parameter' => 'topic'],
             $atlas->toArray()['live'],
         );
     }

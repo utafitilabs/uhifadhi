@@ -1652,9 +1652,10 @@ export default class extends Controller {
     /*
      * THE LIVE STREAM — how the marks keep moving after the page is drawn.
      *
-     * The builder that knows the area handed the plate two facts under
-     * `extra.atlas.live`: the hub's PUBLIC address and the topics to hold
-     * open. This opens ONE credentialed EventSource on it and nothing else:
+     * The builder that knows the area handed the plate three facts under
+     * `extra.atlas.live`: the hub's PUBLIC address, the topics to hold open,
+     * and the parameter its protocol takes them on (`topic` on Mercure 0.x,
+     * `match` on 1.0). This opens ONE credentialed EventSource on it and nothing else:
      * no polling, no second request, no map maths. The page set a subscriber
      * cookie for those topics before this ran, which is what `withCredentials`
      * hands the hub.
@@ -1687,8 +1688,9 @@ export default class extends Controller {
         }
 
         const url = new URL(stream.hub);
+        const parameter = stream.parameter ?? 'topic';
         for (const topic of stream.topics) {
-            url.searchParams.append('topic', topic);
+            url.searchParams.append(parameter, topic);
         }
 
         this.stream = new EventSource(url, { withCredentials: true });

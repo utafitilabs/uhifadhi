@@ -23,7 +23,8 @@ use PHPUnit\Framework\TestCase;
  * here read it: what is asserted is the four things the stream contract
  * turns on. The browser connects WITH CREDENTIALS, because the page set a
  * subscriber cookie for the topics and the hub authorizes on it; every topic
- * is a `topic` query parameter on the hub's public address; a frame that is
+ * is a query parameter on the hub's public address, named as the hub's
+ * protocol names it (`topic` on 0.x, `match` on 1.0, `topic` when unsaid); a frame that is
  * not JSON is dropped and never a broken plate; and the connection is closed
  * with the plate, so a detached map does not go on receiving.
  *
@@ -44,7 +45,7 @@ final class PlateLiveStreamTest extends TestCase
     public function testEveryTopicIsAQueryParameterOnTheHubsPublicAddress(): void
     {
         self::assertMatchesRegularExpression(
-            '/const url = new URL\(stream\.hub\);\s*\n\s*for \(const topic of stream\.topics\) \{\s*\n\s*url\.searchParams\.append\(\'topic\', topic\);/',
+            '/const url = new URL\(stream\.hub\);\s*\n\s*const parameter = stream\.parameter \?\? \'topic\';\s*\n\s*for \(const topic of stream\.topics\) \{\s*\n\s*url\.searchParams\.append\(parameter, topic\);/',
             self::controllerJs(),
         );
     }

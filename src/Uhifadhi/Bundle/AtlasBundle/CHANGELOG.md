@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * A LIVE STREAM NAMES THE PARAMETER ITS HUB TAKES TOPICS ON (#61): `LiveStream` carries
+   `parameter` — `topic` for a Mercure 0.x hub, `match` for 1.0 (`LiveStream::parameterFor()`,
+   from the protocol version as `symfony/mercure` names it) — and the plate subscribes on it,
+   `topic` when a builder states none. `extra.atlas.live` gains `parameter`.
+
  * A CLICK ON A MARK OPENS A SHEET (ruled 30 Sep, #16 C): a layer may name a sheet
    address (`GeoJsonLayer::$sheet`, `{id}` for the feature's id); a click flies the
    plate to the feature (zoom 15) and draws the JSON answer - `AtlasSheet`: a mark,

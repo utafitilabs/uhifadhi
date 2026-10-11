@@ -30,9 +30,28 @@ final class LiveStreamTest extends TestCase
         $stream = new LiveStream(self::HUB, ['area/a/presence', 'area/b/presence']);
 
         self::assertSame(
-            ['hub' => self::HUB, 'topics' => ['area/a/presence', 'area/b/presence']],
+            ['hub' => self::HUB, 'topics' => ['area/a/presence', 'area/b/presence'], 'parameter' => 'topic'],
             $stream->toArray(),
         );
+    }
+
+    /**
+     * THE PARAMETER THE TOPICS RIDE ON IS THE HUB'S PROTOCOL: \`topic\` for a
+     * Mercure 0.x hub, \`match\` for a 1.0 one, named by the protocol version
+     * the installation configured.
+     */
+    public function testTheTopicsRideOnTheParameterTheHubsProtocolNames(): void
+    {
+        self::assertSame(LiveStream::TOPIC, LiveStream::parameterFor('0.x'));
+        self::assertSame(LiveStream::MATCH, LiveStream::parameterFor('1.0'));
+        self::assertSame('match', new LiveStream(self::HUB, ['area/a/presence'], LiveStream::MATCH)->toArray()['parameter']);
+    }
+
+    public function testAParameterNoProtocolNamesIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new LiveStream(self::HUB, ['area/a/presence'], 'topics');
     }
 
     /** A stream to nowhere is not a stream: the deployment that has no hub hands the plate none. */

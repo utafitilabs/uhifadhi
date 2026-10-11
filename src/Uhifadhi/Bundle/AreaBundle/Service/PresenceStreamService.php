@@ -116,7 +116,9 @@ final readonly class PresenceStreamService
         }
 
         return new PresenceSubscription(
-            new LiveStream($hub, $topics),
+            // THE HUB'S OWN PROTOCOL NAMES THE PARAMETER, as the installation
+            // configured it (`protocol_version` in mercure.yaml).
+            new LiveStream($hub, $topics, LiveStream::parameterFor($this->hub->getProtocolVersion()->value)),
             $this->authorization->createCookie($request, $topics),
         );
     }

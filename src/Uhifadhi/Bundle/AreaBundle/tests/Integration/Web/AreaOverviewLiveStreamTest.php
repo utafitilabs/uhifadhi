@@ -53,7 +53,7 @@ final class AreaOverviewLiveStreamTest extends WebTestCase
 
         self::assertSame(Response::HTTP_OK, $this->browser()->getResponse()->getStatusCode());
         self::assertSame([$topic], $this->subscribedTopics());
-        self::assertSame(['hub' => WebKernel::HUB_URL, 'topics' => [$topic]], $this->liveStream());
+        self::assertSame(['hub' => WebKernel::HUB_URL, 'topics' => [$topic], 'parameter' => 'topic'], $this->liveStream());
     }
 
     /**
@@ -74,7 +74,7 @@ final class AreaOverviewLiveStreamTest extends WebTestCase
         $topic = PresencePublisher::topicFor((string) $area->getUuidString()).'/for/5';
         self::assertSame(Response::HTTP_OK, $this->browser()->getResponse()->getStatusCode());
         self::assertSame([$topic], $this->subscribedTopics());
-        self::assertSame(['hub' => WebKernel::HUB_URL, 'topics' => [$topic]], $this->liveStream());
+        self::assertSame(['hub' => WebKernel::HUB_URL, 'topics' => [$topic], 'parameter' => 'topic'], $this->liveStream());
     }
 
     /** A person without a rank sees nobody: the page answers, and there is nothing to follow. */
@@ -165,7 +165,7 @@ final class AreaOverviewLiveStreamTest extends WebTestCase
 
         self::assertSame(Response::HTTP_OK, $this->browser()->getResponse()->getStatusCode());
         self::assertSame($topics, $this->subscribedTopics());
-        self::assertSame(['hub' => WebKernel::HUB_URL, 'topics' => $topics], $this->liveStream());
+        self::assertSame(['hub' => WebKernel::HUB_URL, 'topics' => $topics, 'parameter' => 'topic'], $this->liveStream());
     }
 
     /** And a ranked person follows their place in every area, one topic each. */

@@ -65,39 +65,35 @@
             </form>
         </div>
 
-        {# SCOPE — the audited change. #}
+        {# SCOPE AND VISIBILITY (#74, design B) — where it works and who outside
+           it sees it decide who reads it, so they are one form under one reason,
+           and each change is a line in the permission history. #}
         <div class="c">
-            <span class="tab">Scope<span class="src">&middot; {{ area ? area.name ~ ' — the other areas do not see it' : 'org-wide — every area reads it' }}</span></span>
+            <span class="tab">Scope and visibility<span class="src">&middot; where {{ department.name }} works, and who outside it sees it</span></span>
             <form method="post" action="{{ path('team_department_scope', {uuid: uuid}) }}">
                 <input type="hidden" name="_token" value="{{ csrfToken }}">
                 <input type="hidden" name="_return" value="{{ returnTo }}">
-                {% if area %}
-                    <input type="hidden" name="scope" value="org">
-                    <div class="crgrid">
-                        <div class="crfield grow"><span class="crlab">Reason &middot; required</span>
-                            <input class="fld" type="text" name="reason" placeholder="Why promote {{ department.name }}?" aria-label="Reason for promoting {{ department.name }}" required></div>
-                    </div>
-                    <p class="sbn">Its {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} and the {{ filled }} {{ filled == 1 ? 'person' : 'people' }} in them widen to <b>every area</b>, which grants what they hold everywhere.</p>
-                    <div class="staddrow">
-                        <span class="sp"></span>
-                        <button type="submit" class="cta">Promote to org-wide</button>
-                    </div>
-                {% else %}
-                    <input type="hidden" name="scope" value="area">
-                    <div class="crgrid">
-                        <div class="crfield"><span class="crlab">Confine to</span>
-                            <select class="fld" name="area" aria-label="Confine {{ department.name }} to area">
-                                {% for option in areas %}<option value="{{ option.uuidString }}">{{ option.name }}</option>{% endfor %}
-                            </select></div>
-                        <div class="crfield grow"><span class="crlab">Reason &middot; required</span>
-                            <input class="fld" type="text" name="reason" placeholder="Why confine {{ department.name }}?" aria-label="Reason for confining {{ department.name }}" required></div>
-                    </div>
-                    <p class="sbn">Its {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }}, the {{ filled }} {{ filled == 1 ? 'person' : 'people' }} in them and its figures narrow to that area; the other areas stop inheriting it.</p>
-                    <div class="staddrow">
-                        <span class="sp"></span>
-                        <button type="submit" class="softbtn danger">Confine to area</button>
-                    </div>
-                {% endif %}
+                <div class="crgrid">
+                    <div class="crfield"><span class="crlab">Works in</span>
+                        <select class="fld" name="area" aria-label="Where {{ department.name }} works">
+                            <option value=""{{ area ? '' : ' selected' }}>the whole organization</option>
+                            {% for option in areas %}<option value="{{ option.uuidString }}"{{ area and area.uuidString == option.uuidString ? ' selected' }}>{{ option.name }}</option>{% endfor %}
+                        </select></div>
+                    <div class="crfield"><span class="crlab">Seen by</span>
+                        <select class="fld" name="visibility" aria-label="Who outside {{ department.name }} sees it">
+                            {% for level in visibilities %}<option value="{{ level.value }}"{{ level == department.visibility ? ' selected' }}>{{ level.choice() }}</option>{% endfor %}
+                        </select></div>
+                </div>
+                <div class="crgrid">
+                    <div class="crfield grow"><span class="crlab">Reason &middot; required</span>
+                        <input class="fld" type="text" name="reason" placeholder="Why does {{ department.name }} change?" aria-label="Reason for the change to {{ department.name }}"></div>
+                </div>
+                <p class="sbn">{% if area %}Working across the organization widens its {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} and the {{ filled }} {{ filled == 1 ? 'person' : 'people' }} in them to <b>every area</b>.{% else %}Confining it narrows its {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }}, the {{ filled }} {{ filled == 1 ? 'person' : 'people' }} in them and its figures to that area.{% endif %}
+                    Listed puts its name and area in everybody&rsquo;s register; Open lets everybody who reads departments read it. Both changes ask for a reason and leave a line in the permission history.</p>
+                <div class="staddrow">
+                    <span class="sp"></span>
+                    <button type="submit" class="cta">Save scope and visibility</button>
+                </div>
             </form>
         </div>
 

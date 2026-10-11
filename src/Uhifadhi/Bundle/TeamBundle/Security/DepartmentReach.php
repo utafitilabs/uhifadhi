@@ -15,14 +15,18 @@ namespace Uhifadhi\Bundle\TeamBundle\Security;
 
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Enum\DepartmentVisibilityEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Contracts\Performance\DepartmentDirectory;
 
 /**
  * WHICH DEPARTMENTS THE SIGNED-IN VIEWER READS — on need to know. A
  * department is read by the people who belong to it or support it, by
- * somebody whose authority reaches the whole organization, and by somebody
- * who may configure it, whose Configure page is reached from its record.
+ * somebody whose authority reaches the whole organization, by somebody
+ * who may configure it, whose Configure page is reached from its record, and
+ * — when it is Open (#74) — by everybody who reads departments. A Listed one
+ * is named to everybody in the register ({@see listedOnly()}) and read only as
+ * a Private one is.
  *
  * The record asks it of one department and every list asks it of its rows,
  * so a list never names a department whose record would refuse the viewer.
@@ -38,7 +42,7 @@ final readonly class DepartmentReach
 
     public function reads(Department $department): bool
     {
-        if ($this->authority->isUnbounded()) {
+        if ($this->authority->isUnbounded() || DepartmentVisibilityEnum::Open === $department->getVisibility()) {
             return true;
         }
 
@@ -49,6 +53,26 @@ final readonly class DepartmentReach
         return $department->isAreaLevel()
             && $this->authority->covers($department->getArea())
             && $this->authorization->isGranted('departments.configure');
+    }
+
+    /**
+     * The Listed departments the viewer does not read: the register names them
+     * — name, area, head — and opens none of them.
+     *
+     * @param iterable<Department> $departments
+     *
+     * @return list<Department>
+     */
+    public function listedOnly(iterable $departments): array
+    {
+        $listed = [];
+        foreach ($departments as $department) {
+            if (DepartmentVisibilityEnum::Listed === $department->getVisibility() && !$this->reads($department)) {
+                $listed[] = $department;
+            }
+        }
+
+        return $listed;
     }
 
     /** The directory's entries the viewer reads, for a page that lists departments by their figures. */

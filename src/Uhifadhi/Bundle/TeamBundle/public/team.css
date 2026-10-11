@@ -3484,6 +3484,8 @@ table.tbl.dreg .chip + .chip { margin-left: 4px; }
 /* FOCUS IS THE SIDEBAR'S MARK on a row — the one left line a card may wear. */
 table.tbl.dreg tr.dcfocus td:first-child { box-shadow: inset 2px 0 0 rgb(var(--c-acc)); }
 table.tbl.dreg tr.dcinactive td { opacity: .55; }
+/* A LISTED DEPARTMENT THE READER DOES NOT BELONG TO (#74): named, not opened. */
+table.tbl.dreg tr.dcoutside td { opacity: .62; }
 table.tbl.dreg tr.dempty td { padding: 22px 10px; color: rgb(var(--c-fog)); }
 table.tbl.dreg tr.dempty b { display: block; color: rgb(var(--c-tx)); }
 table.tbl.dreg tr.dempty:hover td { background: none; }

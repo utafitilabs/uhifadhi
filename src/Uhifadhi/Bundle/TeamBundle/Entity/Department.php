@@ -20,6 +20,7 @@ use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\TeamBundle\Entity\Trait\TimestampableTrait;
 use Uhifadhi\Bundle\TeamBundle\Entity\Trait\UuidTrait;
 use Uhifadhi\Bundle\TeamBundle\Enum\DepartmentScopeEnum;
+use Uhifadhi\Bundle\TeamBundle\Enum\DepartmentVisibilityEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\MissingScopeChangeReasonException;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Contracts\Entity\AreaInterface;
@@ -191,6 +192,15 @@ class Department
      */
     #[ORM\Column(options: ['default' => true])]
     private bool $active = true;
+
+    /**
+     * WHO OUTSIDE IT SEES IT (#74): Private, as a new department starts —
+     * nobody gains sight of anything until somebody chooses it — Listed, or
+     * Open. Changed with the scope, with a reason, through
+     * {@see \Uhifadhi\Bundle\TeamBundle\Service\DepartmentService::changeVisibility()}.
+     */
+    #[ORM\Column(length: 20, enumType: DepartmentVisibilityEnum::class, options: ['default' => 'private'])]
+    private DepartmentVisibilityEnum $visibility = DepartmentVisibilityEnum::Private;
 
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $deactivatedAt = null;
@@ -380,6 +390,18 @@ class Department
     public function isActive(): bool
     {
         return $this->active;
+    }
+
+    public function getVisibility(): DepartmentVisibilityEnum
+    {
+        return $this->visibility;
+    }
+
+    public function setVisibility(DepartmentVisibilityEnum $visibility): static
+    {
+        $this->visibility = $visibility;
+
+        return $this;
     }
 
     /**

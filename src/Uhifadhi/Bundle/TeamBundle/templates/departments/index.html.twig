@@ -203,6 +203,19 @@
                         <span>{{ query.isFiltered ? 'clear the search, or widen a filter' : 'file one with the form above' }}</span>
                     </td></tr>
                 {% endfor %}
+                {# LISTED, NOT YOURS (#74): a department that lets everybody know it
+                   exists, and its people, figures and records are its own. #}
+                {% for department in outside %}
+                    <tr class="drow dcoutside" data-outside="{{ department.uuidString }}">
+                        <td class="fchev-c"></td>
+                        <td><div class="who"><span class="dmark" aria-hidden="true"></span><div>
+                            <b>{{ department.name }}</b>
+                            <div class="sub">{{ department.area ? department.area.name : 'org-wide' }}</div>
+                        </div></div></td>
+                        <td colspan="4"><span class="mono d">listed &middot; its people and figures are its own</span></td>
+                        <td class="act"><span class="mono d">not yours to open</span></td>
+                    </tr>
+                {% endfor %}
                 </tbody>
             </table>
             </div>

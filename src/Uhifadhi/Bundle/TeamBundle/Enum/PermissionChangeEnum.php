@@ -38,6 +38,7 @@ enum PermissionChangeEnum: string
     case ExceptionGiven = 'exception-given';
     case ExceptionTaken = 'exception-taken';
     case ScopeChanged = 'scope-changed';
+    case VisibilityChanged = 'visibility-changed';
     case ModuleAttached = 'module-attached';
     case ModuleDetached = 'module-detached';
 
@@ -52,7 +53,7 @@ enum PermissionChangeEnum: string
             self::ResetLinkSent, self::OneTimePasswordIssued => 'sign-in',
             self::GrantsChanged => 'grants',
             self::ExceptionGiven, self::ExceptionTaken => 'exception',
-            self::ScopeChanged, self::ModuleAttached, self::ModuleDetached => 'department',
+            self::ScopeChanged, self::VisibilityChanged, self::ModuleAttached, self::ModuleDetached => 'department',
         };
     }
 
@@ -78,6 +79,7 @@ enum PermissionChangeEnum: string
             self::ExceptionGiven => 'gave {on} an exception',
             self::ExceptionTaken => 'took an exception away from {on}',
             self::ScopeChanged => 'changed the scope of {on}',
+            self::VisibilityChanged => 'changed who sees {on}',
             self::ModuleAttached => 'attached a module to {on}',
             self::ModuleDetached => 'detached a module from {on}',
         };

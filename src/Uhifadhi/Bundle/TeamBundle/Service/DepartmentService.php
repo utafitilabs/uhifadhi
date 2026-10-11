@@ -20,9 +20,11 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\DepartmentGoal;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\DepartmentVisibilityEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\GoalDirectionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionChangeEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\MissingScopeChangeReasonException;
+use Uhifadhi\Bundle\TeamBundle\Exception\MissingVisibilityChangeReasonException;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 
@@ -113,6 +115,31 @@ final readonly class DepartmentService
         $this->changes?->record(PermissionChangeEnum::ScopeChanged, $department, $was, PermissionChangeLog::scopeOf($department), trim($reason), $by);
 
         $this->flush((string) $department->getName());
+    }
+
+    /**
+     * WHO OUTSIDE IT SEES IT (#74) — Private, Listed or Open. Like the scope,
+     * it decides who reads the department, so it takes a reason and leaves a
+     * line in the permission history. Choosing what it already is changes
+     * nothing.
+     *
+     * @throws MissingVisibilityChangeReasonException when no reason was given
+     */
+    public function changeVisibility(Department $department, DepartmentVisibilityEnum $visibility, ?User $by, string $reason): void
+    {
+        $was = $department->getVisibility();
+        if ($was === $visibility) {
+            return;
+        }
+
+        $reason = trim($reason);
+        if ('' === $reason) {
+            throw new MissingVisibilityChangeReasonException();
+        }
+
+        $department->setVisibility($visibility);
+        $this->changes?->record(PermissionChangeEnum::VisibilityChanged, $department, $was->label(), $visibility->label(), $reason, $by);
+        $this->entityManager->flush();
     }
 
     /**

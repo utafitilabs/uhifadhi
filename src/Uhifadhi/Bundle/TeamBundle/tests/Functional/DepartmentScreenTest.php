@@ -517,7 +517,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $crawler = $this->screen();
 
-        $form = $this->configureOf('Ecology')->filter('form[action$="/scope"]')->selectButton('Confine to area')->form();
+        $form = $this->configureOf('Ecology')->filter('form[action$="/scope"]')->selectButton('Save scope and visibility')->form();
         $form['area'] = (string) $this->uuidOf('__area:Northern Reserve');
         $form['reason'] = 'Ecology now works only in the north.';
         $this->client->submit($form);
@@ -541,7 +541,8 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $crawler = $this->screen();
 
-        $form = $this->configureOf('Wetland Management')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
+        $form = $this->configureOf('Wetland Management')->filter('form[action$="/scope"]')->selectButton('Save scope and visibility')->form();
+        $form['area'] = '';
         $form['reason'] = 'Its remit is now the whole park.';
         $this->client->submit($form);
 
@@ -562,7 +563,8 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $crawler = $this->screen();
 
-        $form = $this->configureOf('Wetland Management')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
+        $form = $this->configureOf('Wetland Management')->filter('form[action$="/scope"]')->selectButton('Save scope and visibility')->form();
+        $form['area'] = '';
         $form['reason'] = '   ';
         $this->client->submit($form);
 
@@ -699,7 +701,8 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/departments');
-        $form = $this->configureOf('Wetland Management')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
+        $form = $this->configureOf('Wetland Management')->filter('form[action$="/scope"]')->selectButton('Save scope and visibility')->form();
+        $form['area'] = '';
         $form['reason'] = 'Its remit is now the whole park.';
         $this->client->submit($form);
 
@@ -720,7 +723,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/departments');
-        $form = $this->configureOf('Ecology')->filter('form[action$="/scope"]')->selectButton('Confine to area')->form();
+        $form = $this->configureOf('Ecology')->filter('form[action$="/scope"]')->selectButton('Save scope and visibility')->form();
         $form['area'] = (string) $ng->getUuidString();
         $form['reason'] = 'Ecology now works only in the north.';
         $this->client->submit($form);
@@ -802,7 +805,8 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
 
         // Their own area-level department — even so, scope change is unbounded.
         $crawler = $this->client->request('GET', '/departments');
-        $form = $this->configureOf('Warden Office')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
+        $form = $this->configureOf('Warden Office')->filter('form[action$="/scope"]')->selectButton('Save scope and visibility')->form();
+        $form['area'] = '';
         $form['reason'] = 'trying to widen';
         $this->client->submit($form);
 

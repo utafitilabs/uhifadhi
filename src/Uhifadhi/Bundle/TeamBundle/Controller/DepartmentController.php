@@ -34,9 +34,11 @@ use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\DepartmentVisibilityEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\GoalDirectionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\GoalStateEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\MissingScopeChangeReasonException;
+use Uhifadhi\Bundle\TeamBundle\Exception\MissingVisibilityChangeReasonException;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentRow;
@@ -209,6 +211,8 @@ final readonly class DepartmentController
 
         return new Response($this->twig->render('@Team/departments/index.html.twig', [
             'rows' => $listed,
+            // LISTED, NOT READ (#74): named at the foot of the table, never opened.
+            'outside' => $this->reach->listedOnly($this->departments->findAllOrdered()),
             'total' => \count($rows),
             'query' => $query,
             'areas' => $areas,
@@ -486,6 +490,7 @@ final readonly class DepartmentController
             'positions' => $positions,
             'headcount' => $this->users->countActiveHoldingAnyPosition($positions),
             'areas' => $this->areas(),
+            'visibilities' => DepartmentVisibilityEnum::cases(),
             'returnTo' => $this->router->generate(self::CONFIGURE, ['uuid' => $uuid]),
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
         ]));
@@ -653,6 +658,37 @@ final readonly class DepartmentController
             if (null === $newArea) {
                 return $this->back($request, 'That area is not one this installation has.', 'error');
             }
+        }
+
+        // SCOPE AND VISIBILITY ARE ONE FORM (#74, design B): who outside it
+        // sees it is changed beside where it works, under the same reason.
+        // Each is applied only when it moved.
+        $visibility = DepartmentVisibilityEnum::tryFrom((string) $request->request->get('visibility', $department->getVisibility()->value)) ?? $department->getVisibility();
+        $visibilityMoves = $visibility !== $department->getVisibility();
+        $scopeMoves = $newArea?->getId() !== $department->getArea()?->getId();
+
+        if (!$scopeMoves && !$visibilityMoves) {
+            return $this->back($request, 'Nothing changed — it already works there and is seen that way.');
+        }
+
+        if ($visibilityMoves) {
+            try {
+                $this->departmentWrites->changeVisibility($department, $visibility, $this->signedIn(), $reason);
+            } catch (MissingVisibilityChangeReasonException) {
+                return $this->back($request, 'A change to who sees it needs a reason — it is recorded in the permission history.', 'error');
+            }
+        }
+
+        if (!$scopeMoves) {
+            return $this->back($request, \sprintf(
+                '%s is %s now. The change is recorded with your reason.',
+                (string) $department->getName(),
+                match ($visibility) {
+                    DepartmentVisibilityEnum::Private => 'private — only its own people and those who reach the whole organization read it',
+                    DepartmentVisibilityEnum::Listed => 'listed — everybody sees it in the register; only its own people open it',
+                    DepartmentVisibilityEnum::Open => 'open — everybody who reads departments reads it',
+                },
+            ));
         }
 
         $wasOrg = $department->isOrgLevel();

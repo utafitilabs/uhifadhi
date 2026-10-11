@@ -8,6 +8,15 @@
 
 Not released yet.
 
+ * WHO OUTSIDE A DEPARTMENT SEES IT (ruled 12 Oct, #74, design B): `Department::$visibility`,
+   `DepartmentVisibilityEnum` — Private (a new department, and every existing one), Listed,
+   Open. Open: everybody who reads departments reads its record and figures. Listed: its name
+   and area are a row at the foot of everybody's register, marked "not yours to open", and its
+   record stays closed to them. The department's Configure page sets it in one card with the
+   scope, "Scope and visibility", under one reason; a change is a line in the permission
+   history (`visibility-changed`). Migration `Version20261012090000` adds the column, private
+   by default.
+
  * A HISTORY OF PERMISSION CHANGES (ruled 11 Oct, #75, design D with rail B): every
    change to who may do what leaves one append-only line — when, who, on whom or what,
    before → after, and the reason where the change asks for one — written in the same

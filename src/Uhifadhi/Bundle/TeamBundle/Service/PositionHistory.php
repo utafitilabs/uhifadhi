@@ -13,25 +13,31 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Service;
 
+use Uhifadhi\Bundle\TeamBundle\Entity\PermissionChange;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Model\HolderRow;
 use Uhifadhi\Bundle\TeamBundle\Model\MemberEvent;
+use Uhifadhi\Bundle\TeamBundle\Repository\PermissionChangeRepository;
 
 /**
  * WHAT THIS INSTALLATION CAN TRUTHFULLY SAY HAPPENED TO A POSITION, derived
  * from the stored facts that carry a date — the same discipline as
  * {@see MemberHistory} and for the same reason.
  *
- * WHAT IS NOT HERE. Every grant that was ticked and unticked, every rename
- * and every change of the seat count: real events with no stored date. They
- * belong to the planned audit trail, and a line that cannot be placed in a
- * list ordered by when is not put in one with a guess.
+ * WHAT IT GRANTS, AND ITS EXCEPTIONS, come from the permission history: each
+ * change since it was kept. A rename and a change of the seat count change
+ * nobody's access and have no stored date, so they have no line.
  *
  * NEWEST FIRST, AND BOUNDED BY THE CALLER. The card shows the latest few and
  * says how many there are.
  */
 final readonly class PositionHistory
 {
+    public function __construct(
+        private ?PermissionChangeRepository $changes = null,
+    ) {
+    }
+
     /**
      * @param list<HolderRow> $holders everybody standing in it, with the day they were given it
      *
@@ -65,6 +71,10 @@ final readonly class PositionHistory
                 'empty from the day it was written',
                 $created,
             );
+        }
+
+        foreach (null === $position->getUuidString() ? [] : ($this->changes?->findOnSubject(PermissionChange::POSITION, $position->getUuidString()) ?? []) as $change) {
+            $events[] = MemberEvent::fromChange($change);
         }
 
         usort($events, static fn (MemberEvent $a, MemberEvent $b): int => $b->when <=> $a->when);

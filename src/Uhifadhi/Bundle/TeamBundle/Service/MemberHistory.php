@@ -13,25 +13,23 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Service;
 
+use Uhifadhi\Bundle\TeamBundle\Entity\PermissionChange;
 use Uhifadhi\Bundle\TeamBundle\Entity\RankHolding;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\PermissionChangeEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\MemberEvent;
 use Uhifadhi\Bundle\TeamBundle\Repository\OneTimePasswordRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\PermissionChangeRepository;
 use Uhifadhi\Contracts\People\PersonPosting;
 
 /**
  * WHAT THIS INSTALLATION CAN TRUTHFULLY SAY HAPPENED TO ONE PERSON.
  *
- * DERIVED, NOT LOGGED. There is no audit trail in this release, so the history
- * is read off the stored facts that carry a date: when the account was made,
- * when the invitation went out and who sent it, when each posting began, and
- * when the account was switched off. A card that invented the rest would be a
- * card nobody could act on.
- *
- * WHAT IS THEREFORE ABSENT, and will arrive with the audit trail rather than
- * with a guess: the position changes, the tier changes and the field edits.
- * They have no stored date, and a line without one cannot be placed in a list
- * ordered by when.
+ * READ OFF WHAT CARRIES A DATE: when the account was made, when the
+ * invitation went out and who sent it, when each posting began, when the
+ * account was switched off — and, from the permission history, every change
+ * to their tier, position, placement and account since it was kept. A field
+ * edit that changes nobody's access has no date, and no line.
  *
  * NEWEST FIRST, AND BOUNDED. The card shows the latest few and says how many
  * there are; it never grows to the data and never scrolls inside itself.
@@ -41,8 +39,18 @@ final readonly class MemberHistory
     public function __construct(
         /** The one-time passwords issued for a person, where this installation keeps them. */
         private ?OneTimePasswordRepository $oneTimePasswords = null,
+        /** The permission history; the changes it already derives above are left out of it. */
+        private ?PermissionChangeRepository $changes = null,
     ) {
     }
+
+    /** What this card already says from the record itself, so the history's line would say it twice. */
+    private const array DERIVED = [
+        PermissionChangeEnum::AccountCreated,
+        PermissionChangeEnum::Invited,
+        PermissionChangeEnum::OneTimePasswordIssued,
+        PermissionChangeEnum::Deactivated,
+    ];
 
     /**
      * EVERY LINE THE MODEL CAN DATE, newest first.
@@ -119,6 +127,12 @@ final readonly class MemberHistory
                 null === $invited ? 'with a password, handed over' : 'by invitation',
                 $created,
             );
+        }
+
+        foreach (null === $person->getUuidString() ? [] : ($this->changes?->findOnSubject(PermissionChange::PERSON, $person->getUuidString()) ?? []) as $change) {
+            if (!\in_array($change->getAction(), self::DERIVED, true)) {
+                $events[] = MemberEvent::fromChange($change);
+            }
         }
 
         usort($events, static fn (MemberEvent $a, MemberEvent $b): int => $b->when <=> $a->when);

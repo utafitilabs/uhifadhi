@@ -18,6 +18,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Uhifadhi\Bundle\TeamBundle\Entity\OneTimePassword;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\PermissionChangeEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\OneTimePasswordRepository;
 
@@ -58,6 +59,7 @@ final readonly class OneTimePasswordService
         private EntityManagerInterface $entityManager,
         private UserPasswordHasherInterface $hasher,
         private OneTimePasswordRepository $issued,
+        private ?PermissionChangeLog $changes = null,
     ) {
     }
 
@@ -90,6 +92,7 @@ final readonly class OneTimePasswordService
         $now = new \DateTimeImmutable();
         $person->setPassword($this->hasher->hashPassword($person, $code))->markOneTimePassword($now);
         $this->entityManager->persist(new OneTimePassword($person, $issuer, $now));
+        $this->changes?->record(PermissionChangeEnum::OneTimePasswordIssued, $person, null, null, by: $issuer);
         $this->entityManager->flush();
 
         return $code;

@@ -3,9 +3,12 @@
 
    THE BAND IS THE WAY IN: the tiers × the main powers. Picking a person adds
    their column beside the tiers and their card, and narrows the ledger to
-   them. THE LEDGER HAS EVERY CELL, one row each, with the rule's reason. #}
+   them. THE LEDGER HAS EVERY CELL, one row each, with the rule's reason.
+
+   THE HISTORY IS THE RAIL BESIDE THEM (#75): the changes behind what the page
+   is showing — the picked person's, or a dotted power's — else everybody's. #}
 {% extends '@Shell/page.html.twig' %}
-{% from '@Team/team/_permissions_bits.html.twig' import mark, who %}
+{% from '@Team/team/_permissions_bits.html.twig' import mark, who, change %}
 
 {% block title %}Team · Permissions{% endblock %}
 
@@ -27,6 +30,8 @@
         <span><b>Evaluates, never performs.</b> Each cell asks the rule the button asks, for the real account, and changes nothing.</span>
     </div>
 
+    <div class="perm-two">
+    <div>
     <div class="perm-pick">
         <span class="perm-sub">Beside the tiers:</span>
         <details class="i-dd" data-facet="person">
@@ -57,7 +62,7 @@
                     {% set last = row.group %}
                 {% endif %}
                 <tr data-power="{{ row.power.key }}">
-                    <td class="t"><a href="{{ path('team_permissions', query.with('action', row.power.key)) }}#ledger">{{ row.power.label }}</a></td>
+                    <td class="t"><a href="{{ path('team_permissions', query.with('action', row.power.key)) }}#ledger">{{ row.power.label }}</a>{% if row.power.key in recent %}<a class="perm-dot" href="{{ path('team_permissions', query.with('changes', row.power.key)) }}" title="Changed in the last 30 days &mdash; show the changes" aria-label="Show the changes behind {{ row.power.label }}"></a>{% endif %}</td>
                     <td>{{ mark(row.staff) }}</td>
                     <td>{{ mark(row.admin) }}</td>
                     <td>{{ mark(row.superAdmin) }}</td>
@@ -138,5 +143,31 @@
                 {% if page < pages %}<a class="more" href="{{ path('team_permissions', query.onPage(page + 1)) }}#ledger">Next &rarr;</a>{% endif %}
             </span>
         </div>
+    </div>
+    </div>
+
+    <aside class="perm-rail" aria-label="Permission changes">
+        {% for card in rail %}
+            <div class="c">
+                <span class="tab">{{ card.title }}<span class="src">&middot; {{ card.src }}</span></span>
+                {% if card.context %}<div class="perm-rail-ctx">{{ card.context }}</div>{% endif %}
+                {% for line in card.lines %}
+                    {{ change(line) }}
+                {% else %}
+                    <p class="perm-sub perm-rail-empty">No change recorded yet.</p>
+                {% endfor %}
+                {% if card.count > 0 %}
+                    <div class="sxfoot">
+                        <span>{{ card.from }}&ndash;{{ card.from + card.lines|length - 1 }} of {{ card.count }}</span>
+                        <span>
+                            {% if card.close %}<a class="more" href="{{ path('team_permissions', query.with(card.close, null)) }}">Close &times;</a>{% endif %}
+                            {% if card.page > 1 %}<a class="more" href="{{ path('team_permissions', query.onChangesPage(card.page - 1)) }}">&larr;</a>{% endif %}
+                            {% if card.page < card.pages %}<a class="more" href="{{ path('team_permissions', query.onChangesPage(card.page + 1)) }}">Next &rarr;</a>{% endif %}
+                        </span>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </aside>
     </div>
 {% endblock %}

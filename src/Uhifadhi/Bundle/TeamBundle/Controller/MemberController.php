@@ -335,8 +335,7 @@ final readonly class MemberController
             ['token' => $this->resets->begin($member)],
             UrlGeneratorInterface::ABSOLUTE_URL,
         ));
-        $member->resetLinkSent(new \DateTimeImmutable(), $this->signedIn());
-        $this->entityManager->flush();
+        $this->accounts->resetLinkSent($member, $this->signedIn());
 
         // The approved line (30 Sep, #67): where it went, as this viewer may read the address.
         return $this->back($request, $member, \sprintf(

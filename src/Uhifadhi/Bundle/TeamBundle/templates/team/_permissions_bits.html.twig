@@ -1,5 +1,25 @@
-{# The Permissions page's two small marks: a band answer, and who a person is. #}
+{# The Permissions page's small marks: a band answer, who a person is, and one line of the permission history. #}
 
 {% macro mark(m) %}{% if m %}<span class="perm-c {{ m.kind }}">{{ m.text }}</span>{% endif %}{% endmacro %}
 
 {% macro who(person) %}{{ person.teamRole.label() }}{% if person.position %} &middot; {{ person.position.name }}{% endif %}{% endmacro %}
+
+{% macro change(line) %}
+    {%- set routes = {person: 'team_member', position: 'team_position_show', department: 'team_department_show'} -%}
+    <div class="perm-rl">
+        <span class="perm-rl-t"><time datetime="{{ line.when|date('c') }}" data-localtime-format="daystamp">{{ line.when|date('j M Y · H:i') }}</time> &middot; <span class="chip">{{ line.kind }}</span></span>
+        <span class="perm-ft"><b>{{ line.by }}</b> {{ line.lead }} {% if line.subjectUuid %}<a href="{{ path(routes[line.subjectKind], {uuid: line.subjectUuid}) }}">{{ line.on }}</a>{% else %}{{ line.on }}{% endif %}{% if line.tail %} {{ line.tail }}{% endif %}</span>
+        {% if line.diff is not empty %}
+            <span class="perm-diff">
+                {%- for part in line.diff -%}
+                    {%- if part[0] == 'was' -%}<s>{{ part[1] }}</s>{% if not loop.last %}<span>&rarr;</span>{% endif %}
+                    {%- elseif part[0] == 'now' -%}<i>{{ part[1] }}</i>
+                    {%- elseif part[0] == 'added' -%}<i>+ {{ part[1] }}</i>
+                    {%- else -%}<s>&minus; {{ part[1] }}</s>
+                    {%- endif -%}
+                {%- endfor -%}
+            </span>
+        {% endif %}
+        {% if line.reason %}<span class="perm-why">&ldquo;{{ line.reason }}&rdquo;</span>{% endif %}
+    </div>
+{% endmacro %}

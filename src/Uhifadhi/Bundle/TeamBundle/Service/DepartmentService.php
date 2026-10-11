@@ -21,6 +21,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\DepartmentGoal;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\GoalDirectionEnum;
+use Uhifadhi\Bundle\TeamBundle\Enum\PermissionChangeEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\MissingScopeChangeReasonException;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Contracts\Entity\AreaInterface;
@@ -43,10 +44,11 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * it: {@see Department::changeScopeTo()} is the one door, it refuses a change
  * with no reason, and it appends the transition. This only supplies who and why.
  *
- * WHICH MODULES LEAD IT IS A LENS, NOT A GRANT. {@see attach()} and
+ * WHICH MODULES IT RUNS DECIDES WHO READS THEM. {@see attach()} and
  * {@see detach()} decide what a department's people meet first and what figures
- * its performance surfaces roll up; they move no permission and fence off no
- * row, so a module two departments attach is one module listed first for both.
+ * its performance surfaces roll up, and — once any department runs a module —
+ * that only the people of a department running it reach its records; so each
+ * leaves a line in the permission history.
  *
  * A DEPARTMENT DEACTIVATES, IT NEVER DELETES. Winding one down flips a flag: the
  * register draws it greyed, the pickers drop it, its scope history and filed
@@ -61,6 +63,7 @@ final readonly class DepartmentService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
+        private ?PermissionChangeLog $changes = null,
     ) {
     }
 
@@ -105,35 +108,46 @@ final readonly class DepartmentService
      */
     public function changeScope(Department $department, ?AreaInterface $area, ?User $by, string $reason): void
     {
+        $was = PermissionChangeLog::scopeOf($department);
         $department->changeScopeTo($area, $by, $reason);
+        $this->changes?->record(PermissionChangeEnum::ScopeChanged, $department, $was, PermissionChangeLog::scopeOf($department), trim($reason), $by);
 
         $this->flush((string) $department->getName());
     }
 
     /**
-     * ATTACH A MODULE — make it lead this department's view.
+     * ATTACH A MODULE — the department runs it.
      *
      * Idempotent, because the control is a chip and a chip can be pressed twice.
      *
-     * NOT AUDITED, and that is the model rather than an omission. The ledger this
-     * bundle keeps ({@see \Uhifadhi\Bundle\TeamBundle\Entity\DepartmentScopeChange})
-     * records SCOPE transitions, and it exists because a scope change moves the
-     * authority of everyone filed under the department — a fact the resulting row
-     * could never explain on its own. An attachment moves no authority and hides
-     * no row: it says which modules lead a page, the current state says exactly
-     * which those are, and reversing it is the same one click. Writing it into a
-     * scope ledger would put a row there that is not a scope transition.
+     * IT MOVES WHO READS THE MODULE: once any department runs a module, only the
+     * people who belong to or support a department running it reach its records
+     * ({@see \Uhifadhi\Bundle\TeamBundle\Security\GrantVoter}). So attaching and
+     * detaching are changes to who may do what, and each leaves its line.
      */
     public function attach(Department $department, Module $module): void
     {
-        $department->attachModule($module);
+        if (!$department->hasModule($module)) {
+            $was = self::modulesOf($department);
+            $department->attachModule($module);
+            $this->changes?->record(PermissionChangeEnum::ModuleAttached, $department, $was, self::modulesOf($department));
+        }
         $this->entityManager->flush();
     }
 
     public function detach(Department $department, Module $module): void
     {
-        $department->detachModule($module);
+        if ($department->hasModule($module)) {
+            $was = self::modulesOf($department);
+            $department->detachModule($module);
+            $this->changes?->record(PermissionChangeEnum::ModuleDetached, $department, $was, self::modulesOf($department));
+        }
         $this->entityManager->flush();
+    }
+
+    private static function modulesOf(Department $department): ?string
+    {
+        return PermissionChangeLog::listOf(array_values(array_map(static fn (Module $m): string => (string) $m->getName(), $department->getModules()->toArray())));
     }
 
     /**

@@ -24,6 +24,9 @@ final readonly class LedgerQuery
     public const array FACETS = ['group', 'action', 'actor', 'target', 'answer'];
     public const int PER_PAGE = 25;
 
+    /** How many changes the history rail shows at a time. */
+    public const int CHANGES_PER_PAGE = 12;
+
     /**
      * @param array<string, string> $facets
      */
@@ -31,6 +34,9 @@ final readonly class LedgerQuery
         public ?string $person = null,
         public array $facets = [],
         public int $page = 1,
+        /** The main power whose changes the rail is opened on, by its key. */
+        public ?string $changes = null,
+        public int $changesPage = 1,
     ) {
     }
 
@@ -44,8 +50,15 @@ final readonly class LedgerQuery
             }
         }
         $person = trim($request->query->getString('person'));
+        $changes = trim($request->query->getString('changes'));
 
-        return new self('' === $person ? null : $person, $facets, max(1, $request->query->getInt('page', 1)));
+        return new self(
+            '' === $person ? null : $person,
+            $facets,
+            max(1, $request->query->getInt('page', 1)),
+            '' === $changes ? null : $changes,
+            max(1, $request->query->getInt('changes_page', 1)),
+        );
     }
 
     /** The value a facet has chosen in the address. */
@@ -61,7 +74,13 @@ final readonly class LedgerQuery
      */
     public function with(string $key, ?string $value): array
     {
-        return $this->params([$key => $value, 'page' => null]);
+        return $this->params([$key => $value, 'page' => null, 'changes_page' => null]);
+    }
+
+    /** @return array<string, string|int> */
+    public function onChangesPage(int $page): array
+    {
+        return $this->params(['changes_page' => $page > 1 ? $page : null]);
     }
 
     /** @return array<string, string|int> */
@@ -96,7 +115,14 @@ final readonly class LedgerQuery
      */
     private function params(array $overrides): array
     {
-        $params = ['person' => $this->person, ...$this->facets, 'page' => $this->page > 1 ? $this->page : null, ...$overrides];
+        $params = [
+            'person' => $this->person,
+            ...$this->facets,
+            'page' => $this->page > 1 ? $this->page : null,
+            'changes' => $this->changes,
+            'changes_page' => $this->changesPage > 1 ? $this->changesPage : null,
+            ...$overrides,
+        ];
 
         return array_filter($params, static fn (string|int|null $value): bool => null !== $value && '' !== $value);
     }

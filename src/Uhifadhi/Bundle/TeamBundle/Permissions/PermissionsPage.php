@@ -13,12 +13,15 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Permissions;
 
+use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
+use Uhifadhi\Bundle\TeamBundle\Entity\PermissionChange;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\Facet;
 use Uhifadhi\Bundle\TeamBundle\Model\FacetGroup;
 use Uhifadhi\Bundle\TeamBundle\Model\FilterOption;
+use Uhifadhi\Bundle\TeamBundle\Repository\PermissionChangeRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Contracts\Access\Power;
 use Uhifadhi\Contracts\Access\PowerGroup;
@@ -27,7 +30,8 @@ use Uhifadhi\Contracts\Access\PowerTarget;
 /**
  * WHAT THE PERMISSIONS PAGE DRAWS, from the evaluator's cells: the band of the
  * tiers × the main powers (and a picked person's column beside them), the
- * person's card, and the ledger's facets and rows.
+ * person's card, and the ledger's facets and rows — and, in the rail beside
+ * them, the permission history.
  */
 final readonly class PermissionsPage
 {
@@ -43,8 +47,14 @@ final readonly class PermissionsPage
         private PermissionEvaluator $evaluator,
         private PowerCatalogue $powers,
         private UserRepository $users,
+        /** The permission history the rail reads; null where an installation keeps none. */
+        private ?PermissionChangeRepository $changes = null,
+        private ?ClockInterface $clock = null,
     ) {
     }
+
+    /** How far back a change still marks its power in the band. */
+    public const string RECENT = '-30 days';
 
     /** @return array<string, mixed> */
     public function build(LedgerQuery $query): array
@@ -72,6 +82,111 @@ final readonly class PermissionsPage
             'page' => $page,
             'pages' => $pages,
             'groups' => PowerGroup::cases(),
+            'rail' => $this->rail($query, $person),
+            'recent' => $this->recent(),
+        ];
+    }
+
+    /**
+     * THE HISTORY RAIL ANSWERS FOR WHAT THE PAGE IS SHOWING (#75, rail B): the
+     * changes made by or to the person picked beside the tiers, and the
+     * changes behind the power whose dot was opened; everybody's when neither.
+     * Bounded, newest first; it never scrolls inside itself.
+     *
+     * @return list<array{title: string, src: string, context: ?string, lines: list<ChangeLine>, count: int, from: int, page: int, pages: int, close: ?string}>
+     */
+    private function rail(LedgerQuery $query, ?User $person): array
+    {
+        if (null === $this->changes) {
+            return [];
+        }
+
+        $per = LedgerQuery::CHANGES_PER_PAGE;
+        $cards = [];
+        if (null !== $person) {
+            $id = (int) $person->getId();
+            $uuid = (string) $person->getUuidString();
+            $cards[] = self::railCard(
+                'Changes',
+                'by or to '.$person->getFullName(),
+                \sprintf('The changes %s made, and the changes made to them.', $person->getFirstName()),
+                $this->changes->findByOrOnPerson($id, $uuid, $per),
+                $this->changes->countByOrOnPerson($id, $uuid),
+                null,
+            );
+        }
+
+        $power = null === $query->changes ? null : $this->powerOf($query->changes);
+        if (null !== $power) {
+            $cards[] = self::railCard(
+                'Behind “'.$power->label.'”',
+                'a dot in the band, opened',
+                null,
+                $this->changes->findBehind($power->key, $per),
+                $this->changes->countBehind($power->key),
+                'changes',
+            );
+        }
+
+        if ([] === $cards) {
+            $total = $this->changes->countAll();
+            $pages = max(1, (int) ceil($total / $per));
+            $page = min($query->changesPage, $pages);
+            $cards[] = self::railCard('Changes', 'newest first', null, $this->changes->findPage(($page - 1) * $per, $per), $total, null, $page, $pages);
+        }
+
+        return $cards;
+    }
+
+    /**
+     * THE MAIN POWERS A CHANGE MARKED IN THE LAST 30 DAYS, by key: the band
+     * draws a dot beside each, and the dot opens the rail on it.
+     *
+     * @return list<string>
+     */
+    private function recent(): array
+    {
+        if (null === $this->changes) {
+            return [];
+        }
+
+        $since = ($this->clock?->now() ?? new \DateTimeImmutable())->modify(self::RECENT);
+
+        return array_values(array_filter(self::BAND, fn (string $key): bool => $this->changes->countBehind($key, $since) > 0));
+    }
+
+    private function powerOf(string $key): ?Power
+    {
+        if (!\in_array($key, self::BAND, true) || !PermissionChangeRepository::hasLines($key)) {
+            return null;
+        }
+
+        foreach ($this->powers->all() as $power) {
+            if ($power->key === $key) {
+                return $power;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param list<PermissionChange> $rows
+     *
+     * @return array{title: string, src: string, context: ?string, lines: list<ChangeLine>, count: int, from: int, page: int, pages: int, close: ?string}
+     */
+    private static function railCard(string $title, string $src, ?string $context, array $rows, int $count, ?string $close, int $page = 1, int $pages = 1): array
+    {
+        return [
+            'title' => $title,
+            'src' => $src,
+            'context' => $context,
+            'lines' => array_map(ChangeLine::of(...), $rows),
+            'count' => $count,
+            'from' => ($page - 1) * LedgerQuery::CHANGES_PER_PAGE + 1,
+            'page' => $page,
+            'pages' => $pages,
+            'close' => $close,
         ];
     }
 

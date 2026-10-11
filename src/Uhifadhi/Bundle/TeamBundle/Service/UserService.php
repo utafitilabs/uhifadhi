@@ -20,6 +20,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\PermissionChangeEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\EmailAlreadyUsedException;
 use Uhifadhi\Bundle\TeamBundle\Exception\LastSuperAdminException;
@@ -61,6 +62,8 @@ final readonly class UserService
         private PositionVacancy $vacancies,
         private UserRepository $users,
         private TeamSettingsService $settings,
+        /** Where a change to who may do what leaves its line; null in a suite that is not about it. */
+        private ?PermissionChangeLog $changes = null,
     ) {
     }
 
@@ -111,6 +114,8 @@ final readonly class UserService
         $user->setPassword($this->hasher->hashPassword($user, $password));
 
         $this->save($user, $email);
+        $this->changes?->record(PermissionChangeEnum::AccountCreated, $user, null, $position?->getName() ?? $tier->label());
+        $this->entityManager->flush();
 
         // SEATING SOMEBODY AT BIRTH FILLS THE POST, exactly as seating them
         // later does.
@@ -163,6 +168,8 @@ final readonly class UserService
         }
 
         $this->save($user, $email);
+        $this->changes?->record(PermissionChangeEnum::Invited, $user, null, $position?->getName(), by: $invitedBy);
+        $this->entityManager->flush();
 
         return $user;
     }
@@ -214,6 +221,12 @@ final readonly class UserService
     /** The four fields the record page has. */
     public function updateRecord(User $user, string $firstName, string $lastName, string $email, ?string $rangerCode): void
     {
+        // THE ADDRESS IS HOW AN ACCOUNT IS TAKEN OVER: a reset link goes to it.
+        $was = (string) $user->getEmail();
+        if (self::normalise($was) !== self::normalise($email)) {
+            $this->changes?->record(PermissionChangeEnum::EmailChanged, $user, $was, trim($email));
+        }
+
         $user
             ->setFirstName(trim($firstName))
             ->setLastName(trim($lastName))
@@ -268,6 +281,9 @@ final readonly class UserService
 
         $this->invariant->assertMayChangeTier($user, $tier);
 
+        if ($user->getTeamRole() !== $tier) {
+            $this->changes?->record(PermissionChangeEnum::TierChanged, $user, $user->getTeamRole()->label(), $tier->label(), by: $by);
+        }
         $user->setTeamRole($tier);
         $this->entityManager->flush();
     }
@@ -299,6 +315,14 @@ final readonly class UserService
             $this->assertHasASeat($position);
         }
 
+        if ($was !== $position) {
+            $this->changes?->record(
+                null === $position ? PermissionChangeEnum::Unseated : PermissionChangeEnum::Seated,
+                $user,
+                $was?->getName(),
+                $position?->getName(),
+            );
+        }
         $user->setPosition($position);
         // THE DAY THE HOLDING STARTED, stamped only when the holding
         // actually changes — re-saving a form that names the position they
@@ -324,7 +348,24 @@ final readonly class UserService
      */
     public function place(User $user, ?Placement $placement): void
     {
+        $was = PermissionChangeLog::placementOf($user->getPlacement());
+        $now = PermissionChangeLog::placementOf($placement);
+        if ($was !== $now) {
+            $this->changes?->record(PermissionChangeEnum::Placed, $user, $was, $now);
+        }
         $user->setPlacement($placement);
+        $this->entityManager->flush();
+    }
+
+    /**
+     * A RESET LINK WAS SENT TO SOMEBODY BY SOMEBODY ELSE — sign-in help, which
+     * is a way into their account, so it is stamped on the record and left as
+     * a line. A person asking for their own link is not this.
+     */
+    public function resetLinkSent(User $user, ?User $by): void
+    {
+        $user->resetLinkSent(new \DateTimeImmutable(), $by);
+        $this->changes?->record(PermissionChangeEnum::ResetLinkSent, $user, null, null, by: $by);
         $this->entityManager->flush();
     }
 
@@ -357,6 +398,9 @@ final readonly class UserService
     {
         $this->invariant->assertMayDeactivate($user);
 
+        if ($user->isActive()) {
+            $this->changes?->record(PermissionChangeEnum::Deactivated, $user, null, null);
+        }
         $user->deactivate();
         $this->entityManager->flush();
 
@@ -366,6 +410,9 @@ final readonly class UserService
 
     public function reactivate(User $user): void
     {
+        if (!$user->isActive()) {
+            $this->changes?->record(PermissionChangeEnum::Reactivated, $user, null, null);
+        }
         $user->reactivate();
         $this->entityManager->flush();
 

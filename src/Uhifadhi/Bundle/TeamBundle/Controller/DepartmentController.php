@@ -105,13 +105,13 @@ use Uhifadhi\Contracts\Performance\PerformanceScope;
  * how many positions and people it touches — is stated on the act and INFORMS,
  * never guards; {@see reactivate()} brings it back.
  *
- * WHICH MODULES A DEPARTMENT LEADS WITH IS A LENS, NOT A GRANT.
+ * WHICH MODULES A DEPARTMENT RUNS DECIDES WHO READS THEM.
  * {@see toggleModule()} attaches a module from the registry's catalogue or takes
- * it back off, and that is the whole of its effect: the attached modules lead the
- * department's overview, and the figures on its performance tab are those
- * modules' KPIs rolled up through the attachment ({@see DepartmentPerformance}).
- * No permission moves and no row becomes unreachable, which is why — unlike a
- * scope change — it takes no reason and leaves no audit line.
+ * it back off: the attached modules lead the department's overview, the figures
+ * on its performance tab are those modules' KPIs rolled up through the
+ * attachment ({@see DepartmentPerformance}), and once any department runs a
+ * module only the people of a department running it reach its records. It takes
+ * no reason, and leaves a line in the permission history.
  *
  * WHAT IS DELIBERATELY NOT HERE YET. A department's WIDGET BOARD — the drawn
  * arrangement of its lens into movable plates — is the canonical detail page's

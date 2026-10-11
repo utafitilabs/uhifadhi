@@ -19,6 +19,7 @@ use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\GrantJustification;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\PermissionChangeEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PositionHeldException;
 use Uhifadhi\Bundle\TeamBundle\Exception\RuleExceptionRefusedException;
@@ -74,6 +75,7 @@ final readonly class PositionService
         private ConcernCatalogue $catalogue,
         private UserRepository $users,
         private ?GrantJustificationRepository $justifications = null,
+        private ?PermissionChangeLog $changes = null,
     ) {
     }
 
@@ -138,7 +140,12 @@ final readonly class PositionService
         }
 
         $ordinary = array_values(array_filter($pairs, static fn (string $pair): bool => !\in_array($pair, $exceptions, true)));
+        $was = PermissionChangeLog::listOf($position->getGrantValues());
         $position->setGrantValues(array_values(array_unique([...$ordinary, ...$heldExceptions])), $this->catalogue->pairs());
+        $now = PermissionChangeLog::listOf($position->getGrantValues());
+        if ($was !== $now) {
+            $this->changes?->record(PermissionChangeEnum::GrantsChanged, $position, $was, $now);
+        }
 
         $this->entityManager->flush();
     }
@@ -168,6 +175,7 @@ final readonly class PositionService
 
         $justification = new GrantJustification($position, $pair, $reason, $actor, $now ?? new \DateTimeImmutable());
         $this->entityManager->persist($justification);
+        $this->changes?->record(PermissionChangeEnum::ExceptionGiven, $position, null, $label, $reason, $actor);
         $position->setGrantValues([...$position->getGrantValues(), $pair], $this->catalogue->pairs());
 
         $this->entityManager->flush();
@@ -193,6 +201,7 @@ final readonly class PositionService
         }
 
         $current?->revoke($actor, $now ?? new \DateTimeImmutable());
+        $this->changes?->record(PermissionChangeEnum::ExceptionTaken, $position, $label, null, by: $actor);
         $position->setGrantValues(
             array_values(array_filter($position->getGrantValues(), static fn (string $value): bool => $value !== $pair)),
             $this->catalogue->pairs(),

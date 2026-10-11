@@ -8,6 +8,28 @@
 
 Not released yet.
 
+ * A HISTORY OF PERMISSION CHANGES (ruled 11 Oct, #75, design D with rail B): every
+   change to who may do what leaves one append-only line — when, who, on whom or what,
+   before → after, and the reason where the change asks for one — written in the same
+   flush as the change by `Service\PermissionChangeLog` (`team.permission_changes`).
+   Lines are left by a tier change, seating or unseating, a placement, an account made,
+   invited, deactivated or reactivated, an email change, a reset link sent by somebody
+   else, a one-time password, a position's grants, an exception given or taken away, a
+   department's scope, and a module attached to or detached from a department. A rank
+   change leaves none. The actor is the person signed in, or the Super Admin behind a
+   switch, else "the system". Team › Permissions reads them in a rail beside the band and
+   the ledger: everybody's newest, twelve at a time; with a person picked, the changes
+   they made and the changes made to them; and a dot on a band power changed in the last
+   30 days opens the changes behind it (`?changes=<power>`). A person's and a position's
+   history cards read the same lines. Migration `Version20261011120000` adds
+   `team_permission_change`; it starts empty. `UserService::resetLinkSent()` stamps and
+   records a reset link sent for somebody.
+
+ * Attaching a module to a department is named for what it does: once any department
+   runs a module, only the people of a department running it reach its records, so the
+   docblocks of `DepartmentService` and `DepartmentController` no longer say it moves no
+   permission.
+
  * THE PERFORMANCE PAGES READ STORED FIGURES (#71): `Facts\TeamFactProvider` (tag
    `uhifadhi.facts`, module `team`) files each department's seats and people and, per
    area and for the organization, the posts past the threshold; the Staffing topic, the

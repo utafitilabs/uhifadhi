@@ -90,6 +90,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\GrantJustificationRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\InstallationPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\OneTimePasswordRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\PermissionChangeRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\RankHoldingRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\RankRepository;
@@ -120,6 +121,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PeopleFacetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
+use Uhifadhi\Bundle\TeamBundle\Service\PermissionChangeLog;
 use Uhifadhi\Bundle\TeamBundle\Service\PersonRankService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionHistory;
@@ -342,6 +344,10 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
 
+    $services->set(PermissionChangeRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
     $services->set(DeletionRecordRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
@@ -414,7 +420,7 @@ return static function (ContainerConfigurator $container): void {
      * code, and the sign-in check that refuses an unused code past its expiry.
      */
     $services->set('team.one_time_password', OneTimePasswordService::class)
-        ->args([service('doctrine.orm.entity_manager'), service('security.user_password_hasher'), service(OneTimePasswordRepository::class)]);
+        ->args([service('doctrine.orm.entity_manager'), service('security.user_password_hasher'), service(OneTimePasswordRepository::class), service('team.permission_changes')]);
 
     /*
      * THE ORGANIZATION'S RANKS — the scales, the ranks on each, and the rank
@@ -1110,6 +1116,20 @@ return static function (ContainerConfigurator $container): void {
             // THE INVITATION RULES an invitation is sent under — the link's
             // validity is stamped from them the moment it is issued.
             service('team.settings'),
+            service('team.permission_changes'),
+        ]);
+
+    /*
+     * THE LINE A CHANGE TO WHO MAY DO WHAT LEAVES (#75): written in the same
+     * flush as the change, naming the person signed in, or the Super Admin
+     * behind a switch. The token storage is optional so a kernel without
+     * security still boots; its changes are then the system's.
+     */
+    $services->set('team.permission_changes', PermissionChangeLog::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service('security.token_storage')->nullOnInvalid(),
+            service('clock')->nullOnInvalid(),
         ]);
 
     /*
@@ -1123,6 +1143,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.access.catalogue'),
             service(UserRepository::class),
             service(GrantJustificationRepository::class),
+            service('team.permission_changes'),
         ]);
 
     /*
@@ -1144,10 +1165,11 @@ return static function (ContainerConfigurator $container): void {
         ]);
 
     /* What this installation can truthfully say happened to a position. */
-    $services->set('team.position_history', PositionHistory::class);
+    $services->set('team.position_history', PositionHistory::class)
+        ->args([service(PermissionChangeRepository::class)]);
 
     $services->set('team.departments', DepartmentService::class)
-        ->args([service('doctrine.orm.entity_manager')]);
+        ->args([service('doctrine.orm.entity_manager'), service('team.permission_changes')]);
 
     /*
      * A DEPARTMENT'S FIGURES ARE ITS ATTACHED MODULES' FIGURES. The providers
@@ -1270,7 +1292,7 @@ return static function (ContainerConfigurator $container): void {
      * a card nobody could act on.
      */
     $services->set('team.member_history', MemberHistory::class)
-        ->args([service(OneTimePasswordRepository::class)]);
+        ->args([service(OneTimePasswordRepository::class), service(PermissionChangeRepository::class)]);
     $services->alias(MemberHistory::class, 'team.member_history');
 
     $services->set('team.person_rank', PersonRankService::class)
@@ -1506,7 +1528,7 @@ return static function (ContainerConfigurator $container): void {
      * the evaluator, for a Super Admin to read.
      */
     $services->set('team.permissions.page', PermissionsPage::class)
-        ->args([service('team.permissions.evaluator'), service('team.permissions.powers'), service(UserRepository::class)]);
+        ->args([service('team.permissions.evaluator'), service('team.permissions.powers'), service(UserRepository::class), service(PermissionChangeRepository::class), service('clock')->nullOnInvalid()]);
 
     $services->set('team.controller.permissions', PermissionsController::class)
         ->args([service('twig'), service('team.permissions.page')])

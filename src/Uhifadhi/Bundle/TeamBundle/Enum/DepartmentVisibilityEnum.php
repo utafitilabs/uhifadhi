@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Enum;
 
 /**
- * WHO OUTSIDE A DEPARTMENT SEES IT (ruled 12 Oct 2026, #74). Asana lets each
+ * WHO OUTSIDE A DEPARTMENT SEES IT (ruled 11 Oct 2026, #74). Asana lets each
  * team choose its privacy — private, membership by request, public to the
  * organization; here the same three levels, with nobody joining a department
  * on their own, so the middle one lists it rather than taking requests.

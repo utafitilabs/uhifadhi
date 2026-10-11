@@ -8,7 +8,7 @@
 
 Not released yet.
 
- * WHO OUTSIDE A DEPARTMENT SEES IT (ruled 12 Oct, #74, design B): `Department::$visibility`,
+ * WHO OUTSIDE A DEPARTMENT SEES IT (ruled 11 Oct, #74, design B): `Department::$visibility`,
    `DepartmentVisibilityEnum` — Private (a new department, and every existing one), Listed,
    Open. Open: everybody who reads departments reads its record and figures. Listed: its name
    and area are a row at the foot of everybody's register, marked "not yours to open", and its

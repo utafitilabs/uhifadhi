@@ -22,7 +22,7 @@ use Uhifadhi\Bundle\TeamBundle\Enum\PermissionChangeEnum;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 
 /**
- * WHO OUTSIDE A DEPARTMENT SEES IT (ruled 12 Oct 2026, #74, design B). A
+ * WHO OUTSIDE A DEPARTMENT SEES IT (ruled 11 Oct 2026, #74, design B). A
  * department is Private — read by who belongs to it, who supports it, and
  * whoever reaches the whole organization, as before — or Listed, its row in
  * the register naming it, its area and its head to everybody who reads

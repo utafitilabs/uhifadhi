@@ -1617,7 +1617,7 @@ row is the old board's mistake in miniature. Periods before an entry's
 `runningSince` are holes in its history for the same reason. `answeringFor()`
 is the narrower set — the rows you will actually query.
 
-Four rules the host will hold you to, and they are the same four the rest of
+Five rules the host will hold you to, and they are the same five the rest of
 this platform states:
 
 - **Exactly five KPIs.** A row of three where the design has five is a
@@ -1633,6 +1633,15 @@ this platform states:
   tinted and its movement is never coloured.
 - **Scope and period are asked, not assumed.** Answer for the scope you are
   handed, or you will draw the organization's figures on one area's page.
+- **Read stored figures; never count records.** A topic is drawn for a run of
+  six or twelve periods, for the page and for every row, on every request, so
+  counting records there grows with the history. File each figure per area and
+  per month through a fact provider ([Facts a module computes on a
+  schedule](#facts-a-module-computes-on-a-schedule)) and read them back with
+  `FactReaderInterface::batch()` once a period for the whole page; set
+  `TopicKpi::$asOf` from the facts of a period still open. A change to a record
+  in a closed month asks for that month again with `RecomputeFacts`, because the
+  schedule refiles open periods only. Patrols and incidents are worked examples.
 
 **The shades are not yours, and neither is the table.** You publish figures and
 say which way is good; where a department stands among the others is worked out

@@ -22,7 +22,10 @@ use Uhifadhi\Bundle\AtlasBundle\Model\ChartFigures;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartNoughts;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartPanel;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartRange;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
+use Uhifadhi\Bundle\AtlasBundle\Model\LineStyle;
 use Uhifadhi\Bundle\AtlasBundle\Tests\Integration\TestKernel;
 use Uhifadhi\Bundle\AtlasBundle\Twig\ChartRuntime;
 
@@ -164,6 +167,36 @@ final class AtlasChartTest extends TestCase
         self::assertSame(40, $dataset['maxBarThickness'] ?? null);
         self::assertSame(['opacity' => 0.28], self::at($view, 'options', 'plugins', 'noughts'));
         self::assertStringContainsString('<span class="chip acc">Assignments</span>', $html);
+    }
+
+    /** A pair of panels on one axis: the upper's ranges, mark and silent ticks, the lower's line over bars and picked week, all in the served views. */
+    public function testAPairOfPanelsCarriesTheRangesTheMarkTheOverlayAndThePickIntoTheServedViews(): void
+    {
+        $upper = self::view(self::render(new AtlasChart(
+            ChartKind::Line,
+            ['13 apr', '20 apr', '27 apr'],
+            [new ChartSeries('Niño 3.4', [0.5, 0.9, 1.2], accent: true, marked: 2)],
+            ranges: [new ChartRange(0.5, null, 'EL NIÑO', cat: 3)],
+            highlight: 2,
+            panel: ChartPanel::Upper,
+            legend: ChartLegend::None,
+        )));
+        $lower = self::view(self::render(new AtlasChart(
+            ChartKind::Bar,
+            ['13 apr', '20 apr', '27 apr'],
+            [new ChartSeries('Rain', [6.0, 115.0, 9.0], accent: true), new ChartSeries('Normal', [32.0, 31.0, 28.0], line: LineStyle::Dashed)],
+            highlight: 2,
+            legend: ChartLegend::Chips,
+        )));
+
+        self::assertSame('EL NIÑO', self::at($upper, 'options', 'plugins', 'ranges', 'ranges', '0', 'label'));
+        self::assertSame('var(--cat-3)', self::at($upper, 'options', 'plugins', 'ranges', 'ranges', '0', 'color'));
+        self::assertSame(2, self::at($upper, 'options', 'plugins', 'ranges', 'highlight'));
+        self::assertSame([0, 0, 4], self::at($upper, 'data', 'datasets', '0', 'pointRadius'));
+        self::assertFalse(self::at($upper, 'options', 'scales', 'x', 'ticks', 'display'));
+        self::assertSame('line', self::at($lower, 'data', 'datasets', '1', 'type'));
+        self::assertSame([6, 4], self::at($lower, 'data', 'datasets', '1', 'borderDash'));
+        self::assertSame(2, self::at($lower, 'options', 'plugins', 'ranges', 'highlight'));
     }
 
     /**

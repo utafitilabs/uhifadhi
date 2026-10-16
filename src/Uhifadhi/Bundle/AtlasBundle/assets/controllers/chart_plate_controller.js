@@ -72,6 +72,17 @@ const PAINTED = ['backgroundColor', 'borderColor', 'color', 'pointBackgroundColo
    id ChartBuilder::NOUGHTS writes it under. */
 const NOUGHTS = 'noughts';
 
+/* The id the builder writes a chart's shaded ranges and its picked label
+   under: ChartBuilder::RANGES_PLUGIN. */
+const RANGES = 'ranges';
+
+/** The inset of a range's word from the band's corner, in canvas pixels. */
+const RANGE_WORD_INSET = 4;
+
+/* Where the builder states the width a paired panel's value axis is held
+   at: ChartBuilder::PANELS_PLUGIN. */
+const PANELS = 'panels';
+
 /*
  * THE SAME COLOR AT AN OPACITY. A token resolves to one of two shapes: the
  * palette's six-digit hex or a channel color (`rgb(62 217 168)`), and each
@@ -105,6 +116,8 @@ export default class extends Controller {
             this.paint(event.detail.config);
             this.hairline(event.detail.config);
             this.figure(event.detail.config);
+            this.ranges(event.detail.config);
+            this.panel(event.detail.config);
         };
         this.element.addEventListener('chartjs:pre-connect', this.onPreConnect);
 
@@ -143,6 +156,101 @@ export default class extends Controller {
                 }
             }
         }
+
+        /* A range's band and the picked label's column carry their colour as
+           tokens too, under the ranges plugin's own options. */
+        const ranges = config?.options?.plugins?.[RANGES];
+        if (ranges) {
+            for (const range of ranges.ranges ?? []) {
+                range.color = this.resolve(range.color);
+            }
+            if ('highlightColor' in ranges) {
+                ranges.highlightColor = this.resolve(ranges.highlightColor);
+            }
+        }
+    }
+
+    /**
+     * THE RANGES PLUGIN: a faint band over a stated range of the value axis
+     * with its word at the band's edge, and a faint column behind the one
+     * label the reader picked — both drawn BEFORE the datasets, so every
+     * series sits on top of them. Inline and identified, like the figures.
+     *
+     * @see https://www.chartjs.org/docs/latest/api/interfaces/Plugin.html — `beforeDatasetsDraw(chart, args, options)`
+     * @see https://www.chartjs.org/docs/latest/api/classes/Scale.html — `getPixelForValue(value)`, `getPixelForTick(index)`; `chart.chartArea` is the plotting box
+     */
+    ranges(config) {
+        if (!config.options?.plugins?.[RANGES]) {
+            return;
+        }
+
+        const element = this.element;
+
+        config.plugins = [...(config.plugins ?? []), {
+            id: RANGES,
+            beforeDatasetsDraw(chart, args, options) {
+                const ctx = chart.ctx;
+                const area = chart.chartArea;
+                const sideways = 'y' === chart.options.indexAxis;
+                const value = sideways ? chart.scales.x : chart.scales.y;
+                const index = sideways ? chart.scales.y : chart.scales.x;
+                if (!value || !index) {
+                    return;
+                }
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(area.left, area.top, area.right - area.left, area.bottom - area.top);
+                ctx.clip();
+
+                for (const range of options.ranges ?? []) {
+                    const lo = null === range.from ? value.min : range.from;
+                    const hi = null === range.to ? value.max : range.to;
+                    const a = value.getPixelForValue(lo);
+                    const b = value.getPixelForValue(hi);
+                    ctx.fillStyle = fade(range.color, options.opacity);
+                    if (sideways) {
+                        ctx.fillRect(Math.min(a, b), area.top, Math.abs(b - a), area.bottom - area.top);
+                    } else {
+                        ctx.fillRect(area.left, Math.min(a, b), area.right - area.left, Math.abs(b - a));
+                    }
+                    if (range.label) {
+                        ctx.fillStyle = range.color;
+                        ctx.font = `600 8.5px ${getComputedStyle(element).getPropertyValue('--font-mono').trim() || 'monospace'}`;
+                        /* The word sits at the band's far end, just inside its
+                           edge: the upper edge, or the lower one where the band is
+                           open at the top — away from where a series usually starts. */
+                        if (sideways) {
+                            ctx.textAlign = 'left';
+                            ctx.textBaseline = 'bottom';
+                            ctx.fillText(range.label, Math.min(a, b) + RANGE_WORD_INSET, area.bottom - RANGE_WORD_INSET);
+                        } else if (null === range.to) {
+                            ctx.textAlign = 'right';
+                            ctx.textBaseline = 'bottom';
+                            ctx.fillText(range.label, area.right - RANGE_WORD_INSET, Math.max(a, b) - RANGE_WORD_INSET);
+                        } else {
+                            ctx.textAlign = 'right';
+                            ctx.textBaseline = 'top';
+                            ctx.fillText(range.label, area.right - RANGE_WORD_INSET, Math.min(a, b) + RANGE_WORD_INSET);
+                        }
+                    }
+                }
+
+                if (null !== options.highlight && undefined !== options.highlight) {
+                    const ticks = index.ticks.length || chart.data.labels.length;
+                    const span = ticks > 1 ? Math.abs(index.getPixelForTick(1) - index.getPixelForTick(0)) : (sideways ? area.bottom - area.top : area.right - area.left);
+                    const centre = index.getPixelForValue(options.highlight);
+                    ctx.fillStyle = fade(options.highlightColor, options.highlightOpacity);
+                    if (sideways) {
+                        ctx.fillRect(area.left, centre - span / 2, area.right - area.left, span);
+                    } else {
+                        ctx.fillRect(centre - span / 2, area.top, span, area.bottom - area.top);
+                    }
+                }
+
+                ctx.restore();
+            },
+        }];
     }
 
     /*
@@ -225,6 +333,36 @@ export default class extends Controller {
     }
 
     /**
+     * A PAIRED PANEL HOLDS ITS VALUE AXIS AT ONE WIDTH. The scale's `afterFit`
+     * is the hook Chart.js gives for sizing a scale after it has measured
+     * its ticks, and a function is nothing JSON can carry — so the builder
+     * states the width under the panels plugin's id and the plate puts the
+     * hook on here. The upper panel's silent ticks and the lower's "116"
+     * then take the same room, and the two plots line up.
+     *
+     * @see https://www.chartjs.org/docs/latest/axes/#callbacks — `afterFit(axis)`: "Callback that runs after the scale fits to the canvas"
+     */
+    panel(config) {
+        const panels = config.options?.plugins?.[PANELS];
+        if (!panels) {
+            return;
+        }
+
+        const sideways = 'y' === config.options?.indexAxis;
+        const value = config.options?.scales?.[sideways ? 'x' : 'y'];
+        if (!value) {
+            return;
+        }
+        value.afterFit = (scale) => {
+            if (sideways) {
+                scale.height = panels.axisWidth;
+            } else {
+                scale.width = panels.axisWidth;
+            }
+        };
+    }
+
+    /**
      * THE SAME CHART, IN THE PALETTE THAT IS ON NOW. The tokens are gone from
      * the configuration Chart.js holds — they were resolved at mount — so the
      * drawn one is derived again from the copy taken before that, with the
@@ -240,6 +378,7 @@ export default class extends Controller {
         const fresh = structuredClone(this.stated);
         this.paint(fresh);
         this.hairline(fresh);
+        this.panel(fresh);
 
         this.chart.data.datasets.forEach((dataset, index) => {
             const painted = fresh.data?.datasets?.[index] ?? {};

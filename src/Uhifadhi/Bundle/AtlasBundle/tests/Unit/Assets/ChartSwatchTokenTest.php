@@ -70,6 +70,27 @@ final class ChartSwatchTokenTest extends TestCase
         self::assertStringContainsString("this.chart.update('none');", $js);
     }
 
+    /**
+     * THE RANGES PLUGIN IS THE PLATE'S, drawn before the datasets so every
+     * series sits on the band, and its colours cross the wire as tokens the
+     * plate resolves like a series' category — at mount and on a flip.
+     */
+    public function testTheRangesPluginIsPutOnBeforeTheDatasetsAndItsColoursAreResolved(): void
+    {
+        $js = self::controllerJs();
+
+        self::assertStringContainsString("const RANGES = 'ranges';", $js);
+        self::assertStringContainsString('beforeDatasetsDraw(chart, args, options)', $js);
+        self::assertStringContainsString('range.color = this.resolve(range.color);', $js);
+        self::assertStringContainsString('ranges.highlightColor = this.resolve(ranges.highlightColor);', $js);
+        self::assertStringContainsString('value.getPixelForValue(', $js);
+        self::assertStringContainsString('index.getPixelForValue(options.highlight)', $js);
+        // And a paired panel's value axis is held at the stated width, at mount and after a flip.
+        self::assertStringContainsString("const PANELS = 'panels';", $js);
+        self::assertStringContainsString('value.afterFit = (scale) =>', $js);
+        self::assertSame(2, substr_count($js, 'this.panel('));
+    }
+
     /** The builder ships no colour of its own — a series is a category. */
     public function testTheBuilderNamesNoColour(): void
     {

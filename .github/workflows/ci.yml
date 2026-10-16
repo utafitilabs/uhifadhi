@@ -120,24 +120,29 @@ jobs:
           # own workflow rather than flattened into one: a module tested with
           # something other than what it asks for is not the module's suite.
           - module: patrol
+            line: 'v0.10.2'
             image: ghcr.io/utafitilabs/postgis:17
             database: patrol_bundle_test
             extensions: ctype, iconv, pdo_pgsql
           - module: incident
+            line: '0.4'
             image: ghcr.io/utafitilabs/postgis:17
             database: incidents_bundle_test
             extensions: ctype, iconv, pdo_pgsql
           - module: storage
+            line: '0.3'
             image: postgres:17
             database: storage_bundle_test
             # gd for the thumbnails, and imagick deliberately absent — the
             # module's own CI exercises the GD-only path on purpose.
             extensions: ctype, iconv, gd, fileinfo, pdo_pgsql
           - module: devkit
+            line: '0.2'
             image: ghcr.io/utafitilabs/postgis:17
             database: uhifadhi_devkit_test
             extensions: ctype, iconv
           - module: roster
+            line: '0.1'
             image: ghcr.io/utafitilabs/postgis:17
             database: roster_bundle_test
             extensions: ctype, iconv, pdo_pgsql
@@ -176,14 +181,17 @@ jobs:
         with:
           path: core
 
-      - name: Check out the module at its current line
+      - name: Check out the module at the line that pairs with this core
         uses: actions/checkout@v4
         with:
           repository: utafitilabs/${{ matrix.module }}-module
-          # No ref: the repository's default branch is its current version line
-          # (0.3, 0.7, …), the Symfony shape — main no longer exists.
+          # THE LINE, NOT THE DEFAULT BRANCH. This core is the 0.1 line; the
+          # modules' default branches have moved on to the lines that pair
+          # with core 0.2, so each is pinned here to the line (or, where the
+          # line has no branch of its own, the tag) released against core 0.1.
           # Every fleet module is public, so the job's own token checks it out.
           # A private module would need a Contents:read token added here.
+          ref: ${{ matrix.line }}
           path: module
 
       - name: Setup PHP

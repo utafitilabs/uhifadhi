@@ -65,6 +65,7 @@
                            state in a class because it is a drawing rather than a colour. #}
                         {% set swatch %}
                             {%- if item.shape.liveDot %}<span class="sw dot"><i class="{{ item.shape.liveDot }}"></i></span>
+                            {%- elseif item.ramp is not empty %}<span class="sw ramp" style="background:linear-gradient(90deg,{{ item.ramp|join(',') }})"></span>
                             {%- else %}<span class="sw{{ item.shape.value == 'line' ? ' ln' : '' }}{{ item.shape.value == 'pin' ? ' pin' : '' }}" style="{{ item.shape.value == 'line' ? 'color:' ~ item.swatch : 'background:' ~ item.swatch }}"></span>
                             {%- endif -%}
                         {% endset %}

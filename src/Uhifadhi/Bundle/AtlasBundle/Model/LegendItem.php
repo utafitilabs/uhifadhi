@@ -29,6 +29,13 @@ namespace Uhifadhi\Bundle\AtlasBundle\Model;
  *
  * `note` is the quiet word after the label where a row has no count — the
  * design's "Zones · context", "The pin · being placed".
+ *
+ * `ramp` makes the row's swatch a RAMP instead of one colour: two or three
+ * plate tokens, left to right, drawn as a gradient — for a layer whose colour
+ * is continuous (millimetres of rain, a percent of normal) and whose legend
+ * would otherwise repeat one swatch per step, each looking the same. The
+ * label carries the endpoints in words: "0 → 15.7 mm", "dry amber · 100
+ * neutral · wet mint".
  */
 final readonly class LegendItem
 {
@@ -41,6 +48,11 @@ final readonly class LegendItem
         public ?string $layerId = null,
         public bool $visible = true,
         public ?string $note = null,
+        /** @var list<string> two or three plate tokens, left to right; empty for a one-colour swatch */
+        public array $ramp = [],
     ) {
+        if ([] !== $ramp && (\count($ramp) < 2 || \count($ramp) > 3)) {
+            throw new \InvalidArgumentException(\sprintf('A ramp runs between two or three tokens; "%s" names %d.', $label, \count($ramp)));
+        }
     }
 }

@@ -73,6 +73,35 @@ final class RenderMapTest extends TestCase
         self::assertStringContainsString('&quot;boundary&quot;', $html);
     }
 
+    /**
+     * A CONTINUOUS COLOUR IS ONE RAMP ROW, not a swatch per step that all
+     * look alike: the row's swatch is a gradient of the stated tokens, left
+     * to right, and the words carry the endpoints.
+     */
+    public function testARampRowDrawsAGradientOfItsTokens(): void
+    {
+        $html = self::render(static function (AtlasMap $map): void {
+            $map->addLegendItem(new LegendItem(label: 'mm: 0 → 15.7', swatch: PlatePalette::ACCENT, ramp: [PlatePalette::DIM, PlatePalette::ACCENT]));
+        });
+
+        self::assertStringContainsString('class="sw ramp" style="background:linear-gradient(90deg,'.PlatePalette::DIM.','.PlatePalette::ACCENT.')"', $html);
+        self::assertStringContainsString('mm: 0 → 15.7', $html);
+    }
+
+    /** A ramp runs between two or three tokens; one, or four, is refused where it is stated. */
+    public function testARampOfOneOrFourTokensIsRefused(): void
+    {
+        $refused = 0;
+        foreach ([[PlatePalette::ACCENT], [PlatePalette::DIM, PlatePalette::OK, PlatePalette::WARN, PlatePalette::FAIL]] as $ramp) {
+            try {
+                new LegendItem(label: 'x', swatch: PlatePalette::ACCENT, ramp: $ramp);
+            } catch (\InvalidArgumentException) {
+                ++$refused;
+            }
+        }
+        self::assertSame(2, $refused);
+    }
+
     public function testALayerRendersALegendRowThatTogglesIt(): void
     {
         $html = self::render(static function (AtlasMap $map): void {

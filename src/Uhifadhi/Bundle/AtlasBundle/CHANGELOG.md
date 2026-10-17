@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * A LEGEND ROW MAY BE A RAMP (`LegendItem::$ramp`, two or three plate tokens drawn as a
+   gradient) for a layer whose colour is continuous, with the endpoints in the label.
+
  * A CHART STATES WHERE A READING SITS: `AtlasChart::$ranges` (a `ChartRange` — a shaded
    range of the value axis with a word, open at either end), `AtlasChart::$highlight` (the one
    label the reader picked, banded behind every series) and `AtlasChart::$panel` (a `ChartPanel`: the

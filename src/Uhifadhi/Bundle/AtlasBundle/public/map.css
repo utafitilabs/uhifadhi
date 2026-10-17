@@ -206,6 +206,8 @@
     border: 1px solid color-mix(in srgb, rgb(var(--c-tx)) 18%, transparent);
 }
 .map-legend .lay .sw.ln { height: 0; border: 0; border-top: 2.2px solid currentColor; border-radius: 0; }
+/* A RAMP IS WIDER THAN A SWATCH, so the gradient has room to read as one. */
+.map-legend .lay .sw.ramp { width: 34px; }
 /* THE LIVE MARK'S BOX IS BIGGER THAN THE MARK, so the ring has room to
    breathe — and a box that captured clicks over all of it would make a
    38-pixel square of empty air steal the cursor from whatever is under it on

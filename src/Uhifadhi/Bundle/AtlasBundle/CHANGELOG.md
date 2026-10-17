@@ -8,6 +8,8 @@
 
 Not released yet.
 
+ * A LEGEND ROW MAY BE A RAMP (`LegendItem::$ramp`, two or three plate tokens drawn as a
+   gradient) for a layer whose colour is continuous, with the endpoints in the label.
  * A LIVE STREAM NAMES THE PARAMETER ITS HUB TAKES TOPICS ON (#61): `LiveStream` carries
    `parameter` — `topic` for a Mercure 0.x hub, `match` for 1.0 (`LiveStream::parameterFor()`,
    from the protocol version as `symfony/mercure` names it) — and the plate subscribes on it,

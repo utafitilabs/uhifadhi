@@ -21,6 +21,7 @@ their API once it settles.
 - [The boundary](#the-boundary)
 - [The ground](#the-ground)
 - [The legend](#the-legend)
+  - [A ramp row](#a-ramp-row)
   - [Where it is drawn](#where-it-is-drawn)
 - [The live stream](#the-live-stream)
 - [Base layers, fullscreen and fitting](#base-layers-fullscreen-and-fitting)
@@ -391,6 +392,15 @@ $map->addLegendItem(new LegendItem(
 
 Rows sharing a `group` are drawn together under that heading, in the order their first row
 appeared — which is how a plate with four contributors stays readable.
+
+### A ramp row
+
+A layer whose colour is continuous — millimetres of rain, a percent of normal — has no five
+colours to name, and five rows of one token at five opacities all look the same in a legend. Such
+a layer states **one ramp row**: `new LegendItem(label: 'mm summed over the window: 0 → 15.7 mm',
+swatch: PlatePalette::ACCENT, ramp: [PlatePalette::DIM, PlatePalette::ACCENT])`. The swatch is
+drawn as a gradient of the two or three tokens, left to right, and the words carry the endpoints
+("dry amber · 100 neutral · wet mint"). A ramp of one or four tokens is refused.
 
 ### Where it is drawn
 

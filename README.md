@@ -290,6 +290,19 @@ in that block: a name there is a promise that this package *is* that package.
 The root [CHANGELOG-1.0.md](CHANGELOG-1.0.md) and [UPGRADE-1.0.md](UPGRADE-1.0.md)
 are the release notes; each bundle also keeps its own `CHANGELOG.md`.
 
+**Lines, and how a fix travels.** This repository, like every repository of
+the fleet, is branched the way Symfony is: one branch per version line, named
+after it (`0.1`, `0.2`, …), the newest line the default branch where features
+land, tags on the lines as the releases, no `main`. A fix lands on the **oldest
+line that has the fault** and is released from there — an installation on core
+`0.1` takes it as `0.1.x` without moving line. Then that line is **merged
+upward** into every newer line (`git merge origin/0.1` on `0.2`, and onward),
+as a merge and never a cherry-pick, so each fix reaches each later line once and
+the lines never drift apart. In that merge a file that is a line's own — a CI
+pin, a lock — keeps the newer line's version. A new line begins as a branch cut
+from the current one when a change breaks the contract; features never land on
+an older line.
+
 **A tag is not done until the fleet gate is green.** The starter repository
 (`utafitilabs/uhifadhi-skeleton`) carries `composer fleet-gate`, which creates a project
 with its README's own commands and installs this core and every official module

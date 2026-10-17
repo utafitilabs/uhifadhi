@@ -32,6 +32,12 @@ use Uhifadhi\Contracts\Atlas\PlatePalette;
  * next one in order, so two charts built by two modules on one page do not
  * read as one chart with nine series.
  *
+ * A SERIES MAY BE A LINE OVER THE BARS (`line`): on a bar chart it is drawn
+ * as a line and not a second set of bars — the normal the bars are read
+ * against, dashed, or a second measurement, solid. And it MAY MARK ONE
+ * POINT (`marked`): the reading the page is about wears a dot, the rest of
+ * the line wears none.
+ *
  * `swatch` IS THE OLD DOOR AND IS DEPRECATED. It took a hex, which was
  * right in one palette and wrong in the other two, and it is honoured for
  * one release so a module that states one still draws.
@@ -45,6 +51,8 @@ final readonly class ChartSeries
      *                                 position in the palette, resolved where it is drawn
      * @param bool             $accent the series wears the house accent: the one quantity a
      *                                 card measures where it is no category at all
+     * @param LineStyle|null   $line   on a bar chart, this series is a line over the bars
+     * @param int|null         $marked the index of the one point drawn with a marker
      */
     public function __construct(
         public string $label,
@@ -52,7 +60,12 @@ final readonly class ChartSeries
         public ?string $swatch = null,
         public ?int $cat = null,
         public bool $accent = false,
+        public ?LineStyle $line = null,
+        public ?int $marked = null,
     ) {
+        if (null !== $marked && ($marked < 0 || $marked >= \count($points))) {
+            throw new \InvalidArgumentException(\sprintf('A marked point is one of the %d points of "%s"; %d is none of them.', \count($points), $label, $marked));
+        }
         if ($accent && (null !== $cat || null !== $swatch)) {
             throw new \InvalidArgumentException(\sprintf('A series wears a category or the accent, never both; "%s" states both.', $label));
         }

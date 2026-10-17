@@ -37,6 +37,10 @@ their API once it settles.
   - [A stated axis](#a-stated-axis)
   - [The chip legend](#the-chip-legend)
   - [The accent, the nought and the column width](#the-accent-the-nought-and-the-column-width)
+  - [A shaded range of the value axis, with a word](#a-shaded-range-of-the-value-axis-with-a-word)
+  - [The label the reader picked](#the-label-the-reader-picked)
+  - [A line over the bars, and a marked point](#a-line-over-the-bars-and-a-marked-point)
+  - [A pair of panels on one axis](#a-pair-of-panels-on-one-axis)
   - [The bar radius](#the-bar-radius)
   - [Ticks, grid and axis line](#ticks-grid-and-axis-line)
   - [How tall a chart is](#how-tall-a-chart-is)
@@ -780,6 +784,74 @@ new AtlasChart(
   ([general/options](https://www.chartjs.org/docs/latest/general/options.html#indexable-options)).
 - **`barWidth: 40.0`** — no column is drawn wider than that. Chart.js: `maxBarThickness`, "Set this
   to ensure that bars are not sized thicker than this".
+
+### A shaded range of the value axis, with a word
+
+`ranges: [new ChartRange(0.5, null, 'EL NIÑO ≥ +0.5 °C', cat: 3)]` shades the value axis from
++0.5 up to the top of the scale in that category's colour, faintly (.08), behind every series,
+and writes the word once at the band's edge. A range is a fact about the scale — above this is
+El Niño, below that is short — stated so the reader learns what a reading there means without a
+legend. `from` or `to` may be null for an open end; a range open at both ends, one that runs
+downward, or one wearing both a category and the accent is refused where it is stated.
+
+```php
+new AtlasChart(
+    ChartKind::Line,
+    $weeks,
+    [new ChartSeries('Niño 3.4 anomaly', $readings, accent: true, marked: $picked)],
+    unit: '°C',
+    ranges: [new ChartRange(0.5, null, 'EL NIÑO ≥ +0.5 °C', swatch: PlatePalette::FAIL)],
+    highlight: $picked,
+    panel: ChartPanel::Upper,
+    legend: ChartLegend::None,
+);
+```
+
+Chart.js draws no such band, so it is the plate's own inline plugin — `options.plugins.ranges`,
+the same door the figures go through — drawn in `beforeDatasetsDraw`
+([api/interfaces/Plugin](https://www.chartjs.org/docs/latest/api/interfaces/Plugin.html)) so every
+series sits on top of it, between the pixels the value scale gives for the two bounds
+(`Scale.getPixelForValue`, [api/classes/Scale](https://www.chartjs.org/docs/latest/api/classes/Scale.html)),
+clipped to the chart area. Each range's colour crosses the wire as a token the plate resolves at
+mount and again on a theme flip, like a series' category.
+
+### The label the reader picked
+
+`highlight: 7` bands the eighth label's column behind every series, in the accent at .14 — the
+week the page is about, the month a link selected. It goes through the same ranges plugin:
+the index scale's pixel for that label, one category's width either side. A highlight that names
+no label is refused.
+
+### A line over the bars, and a marked point
+
+Two statements a series makes about itself:
+
+- **`new ChartSeries('Normal for those dates', $normal, line: LineStyle::Dashed)`** on a bar
+  chart draws that series as a line over the bars rather than as a second set of bars — the
+  library's mixed chart, "each dataset can be configured with a different type"
+  ([charts/mixed](https://www.chartjs.org/docs/latest/charts/mixed.html)). `Dashed` is a
+  reference the bars are read against; `Solid` is a second measurement. A line over bars has no
+  dots and takes none of a bar's options (no hairline nought, no column width).
+- **A dense run wears no dots.** A line of up to sixteen points carries a dot a point, as the
+  monthly charts do; a longer run — twenty-six weeks — runs bare, because that many dots are
+  noise on a line. The atlas decides by the count; a module states nothing.
+- **`marked: $picked`** draws one dot, on that point, and none on the rest of the line: the point
+  radius is an indexable option, one entry per point
+  ([general/options](https://www.chartjs.org/docs/latest/general/options.html#indexable-options)),
+  and the dot's ring is the canvas token so it reads as a mark and not a bead.
+
+### A pair of panels on one axis
+
+Two charts stacked in one card, on the same labels, read as one figure when each says which
+panel it is: `panel: ChartPanel::Upper` writes no names under its axis (`ticks.display: false`,
+[axes/styling](https://www.chartjs.org/docs/latest/axes/styling.html#tick-configuration)) and
+`ChartPanel::Lower` writes them once for both; each keeps its axis line. Both hold their value
+axis at one width — stated under `options.plugins.panels` and applied by the plate in the scale's
+`afterFit` ([axes — callbacks](https://www.chartjs.org/docs/latest/axes/#callbacks)), since a
+function is nothing JSON can carry — so the plots line up, and both place their categories alike (`offset: true` on the index
+axis, which a bar chart has by default and a line chart has not), so a column banded in one is
+banded in the other at the same place. Both state the same `highlight`. The card is the module's; the atlas
+draws two plates.
 
 ### The bar radius
 

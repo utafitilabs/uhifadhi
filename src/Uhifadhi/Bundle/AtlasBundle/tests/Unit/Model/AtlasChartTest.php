@@ -23,7 +23,10 @@ use Uhifadhi\Bundle\AtlasBundle\Model\ChartFigures;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartNoughts;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartPanel;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartRange;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
+use Uhifadhi\Bundle\AtlasBundle\Model\LineStyle;
 
 /**
  * THE PLATFORM'S ONE CHART, AND WHAT A MODULE MAY SAY ABOUT IT.
@@ -43,6 +46,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
 #[CoversClass(AtlasChart::class)]
 #[CoversClass(AxisScale::class)]
 #[CoversClass(ChartFigures::class)]
+#[CoversClass(ChartRange::class)]
 #[CoversClass(ChartBuilder::class)]
 final class AtlasChartTest extends TestCase
 {
@@ -218,6 +222,193 @@ final class AtlasChartTest extends TestCase
             ['label' => 'drone', 'cat' => null, 'swatch' => '#E05B41', 'accent' => false],
             ['label' => 'Target', 'cat' => null, 'swatch' => null, 'accent' => false],
         ], $chart->legendRows());
+    }
+
+    /**
+     * A SHADED RANGE OF THE VALUE AXIS, WITH A WORD. "Above +0.5 °C is El
+     * Niño" is a fact about the scale; the plate's ranges plugin draws it
+     * behind the series as a faint band and writes the word at its edge.
+     * The builder puts the ranges, each with its colour as a token, under
+     * the plugin's id — where Chart.js scopes a plugin's options.
+     *
+     * @see https://www.chartjs.org/docs/latest/developers/plugins.html — "Plugin options are located under the `options.plugins` config and are scoped by the plugin ID"
+     */
+    public function testAStatedRangeIsTheRangesPluginsOptionsWithItsColourAsAToken(): void
+    {
+        $chart = self::builder()->chart(new AtlasChart(
+            ChartKind::Line,
+            ['apr', 'may'],
+            [new ChartSeries('Niño 3.4', [0.4, 1.2], accent: true)],
+            ranges: [new ChartRange(0.5, null, 'EL NIÑO ≥ +0.5 °C', cat: 3), new ChartRange(null, -0.5, 'LA NIÑA', accent: true)],
+        ));
+
+        $plugins = self::at($chart->getOptions(), 'plugins');
+        self::assertIsArray($plugins);
+        $ranges = self::at($plugins, ChartBuilder::RANGES_PLUGIN);
+        self::assertIsArray($ranges);
+        self::assertSame([
+            ['from' => 0.5, 'to' => null, 'label' => 'EL NIÑO ≥ +0.5 °C', 'color' => 'var(--cat-3)'],
+            ['from' => null, 'to' => -0.5, 'label' => 'LA NIÑA', 'color' => 'var(--acc)'],
+        ], self::at($ranges, 'ranges'));
+        self::assertSame(0.08, self::at($ranges, 'opacity'));
+        self::assertNull(self::at($ranges, 'highlight'));
+
+        $bare = self::builder()->chart(new AtlasChart(ChartKind::Line, ['apr'], [new ChartSeries('S', [1.0])]));
+        $none = self::at($bare->getOptions(), 'plugins');
+        self::assertIsArray($none);
+        self::assertArrayNotHasKey(ChartBuilder::RANGES_PLUGIN, $none);
+    }
+
+    /** A range is bounded at one end at least, runs upward, and wears a category or the accent, never both. */
+    public function testARangeThatCannotBeDrawnIsRefusedWhereItIsStated(): void
+    {
+        $refused = 0;
+        foreach ([
+            static fn () => new ChartRange(null, null, 'everything'),
+            static fn () => new ChartRange(2.0, 1.0, 'downward'),
+            static fn () => new ChartRange(0.0, 1.0, 'both', cat: 2, accent: true),
+            static fn () => new ChartRange(0.0, 1.0, 'none', cat: 99),
+        ] as $state) {
+            try {
+                $state();
+            } catch (\InvalidArgumentException) {
+                ++$refused;
+            }
+        }
+
+        self::assertSame(4, $refused);
+    }
+
+    /**
+     * THE LABEL THE READER PICKED is banded behind every series: the index
+     * reaches the same plugin, in the accent, at the design's .14.
+     */
+    public function testTheHighlightedLabelReachesTheRangesPluginInTheAccent(): void
+    {
+        $chart = self::builder()->chart(new AtlasChart(
+            ChartKind::Bar,
+            ['W1', 'W2', 'W3'],
+            [new ChartSeries('Rain', [5.0, 110.0, 8.0], accent: true)],
+            highlight: 2,
+        ));
+
+        $plugins = self::at($chart->getOptions(), 'plugins');
+        self::assertIsArray($plugins);
+        $ranges = self::at($plugins, ChartBuilder::RANGES_PLUGIN);
+        self::assertIsArray($ranges);
+        self::assertSame([], self::at($ranges, 'ranges'));
+        self::assertSame(2, self::at($ranges, 'highlight'));
+        self::assertSame('var(--acc)', self::at($ranges, 'highlightColor'));
+        self::assertSame(0.14, self::at($ranges, 'highlightOpacity'));
+    }
+
+    /** A highlight names one of the labels, or it is refused. */
+    public function testAHighlightOffTheAxisIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new AtlasChart(ChartKind::Bar, ['W1', 'W2'], [new ChartSeries('S', [1.0, 2.0])], highlight: 2);
+    }
+
+    /**
+     * A LINE OVER THE BARS. The normal the bars are read against is a line
+     * on the same chart — the library's mixed chart, one dataset of another
+     * type — dashed as a reference, with no dots and none of a bar's options.
+     *
+     * @see https://www.chartjs.org/docs/latest/charts/mixed.html — "each dataset can be configured with a different type"
+     */
+    public function testASeriesMayBeALineOverTheBarsDashedAsAReference(): void
+    {
+        $chart = self::builder()->chart(new AtlasChart(
+            ChartKind::Bar,
+            ['W1', 'W2'],
+            [
+                new ChartSeries('Rain', [5.0, 110.0], accent: true),
+                new ChartSeries('Normal', [32.0, 30.0], line: LineStyle::Dashed),
+                new ChartSeries('Last year', [12.0, 40.0], line: LineStyle::Solid),
+            ],
+            noughts: ChartNoughts::Hairline,
+            barWidth: 40.0,
+        ));
+
+        self::assertSame(UxChart::TYPE_BAR, $chart->getType());
+        self::assertArrayNotHasKey('type', self::dataset($chart, 0));
+        self::assertSame(UxChart::TYPE_LINE, self::at(self::dataset($chart, 1), 'type'));
+        self::assertSame([6, 4], self::at(self::dataset($chart, 1), 'borderDash'));
+        self::assertSame(0, self::at(self::dataset($chart, 1), 'pointRadius'));
+        self::assertArrayNotHasKey('maxBarThickness', self::dataset($chart, 1), 'a line over bars takes none of a bar\'s options');
+        self::assertArrayNotHasKey('minBarLength', self::dataset($chart, 1));
+        self::assertSame(UxChart::TYPE_LINE, self::at(self::dataset($chart, 2), 'type'));
+        self::assertArrayNotHasKey('borderDash', self::dataset($chart, 2));
+    }
+
+    /**
+     * ONE POINT WEARS THE DOT. The reading the page is about is marked and
+     * the rest of the line is bare: the point radius is an indexable option,
+     * one entry per point, and the dot's ring is the canvas token.
+     *
+     * @see https://www.chartjs.org/docs/latest/general/options.html#indexable-options — "Indexable options also accept an array in which each item corresponds to the element at the same index"
+     */
+    public function testAMarkedPointIsTheOneDotOnTheLine(): void
+    {
+        $chart = self::builder()->chart(new AtlasChart(
+            ChartKind::Line,
+            ['W1', 'W2', 'W3'],
+            [new ChartSeries('Niño 3.4', [0.5, 1.1, 3.3], accent: true, marked: 2)],
+        ));
+
+        self::assertSame([0.0, 0.0, 4.0], self::at(self::dataset($chart, 0), 'pointRadius'));
+        self::assertSame('var(--acc)', self::at(self::dataset($chart, 0), 'pointBackgroundColor'));
+        self::assertSame('var(--cv)', self::at(self::dataset($chart, 0), 'pointBorderColor'));
+    }
+
+    /** A DENSE RUN WEARS NO DOTS: twelve months carry one a point, twenty-six weeks run bare. */
+    public function testADenseRunWearsNoDots(): void
+    {
+        $months = self::builder()->chart(new AtlasChart(ChartKind::Line, array_map('strval', range(1, 12)), [new ChartSeries('S', array_fill(0, 12, 1.0))]));
+        $weeks = self::builder()->chart(new AtlasChart(ChartKind::Line, array_map('strval', range(1, 26)), [new ChartSeries('S', array_fill(0, 26, 1.0))]));
+
+        self::assertSame(2, self::at(self::dataset($months, 0), 'pointRadius'));
+        self::assertSame(0, self::at(self::dataset($weeks, 0), 'pointRadius'));
+    }
+
+    /** A marked point is one of the series' points, or it is refused. */
+    public function testAMarkOffTheSeriesIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new ChartSeries('S', [1.0, 2.0], marked: 5);
+    }
+
+    /**
+     * A PAIR OF PANELS ON ONE AXIS. The upper writes no index ticks — the
+     * lower, on the same labels, writes them once for both — and each keeps
+     * its axis line, the one the series stand on. Both hold their value axis
+     * at one width, stated under the panels plugin's id, so the plots line
+     * up and a column banded in one is banded in the other at the same place.
+     *
+     * @see https://www.chartjs.org/docs/latest/axes/styling.html#tick-configuration — `ticks.display`, "If true, show tick labels"
+     */
+    public function testAPairOfPanelsSharesTheNamesAndTheAxisWidth(): void
+    {
+        $upper = self::builder()->chart(new AtlasChart(ChartKind::Line, ['W1'], [new ChartSeries('S', [1.0])], panel: ChartPanel::Upper));
+        $lower = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['W1'], [new ChartSeries('S', [1.0])], panel: ChartPanel::Lower));
+        $alone = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['W1'], [new ChartSeries('S', [1.0])]));
+
+        self::assertFalse(self::at(self::under(self::scale($upper, 'x'), 'ticks'), 'display'));
+        self::assertTrue(self::at(self::under(self::scale($upper, 'x'), 'border'), 'display'));
+        self::assertArrayNotHasKey('display', self::under(self::scale($lower, 'x'), 'ticks'));
+        foreach ([$upper, $lower] as $panel) {
+            $plugins = self::at($panel->getOptions(), 'plugins');
+            self::assertIsArray($plugins);
+            self::assertSame(['axisWidth' => 44], self::at($plugins, ChartBuilder::PANELS_PLUGIN));
+            // And both place their categories alike, so a week is one pixel in either.
+            self::assertTrue(self::at(self::scale($panel, 'x'), 'offset'));
+        }
+        self::assertArrayNotHasKey('offset', self::scale($alone, 'x'));
+        $plugins = self::at($alone->getOptions(), 'plugins');
+        self::assertIsArray($plugins);
+        self::assertArrayNotHasKey(ChartBuilder::PANELS_PLUGIN, $plugins);
     }
 
     /** @return array<array-key, mixed> */

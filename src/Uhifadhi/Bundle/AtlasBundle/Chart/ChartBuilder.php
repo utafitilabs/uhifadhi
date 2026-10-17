@@ -19,7 +19,10 @@ use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartNoughts;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartPanel;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartRange;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
+use Uhifadhi\Bundle\AtlasBundle\Model\LineStyle;
 use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
@@ -59,6 +62,7 @@ use Uhifadhi\Contracts\Atlas\PlatePalette;
  * @see https://www.chartjs.org/docs/latest/axes/styling.html#tick-configuration — `ticks.color`, "Color of ticks"; `ticks.font`; `ticks.padding`, "Sets the offset of the tick labels from the axis"
  * @see https://www.chartjs.org/docs/latest/axes/styling.html#grid-line-configuration — `grid.color`, `grid.lineWidth`, `grid.drawTicks`, "If true, draw lines beside the ticks in the axis area beside the chart"
  * @see https://www.chartjs.org/docs/latest/axes/styling.html#border-configuration — "options for the border that run perpendicular to the axis": `display`, `color`, `width`
+ * @see https://www.chartjs.org/docs/latest/axes/cartesian/category.html — `offset`: "If true, extra space is added to the both edges and the axis is scaled to fit into the chart area"; bar charts default it to true
  * @see https://www.chartjs.org/docs/latest/migration/v4-migration.html — "`scales[id].grid.drawBorder` has been renamed to `scales[id].border.display`"
  * @see https://www.chartjs.org/docs/latest/general/fonts.html — the font object's `family` and `size`
  * @see https://www.chartjs.org/docs/latest/configuration/tooltip.html — `options.plugins.tooltip.enabled`, "Are on-canvas tooltips enabled?"
@@ -90,6 +94,43 @@ final readonly class ChartBuilder
 
     /** Where the plate reads how faded a nought's hairline is drawn. */
     public const string NOUGHTS = 'noughts';
+
+    /**
+     * THE ID OF THE PLATE'S RANGES PLUGIN — the inline plugin that shades a
+     * stated range of the value axis behind the series, writes its word at
+     * the band's edge, and bands the one label the reader picked. Written
+     * here, read in chart_plate_controller.js, nowhere else.
+     */
+    public const string RANGES_PLUGIN = 'ranges';
+
+    /**
+     * THE ID OF THE PLATE'S PANELS PLUGIN — where a chart that is one panel
+     * of a pair states the width both panels give their value axis, so the
+     * two plots line up. Written here, read in chart_plate_controller.js.
+     */
+    public const string PANELS_PLUGIN = 'panels';
+
+    /** The width a paired panel's value axis is held at, in canvas pixels: room for "3.5" and "116" alike. */
+    private const int PANEL_AXIS_WIDTH = 44;
+
+    /** How faint a range's band is, and how faint the picked label's column: the design's .08 and .14. */
+    private const float RANGE_OPACITY = 0.08;
+    private const float HIGHLIGHT_OPACITY = 0.14;
+
+    /**
+     * A DENSE RUN WEARS NO DOTS. Twelve months carry a dot a point; twenty-six
+     * weeks of dots are noise on a line, so past this many points the line
+     * runs bare and a marked point is the only dot.
+     */
+    private const int DENSE_RUN = 16;
+
+    /** The dot on a marked point, and the ring the canvas draws round it. */
+    private const float MARK_RADIUS = 4.0;
+    private const string MARK_RING = 'var(--cv)';
+
+    /** A line laid over bars: the dash of a reference, the width of both. */
+    private const array REFERENCE_DASH = [6, 4];
+    private const float OVERLAY_WIDTH = 1.4;
 
     /** A nought's stub, in pixels, and how far it is faded — the design's two-pixel column at .28. */
     private const int HAIRLINE = 2;
@@ -189,15 +230,38 @@ final readonly class ChartBuilder
             // never enough to invent a value between two months.
             $dataset['tension'] = 0.25;
             $dataset['fill'] = false;
-            $dataset['pointRadius'] = 2;
+            $dataset['pointRadius'] = \count($series->points) > self::DENSE_RUN ? 0 : 2;
             $dataset['backgroundColor'] = 'transparent';
+        } elseif (null !== $series->line) {
+            // A LINE OVER THE BARS: the library's mixed chart — one dataset
+            // of another type on a bar chart. The normal the bars are read
+            // against is dashed; a second measurement is solid.
+            $dataset['type'] = Chart::TYPE_LINE;
+            $dataset['tension'] = 0.25;
+            $dataset['fill'] = false;
+            $dataset['pointRadius'] = 0;
+            $dataset['borderWidth'] = self::OVERLAY_WIDTH;
+            $dataset['backgroundColor'] = 'transparent';
+            if (LineStyle::Dashed === $series->line) {
+                $dataset['borderDash'] = self::REFERENCE_DASH;
+            }
+        }
+
+        if (null !== $series->marked) {
+            // ONE POINT WEARS THE DOT, the rest of the line none: the point
+            // radius is an indexable option, one entry per point.
+            $marked = $series->marked;
+            $dataset['pointRadius'] = array_map(static fn (int $i): float => $i === $marked ? self::MARK_RADIUS : 0.0, array_keys($series->points));
+            $dataset['pointBackgroundColor'] = $colour;
+            $dataset['pointBorderColor'] = self::MARK_RING;
+            $dataset['pointBorderWidth'] = 2;
         }
 
         if (ChartKind::Stacked === $kind) {
             $dataset['stack'] = 'one';
         }
 
-        if (ChartKind::Line !== $kind) {
+        if (ChartKind::Line !== $kind && null === $series->line) {
             if (ChartNoughts::Hairline === $chart->noughts) {
                 // "Set this to ensure that bars have a minimum length in
                 // pixels" — and a nought, whose value is the base, is moved
@@ -258,6 +322,19 @@ final readonly class ChartBuilder
             $value['ticks']['stepSize'] = $chart->axis->step;
         }
 
+        if (null !== $chart->panel) {
+            // BOTH PANELS OF A PAIR PLACE THEIR CATEGORIES ALIKE. Chart.js
+            // centres a bar chart's categories inside the axis (`offset:
+            // true`) and a line chart's on its ends; stated once for both,
+            // the same week lands on the same pixel in either panel.
+            $index['offset'] = true;
+        }
+        if (ChartPanel::Upper === $chart->panel) {
+            // THE UPPER PANEL OF A PAIR writes no names of its own: the
+            // lower one, on the same labels, writes them once for both.
+            $index['ticks']['display'] = false;
+        }
+
         if (ChartKind::Stacked === $chart->kind) {
             $index['stacked'] = true;
             $value['stacked'] = true;
@@ -294,6 +371,32 @@ final readonly class ChartBuilder
             // plate turns a nought's color into the same color at this
             // opacity when it resolves the series' tokens.
             $plugins[self::NOUGHTS] = ['opacity' => self::HAIRLINE_OPACITY];
+        }
+
+        if (null !== $chart->panel) {
+            // BOTH PANELS HOLD THEIR VALUE AXIS AT ONE WIDTH, so the plots
+            // line up and a column banded in one is banded in the other at
+            // the same place. The width is applied by the plate, in the
+            // scale's `afterFit`, which no JSON can carry.
+            $plugins[self::PANELS_PLUGIN] = ['axisWidth' => self::PANEL_AXIS_WIDTH];
+        }
+
+        if ([] !== $chart->ranges || null !== $chart->highlight) {
+            // THE RANGES AND THE PICKED LABEL ARE THE PLATE'S PLUGIN, drawn
+            // behind the series; each range carries its colour as a token
+            // the plate resolves like a series' category.
+            $plugins[self::RANGES_PLUGIN] = [
+                'ranges' => array_map(static fn (ChartRange $range): array => [
+                    'from' => $range->from,
+                    'to' => $range->to,
+                    'label' => $range->label,
+                    'color' => $range->accent ? self::ACCENT : $range->swatch ?? \sprintf('var(--cat-%d)', $range->cat ?? 1),
+                ], $chart->ranges),
+                'opacity' => self::RANGE_OPACITY,
+                'highlight' => $chart->highlight,
+                'highlightColor' => self::ACCENT,
+                'highlightOpacity' => self::HIGHLIGHT_OPACITY,
+            ];
         }
 
         if (null !== $chart->figures) {

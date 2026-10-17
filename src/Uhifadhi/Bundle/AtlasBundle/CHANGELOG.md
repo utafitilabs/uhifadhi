@@ -13,6 +13,14 @@ Not released yet.
    from the protocol version as `symfony/mercure` names it) — and the plate subscribes on it,
    `topic` when a builder states none. `extra.atlas.live` gains `parameter`.
 
+ * A CHART STATES WHERE A READING SITS: `AtlasChart::$ranges` (a `ChartRange` — a shaded
+   range of the value axis with a word, open at either end), `AtlasChart::$highlight` (the one
+   label the reader picked, banded behind every series) and `AtlasChart::$panel` (a `ChartPanel`: the
+   upper panel of a pair on one axis writes no ticks, and both hold their value axis at one width); and a series may be a line over the
+   bars (`ChartSeries::$line`, `LineStyle::Dashed` for a reference) or mark one point
+   (`ChartSeries::$marked`); a line of more than sixteen points runs without dots. The bands and the column are the plate's `ranges` plugin,
+   drawn before the datasets; their colours are tokens resolved where the chart is drawn.
+
  * A CLICK ON A MARK OPENS A SHEET (ruled 30 Sep, #16 C): a layer may name a sheet
    address (`GeoJsonLayer::$sheet`, `{id}` for the feature's id); a click flies the
    plate to the feature (zoom 15) and draws the JSON answer - `AtlasSheet`: a mark,

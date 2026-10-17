@@ -37,12 +37,19 @@ use Uhifadhi\Contracts\Atlas\PlatePalette;
  * on the bars ({@see ChartFigures}), and where the legend goes
  * ({@see ChartLegend}). Each is a fact about how the chart is READ; how
  * it is drawn stays the atlas's.
+ *
+ * AND THREE FACTS ABOUT WHERE A READING SITS: a shaded range of the value
+ * axis with a word ({@see ChartRange} — "above +0.5 is El Niño"), the one
+ * label the reader has picked (`highlight`, banded behind every series),
+ * and which panel of a pair on one axis this chart is ({@see ChartPanel}:
+ * the upper writes no index ticks of its own, and both line their plots up).
  */
 final readonly class AtlasChart
 {
     /**
      * @param list<string>      $labels the axis, one per point in every series
      * @param list<ChartSeries> $series
+     * @param list<ChartRange>  $ranges shaded ranges of the value axis, each with its word
      */
     public function __construct(
         public ChartKind $kind,
@@ -67,7 +74,15 @@ final readonly class AtlasChart
          * chart's to say; null leaves the bars square.
          */
         public ?float $barRadius = null,
+        public array $ranges = [],
+        /** The index of the one label the reader has picked, banded behind every series; null bands none. */
+        public ?int $highlight = null,
+        /** Which panel of a pair on one axis this chart is; null for a chart that stands alone. */
+        public ?ChartPanel $panel = null,
     ) {
+        if (null !== $highlight && ($highlight < 0 || $highlight >= \count($labels))) {
+            throw new \InvalidArgumentException(\sprintf('A highlight names one of the %d labels; %d is none of them.', \count($labels), $highlight));
+        }
     }
 
     /**

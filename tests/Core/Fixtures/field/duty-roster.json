@@ -1,0 +1,1 @@
+{"pingIntervalMinutes":30,"rostered":true,"watches":[{"localDate":"2026-09-19","startsAt":"2026-09-19T06:00:00+03:00","endsAt":"2026-09-19T18:00:00+03:00","stationUuid":null,"label":"Day watch"}],"checkInStatuses":[{"key":"at_post","label":"At Post","kind":"at_post","takesStation":true,"order":0}],"updatedAt":"2026-09-16T09:00:00+03:00"}

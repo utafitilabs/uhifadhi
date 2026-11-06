@@ -44,6 +44,18 @@ final class SettingsCatalogueTest extends TestCase
         self::assertFalse($catalogue->has('core.nothing'));
     }
 
+    /** One settings page per owner: every owner that declares a setting, once each, in name order. */
+    public function testTheOwnersAreEveryOwnerThatDeclaresASettingOnce(): void
+    {
+        $catalogue = new SettingsCatalogue([
+            self::source(self::number('roster.late_threshold', 'roster', 2), self::number('core.ping_interval', 'core', 1)),
+            self::source(self::number('roster.catchment', 'roster', 1)),
+        ]);
+
+        self::assertSame(['core', 'roster'], $catalogue->owners());
+        self::assertSame([], new SettingsCatalogue([])->owners(), 'An installation without settings has no owner.');
+    }
+
     public function testTwoSourcesDeclaringOneKeyIsRefused(): void
     {
         $this->expectException(\LogicException::class);

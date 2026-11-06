@@ -2328,6 +2328,17 @@ that drops it are two releases, and the file that drops says which is which:
  */
 ```
 
+**A screen follows the same order: nothing that works is taken away before its replacement
+ships.** A field, a form or a page that people use leaves in the release that ships the place
+that does its job, never in an earlier one; a version that moves a value somewhere new brings the
+screen that changes it there, or keeps the old field until it can. A release with the old field
+gone and the new screen still a design renders every page green and leaves an Admin a value
+nobody can change. `tests/Core/EverySettingHasAnEditorTest` holds the settings to it: every owner
+that declares a setting has its screen at `/settings/configure/{owner}`, posting a form with a
+field and the label of each of its settings, and an owner whose screen is designed and not yet
+built is listed there by name until the screen exists. A module that declares settings copies the
+test into its own suite.
+
 ### The four tests to copy
 
 The core keeps these under `tests/Core/`, and they are worth copying whole:

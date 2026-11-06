@@ -290,6 +290,13 @@ class Kernel extends BaseKernel
             ->alias('test_public.'.ConcernCatalogue::class, 'team.access.catalogue')
             ->public();
 
+        // EVERY SETTING THIS INSTALLATION DECLARES, from the sources it
+        // actually compiles: the build test that holds each owner to a screen
+        // where its settings are changed reads this, not a list of its own.
+        $container->services()
+            ->alias('test_public.registry.settings.catalogue', 'registry.settings.catalogue')
+            ->public();
+
         // The ground's own seed content, for the same reason: a specification
         // that seeds the shipped organization has to reach the providers an
         // installation's devkit would run, not copies of them.

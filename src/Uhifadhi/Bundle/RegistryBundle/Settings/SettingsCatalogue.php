@@ -54,6 +54,17 @@ final class SettingsCatalogue
     }
 
     /**
+     * @return list<string> every owner that declares a setting, once each, in name order — one settings page each
+     */
+    public function owners(): array
+    {
+        $owners = array_values(array_unique(array_map(static fn (SettingDefinition $d): string => $d->owner, array_values($this->all()))));
+        sort($owners);
+
+        return $owners;
+    }
+
+    /**
      * @return array<string, SettingDefinition>
      */
     private function all(): array

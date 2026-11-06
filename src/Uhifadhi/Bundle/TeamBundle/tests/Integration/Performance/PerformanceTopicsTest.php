@@ -137,12 +137,16 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         $department = new \Uhifadhi\Bundle\TeamBundle\Entity\Department()->setName('Protection Service');
         $this->em->persist($department);
 
+        // A CLOSED PERIOD IS COUNTED AS OF ITS END, so the days a post has
+        // stood empty are reckoned back from there, not from the day the
+        // suite runs: one well past the threshold, one well inside it.
+        $end = self::period()->until;
         $long = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Ranger');
         $long->setGrantValues([], []);
-        $long->setVacantSince(new \DateTimeImmutable('-96 days'));
+        $long->setVacantSince($end->modify('-96 days'));
         $fresh = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Warden');
         $fresh->setGrantValues([], []);
-        $fresh->setVacantSince(new \DateTimeImmutable('-3 days'));
+        $fresh->setVacantSince($end->modify('-3 days'));
         $undated = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Scout');
         $undated->setGrantValues([], []);
         $this->em->persist($long);

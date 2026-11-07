@@ -23,6 +23,7 @@
     ],
     "require": {
         "php": ">=8.4",
+        "ext-ctype": "*",
         "composer-runtime-api": "^2.0",
         "doctrine/dbal": "^4.0",
         "doctrine/doctrine-bundle": "^3.0",

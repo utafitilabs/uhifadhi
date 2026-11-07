@@ -30,6 +30,7 @@ use Uhifadhi\Bundle\ShellBundle\Service\Installation;
 use Uhifadhi\Bundle\ShellBundle\Service\Navigation;
 use Uhifadhi\Bundle\ShellBundle\Service\OrgModulesNavigation;
 use Uhifadhi\Bundle\ShellBundle\Service\OrgShell;
+use Uhifadhi\Bundle\ShellBundle\Service\PackageRegisterService;
 use Uhifadhi\Bundle\ShellBundle\Service\Scopes;
 use Uhifadhi\Bundle\ShellBundle\Service\SettingsNavigation;
 use Uhifadhi\Bundle\ShellBundle\Service\SettingsReading;
@@ -292,10 +293,14 @@ return static function (ContainerConfigurator $container): void {
             param('kernel.bundles'),
         ]);
 
+    $services->set('shell.settings.packages', PackageRegisterService::class)
+        ->args([service('shell.table_page')]);
+
     $services->set('shell.settings.section', SettingsSection::class)
         ->args([
             service('router'),
             service('shell.settings.reading'),
+            service('shell.settings.packages'),
             service(DeletionPageInterface::SERVICE)->nullOnInvalid(),
         ]);
 

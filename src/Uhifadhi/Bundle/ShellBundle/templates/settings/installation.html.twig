@@ -26,15 +26,39 @@
     <div class="c">
         <span class="tab">What is installed<span class="src">&middot; the core and every package beside it, with the version this installation runs</span></span>
         <a class="more" href="{{ modulesUrl }}">Modules &rarr;</a>
+        {# THE HOUSE BAR: what a package was installed from, counted over
+           every package, and a search over its name and its line — every
+           option a link, the search one GET that keeps the chip. #}
+        {%- set here = app.request.attributes.get('_route') -%}
+        {%- set params = app.request.attributes.get('_route_params') -%}
+        {%- set from = constant('Uhifadhi\\Bundle\\ShellBundle\\Service\\PackageRegisterService::FROM') -%}
+        {%- set kept = packages.filter|filter((v, k) => k != from and v is not null) -%}
+        {%- set sources = [{value: null, label: 'all', count: packages.counts.all}] -%}
+        {%- for source, label in constant('Uhifadhi\\Bundle\\ShellBundle\\Service\\PackageRegisterService::SOURCES') -%}
+            {%- set sources = sources|merge([{value: source, label: label, count: packages.counts[source]}]) -%}
+        {%- endfor -%}
+        {%- set chosen = sources|filter(o => o.value == packages.filter[from])|first ?: sources|first -%}
+        <form class="lfilt" method="get" action="{{ path(here, params) }}">
+            {%- if packages.filter[from] %}<input type="hidden" name="{{ from }}" value="{{ packages.filter[from] }}">{% endif -%}
+            <details class="i-dd"><summary class="mchip i-ddt{{ chosen.value ? ' on' }}"><span class="i-ddval">{{ chosen.label }} &middot; {{ chosen.count }}</span><span class="i-ddcaret" aria-hidden="true">&#9662;</span></summary><div class="i-ddmenu" aria-label="Filter by what it was installed from">
+                <span class="i-ddhead">installed from</span>
+                {%- for option in sources %}
+                <a class="i-ddopt{{ option is same as(chosen) ? ' on' }}" href="{{ path(here, params|merge(kept)|merge(option.value ? {(from): option.value} : {})) }}"{% if option is same as(chosen) %} aria-current="true"{% endif %}><span class="i-ddopt-l">{{ option.label }}</span><span class="i-ddopt-n">{{ option.count }}</span></a>
+                {%- if loop.first %}<span class="i-ddsep"></span>{% endif %}
+                {%- endfor %}
+            </div></details>
+            <span class="lsearch">{{ ux_icon('shell:search', {width: 14, height: 14, 'aria-hidden': 'true'}) }}<input class="fld" type="search" name="q" value="{{ packages.filter.q }}" placeholder="A package, or what it is" aria-label="Search what is installed"></span>
+        </form>
         <table class="tbl">
-            <tr>
+            <thead><tr>
                 <th>package</th>
                 <th>what it is</th>
                 <th>installed</th>
                 <th>released</th>
                 <th>state</th>
-            </tr>
-            {%- for package in settings.packages -%}
+            </tr></thead>
+            <tbody>
+            {%- for package in packages.rows -%}
                 <tr>
                     <td><b>{{ package.name }}</b></td>
                     <td>{{ package.line ?? '—' }}</td>
@@ -47,8 +71,12 @@
                     <td class="mono fog">—</td>
                     <td class="fog">—</td>
                 </tr>
+            {%- else -%}
+                <tr><td colspan="5" class="fog">No package matches this filter.</td></tr>
             {%- endfor -%}
+            </tbody>
         </table>
+        {{ include('@Shell/_foot.html.twig', packages.foot, with_context: false) }}
         <p class="use">Read from composer at render time, so this is what the installation
             actually has. What has been RELEASED is not read from anywhere: nothing here
             subscribes to a release feed, so no row can say it is behind.</p>

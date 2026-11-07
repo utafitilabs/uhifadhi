@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\ShellBundle\Controller;
 
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
@@ -64,13 +65,13 @@ final readonly class SettingsController
     ) {
     }
 
-    public function __invoke(?string $tab = null): Response
+    public function __invoke(Request $request, ?string $tab = null): Response
     {
         if (null !== $this->authorization && !$this->authorization->isGranted(ShellConcerns::SETTINGS_READ)) {
             throw new AccessDeniedException(\sprintf('The settings section asks for "%s".', ShellConcerns::SETTINGS_READ));
         }
 
-        $screen = $this->section->screen($tab);
+        $screen = $this->section->screen($tab, $request);
         if (null === $screen) {
             throw new NotFoundHttpException(\sprintf('"%s" is not a screen of the settings section.', (string) $tab));
         }

@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\ShellBundle\Tests\Unit\Settings;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RequestContext;
@@ -26,9 +27,11 @@ use Twig\Environment;
 use Twig\Loader\ArrayLoader;
 use Uhifadhi\Bundle\ShellBundle\Access\ShellConcerns;
 use Uhifadhi\Bundle\ShellBundle\Controller\SettingsController;
+use Uhifadhi\Bundle\ShellBundle\Service\PackageRegisterService;
 use Uhifadhi\Bundle\ShellBundle\Service\SettingsNavigation;
 use Uhifadhi\Bundle\ShellBundle\Service\SettingsReading;
 use Uhifadhi\Bundle\ShellBundle\Service\SettingsSection;
+use Uhifadhi\Bundle\ShellBundle\Service\TablePageService;
 use Uhifadhi\Contracts\Access\ScopeKind;
 use Uhifadhi\Contracts\Access\Verb;
 
@@ -69,12 +72,12 @@ final class SettingsGateTest extends TestCase
     {
         $this->expectException(AccessDeniedException::class);
 
-        (new SettingsController($this->twig(), $this->section(), self::checker(false)))();
+        (new SettingsController($this->twig(), $this->section(), self::checker(false)))(Request::create('/settings'));
     }
 
     public function testWithThePairTheAddressDrawsTheScreen(): void
     {
-        $response = (new SettingsController($this->twig(), $this->section(), self::checker(true)))();
+        $response = (new SettingsController($this->twig(), $this->section(), self::checker(true)))(Request::create('/settings'));
 
         self::assertSame(200, $response->getStatusCode());
     }
@@ -109,7 +112,7 @@ final class SettingsGateTest extends TestCase
         $urls->method('generate')->willReturnCallback(static fn (string $route, array $parameters = []): string => '/settings'.(isset($parameters['tab']) && \is_string($parameters['tab']) ? '/'.$parameters['tab'] : ''));
         $urls->method('getContext')->willReturn(new RequestContext());
 
-        return new SettingsSection($urls, (new \ReflectionClass(SettingsReading::class))->newInstanceWithoutConstructor());
+        return new SettingsSection($urls, (new \ReflectionClass(SettingsReading::class))->newInstanceWithoutConstructor(), new PackageRegisterService(new TablePageService()));
     }
 
     private function twig(): Environment

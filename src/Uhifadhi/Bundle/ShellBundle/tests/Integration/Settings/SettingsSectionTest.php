@@ -216,6 +216,54 @@ final class SettingsSectionTest extends ShellKernelTestCase
     }
 
     /**
+     * WHAT IS INSTALLED IS A HOUSE REGISTER: the installed-from chip with its
+     * counts and the search above the table, the Shell foot under it.
+     */
+    public function testWhatIsInstalledSitsUnderTheHouseBarAndOverTheShellFoot(): void
+    {
+        $card = $this->packagesCard($this->get('/settings/installation'));
+
+        self::assertCount(1, $card->filter('form.lfilt[method=get] > details.i-dd > summary.mchip.i-ddt'));
+        self::assertSame('all · 1', trim($card->filter('.lfilt summary .i-ddval')->text()));
+        self::assertSame(
+            ['all 1', 'a release 0', 'a branch 1'],
+            $card->filter('.lfilt a.i-ddopt')->each(static fn (Crawler $a): string => trim($a->filter('.i-ddopt-l')->text()).' '.trim($a->filter('.i-ddopt-n')->text())),
+        );
+        self::assertCount(1, $card->filter('form.lfilt .lsearch input.fld[name=q]'));
+        self::assertCount(1, $card->filter('table.tbl thead'));
+        self::assertCount(1, $card->filter('table.tbl tbody tr'));
+
+        $foot = $card->filter('.rdf-foot');
+        self::assertCount(1, $foot);
+        self::assertStringStartsWith('1 package · 20 per page', trim($foot->filter('span')->first()->text()));
+        self::assertSame('page 1 of 1', trim($foot->filter('.rdf-page')->text()));
+        foreach ($foot->filter('details.rdf-size a.i-ddopt')->each(static fn (Crawler $a): string => (string) $a->attr('href')) as $href) {
+            self::assertStringStartsWith('/settings/installation?', $href);
+        }
+    }
+
+    public function testTheChipAndTheSearchNarrowWhatIsInstalled(): void
+    {
+        $card = $this->packagesCard($this->get('/settings/installation?from=release'));
+
+        self::assertSame('a release · 0', trim($card->filter('.lfilt summary .i-ddval')->text()));
+        self::assertStringContainsString('No package matches', $card->filter('table.tbl tbody')->text());
+        self::assertStringStartsWith('0 packages', trim($card->filter('.rdf-foot span')->first()->text()));
+        self::assertSame('release', $card->filter('form.lfilt input[type=hidden][name=from]')->attr('value'), 'the search keeps the chip');
+
+        $card = $this->packagesCard($this->get('/settings/installation?q=uhifadhi%2Fuhi'));
+        self::assertStringContainsString('uhifadhi/uhifadhi', $card->filter('table.tbl tbody')->text());
+    }
+
+    private function packagesCard(Crawler $crawler): Crawler
+    {
+        $card = $crawler->filter('div.pgbody .c')->reduce(static fn (Crawler $c): bool => $c->filter('.tab')->count() > 0 && str_starts_with(trim($c->filter('.tab')->first()->text()), 'What is installed'));
+        self::assertCount(1, $card);
+
+        return $card;
+    }
+
+    /**
      * WITH NO AREAS BUNDLE THERE IS NO MATRIX, and both screens that draw one
      * say so rather than rendering an empty table with headers over nothing.
      */

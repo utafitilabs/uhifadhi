@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\ShellBundle\Service;
 
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
@@ -57,6 +58,7 @@ final class SettingsSection
     public function __construct(
         private readonly UrlGeneratorInterface $urls,
         private readonly SettingsReading $reading,
+        private readonly PackageRegisterService $packages,
         /** WHO MAY READ THE DELETIONS: a Super Admin, where deleting is installed at all. */
         private readonly ?DeletionPageInterface $deletions = null,
     ) {
@@ -79,7 +81,7 @@ final class SettingsSection
      * miss MEANS with the controller, which is the layer that can answer with
      * a 404.
      */
-    public function screen(?string $segment): ?SettingsScreen
+    public function screen(?string $segment, Request $request): ?SettingsScreen
     {
         $tab = null === $segment ? SettingsTab::first() : SettingsTab::tryFrom($segment);
         // DELETIONS IS DRAWN BY WHOEVER KEEPS THE DELETES, on a route of its
@@ -109,6 +111,9 @@ final class SettingsSection
             // different few of them, and a controller that resolved all of
             // them would run the health checks to draw the identity card.
             'settings' => $this->reading,
+            // WHAT IS INSTALLED IS A REGISTER, its bar and its foot read off
+            // the request — and read only on the screen that draws it.
+            ...(SettingsTab::Installation === $tab ? ['packages' => $this->packages->read($request, $this->reading->packages())] : []),
         ]);
     }
 

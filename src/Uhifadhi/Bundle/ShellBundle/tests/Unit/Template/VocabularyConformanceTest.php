@@ -190,7 +190,7 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
         yield 'figure line' => ['.ov-kpis .kpi .sub', 'font-size:\\s*11px;\\s*font-weight:\\s*400'];
         yield 'plot footer' => ['.ov-plots .sxmore', 'font-size:\\s*11px'];
         yield 'plot door' => ['.ov-plots .sxmore a', 'font-size:\\s*11px;\\s*font-weight:\\s*700'];
-        yield 'plot key' => ['.ov-plots .sxmxkey', 'font-size:\\s*11px;\\s*margin:\\s*12px 0 0'];
+        yield 'plot key' => ['.ov-plots', '--sx-key-size:\\s*11px;\\s*--sx-key-margin:\\s*12px 0 0'];
     }
 
     #[DataProvider('overviewPairs')]

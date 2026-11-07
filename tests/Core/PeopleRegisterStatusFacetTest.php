@@ -91,7 +91,7 @@ final class PeopleRegisterStatusFacetTest extends WebTestCase
         $crawler = $this->client->request('GET', '/team');
 
         self::assertResponseIsSuccessful();
-        self::assertSame(['position', 'department', 'station', 'rank', 'status', 'account'], $crawler->filter('.tm-tools details.i-dd')->each(static fn (Crawler $d): string => (string) $d->attr('data-facet')));
+        self::assertSame(['position', 'department', 'station', 'rank', 'status', 'account'], $crawler->filter('.lfilt details.i-dd[data-facet]')->each(static fn (Crawler $d): string => (string) $d->attr('data-facet')));
         $facet = $crawler->filter('details.i-dd[data-facet="status"]');
         self::assertSame('any status', trim($facet->filter('.i-ddval')->text()));
         self::assertSame(
@@ -123,7 +123,7 @@ final class PeopleRegisterStatusFacetTest extends WebTestCase
         $crawler = $this->client->request('GET', '/team');
 
         self::assertResponseIsSuccessful();
-        self::assertSame(['position', 'department', 'station', 'rank', 'account'], $crawler->filter('.tm-tools details.i-dd')->each(static fn (Crawler $d): string => (string) $d->attr('data-facet')));
+        self::assertSame(['position', 'department', 'station', 'rank', 'account'], $crawler->filter('.lfilt details.i-dd[data-facet]')->each(static fn (Crawler $d): string => (string) $d->attr('data-facet')));
     }
 
     private function area(string $name): AreaOfInterest

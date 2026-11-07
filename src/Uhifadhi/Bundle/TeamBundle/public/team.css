@@ -273,19 +273,6 @@ table.tbl tr.gh + tr.prow td { padding-top: 12px; }
 /* ---- B · department filter chips ----------------------------------------- */
 /* The chip scopes the table; the scope bar always states which list you are in. */
 .fbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 16px; }
-.fchip {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-family: "JetBrains Mono", ui-monospace, monospace;
-    font-size: 10.5px; font-weight: 700; letter-spacing: .05em; border: 1px solid var(--c-ln2); border-radius: 999px;
-    padding: 0 13px; color: rgb(var(--c-fog)); background: none; cursor: pointer; height: 28px; box-sizing: border-box;
-    line-height: 1;
-}
-.fchip:hover { color: rgb(var(--c-tx)); border-color: rgb(var(--c-fog)); }
-.fchip .n { color: rgb(var(--c-dim)); font-weight: 600; }
-.fchip.on { color: rgb(var(--c-tx)); border-color: rgb(var(--c-fog)); background: color-mix(in srgb, rgb(var(--c-fog)) 10%, transparent); }
-.fchip.ec.on { border-color: color-mix(in srgb, rgb(var(--c-ok)) 55%, transparent); background: color-mix(in srgb, rgb(var(--c-ok)) 11%, transparent); }
-.fchip.ps.on { border-color: color-mix(in srgb, rgb(var(--c-warn)) 55%, transparent); background: color-mix(in srgb, rgb(var(--c-warn)) 11%, transparent); }
-.fchip.un { border-style: dashed; }
 .scopebar {
     display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
     border: 1px solid var(--c-ln); border-radius: 10px; padding: 11px 14px; margin: 0 0 14px;
@@ -1360,48 +1347,6 @@ td.dcell + td { white-space: nowrap; }
 }
 .tm-fresh .fdo { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-/* ---- the tool row: search, tier chips, position filter -------------------
-   One row above a list, and it always ends by SAYING WHAT IS SHOWN. A filtered
-   list that does not state its filter is a list somebody will read as the whole
-   roster. */
-.tm-tools {
-    display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
-    padding: 0 0 13px; margin-bottom: 4px; border-bottom: 1px solid var(--c-ln);
-}
-
-/* ONE ROW, wrapping only when the viewport genuinely cannot hold it. The bug
-   this fixes: both filters carry `.fld`, and `.fld` in uhifadhi.css is
-   `width: 100%` because it was written for the sign-in card, where a field IS
-   the row. In a filter bar that makes every select claim the whole line, so the
-   toolbar stacked into four rows at any width. The selects size to their
-   content and refuse to grow; the SEARCH is the one flexible thing, so it
-   absorbs all the slack and the controls stay where they were put.
-   Same grammar as `.fbar` in positions.css and `.rdf-*` in uhifadhi.css. */
-.tm-tools .sel, .tm-tools select.fld {
-    flex: 0 1 auto; width: auto; min-width: 0; max-width: 200px;
-}
-.tm-search { position: relative; flex: 1 1 200px; min-width: 150px; }
-.tm-search svg {
-    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
-    width: 14px; height: 14px; color: rgb(var(--c-dim)); pointer-events: none;
-}
-.tm-search input {
-    width: 100%; box-sizing: border-box; height: 28px; padding: 0 10px 0 30px;
-    background: rgb(var(--c-raised)); border: 1px solid var(--c-ln2); border-radius: 8px;
-    color: rgb(var(--c-tx)); font-size: 12px; font-family: inherit;
-}
-.tm-search input::placeholder { color: rgb(var(--c-dim)); }
-.tm-search input:focus { outline: none; border-color: color-mix(in srgb, rgb(var(--c-acc)) 55%, transparent); }
-/* One height across every control in the row, per the house rule that a
-   primary differs from a secondary by fill and weight, never by size.
-   `.fchip` is already 28px; these are matched to it. */
-.tm-tools .sel, .tm-tools select.fld, .tm-tools .fchip, .tm-tools button {
-    height: 28px; box-sizing: border-box;
-}
-.tm-tools select.fld { padding: 0 9px; font-size: 11.5px; border-radius: 8px; }
-/* The tier pills are LINKS now, not toggles — they modify the query string, so
-   the filtered roster is bookmarkable and the back button works. */
-a.fchip { text-decoration: none; }
 .tm-shown {
     margin-left: auto; font-family: "JetBrains Mono", ui-monospace, monospace;
     font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: rgb(var(--c-dim));
@@ -1567,20 +1512,8 @@ td .qual { white-space: nowrap; }
 }
 .tm-code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; color: rgb(var(--c-fog)); }
 .tm-code.none { color: rgb(var(--c-dim)); }
-/* ---- THE ROW RULE: THIS CELL IS NEVER A FLEX CONTAINER --------------------
-   A <td> given `display: flex` stops being a table-cell and stops stretching to
-   the row's height: it shrinks to its content and draws its border-bottom 34px
-   above every other cell in the same row, breaking the dashed rule at the
-   actions column.
-
-   A table cell has to stay a table cell. The buttons are laid out by text
-   alignment and a margin instead, which costs nothing: there are never more
-   than two of them and they are always on one line. */
-.tm-acts { text-align: right; white-space: nowrap; }
-.tm-acts > * + * { margin-left: 6px; }
-/* A member row navigates to that member, so the whole row says so. Band headers
-   are not rows of data. */
-[data-tm] table.tbl tbody tr:not(.tm-bandrow) { cursor: pointer; }
+/* A member row navigates to that member, so the whole row says so. */
+[data-tm] table.tbl tbody tr { cursor: pointer; }
 
 /* A FILTER THAT MATCHES NOBODY IS A RESULT: an icon and a sentence saying which
    filter produced it, not an empty table. Drawn as the platform's other empty
@@ -1592,34 +1525,6 @@ td .qual { white-space: nowrap; }
 .tm-nores svg { flex: none; color: rgb(var(--c-fog)); margin-top: 2px; }
 .tm-nores b { display: block; color: rgb(var(--c-tx)); margin-bottom: 2px; }
 
-/* ---- B and D · the band header ------------------------------------------
-   Tier, department and position are the grouping axes the model now has. B
-   bands by tier; D bands by department and then by position inside it. All the
-   bands share one grammar so a person who learns B can read D. */
-tr.tm-bandrow td {
-    border-bottom: 1px solid var(--c-ln2); padding: 12px 10px 9px;
-    background: color-mix(in srgb, rgb(var(--c-fog)) 7%, transparent);
-}
-tr.tm-bandrow:hover td { background: color-mix(in srgb, rgb(var(--c-fog)) 7%, transparent); }
-tr.tm-bandrow.dim td { background: none; border-bottom: 1px dashed var(--c-ln2); }
-.tm-band { display: flex; align-items: center; gap: 11px; flex-wrap: wrap; }
-.tm-band b { font-size: 14px; font-weight: 700; letter-spacing: -.01em; color: rgb(var(--c-tx)); }
-.tm-band .n {
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px;
-    letter-spacing: .08em; text-transform: uppercase; color: rgb(var(--c-dim));
-}
-.tm-band .gr { display: flex; gap: 3px; flex-wrap: wrap; margin-left: auto; }
-.tm-band .say { font-size: 11.5px; color: rgb(var(--c-dim)); font-style: italic; }
-tr.tm-bandrow.dim .tm-band b { color: rgb(var(--c-dim)); }
-/* every member row is visually INSIDE its band */
-td.tm-in { padding-left: 26px !important; position: relative; }
-tr.tm-memrow td.tm-in::before {
-    content: ""; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px;
-    background: color-mix(in srgb, rgb(var(--c-fog)) 30%, transparent);
-}
-tr.tm-memrow.loose td.tm-in::before {
-    background: none; border-left: 2px dashed color-mix(in srgb, rgb(var(--c-warn)) 45%, transparent);
-}
 
 /* ---- D · the department band, one level above the position band ----------
    D now bands twice, and the two levels have to be unmistakably different or
@@ -1643,16 +1548,9 @@ tr.tm-deptrow:hover td { background: none; }
 tr.tm-deptrow.ec td { border-bottom-color: color-mix(in srgb, rgb(var(--c-ok)) 45%, transparent); }
 tr.tm-deptrow.ps td { border-bottom-color: color-mix(in srgb, rgb(var(--c-warn)) 45%, transparent); }
 tr.tm-deptrow.adm td { border-bottom-color: var(--c-ln2); }
-tr.tm-bandrow.inner td { padding-left: 24px; }
-tr.tm-memrow.inner td.tm-in { padding-left: 40px !important; }
-tr.tm-memrow.inner td.tm-in::before { left: 24px; }
 
 /* A POSITION NOBODY HOLDS. Not a fault and not an empty result — a position
-   created before its first person, which is the ordinary way an org grows. It
-   keeps its band and its permission set, because what it grants is exactly the
-   thing worth checking BEFORE somebody is put in it. */
-tr.tm-bandrow.vacant td { background: none; border-bottom: 1px dashed var(--c-ln2); }
-tr.tm-bandrow.vacant .tm-band b { color: rgb(var(--c-fog)); }
+   created before its first person, which is the ordinary way an org grows. */
 .tm-vacant {
     font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px;
     letter-spacing: .08em; text-transform: uppercase; color: rgb(var(--c-dim)); font-style: italic;
@@ -3530,7 +3428,6 @@ table.tbl.preg .who { display: flex; align-items: center; gap: 10px; }
 table.tbl.preg .pmk { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; font: 700 10px var(--font-mono); background: rgb(var(--c-raised)); color: rgb(var(--c-fog)); flex: none; }
 table.tbl.preg .sub { font-size: 11px; color: rgb(var(--c-dim)); margin-top: 2px; }
 table.tbl.preg .ov-nm { font-weight: 600; }
-table.tbl.preg td.act { text-align: right; white-space: nowrap; }
 table.tbl.preg tr.dcinactive td { opacity: .55; }
 table.tbl.preg tr.dempty td { padding: 22px 10px; color: rgb(var(--c-fog)); }
 table.tbl.preg tr.dempty b { display: block; color: rgb(var(--c-tx)); }
@@ -3588,22 +3485,10 @@ form.c { display: block; margin-bottom: 20px; }
    every colour is a token, so both themes work from one rule.
    ========================================================================== */
 /* ---- THE REGISTER BAR ------------------------------------------------------
-   The grouped dropdowns are the house .i-dd (the incidents pattern, the
-   positions register). Inside .tm-tools every control is 28px, so the trigger
-   is matched to the chips beside it. */
-.tm-tools .i-dd{flex:none}
-.tm-tools .i-ddt{height:28px;box-sizing:border-box;display:inline-flex;align-items:center;gap:7px;
-  padding:0 10px;border:1px solid var(--ln2);border-radius:999px;color:var(--fog);
-  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;font-weight:700;letter-spacing:.05em;
-  white-space:nowrap;cursor:pointer}
-.tm-tools .i-ddt:hover{color:var(--tx);border-color:var(--fog)}
-/* A chosen facet wears the house on-state — the accent, never a hue of its own. */
-.tm-tools .i-ddt.on{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 55%,transparent);
-  background:color-mix(in srgb,var(--acc) 10%,transparent)}
-.tm-tools .i-ddmenu{min-width:232px;max-height:420px;overflow-y:auto}
-/* A facet near the bar's right edge opens its menu towards the left, so the
-   menu never leaves the page. */
-.tm-tools .i-dd.r .i-ddmenu{left:auto;right:0}
+   The bar is the house .lfilt and its chips the house .i-dd. A facet near the
+   bar's right edge opens its menu towards the left, so the menu never leaves
+   the page. */
+[data-tm] .lfilt .i-dd.r .i-ddmenu{left:auto;right:0}
 
 /* THE EXPORT DOOR. It states the set it exports, and the set is the bar's
    filter — so it lives on the bar, at 28px like everything else in it. The

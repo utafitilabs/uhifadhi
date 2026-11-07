@@ -11,8 +11,8 @@
    ONE REGISTER, ONE TABLE. One row per catalogued module, running rows first
    in the area's order, parked rows after. Five facts, one per column: what the
    module is, whether it runs, where it stands, whether it has settings of its
-   own, and the switch. Nothing under the table: the strip says which section
-   this is and the columns say the rest.
+   own, and the switch. Under the table only the house foot: the strip says
+   which section this is and the columns say the rest.
 
    EVERY SWITCH IS A REAL FORM and posts the state it means, so it works with
    scripting off and a resubmitted form changes nothing. The order is the one
@@ -23,8 +23,9 @@
 
    THE FILTERS ARE CLIENT-SIDE, like every other register's: the rows are
    already on the page, and a round trip per keystroke would lose the typed
-   text on every reload. The counts are of the whole set, so an option says
-   what picking it would do.
+   text on every reload. The house bar (two chips and the search) above, the
+   house foot under, paged in the browser. The counts are of the whole set,
+   so an option says what picking it would do.
 
    ONE TOKEN FOR THE WHOLE SECTION, scoped to this area: one authorization
    decision — "may this viewer compose THIS area" — already answered once by
@@ -61,7 +62,8 @@
     <span class="tab">Modules<span class="src">&middot; this area&rsquo;s sub-app</span></span>
     <span class="lib">{{ running }} running &middot; {{ parked }} parked</span>
 
-    <div class="cmfilt">
+    {% set mr = 'uhifadhi--area-bundle--module-register' %}
+    <div class="lfilt">
         {# THE STATE, GROUPED. The house filter chip: a closed chip that opens
            a panel of options with counts of the whole set. #}
         <details class="i-dd" data-uhifadhi--area-bundle--module-register-target="dropdown">
@@ -116,8 +118,7 @@
             </div>
         </details>
 
-        <span class="cmsearch"><input class="fld" type="search" placeholder="Find a module" data-uhifadhi--area-bundle--module-register-target="search"></span>
-        <span class="cmshown">showing <b data-uhifadhi--area-bundle--module-register-target="count">{{ rows|length }}</b> of {{ rows|length }}</span>
+        <span class="lsearch">{{ ux_icon('shell:search') }}<input class="fld" type="search" placeholder="Find a module" aria-label="Find a module" data-{{ mr }}-target="search"></span>
     </div>
 
     <div class="cmscroll">
@@ -192,6 +193,15 @@
             </tbody>
         </table>
     </div>
+    {# THE HOUSE FOOT, paged in the browser by the register's controller. #}
+    {{ include('@Shell/_foot.html.twig', {
+        count: rows|length, noun: 'modules', one: 'module', perPage: 20, client: true,
+        hooks: {
+            count: {('data-' ~ mr ~ '-target'): 'count'},
+            menu: {'data-action': 'click->' ~ mr ~ '#size'},
+            pager: {('data-' ~ mr ~ '-target'): 'pager', 'data-action': 'click->' ~ mr ~ '#step'},
+        },
+    }, with_context: false) }}
     <p class="visually-hidden" aria-live="polite" data-{{ reorder }}-target="status"></p>
 </div>
 {% endblock %}

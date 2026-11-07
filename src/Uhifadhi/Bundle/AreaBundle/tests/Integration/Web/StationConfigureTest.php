@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpFoundation\Response;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationEditController;
@@ -41,6 +42,8 @@ use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
 #[CoversClass(StationEditController::class)]
 final class StationConfigureTest extends WebTestCase
 {
+    use HouseRegisterAssertions;
+
     public function testTheSectionListsThePostsWithTheirCodeDerivedZoneAndCount(): void
     {
         $this->boot();
@@ -293,19 +296,26 @@ final class StationConfigureTest extends WebTestCase
         self::assertStringContainsString('Clear the filters', $body);
     }
 
-    /** THE CARD IS BOUNDED BY A PAGE, not by a scrollbar. */
-    public function testTheRegisterIsPagedEightAtATime(): void
+    /** THE CARD IS BOUNDED BY A PAGE, not by a scrollbar: the house foot, twenty a page unless chosen. */
+    public function testTheRegisterIsPagedByTheHouseFoot(): void
     {
         $this->boot();
         $this->signIn();
         $area = $this->anArea();
-        for ($i = 1; $i <= 9; ++$i) {
+        for ($i = 1; $i <= 21; ++$i) {
             $this->stations()->add($area, \sprintf('Station %02d', $i), -29.75, -3.2);
         }
 
-        self::assertStringContainsString('1&ndash;8 of 9 stations', $this->body($this->section($area)));
-        self::assertCount(8, $this->listed($this->section($area)));
-        self::assertSame(['Station 09'], $this->listed($this->section($area).'?page=2'));
+        $body = $this->body($this->section($area));
+        self::assertHouseFoot($body, '#list', '21 stations', '1 of 2');
+        self::assertCount(0, new Crawler($body)->filter('#list .pgr'), 'One pager: the house foot.');
+        self::assertCount(20, $this->listed($this->section($area)));
+        self::assertSame(['Station 21'], $this->listed($this->section($area).'?page=2'));
+        self::assertCount(21, $this->listed($this->section($area).'?per=50'));
+        self::assertHouseFoot($this->body($this->section($area).'?per=all'), '#list', '21 stations', '1 of 1');
+
+        $sizes = new Crawler($body)->filter('#list .rdf-size .i-ddopt')->each(static fn (Crawler $a): string => (string) $a->attr('href'));
+        self::assertSame($this->section($area).'?per=100', $sizes[2]);
     }
 
     /**

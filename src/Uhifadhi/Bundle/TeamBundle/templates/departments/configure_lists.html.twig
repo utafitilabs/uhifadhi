@@ -4,8 +4,14 @@
    nowhere else. The scopes are the MODEL — a third would be a third rule in
    every query a module writes — and they are shown read-only so nobody goes
    looking for the button. The goal kinds arrive with whichever module can
-   measure them and leave with it, so nothing here owns them. #}
+   measure them and leave with it, so nothing here owns them.
+
+   THE KINDS AND THE GOAL KINDS ARE REGISTERS: each wears the house bar and
+   ends in the register foot, both moved in the browser by the `table-filter`
+   controller (`_partial/_table.html.twig`). The scopes are the model's two
+   fixed rows and are not a register. #}
 {% extends '@Shell/page.html.twig' %}
+{% import '@Team/_partial/_table.html.twig' as tb %}
 
 {% block title %}Departments{% endblock %}
 
@@ -52,13 +58,14 @@
         </div>
         {% endif %}
 
-        <div class="c">
+        <div class="c" {{ tb.wrap('kinds', 'kind') }}>
             <span class="tab">Department kinds<span class="src">&middot; {{ kinds|length }} in use</span></span>
+            <div class="lfilt">{{ tb.chip('use', useOptions) }}{{ tb.search('Find a kind') }}</div>
             <table class="tbl">
                 <thead><tr><th>Kind</th><th>What it means</th><th class="num">Departments</th><th>Which</th><th></th></tr></thead>
                 <tbody>
                 {% for kind in kinds %}
-                    <tr>
+                    <tr {{ tb.row({use: kind.departments|length > 0 ? 'used' : 'unused'}, kind.name ~ ' ' ~ (kind.meaning ?? '') ~ ' ' ~ kind.departments|map(d => d.name)|join(' ')) }}>
                         <td><b>{{ kind.name }}</b></td>
                         <td><span class="mono d">{{ kind.meaning ?? '—' }}</span></td>
                         <td class="num">{{ kind.departments|length }}</td>
@@ -79,7 +86,9 @@
                 {% endfor %}
                 </tbody>
             </table>
-            <div class="sxfoot"><span>{{ unkinded }} of {{ departments }} departments carry no kind. A department with no kind is legal and reads as &ldquo;unkinded&rdquo;.</span></div>
+            {{ tb.none('No kind matches these filters.') }}
+            {{ tb.foot(kinds|length, 'kinds', 'kind') }}
+            <p class="use" style="margin:10px 0 0">{{ unkinded }} of {{ departments }} departments carry no kind. A department with no kind is legal and reads as &ldquo;unkinded&rdquo;.</p>
         </div>
 
         <div class="c">
@@ -102,13 +111,14 @@
             </table>
         </div>
 
-        <div class="c">
+        <div class="c" {{ tb.wrap('goal kinds', 'goal kind') }}>
             <span class="tab">Goal kinds<span class="src">&middot; module-contributed &middot; {{ goalKinds|length }}</span></span>
+            <div class="lfilt">{{ tb.chip('unit', unitOptions) }}{{ tb.search('Find a goal kind') }}</div>
             <table class="tbl">
                 <thead><tr><th>Stored as</th><th>Unit</th><th class="num">Goals declared</th></tr></thead>
                 <tbody>
                 {% for kind in goalKinds %}
-                    <tr>
+                    <tr {{ tb.row({unit: kind.unit == '' ? 'none' : kind.unit}, kind.ref ~ ' ' ~ kind.unit) }}>
                         <td><span class="mono d">{{ kind.ref }}</span></td>
                         <td>{{ kind.unit }}</td>
                         <td class="num">{{ kind.declared }}</td>
@@ -118,7 +128,9 @@
                 {% endfor %}
                 </tbody>
             </table>
-            <div class="sxfoot"><span>A goal kind arrives with the module that can measure it. Remove that module and the kind leaves the list; the goals that used it keep their statements and stop resolving.</span></div>
+            {{ tb.none('No goal kind matches these filters.') }}
+            {{ tb.foot(goalKinds|length, 'goal kinds', 'goal kind') }}
+            <p class="use" style="margin:10px 0 0">A goal kind arrives with the module that can measure it. Remove that module and the kind leaves the list; the goals that used it keep their statements and stop resolving.</p>
         </div>
     </div>
 {% endblock %}

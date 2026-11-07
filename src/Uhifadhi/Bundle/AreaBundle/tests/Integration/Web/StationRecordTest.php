@@ -37,6 +37,8 @@ use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
 #[CoversClass(StationRecordController::class)]
 final class StationRecordTest extends WebTestCase
 {
+    use HouseRegisterAssertions;
+
     public function testThePostIsDrawnWithItsBandItsPlateAndItsBoard(): void
     {
         $this->boot();
@@ -80,9 +82,11 @@ final class StationRecordTest extends WebTestCase
         self::assertStringNotContainsString('recgrid', $body, 'One column: no side column.');
         // The position and department dropdowns are drawn where the person
         // seam answers; this host has none.
-        foreach (['src', 'sort'] as $axis) {
-            self::assertStringContainsString('data-dd="'.$axis.'"', $body);
-        }
+        self::assertHouseBar($body, '#posted', 2);
+        self::assertHouseTable($body, '#posted');
+        self::assertHouseFoot($body, '#posted', '2 people');
+        self::assertHouseBar($body, '#log', 1);
+        self::assertHouseTable($body, '#log');
         self::assertMatchesRegularExpression('#<thead><tr><th>Person</th><th>Position</th><th>Recorded</th><th>Since</th><th></th></tr></thead>#', $body);
         self::assertMatchesRegularExpression('#<td><b>J\. Mollel</b> <span class="chip ok">leads</span></td>#', $body);
         self::assertMatchesRegularExpression('#<thead><tr><th>What happened</th><th>When</th></tr></thead>#', $body);
@@ -184,6 +188,57 @@ final class StationRecordTest extends WebTestCase
         $fromTheirPage = $this->board($this->record($area, $station).'?src=person');
         self::assertStringContainsString('T. Ndosi', $fromTheirPage);
         self::assertStringNotContainsString('J. Mollel', $fromTheirPage);
+    }
+
+    public function testWhoIsPostedHereIsNarrowedByChips(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+        $record = $this->record($area, $station);
+
+        $chips = self::chips($this->body($record), '#posted');
+
+        self::assertSame(['recorded anywhere · 2', 'name a–z'], array_column($chips, 'chip'));
+        self::assertSame(['Recorded anywhere', 'Written here', 'From their page'], array_column($chips[0]['options'], 'label'));
+        self::assertSame(['2', '1', '1'], array_column($chips[0]['options'], 'count'));
+        self::assertSame($record.'?src=here', $chips[0]['options'][1]['href']);
+
+        $chosen = self::chips($this->body($record.'?src=here&lpage=2'), '#posted');
+        self::assertSame('written here · 1', $chosen[0]['chip']);
+        self::assertSame($record.'?lpage=2', $chosen[0]['options'][0]['href'], 'A chip keeps the other table where it is.');
+    }
+
+    public function testWhatHappenedHereIsNarrowedByKindAndSearch(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+        $record = $this->record($area, $station);
+
+        $body = $this->body($record);
+        $chips = self::chips($body, '#log');
+        $lines = (int) preg_replace('/\D/', '', explode('·', $chips[0]['chip'])[1]);
+
+        self::assertStringStartsWith('every change · ', $chips[0]['chip']);
+        self::assertSame(['Every change', 'Opened', 'Renamed', 'Point moved', 'Zone re-derived', 'Posted', 'Posting ended', 'Leader appointed', 'Closed', 'Reopened'], array_column($chips[0]['options'], 'label'));
+        self::assertSame('2', $chips[0]['options'][5]['count'], 'Two people were posted.');
+        self::assertSame('0', $chips[0]['options'][8]['count'], 'A kind with no line is drawn at nought.');
+        self::assertSame($record.'?lkind=posted', $chips[0]['options'][5]['href']);
+        self::assertHouseFoot($body, '#log', $lines.' lines');
+
+        $posted = $this->body($record.'?lkind=posted&lpage=3');
+        self::assertSame('posted · 2', self::chips($posted, '#log')[0]['chip']);
+        self::assertSame(2, substr_count($this->logOf($posted), 'stationed here'));
+        self::assertHouseFoot($posted, '#log', '2 lines');
+
+        $found = $this->body($record.'?lq=ndosi');
+        self::assertHouseFoot($found, '#log', '1 line');
+        self::assertStringContainsString('value="ndosi"', $this->logOf($found));
+
+        $none = $this->body($record.'?lq=nothing-like-it');
+        self::assertStringContainsString('No line matches', $this->logOf($none));
+        self::assertHouseBar($none, '#log', 1);
     }
 
     public function testTheSearchReadsTheName(): void
@@ -329,6 +384,13 @@ final class StationRecordTest extends WebTestCase
     }
 
     // ---------------------------------------------------------------- fixtures
+
+    private function logOf(string $body): string
+    {
+        preg_match('#<div class="c stlogcard" id="log">.*$#s', $body, $card);
+
+        return $card[0] ?? '';
+    }
 
     private function record(AreaOfInterest $area, Station $station): string
     {

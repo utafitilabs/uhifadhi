@@ -21,8 +21,12 @@
 
 {% block shell_page_subtitle %}Can this person do this, here &mdash; and why? Asked live, of the real rules, for one person.{% endblock %}
 
-{% macro size(table, page, sizes) %}<details class="i-dd rdf-size" data-pc-size="{{ table }}"><summary><span class="pg">{{ page }}</span> per page<span class="i-ddcaret" aria-hidden="true">&#9662;</span></summary><div class="i-ddmenu" aria-label="Rows per page">{% for n in sizes %}<button type="button" class="i-ddopt{{ n == page ~ '' ? ' on' }}" data-pc-per="{{ n }}" aria-pressed="{{ n == page ~ '' ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ n == 'all' ? 'All' : n }}</span></button>{% endfor %}</div></details>{% endmacro %}
-{% macro pager(count, page) %}page <span class="pg">1</span> of {{ max(1, (count / page)|round(0, 'ceil')) }}{% if count > page %}<button type="button" data-pc-go="1" aria-label="Next page">&rsaquo;</button>{% endif %}{% endmacro %}
+{# THE REGISTER FOOT, the shell's, paged in the browser: the page's
+   controller reads the count, the chooser and the pager by these hooks. #}
+{% macro foot(table, count, noun, one, page, hidden) %}{% include '@Shell/_foot.html.twig' with {
+    count: count, noun: noun, one: one, perPage: page, client: true, hidden: hidden,
+    hooks: {count: {'data-pc-count': ''}, size: {'data-pc-size': table}, pager: {'data-pc-page': ''}, option: 'data-pc-per', go: 'data-pc-go'},
+} only %}{% endmacro %}
 {% macro opt(o, find, current) %}<button type="button" class="i-ddopt{{ current is not null and o.value ~ '' == current ~ '' ? ' on' }}" data-pc-opt="{{ o.value }}" data-pc-label="{{ o.label }}" aria-pressed="{{ current is not null and o.value ~ '' == current ~ '' ? 'true' : 'false' }}" data-pc-find="{{ find }}"><span class="i-ddopt-l">{{ o.label }}</span>{% if o.count is not null %}<span class="i-ddopt-n">{{ o.count }}</span>{% endif %}</button>{% endmacro %}
 {% macro find(placeholder, label) %}<div class="lsearch pp-ddfind">{{ ux_icon('shell:search', {'aria-hidden': 'true'}) }}<input class="fld" type="search" placeholder="{{ placeholder }}" aria-label="{{ label }}" data-pc-find-box></div>{% endmacro %}
 {% macro places(f, current) %}{% import _self as m %}<div class="pp-ddg">{% for o in f.options %}{{ m.opt(o, o.label|lower, current) }}{% endfor %}</div>{% endmacro %}
@@ -173,7 +177,7 @@
                     <tr class="{{ r.allowed ? 'ok' : 'no' }}" data-group="{{ r.group }}" data-concern="{{ r.concern }}" data-find="{{ r.find }}"{% if r.asked %} aria-current="true"{% endif %}{% if loop.index > page %} hidden{% endif %}><td><span class="pp-q">{{ r.words }}</span></td><td class="pp-vd"><span class="au-v pp-v {{ r.allowed ? 'ok' : 'no' }}">{{ r.allowed ? 'allowed' : 'refused' }}</span></td><td class="pp-db"><span class="chip {{ r.allowed ? 'ok' : 'warn' }}">{{ r.step }}</span><span class="pp-dl">{{ r.line }}</span></td><td class="pp-exd"><a class="more" href="{{ r.href }}">Check &rarr;</a></td></tr>
                     {%- endfor %}
                 </tbody></table>
-                <div class="rdf-foot"><span><span data-pc-count>{{ ev.total }} permission{{ ev.total == 1 ? '' : 's' }} &middot;</span> {{ m.size('everything', page, sizes) }}</span><span class="rdf-page" data-pc-page>{{ m.pager(ev.total, page) }}</span></div>
+                {{ m.foot('everything', ev.total, 'permissions', 'permission', page, false) }}
                 <p class="pq-empty" hidden>No permission matches these filters.</p>
                 <p class="pp-cov"><span data-pc-shown></span><b>{{ ev.allowed }}</b> of <b>{{ ev.total }}</b> permissions allowed here &middot; asked live.</p>
                 {%- endif %}
@@ -197,7 +201,7 @@
                     <tr data-kind="{{ r.kind }}" data-order="{{ loop.index0 }}" data-person="{{ r.person }}" data-place="{{ r.place }}" data-find="{{ r.find }}"{% if loop.index > page %} hidden{% endif %}><td>{{ r.person }}<span class="sub">{{ r.position }}</span></td><td>{{ r.question }}<span class="sub">{{ r.place }}</span></td><td><span class="chip {{ r.chip }}">{{ r.why }}</span></td><td class="pp-exd"><a class="more" href="{{ r.href }}">Run &rarr;</a></td></tr>
                     {%- endfor %}
                 </tbody></table>
-                <div class="rdf-foot"><span><span data-pc-count>{{ w.count }} {{ w.count == 1 ? 'person' : 'people' }} &middot;</span> {{ m.size('worth', page, sizes) }}</span><span class="rdf-page" data-pc-page>{{ m.pager(w.count, page) }}</span></div>
+                {{ m.foot('worth', w.count, 'people', 'person', page, false) }}
                 <p class="pq-empty" hidden>Nobody matches these filters.</p>
                 {%- endif %}
             </div>
@@ -211,7 +215,7 @@
                     <div class="lsearch">{{ ux_icon('shell:search', {'aria-hidden': 'true'}) }}<input class="fld" type="search" placeholder="Find a person, question or place" aria-label="Find a person, a question or a place" data-pc-search></div>
                 </div>
                 <table class="tbl pp-rec" hidden><thead><tr><th scope="col">Person</th><th scope="col">Question</th><th scope="col">Verdict</th><th scope="col" aria-label="Run again"></th></tr></thead><tbody data-{{ ctl }}-target="recent" data-action="click->{{ ctl }}#run"></tbody></table>
-                <div class="rdf-foot" hidden><span><span data-pc-count>0 checks &middot;</span> {{ m.size('recent', page, sizes) }}</span><span class="rdf-page" data-pc-page></span></div>
+                {{ m.foot('recent', 0, 'checks', 'check', page, true) }}
                 <p class="pq-empty" hidden>No check matches these filters.</p>
                 <p class="au-why pp-empty" data-{{ ctl }}-target="none">No check asked yet this session.</p>
             </div>

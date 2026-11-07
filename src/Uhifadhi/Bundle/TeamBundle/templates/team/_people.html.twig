@@ -1,19 +1,19 @@
 {# TM·A — THE TABLE. The smallest change from a plain list, and the direction
-   that survives growth: one row per person, one column per fact, filters above.
-   The only direction that still reads at three hundred people, and the only one
-   in which nothing about the shape of the organization is visible.
+   that survives growth: one row per person, one column per fact, the house
+   filter bar above and the register foot below. The only direction that still
+   reads at three hundred people, and the only one in which nothing about the
+   shape of the organization is visible.
 
-   THE TOOL ROW IS A GET FORM, and that is the whole mechanism: the filter state
-   lives in the query string, so a filtered roster is bookmarkable, shareable and
-   survives the back button. The tier pills are LINKS that modify those params,
-   not JavaScript toggles — the form works with no JavaScript at all, which is
-   the point. A debounced auto-submit is an optional enhancement later, never a
-   requirement.
+   THE BAR IS THE HOUSE `.lfilt`: every axis a chip whose options are links,
+   so the filter state lives in the query string — a filtered roster is
+   bookmarkable, shareable and survives the back button, and the bar works
+   with no JavaScript at all. The search is a GET form at the right end.
 
-   IT ALWAYS ENDS BY SAYING WHAT IS SHOWN. A filtered list that does not state
-   its filter is a list somebody reads as the whole roster.
+   THE FOOT SAYS WHAT IS SHOWN: the count the filter leaves, the page size and
+   the page. A filtered list that does not state its count is a list somebody
+   reads as the whole roster.
 
-   FIRST RUN HAS NO TOOL ROW. A table with one row and a filter bar filtering
+   FIRST RUN HAS NO BAR. A table with one row and a filter bar filtering
    nothing is a table pretending to be a list. The one row is still a table row,
    because it is still the roster. #}
 {% import '@Team/team/_bits.html.twig' as bits %}
@@ -22,26 +22,24 @@
     <span class="tab">People<span class="src">&middot; {{ overview.people }} &middot; everybody, and what each may do</span></span>
 
     {% if not overview.isFirstRun %}
-        <form class="tm-tools" method="get" action="{{ path('team_index') }}">
-            <label class="tm-search">
-                {{ bits.icon_search() }}
-                <input type="search" name="q" value="{{ query.q }}" placeholder="Name, email or ranger code" aria-label="Search the roster">
-            </label>
-
-            {# THE TIER CHIPS COUNT OVER THE WHOLE ROSTER, never the filtered one:
-               a chip reading "Admin 0" because somebody is searching for a name
-               is a chip lying about the installation. #}
-            {# …and only for a viewer who sees tiers (ruled 28 Sep 2026). #}
+        <div class="lfilt">
+            {# THE TIER CHIP COUNTS OVER THE WHOLE ROSTER, never the filtered
+               one: an option reading "Admin 0" because somebody is searching
+               for a name is an option lying about the installation — and it
+               is drawn only for a viewer who sees tiers (ruled 28 Sep 2026). #}
             {% if sees_tiers() %}
-            <a class="fchip{{ query.tier is null ? ' on' : '' }}" href="{{ path('team_index', query.toParams({tier: null, page: null})) }}">All <span class="n">{{ overview.people }}</span></a>
-            {% for tier in tiers %}
-                <a class="fchip{{ query.tier == tier ? ' on' : '' }}" href="{{ path('team_index', query.toParams({tier: tier.value, page: null})) }}">{{ tier.label }} <span class="n">{{ tierCounts[tier.value] }}</span></a>
-            {% endfor %}
+                {{ include('@Team/_partial/_filter_chip.html.twig', {
+                    key: 'tier', name: 'tier', all: 'All', total: overview.people,
+                    chosen: query.tier ? query.tier.value : null,
+                    options: tiers|map(tier => {value: tier.value, label: tier.label, count: tierCounts[tier.value] ?? 0}),
+                    query: query,
+                }) }}
             {% endif %}
 
-            {# THE GROUPED DROPDOWNS — position, department, rank (while the
-               organization uses ranks) and account. Each counts the whole
-               roster and writes its choice into the address. #}
+            {# THE GROUPED DROPDOWNS — position, department, station, rank
+               (while the organization uses ranks), whatever the modules
+               contribute, and account. Each counts the whole roster and
+               writes its choice into the address. #}
             {% for facet in facets %}
                 {{ include('@Team/team/_facet.html.twig', {facet: facet, chosen: query.chosen(facet.key)}) }}
             {% endfor %}
@@ -49,17 +47,27 @@
             {# THE EXPORT DOOR states the set it exports, and the set is the
                bar's filter — every page of it, not the page on screen. #}
             {% if door('directory.export') %}
-                <a class="tm-export" href="{{ path('team_people_export', query.toParams({page: null})) }}" title="The rows this filter shows, as CSV &middot; directory.export">{{ ux_icon('shell:download') }}export <b>{{ page.total }}</b> rows &middot; CSV</a>
+                <a class="tm-export" href="{{ path('team_people_export', query.toParams({page: null})) }}" title="The rows this filter shows, as CSV &middot; directory.export">{{ ux_icon('shell:download') }}export <b>{{ table.total }}</b> rows &middot; CSV</a>
             {% endif %}
-            <span class="tm-shown">showing <b>{{ page.items|length }}</b> of {{ page.total }}</span>
-        </form>
+
+            {# THE SEARCH IS A FORM, so enter asks the question; the chosen
+               chips ride with it as hidden fields, or typing a name would
+               silently clear them. #}
+            <form class="lsearch" method="get" action="{{ path('team_index') }}">
+                {% for field, value in query.with('q', null) %}
+                    <input type="hidden" name="{{ field }}" value="{{ value }}">
+                {% endfor %}
+                {{ ux_icon('shell:search', {width: 14, height: 14}) }}
+                <input class="fld" type="search" name="q" value="{{ query.q }}" placeholder="Name, email or ranger code" aria-label="Search the roster">
+            </form>
+        </div>
     {% endif %}
 
     <div class="tm-scroll">
         <table class="tbl">
             <thead><tr><th>Person</th>{% if sees_tiers() %}<th>Tier</th>{% endif %}<th>Position</th>{% if usesRanks %}<th>Rank</th>{% endif %}<th>Ranger code</th><th>Account</th><th></th></tr></thead>
             <tbody>
-                {% for person in page.items %}
+                {% for person in people %}
                     <tr{{ person.isActive ? '' : ' class="tm-off"' }}>
                         <td>{{ bits.person(person, person == app.user) }}</td>
                         {% if sees_tiers() %}<td>{% if sees_tier(person) %}{{ bits.tier_pill(person.teamRole) }}{% endif %}</td>{% endif %}
@@ -67,7 +75,7 @@
                         {% if usesRanks %}<td>{{ bits.rank_cell(ranksHeld[person.id] ?? null, severalScales) }}</td>{% endif %}
                         <td>{{ bits.ranger_code(person) }}</td>
                         <td>{{ bits.account_cell(person) }}</td>
-                        <td class="tm-acts">{{ bits.open_button(person) }}</td>
+                        <td class="door">{{ bits.open_button(person) }}</td>
                     </tr>
                 {% else %}
                     {# A FILTER THAT MATCHES NOBODY IS A RESULT, not an error, and
@@ -85,22 +93,10 @@
         </table>
     </div>
 
-    {# THE PAGER, DRAWN IN THE STATE IT IS ACTUALLY IN. Twelve people is one
-       page, so there are no arrows — a disabled ‹ › on page 1 of 1 is chrome
-       pretending there is somewhere to go. The page size is stated instead,
-       which is the fact that tells you when a second page appears. #}
-    <div class="rdf-foot">
-        <span>{{ page.total }} {{ page.total == 1 ? 'person' : 'people' }} &middot; {{ page.perPage }} per page</span>
-        {% if page.isMultiPage %}
-            <span class="rdf-page">
-                {% if page.hasPrevious %}<a href="{{ path('team_index', query.toParams({page: page.page - 1})) }}">&lsaquo;</a>{% endif %}
-                page <span class="pg">{{ page.page }}</span> of {{ page.pages }}
-                {% if page.hasNext %}<a href="{{ path('team_index', query.toParams({page: page.page + 1})) }}">&rsaquo;</a>{% endif %}
-            </span>
-        {% else %}
-            <span class="rdf-page">page <span class="pg">{{ page.page }}</span> of {{ page.pages }}</span>
-        {% endif %}
-    </div>
+    {% include '@Shell/_foot.html.twig' with {
+        count: table.total, noun: 'people', one: 'person',
+        perPage: table.size, page: table.page, pages: table.pages, links: links,
+    } only %}
 
     {% if overview.isFirstRun %}
         <p class="use" style="margin-top:13px">One account, and it is yours. A Super Admin needs no position &mdash;

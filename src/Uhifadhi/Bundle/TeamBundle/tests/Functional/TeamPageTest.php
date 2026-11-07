@@ -17,6 +17,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
@@ -252,83 +253,83 @@ final class TeamPageTest extends WebTestCase
     }
 
     /**
-     * THE TIER PILLS ARE LINKS carrying whole-roster counts. Links because the
-     * page must work with no JavaScript; whole-roster because a chip reading
-     * "Admin 0" while you search for a name is a chip lying about the
-     * installation.
+     * THE TIER IS A CHIP OF THE HOUSE BAR, its options links carrying
+     * whole-roster counts. Links because the page must work with no
+     * JavaScript; whole-roster because an option reading "Admin 0" while you
+     * search for a name is an option lying about the installation.
      */
-    public function testTheTierPillsAreParamLinksWithWholeRosterCounts(): void
+    public function testTheTierChipOffersLinksWithWholeRosterCounts(): void
     {
         $naomi = $this->settled();
 
         $this->client->loginUser($naomi);
         $crawler = $this->client->request('GET', '/team?q=grace');
 
-        $chips = $crawler->filter('.tm-tools a.fchip');
-        self::assertCount(4, $chips, 'All, then one per tier.');
-        self::assertStringContainsString('tier=super_admin', $chips->eq(1)->attr('href') ?? '');
+        $chip = $crawler->filter('.c[data-tm] .lfilt details.i-dd[data-axis="tier"]');
+        self::assertCount(1, $chip);
+        self::assertSame('all · 4', self::squash($chip->filter('summary.mchip.i-ddt .i-ddval')->text()));
+        $options = $chip->filter('a.i-ddopt');
+        self::assertSame(['All', 'Super Admin', 'Admin', 'Staff'], $options->filter('.i-ddopt-l')->each(static fn (Crawler $c): string => $c->text()));
+        self::assertStringContainsString('tier=super_admin', $options->eq(1)->attr('href') ?? '');
+        self::assertStringContainsString('q=grace', $options->eq(1)->attr('href') ?? '', 'the search rides with the choice');
         // Two Super Admins exist; the search for "grace" must not change that.
-        self::assertSame('2', $chips->eq(1)->filter('.n')->text());
-    }
+        self::assertSame(['4', '2', '0', '2'], $options->filter('.i-ddopt-n')->each(static fn (Crawler $c): string => $c->text()));
 
-    /** The tool row is a GET form, so the filter state is the URL. */
-    public function testTheToolRowIsAGetFormAndTheSearchNarrowsTheTable(): void
-    {
-        $naomi = $this->settled();
-
-        $this->client->loginUser($naomi);
-        $crawler = $this->client->request('GET', '/team?q=ndosi');
-
-        self::assertSame('get', strtolower($crawler->filter('form.tm-tools')->attr('method') ?? ''));
-        self::assertCount(1, $crawler->filter('table.tbl tbody tr'));
-        self::assertStringContainsString('showing <b>1</b> of 1', $crawler->html());
+        $chosen = $this->client->request('GET', '/team?tier=staff');
+        self::assertSame('staff · 2', self::squash($chosen->filter('details.i-dd[data-axis="tier"] summary.mchip.on .i-ddval')->text()));
+        self::assertCount(2, $chosen->filter('table.tbl tbody tr'));
     }
 
     /**
-     * THE POSITION FILTER IS ONE FLAT LIST, each name offered once.
-     *
-     * It was grouped by department, and had to be while two positions could
-     * both be called "Analyst" — a flat list would then have offered the same
-     * word twice with no way to tell which was which. The name is unique
-     * across the organization now, so the grouping has nothing left to
-     * disambiguate and the optgroups are gone.
+     * THE BAR IS THE HOUSE BAR — chips, the export door, the search a GET
+     * form at the right end — and no sibling of it: no tool row, no pills,
+     * no second count line beside the foot's.
      */
-    public function testThePositionFilterIsOneFlatListWithEveryNameOnce(): void
+    public function testTheBarIsTheHouseBarAndTheSearchNarrowsTheTable(): void
     {
         $naomi = $this->settled();
-        $this->position('Analyst');
-        $this->em->flush();
 
         $this->client->loginUser($naomi);
-        $crawler = $this->client->request('GET', '/team');
+        $crawler = $this->client->request('GET', '/team?q=ndosi&tier=staff');
 
-        $facet = $crawler->filter('details.i-dd[data-facet="position"]');
-        self::assertSame(['position'], $facet->filter('.i-ddhead')->each(static fn (\Symfony\Component\DomCrawler\Crawler $c): string => $c->text()), 'one run, no group heads');
+        self::assertCount(0, $crawler->filter('.tm-tools, .tm-search, .fchip, .tm-shown'));
+        $search = $crawler->filter('.c[data-tm] .lfilt form.lsearch');
+        self::assertSame('get', strtolower($search->attr('method') ?? ''));
+        self::assertSame('/team', $search->attr('action'));
+        self::assertSame('ndosi', $search->filter('input.fld[type="search"][name="q"]')->attr('value'));
+        self::assertSame(['tier' => 'staff'], self::hidden($search), 'the chosen chips ride with the search; the page does not');
         self::assertSame(
-            ['Any', 'Analyst', 'Ranger', 'Senior Ranger', 'No position'],
-            $facet->filter('a.i-ddopt .i-ddopt-l')->each(static fn (\Symfony\Component\DomCrawler\Crawler $c): string => $c->text()),
+            ['tier', 'position', 'department', 'station', 'rank', 'account'],
+            $crawler->filter('.lfilt details.i-dd')->each(static fn (Crawler $d): string => (string) ($d->attr('data-axis') ?? $d->attr('data-facet'))),
         );
+        self::assertCount(1, $crawler->filter('table.tbl tbody tr'));
+        self::assertSame(['1 person', '20 per page', 'page 1 of 1'], self::foot($crawler));
     }
 
     /**
-     * THE PAGER IS DRAWN IN THE STATE IT IS ACTUALLY IN. Four people is one
-     * page, so there are no arrows: a disabled ‹ › on page 1 of 1 is chrome
-     * pretending there is somewhere to go.
+     * THE REGISTER FOOT IS THE SHELL'S, drawn in the state it is in: four
+     * people is one page at the default twenty, so there are no arrows, and
+     * the chooser offers 20 · 50 · 100 · All as links that keep the filter.
      */
-    public function testASinglePageDrawsNoArrows(): void
+    public function testASinglePageDrawsTheHouseFootWithNoArrows(): void
     {
         $naomi = $this->settled();
 
         $this->client->loginUser($naomi);
-        $crawler = $this->client->request('GET', '/team');
+        $crawler = $this->client->request('GET', '/team?tier=staff');
 
-        $foot = $crawler->filter('.rdf-foot');
-        self::assertStringContainsString('25 per page', $foot->text());
-        self::assertStringContainsString('page 1 of 1', $foot->text());
-        self::assertCount(0, $foot->filter('a'));
+        $foot = $crawler->filter('.c[data-tm] > .rdf-foot');
+        self::assertCount(1, $foot);
+        self::assertSame(['2 people', '20 per page', 'page 1 of 1'], self::foot($crawler));
+        self::assertCount(0, $foot->filter('.rdf-page a'));
+        $sizes = $foot->filter('details.i-dd.rdf-size a.i-ddopt');
+        self::assertSame(['20', '50', '100', 'All'], $sizes->each(static fn (Crawler $a): string => $a->text()));
+        self::assertSame('/team?tier=staff&per=50', $sizes->eq(1)->attr('href'));
+        self::assertSame('true', $sizes->eq(0)->attr('aria-current'));
     }
 
-    public function testASecondPageGetsItsArrow(): void
+    /** The pager cuts at the chosen size, and an arrow appears only where there is a page. */
+    public function testThePagerCutsAtTheChosenSize(): void
     {
         $naomi = $this->settled();
         for ($i = 1; $i <= 30; ++$i) {
@@ -337,10 +338,37 @@ final class TeamPageTest extends WebTestCase
         $this->em->flush();
 
         $this->client->loginUser($naomi);
+        $first = $this->client->request('GET', '/team');
+        self::assertCount(20, $first->filter('table.tbl tbody tr'));
+        self::assertSame(['34 people', '20 per page', 'page 1 of 2'], self::foot($first));
+        self::assertCount(0, $first->filter('.rdf-page a[aria-label="Previous page"]'));
+        self::assertSame('/team?page=2', $first->filter('.rdf-page a[aria-label="Next page"]')->attr('href'));
+
+        $second = $this->client->request('GET', '/team?page=2');
+        self::assertCount(14, $second->filter('table.tbl tbody tr'));
+        self::assertCount(0, $second->filter('.rdf-page a[aria-label="Next page"]'));
+
+        $fifty = $this->client->request('GET', '/team?per=50');
+        self::assertCount(34, $fifty->filter('table.tbl tbody tr'));
+        self::assertSame(['34 people', '50 per page', 'page 1 of 1'], self::foot($fifty));
+
+        $all = $this->client->request('GET', '/team?per=all&page=2');
+        self::assertCount(34, $all->filter('table.tbl tbody tr'));
+        self::assertSame(['34 people', 'all on one page', 'page 1 of 1'], self::foot($all));
+    }
+
+    /** THE ROWS ARE THE HOUSE TABLE'S: one row a person, no band, fold or group row. */
+    public function testTheRowsAreTheHouseTable(): void
+    {
+        $naomi = $this->settled();
+
+        $this->client->loginUser($naomi);
         $crawler = $this->client->request('GET', '/team');
 
-        self::assertCount(25, $crawler->filter('table.tbl tbody tr'));
-        self::assertGreaterThan(0, $crawler->filter('.rdf-page a')->count());
+        self::assertCount(1, $crawler->filter('.c[data-tm] table.tbl'));
+        self::assertCount(4, $crawler->filter('table.tbl > tbody > tr'));
+        self::assertCount(0, $crawler->filter('table.tbl tr.sxgrp, table.tbl tr.foldrow, table.tbl tr.tm-bandrow'));
+        self::assertCount(4, $crawler->filter('table.tbl tbody tr > td.door:last-child a.open-btn'), 'the row\'s door is its last cell');
     }
 
     /**
@@ -395,8 +423,42 @@ final class TeamPageTest extends WebTestCase
 
         self::assertCount(0, $crawler->filter('.dp-kstrip'));
         self::assertStringContainsString('One account, and it is yours', $crawler->html());
-        // And no tool row: a table with one row and a filter bar filtering
+        // And no bar: a table with one row and a filter bar filtering
         // nothing is a table pretending to be a list.
-        self::assertCount(0, $crawler->filter('form.tm-tools'));
+        self::assertCount(0, $crawler->filter('.c[data-tm] .lfilt'));
+    }
+
+    private static function squash(string $text): string
+    {
+        return trim((string) preg_replace('/\s+/u', ' ', $text));
+    }
+
+    /**
+     * The register foot as it reads: the count, the chosen size, the page.
+     *
+     * @return array{string, string, string}
+     */
+    private static function foot(Crawler $page): array
+    {
+        $foot = $page->filter('.rdf-foot');
+        self::assertCount(1, $foot);
+
+        return [
+            self::squash($foot->filter(':scope > span > span')->first()->text()),
+            self::squash(str_replace('▾', '', $foot->filter('details.rdf-size > summary')->text())),
+            self::squash(str_replace(['‹', '›'], '', $foot->filter('.rdf-page')->text())),
+        ];
+    }
+
+    /** @return array<string, string> the hidden fields a form carries */
+    private static function hidden(Crawler $form): array
+    {
+        $fields = [];
+        foreach ($form->filter('input[type="hidden"]') as $input) {
+            \assert($input instanceof \DOMElement);
+            $fields[$input->getAttribute('name')] = $input->getAttribute('value');
+        }
+
+        return $fields;
     }
 }

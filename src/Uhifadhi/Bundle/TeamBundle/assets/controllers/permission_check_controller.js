@@ -318,9 +318,13 @@ export default class extends Controller {
         const n = ordered.length;
         const nouns = { everything: [' permission', ' permissions'], worth: [' person', ' people'], recent: [' check', ' checks'] };
         const noun = nouns[r.kind][1 === n ? 0 : 1];
-        card.querySelector('[data-pc-count]').textContent = n + noun + ' ·';
+        card.querySelector('[data-pc-count]').textContent = n + noun;
         const size = card.querySelector('details[data-pc-size]');
-        size.querySelector('summary .pg').textContent = 'all' === r.size ? 'all' : r.size;
+        const summary = size.querySelector('summary');
+        const pg = document.createElement('span');
+        pg.className = 'pg';
+        pg.textContent = r.size;
+        summary.replaceChildren(...('all' === r.size ? ['all on one page'] : [pg, ' per page']), summary.querySelector('.i-ddcaret'));
         size.querySelectorAll('[data-pc-per]').forEach((o) => {
             const on = o.dataset.pcPer === r.size;
             o.classList.toggle('on', on);

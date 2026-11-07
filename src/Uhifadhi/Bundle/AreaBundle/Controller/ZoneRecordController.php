@@ -23,6 +23,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
+use Uhifadhi\Bundle\AreaBundle\Enum\ZoneEventKind;
 use Uhifadhi\Bundle\AreaBundle\Model\PostingQuery;
 use Uhifadhi\Bundle\AreaBundle\Model\PostingRow;
 use Uhifadhi\Bundle\AreaBundle\Model\StationRow;
@@ -31,6 +32,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPlateService;
+use Uhifadhi\Bundle\AreaBundle\Service\EventLogService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingBoardService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneFigureService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
@@ -86,6 +88,7 @@ final readonly class ZoneRecordController
         private ModuleEntryRouteResolver $entryRoutes,
         private Periods $periods,
         private TablePageService $pager,
+        private EventLogService $log,
     ) {
     }
 
@@ -138,8 +141,9 @@ final readonly class ZoneRecordController
         $found = self::peopleAnswering($people, $ask, $names);
         $peopleTable = $this->pager->read($request, \count($found), self::PEOPLE_PAGE, self::PEOPLE_PER);
 
-        $log = $this->events->findMentioning($area, (string) $zone->getName(), \PHP_INT_MAX);
-        $logTable = $this->pager->read($request, \count($log), self::LOG_PAGE, self::LOG_PER);
+        $lines = $this->events->findMentioning($area, (string) $zone->getName(), \PHP_INT_MAX);
+        $narrowed = $this->log->narrow($lines, ZoneEventKind::cases(), self::answer($request, EventLogService::KIND), $request->query->getString(EventLogService::SEARCH));
+        $logTable = $this->pager->read($request, \count($narrowed['rows']), self::LOG_PAGE, self::LOG_PER);
 
         $figures = $this->figures->collect(
             [new ZoneRef((string) $zone->getUuidString(), (string) $area->getUuidString(), null === $row ? (string) $zone->getName() : $row->name)],
@@ -177,7 +181,11 @@ final readonly class ZoneRecordController
             'stationOptions' => self::stationOptions($people, $names),
             'positionOptions' => self::positionOptions($people),
             'stationNames' => $names,
-            'log' => $logTable->slice($log),
+            'log' => $logTable->slice($narrowed['rows']),
+            'logScope' => \count($lines),
+            'logKinds' => $narrowed['kinds'],
+            'logKind' => $narrowed['kind'],
+            'logSearch' => $narrowed['search'],
             'logTable' => $logTable,
             'logLinks' => $this->pager->links($request, $logTable, self::LOG_PAGE, self::LOG_PER),
             'covered' => $figures->covered((string) $zone->getUuidString()),

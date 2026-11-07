@@ -130,12 +130,6 @@
                 "fetch": "eager",
                 "enabled": true
             },
-            "area-query": {
-                "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/area_query_controller.js",
-                "name": "uhifadhi--area-bundle--area-query",
-                "fetch": "eager",
-                "enabled": true
-            },
             "register-fold": {
                 "main": "../src/Uhifadhi/Bundle/ShellBundle/assets/controllers/register_fold_controller.js",
                 "fetch": "eager",

@@ -19,8 +19,9 @@ use Uhifadhi\Contracts\Access\ScopeKind;
 /**
  * WHAT THE READER ASKED THE POSITIONS REGISTER FOR, read off the query string
  * (ruled 2026-09-22, option B): three grouped dropdowns — where a position may
- * be placed, its seats, what it grants — a search on the name, one sort, and
- * the rows folded open. Every answer is a parameter: the address is the state.
+ * be placed, its seats, what it grants — a search on the name and one sort.
+ * Every answer is a parameter: the address is the state; the page is the
+ * shell pager's.
  */
 final readonly class PositionQuery
 {
@@ -30,7 +31,6 @@ final readonly class PositionQuery
     public const string GRANTS = 'grants';
     public const string SORT = 'sort';
     public const string DIRECTION = 'dir';
-    public const string OPEN = 'open';
 
     /** A placement answer for the positions that allow no kind at all. */
     public const string PLACES_NOWHERE = 'none';
@@ -57,8 +57,6 @@ final readonly class PositionQuery
         public string $search = '',
         public string $sort = 'name',
         public string $direction = self::ASC,
-        /** @var list<string> */
-        public array $open = [],
     ) {
     }
 
@@ -78,18 +76,12 @@ final readonly class PositionQuery
             search: trim($request->query->getString(self::SEARCH)),
             sort: \in_array($sort, self::SORTS, true) ? $sort : 'name',
             direction: self::DESC === trim($request->query->getString(self::DIRECTION, self::ASC)) ? self::DESC : self::ASC,
-            open: array_values(array_filter(array_map(trim(...), explode(',', $request->query->getString(self::OPEN))))),
         );
     }
 
     public function isFiltered(): bool
     {
         return null !== $this->placement || null !== $this->seats || null !== $this->grants || '' !== $this->search;
-    }
-
-    public function isOpen(string $uuid): bool
-    {
-        return \in_array($uuid, $this->open, true);
     }
 
     public function matches(PositionCard $card): bool
@@ -164,7 +156,6 @@ final readonly class PositionQuery
             self::SEARCH => '' === $this->search ? null : $this->search,
             self::SORT => 'name' === $this->sort ? null : $this->sort,
             self::DIRECTION => self::ASC === $this->direction ? null : $this->direction,
-            self::OPEN => [] === $this->open ? null : implode(',', $this->open),
         ], static fn (?string $v): bool => null !== $v);
 
         if (null === $value) {

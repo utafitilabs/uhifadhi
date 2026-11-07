@@ -48,6 +48,8 @@ use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 #[CoversClass(AreaNavigation::class)]
 final class AreaModulesTest extends WebTestCase
 {
+    use HouseRegisterAssertions;
+
     private const string REORDER = 'uhifadhi--shell-bundle--reorder';
 
     /** Everything an ordinary admin holds, plus the module pairs this screen asks for. */
@@ -298,7 +300,7 @@ final class AreaModulesTest extends WebTestCase
         self::assertStringContainsString('<span class="cmnodoor"', $this->row($body, 'incidents'));
     }
 
-    /** The filters count the whole set, and the line under them says what is shown. */
+    /** The filters count the whole set; the house bar above, the foot under. */
     public function testTheFiltersCountTheWholeSet(): void
     {
         $this->boot(self::ALL);
@@ -317,7 +319,16 @@ final class AreaModulesTest extends WebTestCase
         self::assertMatchesRegularExpression('#data-value="has"[^>]*>.*?<span class="i-ddopt-n">1</span>#s', $body);
         self::assertMatchesRegularExpression('#data-value="none"[^>]*>.*?<span class="i-ddopt-n">2</span>#s', $body);
         self::assertStringContainsString('placeholder="Find a module"', $body);
-        self::assertStringContainsString('showing <b data-uhifadhi--area-bundle--module-register-target="count">3</b> of 3', $body);
+        $card = '[data-controller~="uhifadhi--area-bundle--module-register"]';
+        self::assertHouseBar($body, $card, 2);
+        self::assertHouseTable($body, $card);
+        self::assertHouseFoot($body, $card, '3 modules');
+        self::assertStringContainsString('data-uhifadhi--area-bundle--module-register-target="count">3 modules</span>', $body, 'The foot counts what the filters leave.');
+        $foot = new Crawler($body)->filter($card.' .rdf-foot');
+        self::assertSame('click->uhifadhi--area-bundle--module-register#size', $foot->filter('.rdf-size .i-ddmenu')->attr('data-action'));
+        self::assertSame('click->uhifadhi--area-bundle--module-register#step', $foot->filter('.rdf-page')->attr('data-action'));
+        self::assertSame('pager', $foot->filter('.rdf-page')->attr('data-uhifadhi--area-bundle--module-register-target'));
+        self::assertStringNotContainsString('showing <b', $body, 'The foot states the count; no second line does.');
     }
 
     /** A freshly created area has everything parked and nothing in the order. */

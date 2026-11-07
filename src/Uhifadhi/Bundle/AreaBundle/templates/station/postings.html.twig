@@ -27,7 +27,6 @@
 
 {% block shell_page %}
 {% set here = path('area_stations_postings', {uuid: area.uuidString}) %}
-{% set ctl = 'uhifadhi--area-bundle--area-query' %}
 {% set params = {zone: ask.zone, station: ask.station, position: ask.position, q: ask.q == '' ? null : ask.q}|filter(v => v is not null) %}
 <div class="grid">
     <div class="c">
@@ -35,27 +34,15 @@
             {%- if board.total == board.scope %} {{ board.scope }}{% else %} {{ board.total }} of {{ board.scope }}{% endif %} &middot; {{ board.stations }} {{ board.stations == 1 ? 'station' : 'stations' }}
         </span></span>
 
-        <div class="lfilt" data-controller="{{ ctl }}" data-action="uhifadhi--shell-bundle--dropdown:choose->{{ ctl }}#chosen">
-            {{ include('@Shell/_dropdown.html.twig', {
-                name: 'zone', label: 'All zones', icon: 'shell:map', default: '', value: ask.zone ?? '',
-                groups: [
-                    {label: null, options: [{value: '', label: 'All zones', count: board.scope}]},
-                    {label: 'Zones', options: board.zones|map(o => {value: o.value, label: o.label, count: o.count})},
-                ],
+        <div class="lfilt">
+            {{ include('@Area/_partial/_filter.html.twig', {
+                key: 'zone', all: 'All zones', allCount: board.scope, chosen: ask.zone, options: board.zones,
             }, with_context: false) }}
-            {{ include('@Shell/_dropdown.html.twig', {
-                name: 'station', label: 'Every station', icon: 'shell:map-pin', default: '', value: ask.station ?? '', searchable: true, search: 'Find a station…',
-                groups: [
-                    {label: null, options: [{value: '', label: 'Every station', count: board.scope}]},
-                    {label: 'Stations', options: board.stationOptions|map(o => {value: o.value, label: o.label, count: o.count})},
-                ],
+            {{ include('@Area/_partial/_filter.html.twig', {
+                key: 'station', all: 'Every station', allCount: board.scope, chosen: ask.station, options: board.stationOptions,
             }, with_context: false) }}
-            {{ include('@Shell/_dropdown.html.twig', {
-                name: 'position', label: 'Any position', icon: 'shell:user', default: '', value: ask.position ?? '',
-                groups: [
-                    {label: null, options: [{value: '', label: 'Any position', count: board.scope}]},
-                    {label: 'Positions', options: board.positions|map(o => {value: o.value, label: o.label, count: o.count})},
-                ],
+            {{ include('@Area/_partial/_filter.html.twig', {
+                key: 'position', all: 'Any position', allCount: board.scope, chosen: ask.position, options: board.positions,
             }, with_context: false) }}
 
             <form class="lsearch" method="get" action="{{ here }}">

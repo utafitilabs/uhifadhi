@@ -19,6 +19,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
+use Uhifadhi\Bundle\ShellBundle\Service\TablePageService;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Model\RankQuery;
 use Uhifadhi\Bundle\TeamBundle\Service\CsvExportService;
@@ -51,6 +52,8 @@ final readonly class RankController
         private RankBoard $board,
         private TeamSettingsService $settings,
         private CsvExportService $csv,
+        /** THE REGISTER FOOT'S PAGER: ?page and ?per, 20 · 50 · 100 · All. */
+        private TablePageService $tablePages,
     ) {
     }
 
@@ -60,16 +63,27 @@ final readonly class RankController
     {
         $this->assertUsesRanks();
         $query = RankQuery::fromRequest($request);
-        $bands = $this->board->bands($query);
         $counts = $this->board->countByScale();
+
+        // ONE ROW A RANK, its scale a cell of it: the scales keep their order
+        // and the ranks their seniority within each, and the house foot pages
+        // the rows — never a band row over a scale.
+        $rows = [];
+        foreach ($this->board->bands($query) as $band) {
+            foreach ($band->rows as $row) {
+                $rows[] = ['scale' => $band->scale, 'row' => $row];
+            }
+        }
+        $table = $this->tablePages->read($request, \count($rows));
 
         return new Response($this->twig->render('@Team/ranks/index.html.twig', [
             'query' => $query,
-            'bands' => $bands,
+            'rows' => $table->slice($rows),
+            'table' => $table,
+            'links' => $this->tablePages->links($request, $table),
             'scales' => $this->board->scales(),
             'scaleCounts' => $counts,
             'total' => array_sum($counts),
-            'shown' => array_sum(array_map(static fn ($band): int => $band->ranks, $bands)),
         ]));
     }
 

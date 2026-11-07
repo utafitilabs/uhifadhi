@@ -64,7 +64,7 @@ final class PeopleRegisterFacetsTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team?q=naomi');
 
-        self::assertSame(['position', 'department', 'station', 'rank', 'account'], $crawler->filter('.tm-tools details.i-dd')->each(static fn (Crawler $d): string => (string) $d->attr('data-facet')));
+        self::assertSame(['position', 'department', 'station', 'rank', 'account'], $crawler->filter('.lfilt details.i-dd[data-facet]')->each(static fn (Crawler $d): string => (string) $d->attr('data-facet')));
         $facet = $crawler->filter('details.i-dd[data-facet="station"]');
         self::assertStringNotContainsString(' r', (string) $facet->attr('class'), 'the station menu opens to the right, as the design draws it');
         self::assertSame('any station', trim($facet->filter('.i-ddval')->text()));
@@ -128,7 +128,7 @@ final class PeopleRegisterFacetsTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team');
 
-        self::assertSame(['position', 'department', 'station', 'rank', 'status', 'account'], $crawler->filter('.tm-tools details.i-dd')->each(static fn (Crawler $d): string => (string) $d->attr('data-facet')));
+        self::assertSame(['position', 'department', 'station', 'rank', 'status', 'account'], $crawler->filter('.lfilt details.i-dd[data-facet]')->each(static fn (Crawler $d): string => (string) $d->attr('data-facet')));
         $facet = $crawler->filter('details.i-dd[data-facet="status"]');
         self::assertStringContainsString('r', (string) $facet->attr('class'));
         self::assertSame('any status', trim($facet->filter('.i-ddval')->text()));
@@ -149,7 +149,7 @@ final class PeopleRegisterFacetsTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/team?status=at_post');
         self::assertSame(['Anna Sanka', 'Joseph Mollel'], $this->names($crawler));
         self::assertSame('At post', trim($crawler->filter('details[data-facet="status"] .i-ddval')->text()));
-        self::assertStringContainsString('showing 2 of 2', preg_replace('/\s+/', ' ', $crawler->filter('.tm-shown')->text()) ?? '');
+        self::assertStringStartsWith('2 people', trim($crawler->filter('.rdf-foot > span > span')->first()->text()));
 
         // TWO SEAM FACETS AT ONCE intersect, and every option keeps the other's choice.
         $both = $this->client->request('GET', '/team?status=at_post&station='.FakePersonPostings::STATION);

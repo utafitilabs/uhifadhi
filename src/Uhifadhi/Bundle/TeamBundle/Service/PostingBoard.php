@@ -17,6 +17,7 @@ use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Model\FilterOption;
+use Uhifadhi\Bundle\TeamBundle\Model\PostingLine;
 use Uhifadhi\Bundle\TeamBundle\Model\PostingQuery;
 use Uhifadhi\Bundle\TeamBundle\Model\PostingRow;
 use Uhifadhi\Bundle\TeamBundle\Model\PostingStation;
@@ -66,7 +67,7 @@ final readonly class PostingBoard
     /**
      * @return array{
      *     facts: list<SectionFact>,
-     *     stations: list<PostingStation>,
+     *     lines: list<PostingLine>,
      *     postings: int,
      *     areaOptions: list<FilterOption>,
      *     zoneOptions: list<FilterOption>,
@@ -82,7 +83,7 @@ final readonly class PostingBoard
 
         return [
             'facts' => $this->facts($stations),
-            'stations' => $shown,
+            'lines' => self::lines($shown),
             'postings' => self::countPostings($shown),
             'areaOptions' => $this->areaOptions($stations),
             'zoneOptions' => self::zoneOptions($stations),
@@ -217,8 +218,8 @@ final readonly class PostingBoard
      *
      * A STATION FILTER AND A PERSON FILTER ARE NOT THE SAME CUT. Area, zone and
      * the staffed/empty answer are facts about the STATION, so they keep or
-     * drop the whole band; rank and the search cut the PEOPLE inside it, and a
-     * band left with nobody by them is dropped rather than drawn empty — it
+     * drop all its rows; rank and the search cut the PEOPLE at it, and a
+     * station left with nobody by them is dropped rather than drawn empty — it
      * would read as "nobody is posted here", which is a different fact.
      *
      * @param list<PostingStation> $stations
@@ -268,8 +269,8 @@ final readonly class PostingBoard
                 areaUuid: $station->areaUuid,
                 areaName: $station->areaName,
                 zoneName: $station->zoneName,
-                // THE ROWS UNDER A BAND SORT BY THE HEADER the reader asked
-                // for; the bands themselves keep the ground's order.
+                // A STATION'S ROWS SORT BY THE HEADER the reader asked for;
+                // the stations themselves keep the ground's order.
                 rows: $query->order($rows),
                 url: $station->url,
             );
@@ -425,6 +426,30 @@ final readonly class PostingBoard
         } catch (RouteNotFoundException) {
             return null;
         }
+    }
+
+    /**
+     * THE BOARD AS THE REGISTER'S ROWS: every posting, in the ground's order
+     * of stations and the sort's order within each, and a station nobody
+     * stands at as one row of its own.
+     *
+     * @param list<PostingStation> $stations
+     *
+     * @return list<PostingLine>
+     */
+    private static function lines(array $stations): array
+    {
+        $lines = [];
+        foreach ($stations as $station) {
+            if ($station->isEmpty()) {
+                $lines[] = new PostingLine($station);
+            }
+            foreach ($station->rows as $row) {
+                $lines[] = new PostingLine($station, $row);
+            }
+        }
+
+        return $lines;
     }
 
     /** @param list<PostingStation> $stations */

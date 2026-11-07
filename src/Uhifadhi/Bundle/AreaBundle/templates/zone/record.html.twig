@@ -42,7 +42,6 @@
 
 {% block shell_page %}
 {% set here = path('area_zone_show', {uuid: area.uuidString, zone: zone.uuidString}) %}
-{% set ctl = 'uhifadhi--area-bundle--area-query' %}
 {% set keep = app.request.query.all %}
 
 <div class="factband ov-band">
@@ -116,22 +115,14 @@
                 {%- if peopleTotal == 0 %} nobody{% else %} {{ peopleTable.total == peopleTotal ? peopleTotal : peopleTable.total ~ ' of ' ~ peopleTotal }} {{ peopleTotal == 1 ? 'person' : 'people' }} &middot; {{ peopleStations }} {{ peopleStations == 1 ? 'station' : 'stations' }}{% endif -%}
             </span></span>
             {% if peopleTotal %}
-                <div class="lfilt" data-controller="{{ ctl }}" data-action="uhifadhi--shell-bundle--dropdown:choose->{{ ctl }}#chosen">
+                <div class="lfilt">
                     {% if stationCount > 1 %}
-                        {{ include('@Shell/_dropdown.html.twig', {
-                            name: 'station', label: 'Any station', icon: 'shell:map-pin', default: '', value: ask.station ?? '',
-                            groups: [
-                                {label: null, options: [{value: '', label: 'Any station', count: peopleTotal}]},
-                                {label: 'Its stations', options: stationOptions},
-                            ],
+                        {{ include('@Area/_partial/_filter.html.twig', {
+                            key: 'station', all: 'Any station', allCount: peopleTotal, chosen: ask.station, options: stationOptions, pageKey: 'ppage',
                         }, with_context: false) }}
                     {% endif %}
-                    {{ include('@Shell/_dropdown.html.twig', {
-                        name: 'position', label: 'Any position', icon: 'shell:user', default: '', value: ask.position ?? '',
-                        groups: [
-                            {label: null, options: [{value: '', label: 'Any position', count: peopleTotal}]},
-                            {label: 'Positions', options: positionOptions},
-                        ],
+                    {{ include('@Area/_partial/_filter.html.twig', {
+                        key: 'position', all: 'Any position', allCount: peopleTotal, chosen: ask.position, options: positionOptions, pageKey: 'ppage',
                     }, with_context: false) }}
                     <form class="lsearch" method="get" action="{{ here }}">
                         {{ ux_icon('shell:search') }}
@@ -165,21 +156,15 @@
         </div>
 
         <div class="c" id="log">
-            <span class="tab">What happened here<span class="src">&middot; {{ logTable.total }} {{ logTable.total == 1 ? 'line' : 'lines' }}</span></span>
-            {% if log is empty %}
+            <span class="tab">What happened here<span class="src">&middot;
+                {%- if logTable.total == logScope %} {{ logScope }}{% else %} {{ logTable.total }} of {{ logScope }}{% endif %} {{ logScope == 1 ? 'line' : 'lines' }}
+            </span></span>
+            {% if logScope == 0 %}
                 <div class="use">Nothing has happened to {{ zone.name }} yet. Every import, rename and ring writes one line here.</div>
             {% else %}
-                <table class="tbl">
-                    <thead><tr><th>What happened</th><th>When</th></tr></thead>
-                    <tbody>
-                    {% for event in log %}
-                        <tr><td><b>{{ event.headline }}</b>{% if event.detail %}<span class="sub">{{ event.detail }}</span>{% endif %}</td><td><span class="mono d"><time datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="day">{{ event.occurredAt|date('j M Y') }}</time></span><time class="sub" datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="clock">{{ event.occurredAt|date('H:i') }}</time></td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                {{ include('@Shell/_foot.html.twig', {
-                    count: logTable.total, noun: 'lines', one: 'line',
-                    perPage: logTable.size, page: logTable.page, pages: logTable.pages, links: logLinks,
+                {{ include('@Area/_partial/_log.html.twig', {
+                    events: log, kinds: logKinds, kind: logKind, search: logSearch, scope: logScope,
+                    table: logTable, links: logLinks, here: here,
                 }, with_context: false) }}
             {% endif %}
         </div>

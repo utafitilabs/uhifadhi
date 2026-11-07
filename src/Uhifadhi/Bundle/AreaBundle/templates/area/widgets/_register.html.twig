@@ -1,5 +1,6 @@
 {# PREVIEW: THE REGISTER — the working table, its columns operational
-   rather than scientific and its search / filter / sort muscle kept. The columns are
+   rather than scientific and its search / filter / sort muscle kept: the
+   house bar above (the state chip and the search), the house foot under. The columns are
    the area page's "modules live" and the modules' own now-tiles — the SAME figures the
    wall's cards show, in a denser frame — so the area page names none of them: the stat
    headers are whatever labels the now-tile contribution handed back. #}
@@ -21,32 +22,38 @@
 {% if rows is empty %}
     <div class="c"><p class="zeb">No areas yet &mdash; the register fills as areas are added.</p></div>
 {% else %}
-    <div data-controller="uhifadhi--area-bundle--area-register">
-        <div class="reg-bar">
-            <input class="fld" data-uhifadhi--area-bundle--area-register-target="search"
-                   placeholder="Search areas&hellip;" aria-label="Search areas">
-            <span class="subnav">
-                <a class="on" href="#" data-action="uhifadhi--area-bundle--area-register#filter" data-filter="all">All &middot; <span data-uhifadhi--area-bundle--area-register-target="count">{{ counts.all }}</span></a>
-                <a href="#" data-action="uhifadhi--area-bundle--area-register#filter" data-filter="live">Live &middot; {{ counts.live }}</a>
-                <a href="#" data-action="uhifadhi--area-bundle--area-register#filter" data-filter="alerts">With alerts &middot; {{ counts.alerts }}</a>
-                <a href="#" data-action="uhifadhi--area-bundle--area-register#filter" data-filter="setup">Awaiting setup &middot; {{ counts.setup }}</a>
-            </span>
-            <span class="reg-sort mono"><span class="chip acc" data-uhifadhi--area-bundle--area-register-target="sortlabel">sort: last activity &darr;</span></span>
+    {% set ar = 'uhifadhi--area-bundle--area-register' %}
+    <div data-controller="{{ ar }}">
+        {# THE HOUSE BAR: the state chip (its counts of the whole set) and the
+           search, narrowing the rows already on the page. The order is the
+           sortable headers'. #}
+        <div class="lfilt">
+            <details class="i-dd">
+                <summary class="mchip i-ddt"><span class="i-ddval">all &middot; <span data-{{ ar }}-target="count">{{ counts.all }}</span></span><span class="i-ddcaret">&#9662;</span></summary>
+                <div class="i-ddmenu" aria-label="state">
+                    {% for filter, label in {all: 'All', live: 'Live', alerts: 'With alerts', setup: 'Awaiting setup'} %}
+                        <button type="button" class="i-ddopt{{ loop.first ? ' on' }}" data-action="{{ ar }}#filter" data-filter="{{ filter }}" data-chip="{{ label|lower }} &middot; {{ counts[filter] }}" aria-pressed="{{ loop.first ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ label }}</span><span class="i-ddopt-n">{{ counts[filter] }}</span></button>
+                        {% if loop.first %}<span class="i-ddsep"></span>{% endif %}
+                    {% endfor %}
+                </div>
+            </details>
+            <span class="lsearch">{{ ux_icon('shell:search') }}<input class="fld" type="search" data-{{ ar }}-target="search" placeholder="Search areas&hellip;" aria-label="Search areas"></span>
         </div>
 
         <div class="c">
             <span class="tab">All areas<span class="src">&middot; register &mdash; operational columns</span></span>
-            <table class="tbl ax-reg" data-uhifadhi--area-bundle--area-register-target="list">
-                <tr>
-                    <th class="sortable" data-action="uhifadhi--area-bundle--area-register#sort" data-sortcol="name" data-label="protected area">Protected area<span class="mono sarrow">&darr;</span></th>
-                    <th class="sortable" data-action="uhifadhi--area-bundle--area-register#sort" data-sortcol="modules" data-label="modules" style="text-align:right">modules<span class="mono sarrow">&darr;</span></th>
+            <table class="tbl ax-reg">
+                <thead><tr>
+                    <th class="sortable" data-action="{{ ar }}#sort" data-sortcol="name" data-label="protected area">Protected area<span class="mono sarrow">&darr;</span></th>
+                    <th class="sortable" data-action="{{ ar }}#sort" data-sortcol="modules" data-label="modules" style="text-align:right">modules<span class="mono sarrow">&darr;</span></th>
                     {% for label in statColumns %}
-                        <th class="sortable" data-action="uhifadhi--area-bundle--area-register#sort" data-sortcol="s{{ loop.index0 }}" data-label="{{ label }}" style="text-align:right">{{ label }}<span class="mono sarrow">&darr;</span></th>
+                        <th class="sortable" data-action="{{ ar }}#sort" data-sortcol="s{{ loop.index0 }}" data-label="{{ label }}" style="text-align:right">{{ label }}<span class="mono sarrow">&darr;</span></th>
                     {% endfor %}
-                    <th class="sortable sorted" data-action="uhifadhi--area-bundle--area-register#sort" data-sortcol="activity" data-label="last activity">last activity<span class="mono sarrow">&darr;</span></th>
+                    <th class="sortable sorted" data-action="{{ ar }}#sort" data-sortcol="activity" data-label="last activity">last activity<span class="mono sarrow">&darr;</span></th>
                     <th>alerts</th>
                     <th></th>
-                </tr>
+                </tr></thead>
+                <tbody data-{{ ar }}-target="list">
                 {% for row in rows %}
                     {# ONE COLUMN, ONE LABEL. The headings come from the first
                        live area, and an area running fewer modules contributes
@@ -95,10 +102,20 @@
                             <td class="mono ax-time d">&mdash;</td>
                             <td><span class="chip idle">awaiting setup</span></td>
                         {% endif %}
-                        <td class="reg-open"><a class="open-btn" href="{{ path('area_show', {uuid: row.area.uuidString}) }}">Open &rarr;</a></td>
+                        <td class="door"><a class="open-btn" href="{{ path('area_show', {uuid: row.area.uuidString}) }}">Open &rarr;</a></td>
                     </tr>
                 {% endfor %}
+                </tbody>
             </table>
+            {# THE HOUSE FOOT, paged in the browser by the register's controller. #}
+            {{ include('@Shell/_foot.html.twig', {
+                count: rows|length, noun: 'areas', one: 'area', perPage: 20, client: true,
+                hooks: {
+                    count: {('data-' ~ ar ~ '-target'): 'total'},
+                    menu: {'data-action': 'click->' ~ ar ~ '#size'},
+                    pager: {('data-' ~ ar ~ '-target'): 'pager', 'data-action': 'click->' ~ ar ~ '#step'},
+                },
+            }, with_context: false) }}
         </div>
     </div>
 {% endif %}

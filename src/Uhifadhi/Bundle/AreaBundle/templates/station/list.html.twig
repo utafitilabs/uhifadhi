@@ -2,8 +2,8 @@
 
    Design: areas/<area>/stations/stations.html.
 
-   The house bar above (four house dropdowns: zone, posted, lead, order, and
-   the search), the house table, the house foot under it. The address is the
+   The house bar above (four chips: zone, posted, lead, order, and the
+   search), the house table, the house foot under it. The address is the
    question, so the Overview's banner opens `?posted=no` already chosen. #}
 {% extends '@Shell/page.html.twig' %}
 
@@ -27,43 +27,30 @@
 {% block shell_page %}
 {% set here = path('area_stations_list', {uuid: area.uuidString}) %}
 {% set q = 'Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery' %}
-{% set ctl = 'uhifadhi--area-bundle--area-query' %}
 <div class="grid">
     <div class="c">
         <span class="tab">Every station<span class="src">&middot;
             {%- if register.total == register.scope %} {{ register.scope }}{% else %} {{ register.total }} of {{ register.scope }}{% endif -%}
         </span></span>
 
-        <div class="lfilt" data-controller="{{ ctl }}" data-action="uhifadhi--shell-bundle--dropdown:choose->{{ ctl }}#chosen">
-            {{ include('@Shell/_dropdown.html.twig', {
-                name: constant(q ~ '::ZONE'), label: 'All zones', icon: 'shell:map', default: '', value: query.zone ?? '',
-                groups: [
-                    {label: null, options: [{value: '', label: 'All zones', count: register.scope}]},
-                    {label: 'Zones', options: register.zones|map(o => {value: o.value, label: o.value == constant(q ~ '::UNZONED') ? 'No zone' : o.label, count: o.count})},
-                ],
+        <div class="lfilt">
+            {{ include('@Area/_partial/_filter.html.twig', {
+                key: constant(q ~ '::ZONE'), all: 'All zones', allCount: register.scope, chosen: query.zone, query: query,
+                options: register.zones|map(o => {value: o.value, label: o.value == constant(q ~ '::UNZONED') ? 'No zone' : o.label, count: o.count, cat: o.cat}),
             }, with_context: false) }}
-            {{ include('@Shell/_dropdown.html.twig', {
-                name: constant(q ~ '::POSTED'), label: 'Posted or not', icon: 'shell:user', default: '', value: query.posted ?? '',
-                groups: [
-                    {label: null, options: [{value: '', label: 'Posted or not', count: register.scope}]},
-                    {label: 'Posted', options: register.posted|map(o => {value: o.value, label: o.label, count: o.count})},
-                ],
+            {{ include('@Area/_partial/_filter.html.twig', {
+                key: constant(q ~ '::POSTED'), all: 'Posted or not', allCount: register.scope, chosen: query.posted, query: query,
+                options: register.posted,
             }, with_context: false) }}
-            {{ include('@Shell/_dropdown.html.twig', {
-                name: constant(q ~ '::LEAD'), label: 'Led or not', icon: 'shell:chevron-up', default: '', value: query.lead ?? '',
-                groups: [
-                    {label: null, options: [{value: '', label: 'Led or not', count: register.scope}]},
-                    {label: 'Lead', options: register.lead|map(o => {value: o.value, label: o.value == 'yes' ? 'A leader appointed' : 'No leader', count: o.count})},
-                ],
+            {{ include('@Area/_partial/_filter.html.twig', {
+                key: constant(q ~ '::LEAD'), all: 'Led or not', allCount: register.scope, chosen: query.lead, query: query,
+                options: register.lead|map(o => {value: o.value, label: o.value == 'yes' ? 'A leader appointed' : 'No leader', count: o.count, cat: null}),
             }, with_context: false) }}
-            {{ include('@Shell/_dropdown.html.twig', {
-                name: constant(q ~ '::SORT'), label: 'Name A–Z', icon: 'shell:arrow-up-down', default: 'name', value: query.sort,
-                groups: [
-                    {label: 'Order', options: [
-                        {value: 'name', label: 'Name A–Z', count: null},
-                        {value: 'posted', label: 'Most posted', count: null},
-                        {value: 'zone', label: 'By zone', count: null},
-                    ]},
+            {{ include('@Area/_partial/_filter.html.twig', {
+                key: constant(q ~ '::SORT'), all: 'Name A–Z', chosen: query.sort == 'name' ? null : query.sort, query: query,
+                options: [
+                    {value: 'posted', label: 'Most posted', count: null},
+                    {value: 'zone', label: 'By zone', count: null},
                 ],
             }, with_context: false) }}
 

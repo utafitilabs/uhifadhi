@@ -53,7 +53,7 @@ final class PeopleRegisterRanksTest extends WebTestCaseWithSchema
         $this->holds('Joseph', 'Mollel', $one);
         $this->em->flush();
 
-        $facet = $this->client->request('GET', '/team?q=naomi')->filter('.tm-tools details.i-dd[data-facet="rank"]');
+        $facet = $this->client->request('GET', '/team?q=naomi')->filter('.lfilt details.i-dd[data-facet="rank"]');
 
         self::assertSame('any rank', trim($facet->filter('.i-ddval')->text()));
         self::assertSame(['rank'], $facet->filter('.i-ddhead')->each(static fn (Crawler $h): string => $h->text()));
@@ -105,8 +105,8 @@ final class PeopleRegisterRanksTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team');
 
-        self::assertSame(['position', 'department', 'station', 'rank', 'account'], $crawler->filter('.tm-tools details.i-dd')->each(static fn (Crawler $d): string => (string) $d->attr('data-facet')));
-        self::assertCount(0, $crawler->filter('.tm-tools select'), 'no select is left in the bar');
+        self::assertSame(['position', 'department', 'station', 'rank', 'account'], $crawler->filter('.lfilt details.i-dd[data-facet]')->each(static fn (Crawler $d): string => (string) $d->attr('data-facet')));
+        self::assertCount(0, $crawler->filter('.lfilt select'), 'no select is left in the bar');
         self::assertSame(
             ['Any 2', 'Ranger 0', 'No position 2'],
             $crawler->filter('details[data-facet="position"] a.i-ddopt')->each(self::option(...)),
@@ -125,7 +125,7 @@ final class PeopleRegisterRanksTest extends WebTestCaseWithSchema
         $this->holds('Anna', 'Sanka', $one);
         $this->em->flush();
 
-        $door = $this->client->request('GET', '/team?rank='.$one->getUuidString())->filter('.tm-tools a.tm-export');
+        $door = $this->client->request('GET', '/team?rank='.$one->getUuidString())->filter('.lfilt a.tm-export');
         self::assertSame('export 2 rows · CSV', preg_replace('/\s+/', ' ', trim($door->text())));
         self::assertSame('/team/people.csv?rank='.$one->getUuidString(), $door->attr('href'));
 

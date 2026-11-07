@@ -1,0 +1,39 @@
+{# WHAT HAPPENED HERE — a record's log as a house register: the bar (the kind
+   chip, counted over the whole log, and the search), the table of lines, the
+   foot. The log pages and asks on keys of its own (`lkind`, `lq`, `lpage`,
+   `lper`), so the record's other tables keep their place while it moves.
+
+   Takes: events (this page's lines), kinds, kind, search, scope (every line),
+   table, links, here. #}
+{% set _kind = constant('Uhifadhi\\Bundle\\AreaBundle\\Service\\EventLogService::KIND') %}
+{% set _search = constant('Uhifadhi\\Bundle\\AreaBundle\\Service\\EventLogService::SEARCH') %}
+<div class="lfilt">
+    {{ include('@Area/_partial/_filter.html.twig', {
+        key: _kind, all: 'Every change', allCount: scope, chosen: kind, options: kinds, pageKey: 'lpage',
+    }, with_context: false) }}
+    <form class="lsearch" method="get" action="{{ here }}">
+        {{ ux_icon('shell:search') }}
+        <input class="fld" type="search" name="{{ _search }}" value="{{ search }}" placeholder="Find a line&hellip;" aria-label="Find a line in what happened here">
+        {% for k, v in app.request.query.all|filter((v, k) => k not in [_search, 'lpage'] and v is not iterable) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+    </form>
+</div>
+{% if events is empty %}
+    <div class="zempty">
+        <b class="zeh">No line matches</b>
+        <p class="zeb">Nothing in the log answers these filters. Clear one, or search another word.</p>
+        <span class="zea"><a class="btn sm" href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(app.request.query.all|filter((v, k) => k not in [_kind, _search, 'lpage']))) }}">Clear the filters</a></span>
+    </div>
+{% else %}
+    <table class="tbl">
+        <thead><tr><th>What happened</th><th>When</th></tr></thead>
+        <tbody>
+        {% for event in events %}
+            <tr><td><b>{{ event.headline }}</b>{% if event.detail %}<span class="sub">{{ event.detail }}</span>{% endif %}</td><td><span class="mono d"><time datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="day">{{ event.occurredAt|date('j M Y') }}</time></span><time class="sub" datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="clock">{{ event.occurredAt|date('H:i') }}</time></td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {{ include('@Shell/_foot.html.twig', {
+        count: table.total, noun: 'lines', one: 'line',
+        perPage: table.size, page: table.page, pages: table.pages, links: links,
+    }, with_context: false) }}
+{% endif %}

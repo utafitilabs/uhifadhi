@@ -45,6 +45,8 @@ use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 #[CoversClass(ZoneRecordController::class)]
 final class ZoneRecordTest extends WebTestCase
 {
+    use HouseRegisterAssertions;
+
     public function testTheZoneIsDrawnAsARecordWithItsBandItsGroundAndItsPeople(): void
     {
         $this->boot();
@@ -97,6 +99,19 @@ final class ZoneRecordTest extends WebTestCase
         self::assertSame(3, substr_count($body, '<table class="tbl"'));
         self::assertSame(3, substr_count($body, 'class="rdf-foot"'));
         self::assertStringNotContainsString('sxgrp', $body);
+        self::assertHouseBar($body, '#posted', 1);
+        self::assertHouseBar($body, '#log', 1);
+        foreach (['#stations', '#posted', '#log'] as $card) {
+            self::assertHouseTable($body, $card);
+        }
+        self::assertSame('every change · 1', self::chips($body, '#log')[0]['chip']);
+        self::assertSame(['Every change', 'Imported', 'Renamed', 'Boundary replaced', 'Removed', 'Cleared', 'Refused'], array_column(self::chips($body, '#log')[0]['options'], 'label'));
+        self::assertHouseFoot($body, '#log', '1 line');
+        self::assertSame(['any position · 1'], array_column(self::chips($body, '#posted'), 'chip'), 'One station: no station chip.');
+
+        $renamed = $this->body($this->record($area, $zone).'?lkind=imported');
+        self::assertStringContainsString('No line matches', $renamed);
+        self::assertSame('imported · 0', self::chips($renamed, '#log')[0]['chip']);
         self::assertMatchesRegularExpression('#<thead><tr><th>Station</th><th>Code</th><th>Point</th><th class="num">Posted</th><th>Lead</th><th></th></tr></thead>#', $body);
         self::assertMatchesRegularExpression('#<thead><tr><th>Station</th><th>Person</th><th>Position</th><th>Department</th><th></th></tr></thead>#', $body);
         self::assertMatchesRegularExpression('#<td><span class="chip">Eastgate Post</span></td><td><b>J\. Mollel</b> <span class="chip ok">leads</span>#', $body);

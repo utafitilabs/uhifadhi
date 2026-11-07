@@ -6,6 +6,22 @@
 
 ## 1.0.0
 
+ * EVERY REGISTER WEARS THE HOUSE BAR AND THE HOUSE FOOT. The bar is `.lfilt`:
+   a `details.i-dd` chip an axis, its options links with counts of the whole
+   set (`_partial/_filter.html.twig`, which also takes the page's own address
+   when there is no query model, so a second table keeps its place), and the
+   `.lsearch` field. The foot is the shell's (`@Shell/_foot.html.twig`,
+   `shell.table_page`, `?page`/`?per`, 20 · 50 · 100 · All). On the stations
+   register, the postings, the zones register, a record's "Who is posted here"
+   and "Who works out of it" the Shell dropdowns became chips; "What happened
+   here" on both records gains a kind chip and a search (`lkind`, `lq`,
+   `EventLogService`); my duty log takes a month chip, a status chip, a post
+   chip and a search (`DutyLogService`) and the foot in place of its month
+   links; the station configure cards page by the foot, twenty a page, in
+   place of the eight-a-page pager; the configure modules table and the areas
+   register layout take the bar and the foot, paged in the browser. The
+   `area-query` controller, `_partial/_pager` and `_partial/_foot` are gone.
+
  * A SUPER ADMIN DELETES A STATION OR AN AREA (ruled 28 Sep, #48):
    `/areas/{uuid}/stations/{station}/delete` and `/areas/{uuid}/delete`, through the
    Shell's `DeletionPageInterface`; the Area counts what goes with a person, a
@@ -24,12 +40,12 @@ Not released yet.
    posted to, the summary strip, four figures, the plate and two ranked plots
    (people by station, stations by zone), and lists nothing. The register
    moves to `area_stations_list` (`/areas/{uuid}/stations/list`): the house
-   table under four house dropdowns and the search, over the shell's foot and
+   table under the house bar (four chips and the search), over the shell's foot and
    its page size (20, 50, 100 or all, `?per=`). The postings are
    `area_stations_postings` (`/areas/{uuid}/stations/postings`): the station
    is the first column and the rows are ordered by it, the lead marked by its
    chip, with no band rows; filtered by zone, station, position and a search.
-   A dropdown's choice loads the address (`area-query` controller).
+   Every chip's option is a link: the address is the question.
 
  * THE ZONES TAB IS A HUB OF TWO PAGES, Overview · Zones, under a strip of
    its own. The Overview (`area_zones`) holds the banner naming the zones no
@@ -38,7 +54,7 @@ Not released yet.
    three a module publishes by zone, one card a figure), the plate and two
    plots (extent by zone, covered by zone); it lists nothing. The register
    is `area_zones_list` (`/areas/{uuid}/zones/list`): the house table under
-   two house dropdowns (stations or not, the order) and the search, over the
+   two chips (stations or not, the order) and the search, over the
    shell's foot. Its query keys are the house ones: `sort`, `stations`, `q`,
    `page`, `per`, twenty a page.
 

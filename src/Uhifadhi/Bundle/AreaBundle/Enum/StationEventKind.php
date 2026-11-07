@@ -38,6 +38,22 @@ enum StationEventKind: string
     case Deactivated = 'deactivated';
     case Reactivated = 'reactivated';
 
+    /** What the log's kind chip calls a line of this kind. */
+    public function label(): string
+    {
+        return match ($this) {
+            self::Recorded => 'Opened',
+            self::Renamed => 'Renamed',
+            self::PointMoved => 'Point moved',
+            self::ZoneDerived => 'Zone re-derived',
+            self::Posted => 'Posted',
+            self::PostingEnded => 'Posting ended',
+            self::LeaderAppointed => 'Leader appointed',
+            self::Deactivated => 'Closed',
+            self::Reactivated => 'Reopened',
+        };
+    }
+
     /** The log's one loud line: a post that is no longer open. */
     public function isClosure(): bool
     {

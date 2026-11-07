@@ -30,6 +30,8 @@ namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
  */
 final class AreaLandingPresetTest extends WebTestCase
 {
+    use HouseRegisterAssertions;
+
     /** The markup only one of the five layouts ever emits. */
     private const array SIGNATURE = [
         'wall' => 'ax-cards',
@@ -63,6 +65,29 @@ final class AreaLandingPresetTest extends WebTestCase
         $landing = $this->body('/areas');
         self::assertStringContainsString(self::SIGNATURE['register'], $landing);
         self::assertStringNotContainsString(self::SIGNATURE['wall'], $landing);
+    }
+
+    /**
+     * THE REGISTER IS A HOUSE REGISTER: the state chip with its counts and the
+     * search above, the house table, the foot paged in the browser.
+     */
+    public function testTheRegisterLayoutWearsTheHouseBarAndFoot(): void
+    {
+        $this->arrange();
+        $this->anArea('Southern Conservation Reserve');
+        $this->adopt('register');
+
+        $landing = $this->body('/areas');
+        $register = '[data-controller~="uhifadhi--area-bundle--area-register"]';
+
+        self::assertHouseBar($landing, $register, 1);
+        self::assertHouseTable($landing, $register);
+        self::assertHouseFoot($landing, $register, '2 areas');
+        $chips = self::chips($landing, $register);
+        self::assertSame('all · 2', $chips[0]['chip']);
+        self::assertSame(['All', 'Live', 'With alerts', 'Awaiting setup'], array_column($chips[0]['options'], 'label'));
+        self::assertSame(['2', '1', '1', '1'], array_column($chips[0]['options'], 'count'));
+        self::assertStringNotContainsString('class="subnav"', $landing, 'The pills are the chip now.');
     }
 
     /** And every other layout is the same trip. */

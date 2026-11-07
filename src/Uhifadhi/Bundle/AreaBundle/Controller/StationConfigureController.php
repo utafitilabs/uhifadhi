@@ -42,6 +42,8 @@ use Uhifadhi\Bundle\AreaBundle\Service\StationService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
+use Uhifadhi\Bundle\ShellBundle\Model\TablePage;
+use Uhifadhi\Bundle\ShellBundle\Service\TablePageService;
 use Uhifadhi\Contracts\Area\StationSurface;
 use Uhifadhi\Contracts\Kpi\StationRef;
 
@@ -95,6 +97,7 @@ final readonly class StationConfigureController
         private StationSectionService $sections,
         private AreaModuleService $areaModules,
         private CsrfTokenManagerInterface $csrf,
+        private TablePageService $pager,
         /** A SUPER ADMIN DELETES (ruled 28 Sep, #48): the one delete page, absent without the Team. */
         private ?DeletionPageInterface $deletionPage = null,
     ) {
@@ -143,11 +146,14 @@ final readonly class StationConfigureController
             $query = self::showingEveryActivity($query);
         }
 
+        $size = StationsController::sizeFrom($request);
         $register = $this->register->register(
             $area,
             $query,
-            holding: null === $open ? null : (string) $open->getUuidString(),
+            TablePage::ALL === $size ? \PHP_INT_MAX : (int) $size,
+            null === $open ? null : (string) $open->getUuidString(),
         );
+        $table = $this->pager->page($register->total, $size, (string) $register->page);
         $board = null === $open ? [] : $this->board->at($open, new PostingQuery())['rows'];
 
         $posts = [];
@@ -183,6 +189,8 @@ final readonly class StationConfigureController
             'area' => $area,
             'register' => $register,
             'query' => $query,
+            'table' => $table,
+            'links' => $this->pager->links($request, $table),
             'open' => $open,
             'openRow' => null === $open ? null : self::rowOf($register, (string) $open->getUuidString()),
             'board' => $board,

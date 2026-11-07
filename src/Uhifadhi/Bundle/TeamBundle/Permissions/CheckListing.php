@@ -102,7 +102,6 @@ use Uhifadhi\Contracts\Access\PowerGroup;
  *     worth: WorthView|null,
  *     nav: list<array{id: string, label: string, count: int|null, title: null}>,
  *     page: int,
- *     sizes: list<string>,
  *     sorts: list<array{key: string, label: string}>,
  * }
  */
@@ -110,10 +109,6 @@ final class CheckListing
 {
     /** The page size the two registers open on. */
     public const int PAGE = 20;
-
-    /** The sizes the foot offers. */
-    /** @var list<string> */
-    public const array SIZES = ['20', '50', '100', 'all'];
 
     private const array STEPS = [
         'tier' => 'Tier', 'tier-only' => 'Tier-only', 'position' => 'Position', 'exception' => 'Exception',
@@ -210,7 +205,6 @@ final class CheckListing
             'worth' => $worthView,
             'nav' => $nav,
             'page' => self::PAGE,
-            'sizes' => self::SIZES,
             'sorts' => array_map(static fn (string $k, string $l): array => ['key' => $k, 'label' => $l], array_keys(self::SORTS), self::SORTS),
         ];
     }

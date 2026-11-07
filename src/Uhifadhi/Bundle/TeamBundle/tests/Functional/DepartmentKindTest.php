@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
 use Symfony\Component\DomCrawler\Crawler;
+use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\DepartmentGoal;
 use Uhifadhi\Bundle\TeamBundle\Entity\DepartmentKind;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
@@ -101,6 +103,51 @@ final class DepartmentKindTest extends WebTestCaseWithSchema
 
         self::assertCount(2, $card->filter('tbody tr'));
         self::assertCount(0, $card->filter('form'));
+    }
+
+    /**
+     * THE KINDS AND THE GOAL KINDS ARE REGISTERS, so each wears the house bar
+     * and ends in the register foot, paged in the browser: the kinds chip by
+     * use, the goal kinds by unit, each with a search; the rows carry their
+     * value on the chip's axis and the words the search matches.
+     */
+    public function testTheKindsAndTheGoalKindsWearTheHouseBarAndFoot(): void
+    {
+        $this->lists();
+        $this->post('/departments/configure/lists/kinds', ['name' => 'Operational']);
+        $this->post('/departments/configure/lists/kinds', ['name' => 'Support']);
+        $kind = $this->em->getRepository(DepartmentKind::class)->findOneBy(['name' => 'Operational']);
+        self::assertInstanceOf(DepartmentKind::class, $kind);
+        $field = $this->department('Field Unit')->setKind($kind);
+        $this->goal($field, 'patrols.covered', '%');
+        $this->goal($field, 'patrols.covered', '%');
+        $this->goal($field, 'incidents.count', '');
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/departments/configure/lists');
+        $c = 'uhifadhi--team-bundle--table-filter';
+
+        $kinds = $this->card($crawler, 'Department kinds');
+        self::assertSame($c, $kinds->attr('data-controller'));
+        self::assertSame('kinds', $kinds->attr('data-'.$c.'-noun-value'));
+        $use = $kinds->filter('.lfilt details.i-dd[data-axis="use"]');
+        self::assertSame('all · 2', self::squash($use->filter('summary.mchip.i-ddt .i-ddval')->text()));
+        self::assertSame(['All 2', 'In use 1', 'Unused 1'], $use->filter('button.i-ddopt')->each(static fn (Crawler $o): string => $o->filter('.i-ddopt-l')->text().' '.$o->filter('.i-ddopt-n')->text()));
+        self::assertSame(['', 'used', 'unused'], $use->filter('button.i-ddopt')->each(static fn (Crawler $o): string => (string) $o->attr('data-opt')));
+        self::assertCount(1, $kinds->filter('.lfilt .lsearch input.fld[data-'.$c.'-target="search"]'));
+        self::assertSame(['used', 'unused'], $kinds->filter('tbody tr[data-'.$c.'-target="row"]')->each(static fn (Crawler $r): string => (string) $r->attr('data-use')));
+        self::assertStringContainsString('operational', (string) $kinds->filter('tbody tr')->first()->attr('data-find'));
+        self::assertSame('2 kinds', self::squash($kinds->filter('.rdf-foot [data-'.$c.'-target="count"]')->text()));
+        self::assertSame(['20', '50', '100', 'all'], $kinds->filter('.rdf-foot details.rdf-size button.i-ddopt')->each(static fn (Crawler $o): string => (string) $o->attr('data-per')));
+        self::assertCount(0, $kinds->filter('.sxfoot'));
+
+        $goals = $this->card($crawler, 'Goal kinds');
+        $unit = $goals->filter('.lfilt details.i-dd[data-axis="unit"]');
+        self::assertSame(['Any unit 2', '% 1', 'no unit 1'], $unit->filter('button.i-ddopt')->each(static fn (Crawler $o): string => $o->filter('.i-ddopt-l')->text().' '.$o->filter('.i-ddopt-n')->text()));
+        self::assertSame(['none', '%'], $goals->filter('tbody tr[data-'.$c.'-target="row"]')->each(static fn (Crawler $r): string => (string) $r->attr('data-unit')));
+        self::assertSame('2 goal kinds', self::squash($goals->filter('.rdf-foot [data-'.$c.'-target="count"]')->text()));
+        self::assertCount(0, $goals->filter('.sxfoot'));
+        self::assertCount(0, $crawler->filter('.sxfoot'));
     }
 
     /** And the create card is the house one, always open at the top of the page. */
@@ -201,5 +248,25 @@ final class DepartmentKindTest extends WebTestCaseWithSchema
             'departments.read',
             'departments.configure',
         ]);
+    }
+
+    private function card(Crawler $page, string $tab): Crawler
+    {
+        $card = $page->filter('.c')->reduce(static fn (Crawler $c): bool => $c->filter('.tab')->count() > 0 && str_starts_with($c->filter('.tab')->text(), $tab));
+        self::assertCount(1, $card, $tab);
+
+        return $card;
+    }
+
+    private function goal(Department $department, string $ref, string $unit): void
+    {
+        $goal = (new DepartmentGoal())->setDepartment($department)->setStatement('a goal')->setKpiRef($ref)->setUnit($unit)
+            ->setTarget(1.0)->setOpensAt(new \DateTimeImmutable('2026-01-01'))->setClosesAt(new \DateTimeImmutable('2026-12-31'));
+        $this->em->persist($goal);
+    }
+
+    private static function squash(string $text): string
+    {
+        return trim((string) preg_replace('/\s+/u', ' ', $text));
     }
 }

@@ -74,7 +74,7 @@
             }) }}
         </div>
 
-        <div class="c">
+        <div class="c" id="list">
             <span class="tab">The stations<span class="src">&middot;
                 {%- if register.total == register.scope %} {{ register.scope }} {{ register.scope == 1 ? 'station' : 'stations' }}
                 {%- else %} {{ register.total }} of {{ register.scope }} {{ register.scope == 1 ? 'station' : 'stations' }}{% endif -%}
@@ -107,8 +107,8 @@
                     label: 'order', all: 'order', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::SORT'),
                     chosen: query.sort == 'name' ? null : query.sort,
                     options: [
-                        {value: 'posted', label: 'most stationed', count: 0, cat: null},
-                        {value: 'zone', label: 'by zone', count: 0, cat: null},
+                        {value: 'posted', label: 'most stationed', count: null, cat: null},
+                        {value: 'zone', label: 'by zone', count: null, cat: null},
                     ],
                     query: query,
                 }) }}
@@ -118,6 +118,7 @@
                     <input class="fld" type="search" name="q" value="{{ query.search }}" placeholder="Name or code&hellip;"
                            aria-label="Search the stations by name or code">
                     {% for k, v in query.with('q', null) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+                    {% if table.size != '20' %}<input type="hidden" name="per" value="{{ table.size }}">{% endif %}
                 </form>
             </div>
 
@@ -342,12 +343,11 @@
                     {% endfor %}
                 </div>
 
-                {# BOUNDED BY A PAGE, NOT BY A SCROLLBAR: the count on the left,
-                   the pages on the right, eight rows between them. #}
-                {{ include('@Area/_partial/_pager.html.twig', {
-                    query: query, page: register.page, pages: register.pages,
-                    from: register.from, to: register.to, total: register.total, scope: register.scope, noun: 'stations',
-                }) }}
+                {# BOUNDED BY A PAGE, NOT BY A SCROLLBAR: the house foot. #}
+                {{ include('@Shell/_foot.html.twig', {
+                    count: table.total, noun: 'stations', one: 'station',
+                    perPage: table.size, page: table.page, pages: table.pages, links: links,
+                }, with_context: false) }}
             {% endif %}
         </div>
     </div>

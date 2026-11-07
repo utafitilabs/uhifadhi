@@ -19,6 +19,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
+use Uhifadhi\Bundle\ShellBundle\Service\TablePageService;
 use Uhifadhi\Bundle\TeamBundle\Access\AddressSight;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Access\TierSight;
@@ -111,6 +112,8 @@ final readonly class TeamController
         private TierSight $tierSight,
         /** WHO READS A SIGN-IN ADDRESS whole — whoever holds personal-details.read. */
         private AddressSight $addressSight,
+        /** THE REGISTER FOOT'S PAGER: ?page and ?per, 20 · 50 · 100 · All. */
+        private TablePageService $tablePages,
     ) {
     }
 
@@ -202,7 +205,8 @@ final readonly class TeamController
     {
         $everybody = $this->users->findAllByName();
         [$query, $seam] = $this->query($request, $everybody);
-        $page = $this->users->findRoster($query);
+        $table = $this->tablePages->read($request, $this->users->countRoster($query));
+        $people = $this->users->findRoster($query, $table->offset, $table->perPage);
         $positions = $this->positions->findAllOrdered();
         $departments = $this->departments->findAllOrdered();
         $usesRanks = $this->settings->current()->usesRanks();
@@ -223,8 +227,10 @@ final readonly class TeamController
 
         return [
             'query' => $query,
-            // The paged shape, for the table direction: its whole state is the URL.
-            'page' => $page,
+            // The paged shape, for the table: its whole state is the URL.
+            'people' => $people,
+            'table' => $table,
+            'links' => $this->tablePages->links($request, $table),
             // The unpaged shape, for the five banded directions. A band cut in
             // half by a pager is a band that lies about its own count.
             'everybody' => $everybody,
@@ -240,7 +246,7 @@ final readonly class TeamController
             'severalScales' => \count($scales) > 1,
             // THE RANK EACH ROW'S PERSON HOLDS NOW, keyed by the person's id —
             // one query for the page, never one per row.
-            'ranksHeld' => $usesRanks ? $this->holdings->findCurrentByPeople($page->items) : [],
+            'ranksHeld' => $usesRanks ? $this->holdings->findCurrentByPeople($people) : [],
             'teamManage' => (string) Grant::of(TeamConcerns::DIRECTORY, Verb::Manage),
         ];
     }

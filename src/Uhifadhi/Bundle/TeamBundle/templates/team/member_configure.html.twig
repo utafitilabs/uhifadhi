@@ -240,7 +240,7 @@
                                 {% for department in departments %}
                                     <li><label><input type="radio" name="department" value="{{ department.uuidString }}"{{ ownDepartment and ownDepartment.id == department.id ? ' checked' : '' }} required> {{ department.name }}</label><em>{{ department.area ? department.area.name : 'org-wide' }}</em></li>
                                 {% else %}
-                                    <li class="dim">no department yet &middot; <a href="{{ path('team_departments') }}">create one</a></li>
+                                    <li class="d">no department yet &middot; <a href="{{ path('team_departments') }}">create one</a></li>
                                 {% endfor %}
                             </ul>
                         </div>

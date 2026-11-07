@@ -1,5 +1,5 @@
-{# THE POSITIONS REGISTER — one collapsible card per position, on the
-   department register's idiom.
+{# THE POSITIONS REGISTER — one row per position in the house table, the
+   house filter bar above it and the register foot below.
 
    DESIGN → CODE COVERAGE
    source: DesignsProjects/team-module/team/positions/index.html
@@ -16,10 +16,10 @@
    | scope filter row (.rgbar .rgf x5)  | control | ?kind=                     | done   |
    | "by name · n positions · n people  |         |                            |        |
    |  · n declared concerns" (.rgbar-n) | data    | cards / holding / declared | done   |
-   | Collapse all / Expand all          | control | ?open=none / ?open=all     | done   |
+   | register foot 20 · 50 · 100 · All  | control | ?page= / ?per= (shell)     | done   |
    | card head: mark, name, seats line  | data    | PositionCard               | done   |
    | head: scope kinds (.rgkinds)       | data    | PositionCard::allowedKinds | done   |
-   | head: Collapse/Expand + Open door  | control | ?open= / team_position_show| done   |
+   | Open door, the row's last cell    | control | team_position_show (td.door)| done   |
    | body: chips by declarer (.rggrid)  | data    | PositionCard::grantedGroups| done   |
    | body: "grants nothing" (.rgnone)   | state   | PositionCard::grantsNothing| done   |
    | foot: verb summary (.rgsum-l)      | data    | PositionCard::summary()    | done   |
@@ -84,8 +84,9 @@
        register is drawn. ONE TABLE (ruled 2026-09-22, option B): the People-table idiom — three
        grouped dropdowns, a search, what is shown, sortable headers — a
        two-line name cell (the position over where it may be placed) and one
-       fact per column; a chevron folds a row open to its holders. Every
-       option and every header is a link: the address is the state. #}
+       fact per column; no row folds open — the holders are the avatars here
+       and by name on the record. Every option and every header is a link:
+       the address is the state. #}
     <div class="c">
     <span class="tab">Positions<span class="src">&middot; {{ total }} &middot; what each grants, and who holds it</span></span>
     <div class="lfilt">
@@ -109,12 +110,11 @@
             <input class="fld" type="search" name="{{ constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\PositionQuery::SEARCH') }}"
                    value="{{ query.search }}" placeholder="Find a position&hellip;" aria-label="Find a position">
         </form>
-        <span class="tm-shown">showing <b>{{ rows|length }}</b> of {{ total }} &middot; <b>{{ holding }}</b> holding one &middot; {{ declared }} resources declared</span>
+        <span class="tm-shown">showing <b>{{ table.total }}</b> of {{ total }} &middot; <b>{{ holding }}</b> holding one &middot; {{ declared }} resources declared</span>
     </div>
 
-    <table class="tbl preg" data-controller="uhifadhi--shell-bundle--register-fold">
+    <table class="tbl preg">
         <thead><tr>
-            <th class="fchev-h"></th>
             {% for column, label in columns %}
                 {% set sorted = query.sort == column %}
                 <th{{ sorted ? ' class="sorted"' }} aria-sort="{{ sorted ? (query.direction == 'desc' ? 'descending' : 'ascending') : 'none' }}">
@@ -126,12 +126,7 @@
         <tbody>
         {% for card in rows %}
             {% set show = path('team_position_show', {uuid: card.uuid}) %}
-            {% set open = query.isOpen(card.uuid) %}
-            <tr id="p-{{ card.uuid }}" class="prow{{ open ? ' open' : '' }}{{ card.position.isRetired ? ' dcinactive' : '' }}"
-                data-position="{{ card.uuid }}" data-fold-id="{{ card.uuid }}" data-fold-name="{{ card.name }}">
-                <td class="fchev-c"><a class="fchev" href="{{ path('team_positions', query.with('open', open ? null : card.uuid)) }}"
-                       data-action="uhifadhi--shell-bundle--register-fold#toggle" aria-expanded="{{ open ? 'true' : 'false' }}"
-                       aria-label="{{ open ? 'Collapse' : 'Expand' }} {{ card.name }}">&#9656;</a></td>
+            <tr id="p-{{ card.uuid }}" class="prow{{ card.position.isRetired ? ' dcinactive' : '' }}" data-position="{{ card.uuid }}">
                 <td>
                     <div class="who">
                         <span class="pmk">{{ card.mark }}</span>
@@ -168,29 +163,19 @@
                         {%- if card.holders is empty %}<span class="mono d">nobody</span>{% endif -%}
                     </span>
                 </td>
-                <td class="act"><a class="open-btn" href="{{ show }}">Open</a></td>
+                <td class="door"><a class="open-btn" href="{{ show }}">Open</a></td>
             </tr>
-            <tr class="foldrow{{ open ? ' open' : '' }}"><td colspan="7"><div class="foldbox"><div class="fold-in">
-                <div class="poscards">
-                    {% for holder in card.holders %}
-                        <a class="poscard" href="{{ path('team_member', {uuid: holder.uuid}) }}">
-                            <div class="poscardhd"><span></span><span>{{ holder.initials }}</span></div>
-                            <b>{{ holder.name }}</b>
-                            <div class="poscardfoot"><span class="k">{{ holder.where }}</span></div>
-                        </a>
-                    {% else %}
-                        <div class="zdnone"><b>Nobody holds {{ card.name }} yet</b><span>a position is given on a person&rsquo;s record</span></div>
-                    {% endfor %}
-                    <a class="poscard add" href="{{ path('team_index') }}"><span class="t">{{ ux_icon('shell:plus') }} Seat somebody</span></a>
-                </div>
-            </div></div></td></tr>
         {% else %}
-            <tr class="dempty"><td colspan="7">
+            <tr class="dempty"><td colspan="6">
                 {% if total == 0 %}<b>No positions yet.</b><span>Add the first one above</span>
                 {% else %}<b>No position matches</b><span>clear the search, or widen a filter</span>{% endif %}
             </td></tr>
         {% endfor %}
         </tbody>
     </table>
+    {% include '@Shell/_foot.html.twig' with {
+        count: table.total, noun: 'positions', one: 'position',
+        perPage: table.size, page: table.page, pages: table.pages, links: links,
+    } only %}
     </div>
 {% endblock %}

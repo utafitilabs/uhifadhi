@@ -42,21 +42,30 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
         parent::tearDown();
     }
 
-    /** One band a station, and the person's rank and department beside them. */
-    public function testEachStationIsABandAndItsPeopleAreTheRowsUnderIt(): void
+    /**
+     * ONE ROW A POSTING, THE STATION A CELL OF IT — the station's name over
+     * its code and zone — and the person's rank and department beside them.
+     * No band row: a table never separates its rows into groups.
+     */
+    public function testEachPostingIsARowWithItsStationAsACell(): void
     {
         $this->ground();
         $crawler = $this->visit('/team/assignments');
 
+        self::assertCount(0, $crawler->filter('table.tbl tr.sxgrp, table.tbl tr.foldrow'));
+        $rows = $crawler->filter('table.tbl > tbody > tr');
+        self::assertCount(3, $rows);
         self::assertSame(
-            ['Eastgate Post · ST-01 · Crater · 2 stationed', 'Ridge Outpost · ST-08 · Ridge · nobody stationed'],
-            $crawler->filter('tr.sxgrp td')->each(static fn (Crawler $c): string => trim(preg_replace('/\s+/', ' ', $c->text()) ?? '')),
+            ['Eastgate Post | ST-01 · Crater', 'Eastgate Post | ST-01 · Crater', 'Ridge Outpost | ST-08 · Ridge'],
+            $rows->each(static fn (Crawler $r): string => $r->filter('td b')->first()->text().' | '.self::squash($r->filter('td .sub')->first()->text())),
         );
+        self::assertSame('ST-01 · Crater', self::squash($rows->eq(0)->filter('td')->first()->filter('.sub')->text()));
 
-        $first = $crawler->filter('table.tbl tbody tr')->eq(1);
+        $first = $rows->eq(0);
         self::assertStringContainsString('Joseph Mollel', $first->text());
         self::assertStringContainsString('Sergeant', $first->text());
         self::assertStringContainsString('Protection Service', $first->text());
+        self::assertCount(1, $first->filter('td.door'), 'the row\'s door is its last cell, a link where the ground mounts the station');
     }
 
     /** The one who leads says so, and nobody else does. */
@@ -71,17 +80,16 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
     }
 
     /**
-     * A STATION NOBODY STANDS AT KEEPS ITS BAND and says so in one line.
-     * Dropping it would hide the very thing the board's own figure counts.
+     * A STATION NOBODY STANDS AT KEEPS ITS ROW and says so in it. Dropping it
+     * would hide the very thing the board's own figure counts.
      */
-    public function testAStationWithNobodyKeepsItsBandAndSaysSo(): void
+    public function testAStationWithNobodyKeepsItsRowAndSaysSo(): void
     {
         $this->ground();
 
-        self::assertStringContainsString(
-            'Nobody is stationed here',
-            $this->visit('/team/assignments')->filter('table.tbl tbody')->text(),
-        );
+        $ridge = $this->visit('/team/assignments')->filter('table.tbl tbody tr')->last();
+        self::assertStringContainsString('Ridge Outpost', $ridge->text());
+        self::assertStringContainsString('nobody stationed', $ridge->text());
     }
 
     /** The five facts, of the whole installation and not of the filtered view. */
@@ -118,7 +126,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
     {
         $this->ground();
 
-        $rows = $this->visit('/team/assignments?rank=Ranger')->filter('table.tbl tbody tr:not(.sxgrp)');
+        $rows = $this->visit('/team/assignments?rank=Ranger')->filter('table.tbl tbody tr');
 
         self::assertCount(1, $rows);
         self::assertStringContainsString('Tumaini Ndosi', $rows->text());
@@ -144,11 +152,9 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
     {
         $this->ground();
 
-        self::assertSame(
-            ['Ridge Outpost · ST-08 · Ridge · nobody stationed'],
-            $this->visit('/team/assignments?posted=no')->filter('tr.sxgrp td')
-                ->each(static fn (Crawler $c): string => trim(preg_replace('/\s+/', ' ', $c->text()) ?? '')),
-        );
+        $rows = $this->visit('/team/assignments?posted=no')->filter('table.tbl tbody tr');
+        self::assertCount(1, $rows);
+        self::assertStringContainsString('Ridge Outpost', $rows->text());
     }
 
     /**
@@ -166,17 +172,18 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
         );
     }
 
-    /** THE BOARD WRITES NOTHING: a posting is made on the station, in the area. */
     /**
-     * EVERY HEADER SORTS ITS ONE COLUMN, within each station's band: the
-     * headers are links, the sorted one says so, and the default order
-     * stands the leader first.
+     * EVERY HEADER BUT THE STATION'S SORTS ITS ONE COLUMN, within each
+     * station's rows — the stations keep the ground's order: the headers are
+     * links, the sorted one says so, and the default order stands the leader
+     * first.
      */
-    public function testEveryHeaderSortsItsColumnWithinTheBand(): void
+    public function testEveryHeaderSortsItsColumnWithinTheStation(): void
     {
         $this->ground();
 
         $crawler = $this->visit('/team/assignments');
+        self::assertSame(['Station', 'Person', 'Rank', 'Department', ''], $crawler->filter('thead th')->each(static fn (Crawler $c): string => self::squash($c->text())));
         self::assertSame(['Person', 'Rank', 'Department'], $crawler->filter('thead th a')->each(static fn (Crawler $c): string => $c->text()));
         self::assertSame('Person', $crawler->filter('th.sorted a')->text());
         self::assertSame(['Joseph Mollel', 'Tumaini Ndosi'], $this->namesUnder($crawler));
@@ -193,7 +200,56 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
     /** @return list<string> */
     private function namesUnder(Crawler $crawler): array
     {
-        return $crawler->filter('table.tbl tbody tr:not(.sxgrp) td:first-child a')->each(static fn (Crawler $c): string => $c->text());
+        return $crawler->filter('table.tbl tbody tr td:nth-child(2) a')->each(static fn (Crawler $c): string => $c->text());
+    }
+
+    /**
+     * THE REGISTER FOOT IS THE SHELL'S: the rows the filter leaves, the size
+     * chooser as links that keep the filter, the page; an arrow only where
+     * there is a page to go to.
+     */
+    public function testTheBoardEndsInTheHouseFoot(): void
+    {
+        $this->ground();
+        $crawler = $this->visit('/team/assignments?zone=Crater');
+
+        $foot = $crawler->filter('.c > .rdf-foot');
+        self::assertCount(1, $foot);
+        self::assertSame('2 rows', self::squash($foot->filter(':scope > span > span')->first()->text()));
+        self::assertSame('20 per page', self::squash(str_replace('▾', '', $foot->filter('details.rdf-size > summary')->text())));
+        self::assertSame('page 1 of 1', self::squash($foot->filter('.rdf-page')->text()));
+        self::assertSame(['20', '50', '100', 'All'], $foot->filter('details.rdf-size a.i-ddopt')->each(static fn (Crawler $a): string => $a->text()));
+        self::assertSame('/team/assignments?zone=Crater&per=all', $foot->filter('details.rdf-size a.i-ddopt')->last()->attr('href'));
+        self::assertCount(0, $crawler->filter('.sxfoot'));
+    }
+
+    /** Twenty a page: the rows past the twentieth are on the next one. */
+    public function testTheBoardIsPagedTwentyAPage(): void
+    {
+        $this->ground();
+        $posts = [];
+        for ($i = 1; $i <= 22; ++$i) {
+            $posts[] = new StationPost(self::uuid($this->person('Person', \sprintf('%02d', $i))), new \DateTimeImmutable('2026-03-01'));
+        }
+        $this->em->flush();
+        FakeStationDirectory::$stations[] = new PostedStation(
+            uuid: 'st-02', name: 'Fig Tree Post', code: 'ST-02', areaUuid: 'area-kilimani', areaName: 'Kilimani', zoneName: 'Crater', posts: $posts,
+        );
+
+        $first = $this->visit('/team/assignments');
+        self::assertCount(20, $first->filter('table.tbl tbody tr'));
+        self::assertSame('page 1 of 2', self::squash(str_replace('›', '', $first->filter('.rdf-page')->text())));
+        self::assertSame('/team/assignments?page=2', $first->filter('.rdf-page a[aria-label="Next page"]')->attr('href'));
+
+        $second = $this->visit('/team/assignments?page=2');
+        self::assertCount(5, $second->filter('table.tbl tbody tr'));
+
+        self::assertCount(25, $this->visit('/team/assignments?per=50')->filter('table.tbl tbody tr'));
+    }
+
+    private static function squash(string $text): string
+    {
+        return trim((string) preg_replace('/\s+/u', ' ', $text));
     }
 
     public function testTheBoardCarriesNoForm(): void
@@ -202,7 +258,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
         $crawler = $this->visit('/team/assignments');
 
         self::assertCount(0, $crawler->filter('form[method="post"]'));
-        self::assertStringContainsString('Team reads it, never writes it.', $crawler->filter('.sxfoot')->text());
+        self::assertStringContainsString('Team reads it, never writes it.', $crawler->filter('.c > .rdf-foot + p.use')->text());
     }
 
     /**

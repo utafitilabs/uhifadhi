@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
 
+use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\CheckIn;
 use Uhifadhi\Bundle\AreaBundle\Entity\CheckInStatus;
@@ -32,6 +33,8 @@ use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
  */
 final class MyAreaCardsTest extends WebTestCase
 {
+    use HouseRegisterAssertions;
+
     /** @var list<string> */
     private const array NO_AREAS = ['duty.read', 'duty.record'];
 
@@ -126,6 +129,41 @@ final class MyAreaCardsTest extends WebTestCase
         self::assertStringContainsString('on watch', $crawler->filter('[data-me="log"] tbody tr')->eq(0)->text());
     }
 
+    public function testMyDutyLogIsAHouseRegisterWithTheMonthAsAChip(): void
+    {
+        [$me, $eastgate] = $this->aPostedRangerOnWatch();
+        $area = $eastgate->getArea();
+        self::assertNotNull($area);
+        $springs = $this->stations()->add($area, 'Springs Post', -29.7, -3.1);
+        $march = new \DateTimeImmutable('2026-03-10 06:00');
+        $this->aClaim($area, $me, $eastgate, $march, 'm1', $march->modify('+8 hours'));
+        $this->aClaim($area, $me, $eastgate, $march->modify('+1 day'), 'm2', $march->modify('+1 day +8 hours'));
+        $this->aClaim($area, $me, $springs, $march->modify('+2 days'), 'm3', $march->modify('+2 days +8 hours'));
+        $log = '/me/duty-log?month=2026-03';
+
+        $body = $this->html($log);
+        self::assertHouseBar($body, '[data-me="log"]', 3);
+        self::assertHouseTable($body, '[data-me="log"]');
+        self::assertHouseFoot($body, '[data-me="log"]', '3 check-ins');
+        self::assertCount(0, new Crawler($body)->filter('[data-me="log"] .sxfoot'), 'The months are the chip, not a caption line.');
+
+        $chips = self::chips($body, '[data-me="log"]');
+        self::assertSame(['march 2026', 'every status · 3', 'every post · 3'], array_column($chips, 'chip'));
+        self::assertContains(['label' => 'March 2026', 'count' => null, 'href' => $log, 'on' => true], $chips[0]['options']);
+        self::assertContains('/me/duty-log?month=2026-02', array_column($chips[0]['options'], 'href'));
+        self::assertSame(['Every post', 'Eastgate Post', 'Springs Post'], array_column($chips[2]['options'], 'label'));
+        self::assertSame(['3', '2', '1'], array_column($chips[2]['options'], 'count'));
+        self::assertSame($log.'&post='.$springs->getUuidString(), $chips[2]['options'][2]['href']);
+
+        $atSprings = $this->html($log.'&post='.$springs->getUuidString());
+        self::assertCount(1, new Crawler($atSprings)->filter('[data-me="log"] tbody tr'));
+        self::assertHouseFoot($atSprings, '[data-me="log"]', '1 check-in');
+        self::assertSame('springs post · 1', self::chips($atSprings, '[data-me="log"]')[2]['chip']);
+
+        self::assertHouseFoot($this->html($log.'&q=springs'), '[data-me="log"]', '1 check-in');
+        self::assertStringContainsString('No check-in matches', $this->html($log.'&q=nowhere-at-all'));
+    }
+
     public function testMyStationSaysSoWhenIAmPostedNowhere(): void
     {
         $this->boot(self::NO_AREAS);
@@ -136,6 +174,14 @@ final class MyAreaCardsTest extends WebTestCase
 
         self::assertSame(200, $this->browser()->getResponse()->getStatusCode());
         self::assertStringContainsString('posted at no station', $crawler->filter('.c')->text());
+    }
+
+    private function html(string $url): string
+    {
+        $this->browser()->request('GET', $url);
+        self::assertSame(200, $this->browser()->getResponse()->getStatusCode(), $url);
+
+        return (string) $this->browser()->getResponse()->getContent();
     }
 
     private function aClaim(AreaOfInterest $area, HostUser $person, Station $post, \DateTimeImmutable $at, string $ref, ?\DateTimeImmutable $ended = null): CheckIn

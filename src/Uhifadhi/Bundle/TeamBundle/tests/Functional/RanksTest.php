@@ -57,14 +57,25 @@ final class RanksTest extends WebTestCaseWithSchema
         self::assertCount(3, $rows);
         self::assertSame('1', $rows->eq(0)->filter('.rk-ord')->text());
         self::assertSame('Conservation Ranger I', $rows->eq(0)->filter('.who b')->text());
-        self::assertSame('CR I', $rows->eq(0)->filter('td')->first()->filter('.tm-code')->text());
+        self::assertSame('CR I', $rows->eq(0)->filter('td')->first()->filter('.sub')->text());
         self::assertSame('2 people', preg_replace('/\s+/', ' ', trim($rows->eq(0)->filter('a.tm-holders')->text())));
         self::assertSame('/team?rank='.$one->getUuidString(), $rows->eq(0)->filter('a.tm-holders')->attr('href'));
         self::assertSame('0 people', preg_replace('/\s+/', ' ', trim($rows->eq(1)->filter('a.tm-holders')->text())));
-        self::assertSame('/team/configure/ranks#scale-'.$one->getScale()->getUuidString(), $rows->eq(0)->filter('a.open-btn')->attr('href'));
-        self::assertCount(0, $crawler->filter('tr.tm-bandrow'), 'one scale draws no band');
-        self::assertStringContainsString('3 ranks', $crawler->filter('.rdf-foot')->text());
-        self::assertStringContainsString('showing 3 of 3', preg_replace('/\s+/', ' ', $crawler->filter('.tm-shown')->text()) ?? '');
+        self::assertSame('/team/configure/ranks#scale-'.$one->getScale()->getUuidString(), $rows->eq(0)->filter('td.door a.open-btn')->attr('href'));
+        self::assertCount(0, $crawler->filter('tr.tm-bandrow, tr.sxgrp, .tm-tools, .fchip, .tm-shown'), 'the house bar and the house rows, no sibling of either');
+
+        // THE HOUSE BAR: the scale chip (All alone with one scale), the export door, the search.
+        $chip = $crawler->filter('.c[data-tm] .lfilt details.i-dd[data-axis="scale"]');
+        self::assertSame('all · 3', self::squash($chip->filter('summary.mchip.i-ddt .i-ddval')->text()));
+        self::assertSame(['All 3'], $chip->filter('a.i-ddopt')->each(static fn (Crawler $a): string => $a->filter('.i-ddopt-l')->text().' '.$a->filter('.i-ddopt-n')->text()));
+        self::assertSame('get', strtolower((string) $crawler->filter('.lfilt form.lsearch')->attr('method')));
+
+        // THE REGISTER FOOT, the shell's.
+        $foot = $crawler->filter('.c[data-tm] > .rdf-foot');
+        self::assertSame('3 ranks', self::squash($foot->filter(':scope > span > span')->first()->text()));
+        self::assertSame('20 per page', self::squash(str_replace('▾', '', $foot->filter('details.rdf-size > summary')->text())));
+        self::assertSame('page 1 of 1', self::squash($foot->filter('.rdf-page')->text()));
+        self::assertSame(['20', '50', '100', 'All'], $foot->filter('details.rdf-size a.i-ddopt')->each(static fn (Crawler $a): string => $a->text()));
         self::assertSame('Ranks', trim($crawler->filter('.atabs a.on')->text()));
     }
 
@@ -108,8 +119,8 @@ final class RanksTest extends WebTestCaseWithSchema
 
         // THE SEARCH KEEPS THE SORT, and the export follows the same order.
         $searched = $this->client->request('GET', '/team/ranks?sort=holders&dir=desc&q=ranger');
-        self::assertSame('desc', $searched->filter('form.tm-tools input[name="dir"]')->attr('value'));
-        self::assertSame('holders', $searched->filter('form.tm-tools input[name="sort"]')->attr('value'));
+        self::assertSame('desc', $searched->filter('form.lsearch input[name="dir"]')->attr('value'));
+        self::assertSame('holders', $searched->filter('form.lsearch input[name="sort"]')->attr('value'));
         $this->client->request('GET', '/team/ranks.csv?sort=holders&dir=desc');
         $lines = array_values(array_filter(explode("\n", (string) $this->client->getInternalResponse()->getContent())));
         self::assertStringStartsWith('2,', $lines[1]);
@@ -128,7 +139,11 @@ final class RanksTest extends WebTestCaseWithSchema
         self::assertSame('Senior Conservation Ranger', $rows->filter('.who b')->text());
     }
 
-    public function testASecondScaleDrawsItsBandItsColumnAndItsChip(): void
+    /**
+     * A SECOND SCALE DRAWS ITS COLUMN AND ITS OPTION, never a band row: the
+     * Scale column names each row's scale and the chip narrows to one.
+     */
+    public function testASecondScaleDrawsItsColumnAndItsOptionAndNoBand(): void
     {
         $this->administrator();
         $this->ladder();
@@ -138,12 +153,31 @@ final class RanksTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/team/ranks');
 
         self::assertSame(['Rank', 'Scale', 'Holders', 'Since', ''], $crawler->filter('table.tbl thead th')->each(static fn (Crawler $th): string => trim($th->text())));
-        self::assertSame(['Uniformed', 'Civil'], $crawler->filter('tr.tm-bandrow .tm-band b')->each(static fn (Crawler $b): string => $b->text()));
-        self::assertSame(['All 4', 'Uniformed 3', 'Civil 1'], $crawler->filter('.tm-tools a.fchip')->each(static fn (Crawler $a): string => preg_replace('/\s+/', ' ', trim($a->text())) ?? ''));
+        self::assertCount(0, $crawler->filter('tr.tm-bandrow'));
+        self::assertCount(4, $crawler->filter('table.tbl > tbody > tr'));
+        self::assertSame(['Uniformed', 'Uniformed', 'Uniformed', 'Civil'], $crawler->filter('table.tbl tbody tr td:nth-child(2)')->each(static fn (Crawler $c): string => self::squash($c->text())));
+        self::assertSame(['All 4', 'Uniformed 3', 'Civil 1'], $crawler->filter('.lfilt details.i-dd[data-axis="scale"] a.i-ddopt')->each(static fn (Crawler $a): string => $a->filter('.i-ddopt-l')->text().' '.$a->filter('.i-ddopt-n')->text()));
 
         $filtered = $this->client->request('GET', '/team/ranks?scale='.$civil->getUuidString());
-        self::assertCount(1, $filtered->filter('tr.tm-memrow'));
-        self::assertSame('Officer I', $filtered->filter('tr.tm-memrow .who b')->text());
+        self::assertCount(1, $filtered->filter('table.tbl tbody tr'));
+        self::assertSame('Officer I', $filtered->filter('table.tbl tbody tr .who b')->text());
+        self::assertSame('civil · 1', self::squash($filtered->filter('details.i-dd[data-axis="scale"] summary.on .i-ddval')->text()));
+    }
+
+    /** Twenty ranks a page, and the size chosen in the foot. */
+    public function testTheRegisterIsPagedByTheFoot(): void
+    {
+        $this->administrator();
+        [$one] = $this->ladder();
+        for ($i = 1; $i <= 20; ++$i) {
+            $this->ranks()->addRank($one->getScale(), \sprintf('Grade %02d', $i), \sprintf('G %02d', $i));
+        }
+
+        $first = $this->client->request('GET', '/team/ranks');
+        self::assertCount(20, $first->filter('table.tbl tbody tr'));
+        self::assertSame('/team/ranks?page=2', $first->filter('.rdf-page a[aria-label="Next page"]')->attr('href'));
+        self::assertCount(3, $this->client->request('GET', '/team/ranks?page=2')->filter('table.tbl tbody tr'));
+        self::assertCount(23, $this->client->request('GET', '/team/ranks?per=50')->filter('table.tbl tbody tr'));
     }
 
     public function testTheExportDoorAndTheCsvCarryTheFilteredRows(): void
@@ -153,7 +187,7 @@ final class RanksTest extends WebTestCaseWithSchema
         $this->holds('Joseph', 'Mollel', $one);
         $this->em->flush();
 
-        $door = $this->client->request('GET', '/team/ranks?q=cr+i')->filter('.tm-tools a.tm-export');
+        $door = $this->client->request('GET', '/team/ranks?q=cr+i')->filter('.lfilt a.tm-export');
         self::assertSame('export 2 rows · CSV', preg_replace('/\s+/', ' ', trim($door->text())));
         self::assertSame('/team/ranks.csv?q=cr%20i', $door->attr('href'));
 
@@ -535,5 +569,10 @@ final class RanksTest extends WebTestCaseWithSchema
         \assert($ranks instanceof RankService);
 
         return $ranks;
+    }
+
+    private static function squash(string $text): string
+    {
+        return trim((string) preg_replace('/\s+/u', ' ', $text));
     }
 }

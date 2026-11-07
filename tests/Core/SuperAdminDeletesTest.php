@@ -106,8 +106,8 @@ final class SuperAdminDeletesTest extends FieldApiTestCase
         self::assertSame('Department Ecology', $this->lastLine()->getTitle());
     }
 
-    /** SETTINGS › DELETIONS (ruled 30 Sep, #48, B): the line, under its day, for a Super Admin. */
-    public function testTheLineIsReadUnderItsDayInSettings(): void
+    /** SETTINGS › DELETIONS (ruled 30 Sep, #48): the line, a row of the register with its day, for a Super Admin. */
+    public function testTheLineIsReadAsARowInSettings(): void
     {
         $area = $this->area('Kilimani Game Reserve');
         $department = $this->areaDepartment('Ecology', $area);
@@ -118,9 +118,11 @@ final class SuperAdminDeletesTest extends FieldApiTestCase
 
         $page = $this->client->request('GET', '/settings/deletions');
         self::assertResponseIsSuccessful();
-        self::assertCount(1, $page->filter('h2.zone'), 'one day');
-        self::assertStringContainsString('Department Ecology deleted by Naomi Kileo', $page->filter('.rln')->first()->text());
-        self::assertStringContainsString('1 department', $page->filter('.rln')->first()->text());
+        $row = $page->filter('table.tbl tbody tr');
+        self::assertCount(1, $row, 'one delete, one row');
+        self::assertSame('Department Ecology', $row->filter('td')->eq(1)->filter('b')->text());
+        self::assertStringContainsString('deleted by Naomi Kileo', $row->filter('td')->eq(1)->text());
+        self::assertStringContainsString('1 department', $row->filter('td')->eq(2)->text());
     }
 
     public function testAnAdminIsShownNoDeletionsTabAndIsRefusedThePage(): void

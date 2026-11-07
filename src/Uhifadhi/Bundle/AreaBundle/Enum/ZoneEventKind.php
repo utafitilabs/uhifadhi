@@ -37,6 +37,19 @@ enum ZoneEventKind: string
     case Cleared = 'cleared';
     case Refused = 'refused';
 
+    /** What the log's kind chip calls a line of this kind. */
+    public function label(): string
+    {
+        return match ($this) {
+            self::Imported => 'Imported',
+            self::Renamed => 'Renamed',
+            self::RingReplaced => 'Boundary replaced',
+            self::Removed => 'Removed',
+            self::Cleared => 'Cleared',
+            self::Refused => 'Refused',
+        };
+    }
+
     /** Whether the line is about something that did not happen — the log's one red dot. */
     public function isRefusal(): bool
     {

@@ -290,11 +290,29 @@ final class PermissionsHubTest extends WebTestCaseWithSchema
         $history = $this->overview()->filter('#history');
         self::assertStringStartsWith('Permission history', $history->filter('.tab')->text());
         self::assertSame('· newest first', $history->filter('.tab .src')->text());
-        self::assertCount(0, $history->filter('.lfilt, .pp-hrow'), 'no bar; the old lines are gone');
+        self::assertCount(0, $history->filter('.pp-hrow'), 'the old lines are gone');
+
+        // THE HOUSE BAR: the kind of change and who made it as chips, each
+        // option with its count, the search at the right.
+        $bar = $history->filter('[data-pa-reg="history"] > .lfilt');
+        self::assertCount(1, $bar);
+        self::assertSame(['kind', 'by'], $bar->filter('details.i-dd')->each(static fn (Crawler $d): string => (string) $d->attr('data-pa-axis')));
+        $kind = $bar->filter('details.i-dd[data-pa-axis="kind"]');
+        self::assertSame('all · 1', self::squash($kind->filter('summary.mchip.i-ddt .i-ddval')->text()));
+        self::assertSame(['All 1', 'Tier 1'], $kind->filter('button.i-ddopt')->each(static fn (Crawler $o): string => $o->filter('.i-ddopt-l')->text().' '.$o->filter('.i-ddopt-n')->text()));
+        self::assertSame(['', 'tier'], $kind->filter('button.i-ddopt')->each(static fn (Crawler $o): string => (string) $o->attr('data-pa-opt')));
+        $by = $bar->filter('details.i-dd[data-pa-axis="by"]');
+        self::assertSame('anyone · 1', self::squash($by->filter('summary .i-ddval')->text()));
+        self::assertSame(['Anyone 1', 'Amani Kweka 1'], $by->filter('button.i-ddopt')->each(static fn (Crawler $o): string => $o->filter('.i-ddopt-l')->text().' '.$o->filter('.i-ddopt-n')->text()));
+        self::assertCount(1, $bar->filter('.lsearch input.fld[data-pa-search]'));
+
         $table = $history->filter('[data-pa-reg="history"] table.tbl.pp-hist');
         self::assertSame(['Change', 'Before → after'], $table->filter('thead th')->each(static fn (Crawler $c): string => $c->text()));
         $rows = $table->filter('tbody tr[data-pa-r]');
         self::assertCount(1, $rows);
+        self::assertSame(['kind' => ['tier'], 'by' => ['Amani Kweka']], json_decode((string) $rows->attr('data-pa-f'), true), 'the row\'s values on the bar\'s axes');
+        self::assertStringContainsString('pendo urio', (string) $rows->attr('data-pa-q'));
+        self::assertStringContainsString('amani kweka', (string) $rows->attr('data-pa-q'));
         $change = $rows->filter('td.pp-hd');
         self::assertStringContainsString('Pendo Urio', (string) $change->getNode(0)?->firstChild?->textContent);
         self::assertStringStartsWith('Amani Kweka · ', $change->filter('.sub')->text(), 'by · when');

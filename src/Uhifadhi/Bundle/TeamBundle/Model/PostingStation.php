@@ -14,10 +14,9 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Model;
 
 /**
- * ONE STATION'S BAND ON THE POSTINGS BOARD — the group row, and the people
- * under it.
+ * ONE STATION ON THE POSTINGS BOARD, and the people standing at it.
  *
- * A STATION WITH NOBODY KEEPS ITS BAND and says so in one line. Dropping it
+ * A STATION WITH NOBODY KEEPS ITS ROW and says so in it. Dropping it
  * would hide the very thing the board's own figure counts, and "nobody is
  * posted here" is a normal state rather than an error.
  */
@@ -48,7 +47,7 @@ final readonly class PostingStation
         return [] === $this->rows;
     }
 
-    /** The band's own line: the code, the zone and how many stand here. */
+    /** The station's own line: the code, the zone and how many stand here. */
     public function note(): string
     {
         return implode(' · ', array_filter([

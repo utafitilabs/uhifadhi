@@ -1,20 +1,49 @@
 {#
-   SETTINGS › DELETIONS (ruled 30 Sep, #48, option B: a timeline by day,
-   uhifadhi-web/settings/variants-deletions/b.html). One line per delete
-   under the day it happened; the record is gone, so nothing links to it.
+   SETTINGS › DELETIONS (ruled 30 Sep, #48): every delete, newest first, one
+   row of the house table each — the day a cell of the row, never a heading
+   over a group (uhifadhi-web/settings/variants-deletions/b.html). The house
+   bar narrows it by kind and by who deleted, the search finds a title, the
+   register foot pages it. The record is gone, so nothing links to it.
 #}
 {% extends '@Shell/settings/_section.html.twig' %}
 
 {% block shell_page %}
-    {% for day, lines in days %}
-        <h2 class="zone"><time datetime="{{ lines[0].deletedAt|date('c') }}" data-localtime-format="day">{{ lines[0].deletedAt|date('j M') }}</time></h2>
-        <div class="c">
-            {% for line in lines %}
-                <div class="rln"><span><span class="mono d"><time datetime="{{ line.deletedAt|date('c') }}" data-localtime-format="time">{{ line.deletedAt|date('H:i') }}</time></span> &nbsp;<span class="chip">{{ line.kind }}</span> <b>{{ line.title }}</b> deleted by {{ line.byName }}</span><span class="mono d">{{ line.whatWent }}</span></div>
-            {% endfor %}
+    <div class="c">
+        <span class="tab">Deletions<span class="src">&middot; {{ all }} &middot; newest first</span></span>
+        <div class="lfilt">
+            {{ include('@Team/_partial/_filter_chip.html.twig', {
+                key: 'kind', name: 'kind', all: 'All', total: all, chosen: kind, options: kindOptions,
+            }) }}
+            {{ include('@Team/_partial/_filter_chip.html.twig', {
+                key: 'by', name: 'by', all: 'Anyone', total: all, chosen: by, options: byOptions,
+            }) }}
+            {# THE SEARCH IS A FORM; the chosen chips ride with it. #}
+            <form class="lsearch" method="get" action="{{ path('team_settings_deletions') }}">
+                {% for field, value in app.request.query.all|filter((v, k) => k not in ['q', 'page'] and v is not iterable) %}
+                    <input type="hidden" name="{{ field }}" value="{{ value }}">
+                {% endfor %}
+                {{ ux_icon('shell:search', {width: 14, height: 14}) }}
+                <input class="fld" type="search" name="q" value="{{ search }}" placeholder="Find a deleted record" aria-label="Find a deleted record">
+            </form>
         </div>
-    {% else %}
-        <div class="c"><div class="rln"><span class="d">Nothing has been deleted on this installation.</span></div></div>
-    {% endfor %}
+        <table class="tbl">
+            <thead><tr><th>When</th><th>What was deleted</th><th>What went with it</th></tr></thead>
+            <tbody>
+            {% for line in lines %}
+                <tr>
+                    <td><span class="mono"><time datetime="{{ line.deletedAt|date('c') }}" data-localtime-format="day">{{ line.deletedAt|date('j M') }}</time></span><span class="sub"><time datetime="{{ line.deletedAt|date('c') }}" data-localtime-format="time">{{ line.deletedAt|date('H:i') }}</time></span></td>
+                    <td><span class="chip">{{ line.kind }}</span> <b>{{ line.title }}</b><span class="sub">deleted by {{ line.byName }}</span></td>
+                    <td><span class="mono d">{{ line.whatWent }}</span></td>
+                </tr>
+            {% else %}
+                <tr><td colspan="3"><span class="d">{{ all == 0 ? 'Nothing has been deleted on this installation.' : 'No deletion matches these filters.' }}</span></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% include '@Shell/_foot.html.twig' with {
+            count: table.total, noun: 'deletions', one: 'deletion',
+            perPage: table.size, page: table.page, pages: table.pages, links: links,
+        } only %}
+    </div>
     <p class="use" style="margin:10px 0 0">A delete removes the record and everything under it; this line is all that stays. Nothing here links to the record, because the record is gone.</p>
 {% endblock %}

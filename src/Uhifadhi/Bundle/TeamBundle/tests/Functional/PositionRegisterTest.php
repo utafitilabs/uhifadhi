@@ -150,7 +150,7 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/positions');
-        $seats = $crawler->filter('tr.prow td:nth-child(3)')->each(static fn (Crawler $c): string => preg_replace('/\s+/', ' ', trim($c->text())) ?? '');
+        $seats = $crawler->filter('tr.prow td:nth-child(2)')->each(static fn (Crawler $c): string => preg_replace('/\s+/', ' ', trim($c->text())) ?? '');
 
         self::assertStringContainsString('unlimited', $seats[0], 'Ranger seats anybody.');
         self::assertStringContainsString('1 / 1', $seats[1]);
@@ -185,47 +185,66 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team/positions');
 
-        self::assertStringContainsString('reads 2', $crawler->filter('tr.prow td:nth-child(4)')->text());
-        self::assertSame('1 sensitive', $crawler->filter('tr.prow td:nth-child(5) .chip')->text());
+        self::assertStringContainsString('reads 2', $crawler->filter('tr.prow td:nth-child(3)')->text());
+        self::assertSame('1 sensitive', $crawler->filter('tr.prow td:nth-child(4) .chip')->text());
         self::assertCount(0, $crawler->filter('table.preg input'), 'The register previews; it never edits.');
         self::assertSame(['Sergeant'], $this->named($this->client->request('GET', '/team/positions?grants=sensitive')));
     }
 
-    /** The holders column stacks the holders; the fold opens to them as cards. */
-    public function testTheHoldersColumnStacksTheHoldersAndTheFoldNamesThem(): void
+    /**
+     * THE HOLDERS COLUMN STACKS THE HOLDERS, and the row is the whole of it:
+     * one row a position, no fold row under it, no chevron — the holders by
+     * name are on the position's record, which the row opens.
+     */
+    public function testTheHoldersColumnStacksTheHoldersAndNoRowFoldsOpen(): void
     {
         $this->administrator();
         $sergeant = $this->position('Sergeant', ['surveys.read', 'surveys.record']);
         $this->person('Joseph', 'Mollel')->setPosition($sergeant);
+        $this->position('Ranger');
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/positions');
+        $crawler = $this->client->request('GET', '/team/positions?open='.$sergeant->getUuidString());
 
         self::assertSame('JM', $crawler->filter('tr.prow .avs .av')->text());
-        $fold = $crawler->filter('tr.prow')->first()->nextAll()->first();
-        self::assertSame('foldrow', $fold->attr('class'));
-        self::assertStringContainsString('Joseph Mollel', $fold->filter('.poscard b')->text());
-        self::assertStringContainsString('Seat somebody', $fold->filter('.poscard.add')->text());
+        self::assertCount(2, $crawler->filter('table.preg > tbody > tr'));
+        self::assertCount(0, $crawler->filter('table.preg tr.foldrow, table.preg .fchev, table.preg .fchev-h, table.preg tr[data-fold-id]'));
+        self::assertNull($crawler->filter('table.preg')->attr('data-controller'), 'nothing folds, so no fold controller');
+        self::assertSame('/team/positions/'.$sergeant->getUuidString(), $crawler->filter('tr.prow td.door a.open-btn')->last()->attr('href'));
     }
 
-    /** Which rows are open lives in the address; a shut fold row is still in the document for the fold to animate. */
-    public function testWhichRowsAreOpenLivesInTheAddress(): void
+    /** THE REGISTER FOOT IS THE SHELL'S, its chooser links keeping the filter. */
+    public function testTheRegisterEndsInTheHouseFoot(): void
     {
         $this->administrator();
-        $sergeant = $this->position('Sergeant');
+        $this->position('Sergeant');
+        $this->position('Ranger');
         $this->em->flush();
-        $uuid = (string) $sergeant->getUuidString();
 
-        $shut = $this->client->request('GET', '/team/positions');
-        self::assertSame('false', $shut->filter('tr.prow .fchev')->attr('aria-expanded'));
-        self::assertCount(1, $shut->filter('tr.foldrow:not(.open)'));
-        self::assertStringContainsString('open='.$uuid, (string) $shut->filter('tr.prow .fchev')->attr('href'));
+        $crawler = $this->client->request('GET', '/team/positions?q=er');
 
-        $open = $this->client->request('GET', '/team/positions?open='.$uuid);
-        self::assertSame('true', $open->filter('tr.prow .fchev')->attr('aria-expanded'));
-        self::assertCount(1, $open->filter('tr.prow.open'));
-        self::assertCount(1, $open->filter('tr.foldrow.open'));
-        self::assertSame('uhifadhi--shell-bundle--register-fold', $open->filter('table.preg')->attr('data-controller'));
+        $foot = $crawler->filter('.c > table.preg + .rdf-foot');
+        self::assertCount(1, $foot);
+        self::assertSame('2 positions', self::squash($foot->filter(':scope > span > span')->first()->text()));
+        self::assertSame('20 per page', self::squash(str_replace('▾', '', $foot->filter('details.rdf-size > summary')->text())));
+        self::assertSame('page 1 of 1', self::squash($foot->filter('.rdf-page')->text()));
+        self::assertSame('/team/positions?q=er&per=100', $foot->filter('details.rdf-size a.i-ddopt')->eq(2)->attr('href'));
+    }
+
+    /** Twenty a page, and the size chosen in the foot. */
+    public function testTheRegisterIsPagedByTheFoot(): void
+    {
+        $this->administrator();
+        for ($i = 1; $i <= 23; ++$i) {
+            $this->position(\sprintf('Post %02d', $i));
+        }
+        $this->em->flush();
+
+        $first = $this->client->request('GET', '/team/positions');
+        self::assertCount(20, $first->filter('tr.prow'));
+        self::assertSame('/team/positions?page=2', $first->filter('.rdf-page a[aria-label="Next page"]')->attr('href'));
+        self::assertCount(3, $this->client->request('GET', '/team/positions?page=2')->filter('tr.prow'));
+        self::assertCount(23, $this->client->request('GET', '/team/positions?per=all')->filter('tr.prow'));
     }
 
     /**
@@ -241,7 +260,7 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team/positions');
 
-        self::assertSame('Grants nothing', trim($crawler->filter('tr.prow td:nth-child(4)')->text()));
+        self::assertSame('Grants nothing', trim($crawler->filter('tr.prow td:nth-child(3)')->text()));
         self::assertSame(['Community Liaison'], $this->named($this->client->request('GET', '/team/positions?grants=none')));
     }
 
@@ -303,12 +322,12 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
         $this->client->followRedirect();
         $crawler = $this->client->request('GET', '/team/positions');
 
-        $seats = preg_replace('/\s+/', ' ', trim($crawler->filter('tr.prow td:nth-child(3)')->text())) ?? '';
+        $seats = preg_replace('/\s+/', ' ', trim($crawler->filter('tr.prow td:nth-child(2)')->text())) ?? '';
         self::assertStringContainsString('0 / 8', $seats);
         self::assertStringContainsString('8 vacant', $seats);
         // It grants nothing yet, so the grants column says that; the kinds it
         // allows read under the name.
-        self::assertSame('Grants nothing', trim($crawler->filter('tr.prow td:nth-child(4)')->text()));
+        self::assertSame('Grants nothing', trim($crawler->filter('tr.prow td:nth-child(3)')->text()));
         self::assertSame(
             [ScopeKind::Organization],
             $this->em->getRepository(Position::class)->findOneBy(['name' => 'Sergeant'])?->getAllowedKinds(),
@@ -331,5 +350,10 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
             'already has a position called',
             (string) $this->client->followRedirect()->filter('.flashes')->text(),
         );
+    }
+
+    private static function squash(string $text): string
+    {
+        return trim((string) preg_replace('/\s+/u', ' ', $text));
     }
 }

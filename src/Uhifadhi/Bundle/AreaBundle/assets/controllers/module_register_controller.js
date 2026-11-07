@@ -28,15 +28,26 @@ import { Controller } from '@hotwired/stimulus';
  * counts are printed by the template and are of the whole set, so an option
  * says what picking it would do.
  *
+ * THE HOUSE FOOT PAGES WHAT IS LEFT: its size chooser (20 · 50 · 100 · All)
+ * and its arrows are buttons this controller moves, and the count it states
+ * is of the rows the filters left.
+ *
  * NOTHING HERE KNOWS WHAT A MODULE IS. It reads the data attributes the
  * template stamped on each row, so a fact added to a row needs no change here.
  */
 export default class extends Controller {
-    static targets = ['search', 'list', 'count', 'dropdown'];
+    static targets = ['search', 'list', 'count', 'dropdown', 'pager'];
+
+    static values = { noun: { type: String, default: 'modules' }, one: { type: String, default: 'module' } };
 
     connect() {
         this.filters = {};
-        this.searchTarget?.addEventListener('input', () => this.apply());
+        this.per = '20';
+        this.page = 1;
+        this.searchTarget?.addEventListener('input', () => {
+            this.page = 1;
+            this.apply();
+        });
         this.apply();
     }
 
@@ -55,25 +66,59 @@ export default class extends Controller {
         dropdown.querySelector('summary')?.classList.toggle('on', '' !== this.filters[key]);
         dropdown.open = false;
 
+        this.page = 1;
+        this.apply();
+    }
+
+    /** A size of the foot's chooser was picked. */
+    size(event) {
+        const option = event.target.closest('[data-per]');
+        if (!option) {
+            return;
+        }
+        this.per = option.dataset.per;
+        const chooser = option.closest('details');
+        chooser.querySelectorAll('[data-per]').forEach((o) => {
+            o.classList.toggle('on', o === option);
+            o.setAttribute('aria-pressed', o === option ? 'true' : 'false');
+        });
+        const summary = chooser.querySelector('summary');
+        const caret = summary.querySelector('.i-ddcaret')?.outerHTML ?? '';
+        summary.innerHTML = ('all' === this.per ? 'all on one page' : `<span class="pg">${this.per}</span> per page`) + caret;
+        chooser.open = false;
+        this.page = 1;
+        this.apply();
+    }
+
+    /** One of the foot's arrows. */
+    step(event) {
+        const arrow = event.target.closest('[data-go]');
+        if (!arrow) {
+            return;
+        }
+        this.page += Number(arrow.dataset.go);
         this.apply();
     }
 
     apply() {
         const needle = (this.hasSearchTarget ? this.searchTarget.value : '').trim().toLowerCase();
+        const kept = [...this.rows()].filter((row) => ('' === needle || (row.dataset.name || '').includes(needle)) && this.matchesFilters(row));
 
-        let shown = 0;
+        const per = 'all' === this.per ? kept.length || 1 : Number(this.per);
+        const pages = Math.max(1, Math.ceil(kept.length / per));
+        this.page = Math.min(Math.max(1, this.page), pages);
+        const shown = kept.slice((this.page - 1) * per, this.page * per);
         for (const row of this.rows()) {
-            const matchesText = '' === needle || (row.dataset.name || '').includes(needle);
-            const visible = matchesText && this.matchesFilters(row);
-
-            row.hidden = !visible;
-            if (visible) {
-                shown += 1;
-            }
+            row.hidden = !shown.includes(row);
         }
 
         if (this.hasCountTarget) {
-            this.countTarget.textContent = String(shown);
+            this.countTarget.textContent = `${kept.length} ${1 === kept.length ? this.oneValue : this.nounValue}`;
+        }
+        if (this.hasPagerTarget) {
+            const back = this.page > 1 ? '<button type="button" data-go="-1" aria-label="Previous page">&lsaquo;</button>' : '';
+            const on = this.page < pages ? '<button type="button" data-go="1" aria-label="Next page">&rsaquo;</button>' : '';
+            this.pagerTarget.innerHTML = `page <span class="pg">${this.page}</span> of ${pages}${back}${on}`;
         }
     }
 

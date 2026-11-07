@@ -55,7 +55,6 @@
 
 {% block shell_page %}
 {% set here = path('area_station_show', {uuid: area.uuidString, station: station.uuidString}) %}
-{% set ctl = 'uhifadhi--area-bundle--area-query' %}
 {% set q = 'Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery' %}
 
 {# THE FACTS STRIP. ON DUTY IS THE ROSTER'S and no module publishes it yet,
@@ -107,45 +106,31 @@
             </span></span>
             {# DUTY IS NOT HERE. Who is on duty today is the roster's, and no
                module publishes it yet. #}
-            <div class="lfilt" data-controller="{{ ctl }}" data-action="uhifadhi--shell-bundle--dropdown:choose->{{ ctl }}#chosen">
+            <div class="lfilt">
                 {% if facets.knowsRoles %}
-                    {{ include('@Shell/_dropdown.html.twig', {
-                        name: constant(q ~ '::ROLE'), label: 'Any position', icon: 'shell:user', default: '', value: query.role ?? '',
-                        groups: [
-                            {label: null, options: [{value: '', label: 'Any position', count: posted}]},
-                            {label: 'Positions', options: facets.roleOptions|map(o => {value: o.value, label: o.label, count: o.count})},
-                        ],
+                    {{ include('@Area/_partial/_filter.html.twig', {
+                        key: constant(q ~ '::ROLE'), all: 'Any position', allCount: posted, chosen: query.role, options: facets.roleOptions,
                     }, with_context: false) }}
-                    {{ include('@Shell/_dropdown.html.twig', {
-                        name: constant(q ~ '::DEPARTMENT'), label: 'All departments', icon: 'shell:users', default: '', value: query.department ?? '',
-                        groups: [
-                            {label: null, options: [{value: '', label: 'All departments', count: posted}]},
-                            {label: 'Departments', options: facets.departmentOptions|map(o => {value: o.value, label: o.label, count: o.count})},
-                        ],
+                    {{ include('@Area/_partial/_filter.html.twig', {
+                        key: constant(q ~ '::DEPARTMENT'), all: 'All departments', allCount: posted, chosen: query.department, options: facets.departmentOptions,
                     }, with_context: false) }}
                 {% endif %}
-                {{ include('@Shell/_dropdown.html.twig', {
-                    name: constant(q ~ '::SOURCE'), label: 'Recorded anywhere', icon: 'shell:square-pen', default: '', value: query.source ?? '',
-                    groups: [
-                        {label: null, options: [{value: '', label: 'Recorded anywhere', count: posted}]},
-                        {label: 'Recorded', options: facets.sourceOptions|map(o => {value: o.value, label: o.value == 'here' ? 'Written here' : 'From their page', count: o.count})},
-                    ],
+                {{ include('@Area/_partial/_filter.html.twig', {
+                    key: constant(q ~ '::SOURCE'), all: 'Recorded anywhere', allCount: posted, chosen: query.source,
+                    options: facets.sourceOptions|map(o => {value: o.value, label: o.value == 'here' ? 'Written here' : 'From their page', count: o.count}),
                 }, with_context: false) }}
-                {{ include('@Shell/_dropdown.html.twig', {
-                    name: constant(q ~ '::SORT'), label: 'Name A–Z', icon: 'shell:arrow-up-down', default: 'az', value: query.sort,
-                    groups: [
-                        {label: 'Order', options: [
-                            {value: 'az', label: 'Name A–Z', count: null},
-                            {value: 'newest', label: 'Newest posting', count: null},
-                            {value: 'since', label: 'Oldest posting', count: null},
-                            {value: 'role', label: 'By position', count: null},
-                        ]},
+                {{ include('@Area/_partial/_filter.html.twig', {
+                    key: constant(q ~ '::SORT'), all: 'Name A–Z', chosen: query.sort == 'az' ? null : query.sort,
+                    options: [
+                        {value: 'newest', label: 'Newest posting', count: null},
+                        {value: 'since', label: 'Oldest posting', count: null},
+                        {value: 'role', label: 'By position', count: null},
                     ],
                 }, with_context: false) }}
                 <form class="lsearch" method="get" action="{{ here }}">
                     {{ ux_icon('shell:search') }}
                     <input class="fld" type="search" name="q" value="{{ query.search }}" placeholder="Find a person&hellip;" aria-label="Find a person posted here">
-                    {% for k, v in query.with('q', null) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+                    {% for k, v in app.request.query.all|filter((v, k) => k not in ['q', 'page'] and v is not iterable) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
                 </form>
             </div>
 
@@ -217,21 +202,15 @@
         </div>
 
         <div class="c stlogcard" id="log">
-            <span class="tab">What happened here<span class="src">&middot; {{ logTable.total }} {{ logTable.total == 1 ? 'line' : 'lines' }}</span></span>
-            {% if events is empty %}
+            <span class="tab">What happened here<span class="src">&middot;
+                {%- if logTable.total == logScope %} {{ logScope }}{% else %} {{ logTable.total }} of {{ logScope }}{% endif %} {{ logScope == 1 ? 'line' : 'lines' }}
+            </span></span>
+            {% if logScope == 0 %}
                 <div class="use">Nothing has happened at this station yet. Every move, posting and closure writes one line here.</div>
             {% else %}
-                <table class="tbl">
-                    <thead><tr><th>What happened</th><th>When</th></tr></thead>
-                    <tbody>
-                    {% for event in events %}
-                        <tr><td><b>{{ event.headline }}</b>{% if event.detail %}<span class="sub">{{ event.detail }}</span>{% endif %}</td><td><span class="mono d"><time datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="day">{{ event.occurredAt|date('j M Y') }}</time></span><time class="sub" datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="clock">{{ event.occurredAt|date('H:i') }}</time></td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                {{ include('@Shell/_foot.html.twig', {
-                    count: logTable.total, noun: 'lines', one: 'line',
-                    perPage: logTable.size, page: logTable.page, pages: logTable.pages, links: logLinks,
+                {{ include('@Area/_partial/_log.html.twig', {
+                    events: events, kinds: logKinds, kind: logKind, search: logSearch, scope: logScope,
+                    table: logTable, links: logLinks, here: here,
                 }, with_context: false) }}
             {% endif %}
         </div>

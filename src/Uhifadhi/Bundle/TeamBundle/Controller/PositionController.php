@@ -28,6 +28,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
+use Uhifadhi\Bundle\ShellBundle\Service\TablePageService;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
@@ -117,6 +118,8 @@ final readonly class PositionController
         private UserRepository $users,
         private ConcernCatalogue $catalogue,
         private PositionBoard $board,
+        /** THE REGISTER FOOT'S PAGER: ?page and ?per, 20 · 50 · 100 · All. */
+        private TablePageService $tablePages,
         private PositionHistory $historian,
         private PositionService $positionWrites,
         private CsrfTokenManagerInterface $csrf,
@@ -139,10 +142,11 @@ final readonly class PositionController
     {
         // ONE TABLE (ruled 2026-09-22, option B): the dropdowns count the
         // whole register, the filter and the sort read the cards, and the
-        // rows the address names are rendered open.
+        // house foot pages what they leave.
         $query = PositionQuery::from($request);
         $cards = $this->board->register();
         $shown = $query->order(array_values(array_filter($cards, $query->matches(...))));
+        $table = $this->tablePages->read($request, \count($shown));
 
         $count = static fn (callable $test): int => \count(array_filter($cards, $test));
         $placementOptions = [];
@@ -153,7 +157,9 @@ final readonly class PositionController
 
         return new Response($this->twig->render('@Team/positions/index.html.twig', [
             'query' => $query,
-            'rows' => $shown,
+            'rows' => $table->slice($shown),
+            'table' => $table,
+            'links' => $this->tablePages->links($request, $table),
             'total' => \count($cards),
             'placementOptions' => $placementOptions,
             'seatsOptions' => [

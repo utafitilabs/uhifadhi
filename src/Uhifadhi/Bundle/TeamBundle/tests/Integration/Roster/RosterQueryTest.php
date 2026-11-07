@@ -126,7 +126,7 @@ final class RosterQueryTest extends IntegrationTestCase
     {
         return array_map(
             static fn (User $u): string => (string) $u->getEmail(),
-            $this->users()->findRoster($query)->items,
+            $this->users()->findRoster($query),
         );
     }
 
@@ -134,10 +134,8 @@ final class RosterQueryTest extends IntegrationTestCase
     {
         $this->seedCast();
 
-        $page = $this->users()->findRoster(new RosterQuery());
-
-        self::assertSame(7, $page->total);
-        self::assertCount(7, $page->items);
+        self::assertSame(7, $this->users()->countRoster(new RosterQuery()));
+        self::assertCount(7, $this->users()->findRoster(new RosterQuery()));
     }
 
     public function testTheListIsOrderedByName(): void
@@ -190,10 +188,8 @@ final class RosterQueryTest extends IntegrationTestCase
     {
         $this->seedCast();
 
-        $page = $this->users()->findRoster(new RosterQuery(q: 'nobody at all'));
-
-        self::assertSame(0, $page->total);
-        self::assertSame([], $page->items);
+        self::assertSame(0, $this->users()->countRoster(new RosterQuery(q: 'nobody at all')));
+        self::assertSame([], $this->users()->findRoster(new RosterQuery(q: 'nobody at all')));
     }
 
     public function testTheTierChipsFilter(): void
@@ -346,7 +342,12 @@ final class RosterQueryTest extends IntegrationTestCase
         return (string) $department->getUuidString();
     }
 
-    public function testAPageIsTwentyFiveAndSaysWhatItIsPartOf(): void
+    /**
+     * A PAGE IS THE ROWS FROM AN OFFSET, as many as the pager asked for, in
+     * the roster's order; the count is of every page. The pager that picks
+     * the offset is the shell's, which clamps an untrusted page first.
+     */
+    public function testAPageIsTheRowsFromAnOffsetAndTheCountIsOfEveryPage(): void
     {
         for ($i = 1; $i <= 30; ++$i) {
             $this->person('Person', \sprintf('%02d', $i), \sprintf('p%02d@example.test', $i));
@@ -354,48 +355,23 @@ final class RosterQueryTest extends IntegrationTestCase
         $this->em->flush();
         $this->em->clear();
 
-        $first = $this->users()->findRoster(new RosterQuery());
+        $first = $this->users()->findRoster(new RosterQuery(), 0, 20);
+        self::assertCount(20, $first);
+        self::assertSame(30, $this->users()->countRoster(new RosterQuery()));
 
-        self::assertSame(25, RosterQuery::PER_PAGE);
-        self::assertCount(25, $first->items);
-        self::assertSame(30, $first->total);
-        self::assertSame(1, $first->page);
-        self::assertSame(2, $first->pages());
-        self::assertFalse($first->hasPrevious());
-        self::assertTrue($first->hasNext());
+        $second = $this->users()->findRoster(new RosterQuery(), 20, 20);
+        self::assertCount(10, $second);
+        self::assertSame([], array_intersect(array_map(static fn (User $u): int => (int) $u->getId(), $first), array_map(static fn (User $u): int => (int) $u->getId(), $second)), 'no row on two pages');
 
-        $second = $this->users()->findRoster(new RosterQuery(page: 2));
-
-        self::assertCount(5, $second->items);
-        self::assertSame(2, $second->page);
-        self::assertTrue($second->hasPrevious());
-        self::assertFalse($second->hasNext());
-    }
-
-    /**
-     * A PAGE NUMBER IS UNTRUSTED INPUT. It arrives in a URL somebody can type,
-     * so page 0, page -3 and page 900 are all requests a person can make and
-     * none of them is an error worth a 500.
-     */
-    public function testAnOutOfRangePageIsClampedRatherThanFatal(): void
-    {
-        $this->seedCast();
-
-        self::assertSame(1, $this->users()->findRoster(new RosterQuery(page: 0))->page);
-        self::assertSame(1, $this->users()->findRoster(new RosterQuery(page: -3))->page);
-
-        $far = $this->users()->findRoster(new RosterQuery(page: 900));
-        self::assertSame([], $far->items, 'Past the end is empty, not an exception.');
-        self::assertSame(7, $far->total);
+        self::assertCount(30, $this->users()->findRoster(new RosterQuery()), 'no limit is every row');
+        self::assertSame([], $this->users()->findRoster(new RosterQuery(), 900, 20), 'past the end is empty, not an exception');
     }
 
     /** An installation with nobody in it is a page, not a crash. */
     public function testAnEmptyInstallationIsAnEmptyPage(): void
     {
-        $page = $this->users()->findRoster(new RosterQuery());
-
-        self::assertSame(0, $page->total);
-        self::assertSame(1, $page->pages(), 'One empty page rather than zero pages — the list still exists.');
+        self::assertSame(0, $this->users()->countRoster(new RosterQuery()));
+        self::assertSame([], $this->users()->findRoster(new RosterQuery()));
     }
 
     /**

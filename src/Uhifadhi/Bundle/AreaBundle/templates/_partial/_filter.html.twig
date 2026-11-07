@@ -1,4 +1,4 @@
-{# ONE GROUPED DROPDOWN OF THE HOUSE FILTER BAR.
+{# ONE CHIP OF THE HOUSE FILTER BAR (`.lfilt`).
 
    A CLOSED CHIP THAT OPENS A PANEL OF OPTIONS WITH LIVE COUNTS — the
    incidents pattern, which is the standing rule for every filter bar in the
@@ -13,30 +13,56 @@
    filters by the word it is spelt with; a zone filters by an identifier and
    reads as a name with its own hue. One control serves both because the
    caller hands it {@see Uhifadhi\Bundle\AreaBundle\Model\FilterOption}s
-   rather than a map it would have to guess the shape of.
+   rather than a map it would have to guess the shape of. An option whose
+   count is null (an order) draws none.
+
+   THE CLOSED CHIP NAMES THE CHOSEN OPTION AND ITS COUNT ("western sector ·
+   4"), or the "all" option and its count while nothing is chosen.
 
    THE COUNTS ARE OF THE WHOLE SET, not of what is already filtered: a count
    that moved as you filtered could not tell you what picking an option would
-   do, which is the one thing it is for. #}
-{% set picked = chosenLabel is defined and chosenLabel is not null ? chosenLabel : chosen %}
+   do, which is the one thing it is for.
+
+   THE LINKS. A page whose question is a query model hands it over as
+   `query` (`query.with(key, value)`); a page whose question is the address
+   itself leaves `query` out, and the link is the request's own query with
+   this key changed and `pageKey` (`page` when absent) dropped, so a second
+   table on the page keeps its own place. The page size is kept either way.
+
+   An axis with no "all" (a month) passes `all: null`.
+
+   Takes: key, all, allCount?, label? (the menu's head), chosen, chosenLabel?,
+   options, query? | pageKey?. #}
+{% set _route = app.request.attributes.get('_route') %}
+{% set _params = app.request.attributes.get('_route_params') %}
+{% set _pageKey = pageKey ?? 'page' %}
+{% set _query = query ?? null %}
+{% set _here = app.request.query.all|filter((v, k) => k != key and k != _pageKey) %}
+{% set _per = _query is not null and app.request.query.has('per') ? {per: app.request.query.get('per')} : {} %}
+{% set _chosenOption = chosen is null ? null : options|filter(o => o.value == chosen)|first %}
+{% set _picked = chosenLabel ?? (_chosenOption ? _chosenOption.label : chosen) %}
+{% set _count = chosen is null ? (allCount ?? null) : (_chosenOption ? _chosenOption.count : null) %}
 <details class="i-dd">
     <summary class="mchip i-ddt{{ chosen is not null ? ' on' : '' }}">
-        <span class="i-ddval">{{ picked is not null ? picked : all|raw }}</span>
+        <span class="i-ddval">{{ (_picked is not null ? _picked : all|raw)|lower }}{% if _count is not null %} &middot; {{ _count }}{% endif %}</span>
         <span class="i-ddcaret">&#9662;</span>
     </summary>
-    <div class="i-ddmenu">
-        <span class="i-ddhead">{{ label|raw }}</span>
-        <a class="i-ddopt{{ chosen ? '' : ' on' }}"
-           href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(query.with(key, null))) }}">
+    <div class="i-ddmenu" aria-label="{{ label ?? key }}">
+        {% if label is defined and label is not null %}<span class="i-ddhead">{{ label|raw }}</span>{% endif %}
+        {% if all is not null %}
+        <a class="i-ddopt{{ chosen is null ? ' on' : '' }}"
+           href="{{ path(_route, _params|merge(_query is not null ? _query.with(key, null)|merge(_per) : _here)) }}">
             <span class="i-ddopt-l">{{ all|raw }}</span>
+            {% if allCount is defined and allCount is not null %}<span class="i-ddopt-n">{{ allCount }}</span>{% endif %}
         </a>
         <span class="i-ddsep"></span>
+        {% endif %}
         {% for option in options %}
-            <a class="i-ddopt{{ chosen == option.value ? ' on' : '' }}"
-               href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(query.with(key, option.value))) }}">
-                {% if option.cat %}<span class="i-dot" data-cat="{{ option.cat }}"></span>{% endif %}
+            <a class="i-ddopt{{ chosen is not null and chosen == option.value ? ' on' : '' }}"
+               href="{{ path(_route, _params|merge(_query is not null ? _query.with(key, option.value)|merge(_per) : _here|merge({(key): option.value}))) }}">
+                {% if option.cat ?? null %}<span class="i-dot" data-cat="{{ option.cat }}"></span>{% endif %}
                 <span class="i-ddopt-l">{{ option.label }}</span>
-                {% if option.count > 0 %}<span class="i-ddopt-n">{{ option.count }}</span>{% endif %}
+                {% if option.count is not null %}<span class="i-ddopt-n">{{ option.count }}</span>{% endif %}
             </a>
         {% endfor %}
     </div>

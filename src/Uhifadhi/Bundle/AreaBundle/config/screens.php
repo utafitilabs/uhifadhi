@@ -44,6 +44,8 @@ use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
+use Uhifadhi\Bundle\AreaBundle\Service\DutyLogService;
+use Uhifadhi\Bundle\AreaBundle\Service\EventLogService;
 use Uhifadhi\Bundle\AreaBundle\Service\LiveSheet;
 use Uhifadhi\Bundle\AreaBundle\Service\MyDashboard;
 use Uhifadhi\Bundle\AreaBundle\Service\OrgOverviewCatalogue;
@@ -220,6 +222,10 @@ return static function (ContainerConfigurator $container): void {
         ->tag(MyCardProviderInterface::TAG);
 
     // THE PAGES OF A PERSON'S OWN: My station and My duty log.
+    /* MY DUTY LOG, NARROWED by its chips and search. */
+    $services->set('area.duty_log', DutyLogService::class);
+    $services->alias(DutyLogService::class, 'area.duty_log');
+
     $services->set('area.controller.me', MeController::class)
         ->args([
             service('twig'),
@@ -229,6 +235,8 @@ return static function (ContainerConfigurator $container): void {
             service('area.station_plates'),
             service('area.station_sections'),
             service('registry.area_modules'),
+            service('area.duty_log'),
+            service('shell.table_page'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(MeController::class, 'area.controller.me')->public();
@@ -338,6 +346,10 @@ return static function (ContainerConfigurator $container): void {
         ->tag('controller.service_arguments');
     $services->alias(ZoneController::class, 'area.controller.zone')->public();
 
+    /* WHAT HAPPENED HERE, NARROWED by the records' kind chip and search. */
+    $services->set('area.event_log', EventLogService::class);
+    $services->alias(EventLogService::class, 'area.event_log');
+
     /*
      * ONE ZONE, READ — the same surface one step in. It reads only; the ring,
      * the name and the removal are the configure section's.
@@ -356,6 +368,7 @@ return static function (ContainerConfigurator $container): void {
             service('registry.entry_routes'),
             service('atlas.periods'),
             service('shell.table_page'),
+            service('area.event_log'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(ZoneRecordController::class, 'area.controller.zone_record')->public();
@@ -396,6 +409,7 @@ return static function (ContainerConfigurator $container): void {
             service('registry.area_modules'),
             service('atlas.periods'),
             service('shell.table_page'),
+            service('area.event_log'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(StationRecordController::class, 'area.controller.station_record')->public();
@@ -512,6 +526,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.station_sections'),
             service('registry.area_modules'),
             service('security.csrf.token_manager'),
+            service('shell.table_page'),
             service(DeletionPageInterface::SERVICE)->nullOnInvalid(),
         ])
         ->tag('controller.service_arguments');

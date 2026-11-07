@@ -85,21 +85,23 @@
         </table>
     </div>
 
-    {# THE PERMISSION HISTORY — every change, newest first, paged by the house
-       register (the analysis page's controller): the change with who and when
-       under it, then before → after. #}
+    {# THE PERMISSION HISTORY — every change, newest first, narrowed by the
+       house bar (the kind of change, who made it, the search) and paged by the
+       house foot, both moved by the analysis page's register controller: the
+       change with who and when under it, then before → after. #}
     {% import '@Team/permissions/_analysis_bits.html.twig' as an %}
     {% set rctl = 'uhifadhi--team-bundle--permission-analysis' %}
-    {% set reg = {noun: 'changes', one: 'change', count: history|length, pages: max(1, (history|length / 20)|round(0, 'ceil'))} %}
-    <div class="c" id="history" data-controller="{{ rctl }}" data-action="click->{{ rctl }}#click click@document->{{ rctl }}#outside keydown@document->{{ rctl }}#escape">
+    {% set reg = {noun: 'changes', one: 'change', count: history|length, pages: max(1, (history|length / 20)|round(0, 'ceil')), search: 'Find a change'} %}
+    <div class="c" id="history" data-controller="{{ rctl }}" data-action="click->{{ rctl }}#click input->{{ rctl }}#search click@document->{{ rctl }}#outside keydown@document->{{ rctl }}#escape">
         <span class="tab">Permission history<span class="src">&middot; newest first</span></span>
         {% if history is not empty %}
         <div data-pa-reg="history">
+            <div class="lfilt">{% for c in historyChips %}{{ an.chip(c) }}{% endfor %}{{ an.search(reg) }}</div>
             <table class="tbl pp-hist">
                 <thead><tr><th scope="col">Change</th><th scope="col">Before &rarr; after</th></tr></thead>
                 <tbody>
                     {%- for line in history %}
-                    <tr data-pa-r{% if loop.index > 20 %} hidden{% endif %}>
+                    <tr data-pa-r data-pa-f="{{ {kind: [line.kind], by: [line.by]}|json_encode }}" data-pa-q="{{ (line.lead ~ ' ' ~ line.on ~ ' ' ~ line.tail ~ ' ' ~ line.by)|lower }}"{% if loop.index > 20 %} hidden{% endif %}>
                         <td class="pp-hd">{{ line.lead }} {{ line.on }}{% if line.tail %} {{ line.tail }}{% endif %}<span class="sub">{{ line.by }} &middot; {{ pp.stamp(line.when) }}</span></td>
                         <td><span class="ph-diff">
                             {%- for part in line.diff -%}
@@ -115,6 +117,7 @@
                 </tbody>
             </table>
             {{ an.foot(reg) }}
+            <p class="au-why pa-none" data-pa-nomatch hidden>No change matches these filters.</p>
         </div>
         {% else %}
         <p class="au-why pa-none">No permission change is recorded yet.</p>

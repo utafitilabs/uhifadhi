@@ -23,9 +23,9 @@ use Uhifadhi\Bundle\AreaBundle\Service\StationService;
 /**
  * A DEEP LINK INTO THE STATIONS REGISTER LANDS ON THE STATION IT NAMES.
  *
- * THE DEFECT THIS PINS. The register paginates eight cards to a page, and
+ * THE DEFECT THIS PINS. The register paginates twenty cards to a page, and
  * `?open=<uuid>` only ever opened a card the FIRST page happened to hold. So
- * from the ninth station on, every link that names one — the record's "Edit
+ * from the twenty-first station on, every link that names one — the record's "Edit
  * the station", the empty state's "Post somebody", the redirect after a form
  * posts — answered with page one and nothing open. A link that silently does
  * nothing is worse than a broken one: nobody reports it, they just conclude
@@ -40,21 +40,21 @@ use Uhifadhi\Bundle\AreaBundle\Service\StationService;
 final class StationDeepLinkTest extends WebTestCase
 {
     /** One more than a page holds, so the last one is on page two. */
-    private const int STATIONS = 9;
+    private const int STATIONS = 21;
 
     /**
      * THE NINTH STATION, NAMED IN THE ADDRESS, OPENS — on page two, which the
      * page was never asked for and worked out for itself.
      */
-    public function testALinkToTheNinthStationLandsOnPageTwoWithItOpen(): void
+    public function testALinkToTheStationPastAPageLandsOnPageTwoWithItOpen(): void
     {
         $this->boot();
         $this->signIn();
-        [$area, $ninth] = $this->nineStations();
+        [$area, $last] = $this->aPageAndOneStations();
 
-        $url = $this->section($area).'?open='.$ninth->getUuidString();
+        $url = $this->section($area).'?open='.$last->getUuidString();
 
-        self::assertSame(['Station 09'], $this->listed($url), 'Page two holds the one row after the first eight.');
+        self::assertSame(['Station 21'], $this->listed($url), 'Page two holds the one row after the first twenty.');
         self::assertMatchesRegularExpression(
             '#<details class="zcard on focusline"\s+open>#',
             $this->body($url),
@@ -67,13 +67,13 @@ final class StationDeepLinkTest extends WebTestCase
     {
         $this->boot();
         $this->signIn();
-        [$area] = $this->nineStations();
+        [$area] = $this->aPageAndOneStations();
 
         $listed = $this->listed($this->section($area));
 
-        self::assertCount(8, $listed, 'A page of the register is eight rows.');
+        self::assertCount(20, $listed, 'A page of the register is twenty rows.');
         self::assertSame('Station 01', $listed[0]);
-        self::assertNotContains('Station 09', $listed);
+        self::assertNotContains('Station 21', $listed);
     }
 
     /**
@@ -84,25 +84,25 @@ final class StationDeepLinkTest extends WebTestCase
     {
         $this->boot();
         $this->signIn();
-        [$area] = $this->nineStations();
+        [$area] = $this->aPageAndOneStations();
 
-        self::assertSame(['Station 09'], $this->listed($this->section($area).'?page=2'));
+        self::assertSame(['Station 21'], $this->listed($this->section($area).'?page=2'));
     }
 
     /**
      * THE PAGE IS WORKED OUT AGAINST THE ORDER IN FORCE, not against the
-     * default one: reversed by most-posted or by zone, the ninth row by name
+     * default one: reversed by most-posted or by zone, the last row by name
      * is somewhere else entirely, and the link must still land on it.
      */
     public function testThePageIsWorkedOutAgainstTheOrderInForce(): void
     {
         $this->boot();
         $this->signIn();
-        [$area, $ninth] = $this->nineStations();
+        [$area, $last] = $this->aPageAndOneStations();
 
-        $url = $this->section($area).'?sort=zone&open='.$ninth->getUuidString();
+        $url = $this->section($area).'?sort=zone&open='.$last->getUuidString();
 
-        self::assertContains('Station 09', $this->listed($url), 'Whatever the order puts it on, that page answers.');
+        self::assertContains('Station 21', $this->listed($url), 'Whatever the order puts it on, that page answers.');
         self::assertStringContainsString('open>', $this->body($url));
     }
 
@@ -183,27 +183,27 @@ final class StationDeepLinkTest extends WebTestCase
         return [$area, $closed];
     }
 
-    /** @return array{0: AreaOfInterest, 1: Station} the area, and the ninth station by name */
-    private function nineStations(): array
+    /** @return array{0: AreaOfInterest, 1: Station} the area, and the last station by name */
+    private function aPageAndOneStations(): array
     {
         $area = $this->anArea();
         $stations = static::getContainer()->get('test_public.area.stations');
         \assert($stations instanceof StationService);
 
-        self::assertSame(8, StationRegister::PER_PAGE, 'This suite is about the row after the last of a page.');
+        self::assertSame(20, StationRegister::PER_PAGE, 'This suite is about the row after the last of a page.');
 
-        $ninth = null;
+        $last = null;
         for ($n = 1; $n <= self::STATIONS; ++$n) {
             $station = $stations->add($area, \sprintf('Station %02d', $n), -29.75 + ($n / 100), -3.2, \sprintf('ST-%02d', $n));
             if (self::STATIONS === $n) {
-                $ninth = $station;
+                $last = $station;
             }
         }
         $this->em->flush();
 
-        self::assertInstanceOf(Station::class, $ninth);
+        self::assertInstanceOf(Station::class, $last);
 
-        return [$area, $ninth];
+        return [$area, $last];
     }
 
     private function section(AreaOfInterest $area): string

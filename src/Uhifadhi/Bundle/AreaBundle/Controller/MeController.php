@@ -23,8 +23,10 @@ use Uhifadhi\Bundle\AreaBundle\Entity\CheckIn;
 use Uhifadhi\Bundle\AreaBundle\People\AreaStationPlates;
 use Uhifadhi\Bundle\AreaBundle\Repository\CheckInRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
+use Uhifadhi\Bundle\AreaBundle\Service\DutyLogService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationSectionService;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
+use Uhifadhi\Bundle\ShellBundle\Service\TablePageService;
 use Uhifadhi\Contracts\Area\StationSurface;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Contracts\Kpi\StationRef;
@@ -52,6 +54,8 @@ final readonly class MeController
         private AreaStationPlates $plates,
         private StationSectionService $sections,
         private AreaModuleService $areaModules,
+        private DutyLogService $log,
+        private TablePageService $pager,
     ) {
     }
 
@@ -93,7 +97,7 @@ final readonly class MeController
     public function dutyLog(Request $request): Response
     {
         $me = $this->me();
-        $month = \DateTimeImmutable::createFromFormat('!Y-m', $request->query->getString('month')) ?: new \DateTimeImmutable('first day of this month midnight');
+        $month = \DateTimeImmutable::createFromFormat('!Y-m', $request->query->getString(DutyLogService::MONTH)) ?: new \DateTimeImmutable('first day of this month midnight');
         $month = $month->modify('first day of this month')->setTime(0, 0);
         $next = $month->modify('+1 month');
         $now = new \DateTimeImmutable();
@@ -116,14 +120,26 @@ final readonly class MeController
             $pings += $claim->getPingCount();
         }
 
+        $narrowed = $this->log->narrow(
+            $claims,
+            self::answer($request, DutyLogService::STATUS),
+            self::answer($request, DutyLogService::POST),
+            $request->query->getString(DutyLogService::SEARCH),
+        );
+        $table = $this->pager->read($request, \count($narrowed['rows']));
+
         return new Response($this->twig->render('@Area/me/duty_log.html.twig', [
-            'claims' => $claims,
+            'claims' => $table->slice($narrowed['rows']),
+            'scope' => \count($claims),
+            'log' => $narrowed,
+            'months' => $this->log->months($month, $now),
+            'table' => $table,
+            'links' => $this->pager->links($request, $table),
             // A month is a name on the calendar, not an instant: it is read as
             // text, and the instants inside it each carry a <time>.
+            'monthParam' => $month->format('Y-m'),
             'monthLabel' => $month->format('F Y'),
             'monthName' => $month->format('F'),
-            'previous' => self::month($month->modify('-1 month')),
-            'next' => $next <= $now ? self::month($next) : null,
             'now' => $now,
             'hours' => intdiv($minutes, 60),
             'days' => \count($days),
@@ -132,10 +148,11 @@ final readonly class MeController
         ]));
     }
 
-    /** @return array{param: string, name: string} */
-    private static function month(\DateTimeImmutable $month): array
+    private static function answer(Request $request, string $key): ?string
     {
-        return ['param' => $month->format('Y-m'), 'name' => $month->format('F')];
+        $value = trim($request->query->getString($key));
+
+        return '' === $value ? null : $value;
     }
 
     private function me(): UserInterface

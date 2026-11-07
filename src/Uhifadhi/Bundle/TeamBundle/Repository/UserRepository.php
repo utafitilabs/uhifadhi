@@ -24,7 +24,6 @@ use Uhifadhi\Bundle\TeamBundle\Entity\RankHolding;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\RosterStateEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
-use Uhifadhi\Bundle\TeamBundle\Model\Page;
 use Uhifadhi\Bundle\TeamBundle\Model\RosterQuery;
 
 /**
@@ -97,12 +96,11 @@ class UserRepository extends ServiceEntityRepository
     }
 
     /**
-     * THE /team LIST, whole: one page of people plus enough about the rest to
-     * draw the footer.
+     * THE /team LIST: one page of the people the filter leaves.
      *
-     * Every criterion comes off the {@see RosterQuery} — the search box, the
-     * tier chips, the two selects, the page — so the list's entire state is the
-     * URL that asked for it.
+     * Every criterion comes off the {@see RosterQuery} — the search box and
+     * the bar's chips — and the page off the shell's pager, so the list's
+     * entire state is the URL that asked for it.
      *
      * THE SEARCH IS ILIKE ACROSS FOUR COLUMNS: first name, last name, email and
      * ranger code, which is exactly what the box's placeholder promises — the
@@ -116,31 +114,41 @@ class UserRepository extends ServiceEntityRepository
      * no position is the model's zero and belongs in the list; an inner join
      * would silently drop exactly the people the roster most needs to show.
      *
-     * PAGING IS DOCTRINE'S OWN PAGINATOR behind {@see Page}. The page number
-     * arrived in a URL somebody can type, so it is clamped to at least 1 — past
-     * the end is an empty page rather than an exception, because a person
-     * guessing at ?page=900 has not caused an error.
+     * ONE PAGE OF THEM, from the first row the shell's pager asked for: the
+     * pager clamps the page against {@see self::countRoster()} before it gets
+     * here, and a null limit is every row from the offset on.
      *
-     * @return Page<User>
+     * @return list<User>
      */
-    public function findRoster(RosterQuery $query): Page
+    public function findRoster(RosterQuery $query, int $offset = 0, ?int $limit = null): array
     {
-        $qb = $this->rosterBuilder($query);
-
-        $page = max(1, $query->page);
-        $qb->setFirstResult(($page - 1) * RosterQuery::PER_PAGE)
-            ->setMaxResults(RosterQuery::PER_PAGE);
-
-        // fetchJoinCollection: true — the department filter joins a to-MANY
-        // (a placement names several departments), so the paginator needs its
-        // distinct-identifier pass or a person in two departments is counted
-        // twice and the page is short.
-        $paginator = new Paginator($qb->getQuery(), null !== $query->department && RosterQuery::NO_DEPARTMENT !== $query->department);
+        $qb = $this->rosterBuilder($query)
+            ->setFirstResult($offset)
+            ->setMaxResults($limit);
 
         /** @var list<User> $items */
-        $items = array_values(iterator_to_array($paginator));
+        $items = array_values(iterator_to_array(self::paged($qb, $query)));
 
-        return new Page($items, \count($paginator), $page, RosterQuery::PER_PAGE);
+        return $items;
+    }
+
+    /** How many people the roster's filter leaves, on every page. */
+    public function countRoster(RosterQuery $query): int
+    {
+        return \count(self::paged($this->rosterBuilder($query), $query));
+    }
+
+    /**
+     * fetchJoinCollection when the department filter joins a to-MANY (a
+     * placement names several departments): the paginator needs its
+     * distinct-identifier pass, or a person in two departments is counted
+     * twice and the page is short.
+     *
+     * @return Paginator<mixed>
+     */
+    private static function paged(QueryBuilder $qb, RosterQuery $query): Paginator
+    {
+        return new Paginator($qb->getQuery(), null !== $query->department && RosterQuery::NO_DEPARTMENT !== $query->department);
     }
 
     /**
@@ -151,13 +159,7 @@ class UserRepository extends ServiceEntityRepository
      */
     public function findRosterRows(RosterQuery $query): array
     {
-        $qb = $this->rosterBuilder($query);
-        $paginator = new Paginator($qb->getQuery(), null !== $query->department && RosterQuery::NO_DEPARTMENT !== $query->department);
-
-        /** @var list<User> $rows */
-        $rows = array_values(iterator_to_array($paginator));
-
-        return $rows;
+        return $this->findRoster($query);
     }
 
     /** THE ROSTER'S ONE FILTER, shared by the paged register and its export. */

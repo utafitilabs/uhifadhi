@@ -85,7 +85,7 @@ final readonly class PostingQuery
     /**
      * A STATION'S ROWS IN THE ORDER THE SORT ASKS FOR — one column, one
      * direction, the name as the tie-breaker; and in the DEFAULT order the
-     * leader stands first, because a station's band is read from its lead —
+     * leader stands first, because a station's rows are read from its lead —
      * an order the reader asked for is the order they get, leader included.
      *
      * @param list<PostingRow> $rows

@@ -497,11 +497,19 @@ final class PermissionsCheckTest extends WebTestCaseWithSchema
         return $service;
     }
 
-    /** The foot: the count, then the page size as a chooser of its own, 20 · 50 · 100 · All, remembered per table. */
+    /**
+     * The foot is the shell's (@Shell/_foot, paged in the browser): the
+     * count, then the page size as a chooser of its own, 20 · 50 · 100 · All,
+     * remembered per table, the arrows the page's controller moves.
+     */
     private static function assertPageSize(Crawler $card, string $count, string $table): void
     {
+        self::assertCount(1, $card->filter('.rdf-foot'));
         $foot = $card->filter('.rdf-foot > span')->first();
-        self::assertSame($count.' ·', self::squash((string) $foot->filter('[data-pc-count]')->text()));
+        self::assertSame($count, self::squash((string) $foot->filter('[data-pc-count]')->text()), 'the count alone; the separator is the foot\'s');
+        self::assertStringStartsWith($count.' · 20 per page', self::squash($foot->text()));
+        self::assertSame(['20', '50', '100', 'all'], $foot->filter('.i-ddmenu[aria-label="Rows per page"] button.i-ddopt')->each(static fn (Crawler $c): string => (string) $c->attr('data-pc-per')));
+        self::assertCount(1, $card->filter('.rdf-foot > .rdf-page[data-pc-page]'));
         $size = $foot->filter('details.i-dd.rdf-size');
         self::assertSame($table, $size->attr('data-pc-size'));
         self::assertSame('20 per page▾', self::squash($size->filter('summary')->text()));

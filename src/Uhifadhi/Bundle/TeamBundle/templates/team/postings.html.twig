@@ -74,10 +74,17 @@
             </form>
         </div>
 
+        {# ONE ROW A POSTING, THE STATION A CELL OF IT (its name over its
+           code and zone), never a band over its people: a table does not
+           separate its rows into groups. A station nobody stands at keeps
+           one row of its own, so the figure above can be read without
+           opening the area. #}
         <table class="tbl">
-            {# EVERY HEADER SORTS ITS ONE COLUMN, inside each station's band;
-               the sorted header says so and turns over when clicked. #}
+            {# EVERY HEADER BUT THE STATION'S SORTS ITS ONE COLUMN within each
+               station's rows; the stations keep the ground's order. The
+               sorted header says so and turns over when clicked. #}
             <thead><tr>
+                <th>Station</th>
                 {% for column, label in {person: 'Person', rank: 'Rank', department: 'Department'} %}
                     {% set sorted = query.sort == column %}
                     <th{{ sorted ? ' class="sorted"' }} aria-sort="{{ sorted ? (query.direction == 'desc' ? 'descending' : 'ascending') : 'none' }}">
@@ -87,37 +94,32 @@
                 <th></th>
             </tr></thead>
             <tbody>
-            {% for station in stations %}
-                {# THE BAND A GROUPED TABLE BREAKS ON — the station, its code,
-                   its zone and how many stand here. #}
-                <tr class="sxgrp">
-                    <td colspan="4"><b>{{ station.name }}</b> <span class="mono d">&middot; {{ station.note() }}</span></td>
+            {% for line in lines %}
+                {% set station = line.station %}
+                <tr>
+                    <td><b>{{ station.name }}</b><span class="sub">{{ line.where }}</span></td>
+                    {% if line.row %}
+                        <td><b><a href="{{ path('team_member', {uuid: line.row.personUuid}) }}">{{ line.row.name }}</a></b>{% if line.row.leader %} <span class="chip ok">leads</span>{% endif %}</td>
+                        <td><span class="mono d">{{ line.row.rank ?? 'no position' }}</span></td>
+                        <td><span class="mono d">{{ line.row.department ?? 'no department' }}</span></td>
+                    {% else %}
+                        <td colspan="3"><span class="mono d">nobody stationed &mdash; a normal state, not an error</span></td>
+                    {% endif %}
+                    <td class="door">{% if station.url %}<a class="open-btn" href="{{ station.url }}">The station</a>{% endif %}</td>
                 </tr>
-                {% for row in station.rows %}
-                    <tr>
-                        <td><b><a href="{{ path('team_member', {uuid: row.personUuid}) }}">{{ row.name }}</a></b>{% if row.leader %} <span class="chip ok">leads</span>{% endif %}</td>
-                        <td><span class="mono d">{{ row.rank ?? 'no position' }}</span></td>
-                        <td><span class="mono d">{{ row.department ?? 'no department' }}</span></td>
-                        <td style="text-align:right">{% if station.url %}<a class="open-btn" href="{{ station.url }}">The station</a>{% endif %}</td>
-                    </tr>
-                {% else %}
-                    {# NOBODY STATIONED IS A NORMAL STATE, not an error, and it is
-                       drawn so the figure above can be read without opening
-                       the area. #}
-                    <tr><td colspan="4"><span class="mono d">Nobody is stationed here &mdash; a normal state, not an error</span></td></tr>
-                {% endfor %}
             {% else %}
-                <tr><td colspan="4"><span class="mono d">{{ query.isFiltered() ? 'No posting answers that.' : 'No station has been recorded on this installation yet.' }}</span></td></tr>
+                <tr><td colspan="5"><span class="mono d">{{ query.isFiltered() ? 'No posting answers that.' : 'No station has been recorded on this installation yet.' }}</span></td></tr>
             {% endfor %}
             </tbody>
         </table>
 
+        {% include '@Shell/_foot.html.twig' with {
+            count: table.total, noun: 'rows', one: 'row',
+            perPage: table.size, page: table.page, pages: table.pages, links: links,
+        } only %}
+
         {# A PERSON'S ZONE IS READ FROM THE STATION'S POINT, so it follows the
            boundary it falls inside. #}
-        <div class="sxfoot">
-            <span>Made on the station, in the area &mdash; Team reads it, never writes it.</span>
-            <span class="sp"></span>
-            {% if stationsUrl %}<a class="tgl" href="{{ stationsUrl }}">Station somebody</a>{% endif %}
-        </div>
+        <p class="use" style="margin:10px 0 0">Made on the station, in the area &mdash; Team reads it, never writes it. A person&rsquo;s zone is read from the station&rsquo;s point.</p>
     </div>
 {% endblock %}

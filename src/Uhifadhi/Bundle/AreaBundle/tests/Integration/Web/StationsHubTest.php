@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationPostingsController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationsController;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\AreaBundle\Enum\PostingSource;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
@@ -34,6 +35,8 @@ use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
 #[CoversClass(StationPostingsController::class)]
 final class StationsHubTest extends WebTestCase
 {
+    use HouseRegisterAssertions;
+
     public function testTheHubCarriesItsOwnStripInPlaceOfTheAreaTabs(): void
     {
         $this->boot();
@@ -103,11 +106,9 @@ final class StationsHubTest extends WebTestCase
         $body = $this->body($this->hub($area).'/list');
 
         self::assertStringContainsString('Every station', $body);
-        self::assertStringContainsString('class="lfilt"', $body);
-        foreach (['zone', 'posted', 'lead', 'sort'] as $axis) {
-            self::assertStringContainsString('data-dd="'.$axis.'"', $body);
-        }
-        self::assertStringContainsString('class="lsearch"', $body);
+        self::assertHouseBar($body, '.grid > .c', 4);
+        self::assertHouseTable($body, '.grid > .c');
+        self::assertHouseFoot($body, '.grid > .c', '2 stations');
         self::assertStringContainsString('<table class="tbl', $body);
         foreach (['Station', 'Code', 'Zone', 'Point', 'Posted', 'Lead'] as $head) {
             self::assertMatchesRegularExpression('#<th[^>]*>'.$head.'</th>#', $body);
@@ -120,6 +121,26 @@ final class StationsHubTest extends WebTestCase
 
         self::assertStringNotContainsString('class="factband', $body, 'A table page carries no strip.');
         self::assertStringNotContainsString('class="c kpi"', $body);
+    }
+
+    public function testTheRegisterBarIsChipsWithCountsAndEveryOptionALink(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->aStaffedArea();
+
+        $chips = self::chips($this->body($this->hub($area).'/list'), '.grid > .c');
+
+        self::assertSame(['all zones · 2', 'posted or not · 2', 'led or not · 2', 'name a–z'], array_column($chips, 'chip'));
+        self::assertSame(['All zones', 'Western Sector', 'No zone'], array_column($chips[0]['options'], 'label'));
+        self::assertSame(['2', '1', '1'], array_column($chips[0]['options'], 'count'));
+        self::assertTrue($chips[0]['options'][0]['on']);
+        self::assertContains(['label' => 'Nobody posted', 'count' => '1', 'href' => $this->hub($area).'/list?posted=no', 'on' => false], $chips[1]['options']);
+        self::assertSame([null, null, null], array_column($chips[3]['options'], 'count'), 'An order counts nothing.');
+
+        $chosen = self::chips($this->body($this->hub($area).'/list?posted=no&per=50'), '.grid > .c');
+        self::assertSame('nobody posted · 1', $chosen[1]['chip']);
+        self::assertSame($this->hub($area).'/list?per=50', $chosen[1]['options'][0]['href'], 'Clearing a chip keeps the page size and drops the page.');
     }
 
     public function testTheRegisterNamesTheLeadAndTheZone(): void
@@ -164,10 +185,12 @@ final class StationsHubTest extends WebTestCase
         $body = $this->body($this->hub($area).'/postings');
 
         self::assertStringContainsString('Who is posted where', $body);
-        foreach (['zone', 'station', 'position'] as $axis) {
-            self::assertStringContainsString('data-dd="'.$axis.'"', $body);
-        }
-        self::assertStringContainsString('class="lsearch"', $body);
+        self::assertHouseBar($body, '.grid > .c', 3);
+        self::assertHouseTable($body, '.grid > .c');
+        self::assertHouseFoot($body, '.grid > .c', '2 people');
+        $chips = self::chips($body, '.grid > .c');
+        self::assertSame(['all zones · 2', 'every station · 2', 'any position · 2'], array_column($chips, 'chip'));
+        self::assertContains(['label' => 'Eastgate Post', 'count' => '2', 'href' => $this->hub($area).'/postings?station='.$this->stationNamed($area, 'Eastgate Post'), 'on' => false], $chips[1]['options']);
         foreach (['Person', 'Position', 'Department'] as $head) {
             self::assertMatchesRegularExpression('#<th[^>]*>'.$head.'</th>#', $body);
         }
@@ -248,6 +271,14 @@ final class StationsHubTest extends WebTestCase
         preg_match_all('#<tr data-station>\s*<td><b>([^<]+)</b>#', $this->body($url), $found);
 
         return $found[1];
+    }
+
+    private function stationNamed(AreaOfInterest $area, string $name): string
+    {
+        $station = $this->em->getRepository(Station::class)->findOneBy(['area' => $area, 'name' => $name]);
+        self::assertNotNull($station, 'No station '.$name);
+
+        return (string) $station->getUuidString();
     }
 
     private function aStaffedArea(): AreaOfInterest

@@ -31,30 +31,23 @@
 {% block shell_page %}
 {% set here = path('area_zones_list', {uuid: area.uuidString}) %}
 {% set q = 'Uhifadhi\\Bundle\\AreaBundle\\Model\\ZoneListQuery' %}
-{% set ctl = 'uhifadhi--area-bundle--area-query' %}
 <div class="grid">
     <div class="c">
         <span class="tab">Every zone<span class="src">&middot;
             {%- if zones.total == zones.scope %} {{ zones.scope }}{% else %} {{ zones.total }} of {{ zones.scope }}{% endif %} &middot; {{ zones.period }}
         </span></span>
 
-        <div class="lfilt" data-controller="{{ ctl }}" data-action="uhifadhi--shell-bundle--dropdown:choose->{{ ctl }}#chosen">
-            {{ include('@Shell/_dropdown.html.twig', {
-                name: constant(q ~ '::STATIONS'), label: 'Stations or not', icon: 'shell:map-pin', default: '', value: query.stations ?? '',
-                groups: [
-                    {label: null, options: [{value: '', label: 'Stations or not', count: zones.scope}]},
-                    {label: 'Stations', options: zones.stations|map(o => {value: o.value, label: o.label, count: o.count})},
-                ],
+        <div class="lfilt">
+            {{ include('@Area/_partial/_filter.html.twig', {
+                key: constant(q ~ '::STATIONS'), all: 'Stations or not', allCount: zones.scope, chosen: query.stations, query: query,
+                options: zones.stations,
             }, with_context: false) }}
-            {{ include('@Shell/_dropdown.html.twig', {
-                name: constant(q ~ '::SORT'), label: 'Name A–Z', icon: 'shell:arrow-up-down', default: 'name', value: query.sort,
-                groups: [
-                    {label: 'Order', options: [
-                        {value: 'name', label: 'Name A–Z', count: null},
-                        {value: 'extent', label: 'Largest first', count: null},
-                        {value: 'covered', label: 'Most covered', count: null},
-                        {value: 'stations', label: 'Most stations', count: null},
-                    ]},
+            {{ include('@Area/_partial/_filter.html.twig', {
+                key: constant(q ~ '::SORT'), all: 'Name A–Z', chosen: query.sort == 'name' ? null : query.sort, query: query,
+                options: [
+                    {value: 'extent', label: 'Largest first', count: null},
+                    {value: 'covered', label: 'Most covered', count: null},
+                    {value: 'stations', label: 'Most stations', count: null},
                 ],
             }, with_context: false) }}
 

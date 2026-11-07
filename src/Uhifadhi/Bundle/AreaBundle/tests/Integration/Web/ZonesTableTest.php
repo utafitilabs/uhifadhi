@@ -32,6 +32,8 @@ use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 #[CoversClass(ZoneListService::class)]
 final class ZonesTableTest extends WebTestCase
 {
+    use HouseRegisterAssertions;
+
     public function testEveryZoneOfTheAreaIsARow(): void
     {
         $this->boot();
@@ -162,7 +164,7 @@ final class ZonesTableTest extends WebTestCase
         self::assertStringContainsString('page <span class="pg">2</span> of 2', $body);
     }
 
-    /** The bar: two house dropdowns and the search; no strip and no figures. */
+    /** The bar: two chips and the search; no strip and no figures. */
     public function testTheRegisterIsTheHouseTableUnderTheHouseBar(): void
     {
         $this->boot();
@@ -170,9 +172,13 @@ final class ZonesTableTest extends WebTestCase
         $body = $this->body($this->tab($this->threeZones()));
 
         self::assertStringContainsString('Every zone', $body);
-        foreach (['stations', 'sort'] as $axis) {
-            self::assertStringContainsString('data-dd="'.$axis.'"', $body);
-        }
+        self::assertHouseBar($body, '.grid > .c', 2);
+        self::assertHouseTable($body, '.grid > .c');
+        self::assertHouseFoot($body, '.grid > .c', '3 zones');
+        $chips = self::chips($body, '.grid > .c');
+        self::assertSame(['stations or not · 3', 'name a–z'], array_column($chips, 'chip'));
+        self::assertSame(['Name A–Z', 'Largest first', 'Most covered', 'Most stations'], array_column($chips[1]['options'], 'label'));
+        self::assertStringEndsWith('/zones/list?sort=extent', (string) $chips[1]['options'][1]['href']);
         foreach (['Zone', 'km&sup2;', 'Covered', 'Stations', 'Posted'] as $head) {
             self::assertMatchesRegularExpression('#<th[^>]*>'.$head.'</th>#', $body);
         }

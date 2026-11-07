@@ -23,11 +23,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Station;
+use Uhifadhi\Bundle\AreaBundle\Enum\StationEventKind;
 use Uhifadhi\Bundle\AreaBundle\Model\PostingQuery;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPlateService;
+use Uhifadhi\Bundle\AreaBundle\Service\EventLogService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingBoardService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationFigureService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationSectionService;
@@ -85,6 +87,7 @@ final readonly class StationRecordController
          */
         private Periods $periods,
         private TablePageService $pager,
+        private EventLogService $log,
     ) {
     }
 
@@ -106,7 +109,8 @@ final readonly class StationRecordController
         $board = $this->board->at($station, $query);
         $people = $this->pager->read($request, \count($board['rows']));
         $events = $this->events->findByStation($station, \PHP_INT_MAX);
-        $log = $this->pager->read($request, \count($events), self::LOG_PAGE, self::LOG_PER);
+        $narrowed = $this->log->narrow($events, StationEventKind::cases(), self::answer($request, EventLogService::KIND), $request->query->getString(EventLogService::SEARCH));
+        $log = $this->pager->read($request, \count($narrowed['rows']), self::LOG_PAGE, self::LOG_PER);
         $view = $this->set->view($area);
 
         $posts = [];
@@ -153,7 +157,11 @@ final readonly class StationRecordController
             'posted' => $board['total'],
             'leader' => $board['leader'],
             'query' => $query,
-            'events' => $log->slice($events),
+            'events' => $log->slice($narrowed['rows']),
+            'logScope' => \count($events),
+            'logKinds' => $narrowed['kinds'],
+            'logKind' => $narrowed['kind'],
+            'logSearch' => $narrowed['search'],
             'logTable' => $log,
             'logLinks' => $this->pager->links($request, $log, self::LOG_PAGE, self::LOG_PER),
             'bands' => $bands,
@@ -211,6 +219,13 @@ final readonly class StationRecordController
      * the board, and the only thing it can be stale about is how it was
      * ordered.
      */
+    private static function answer(Request $request, string $key): ?string
+    {
+        $value = trim($request->query->getString($key));
+
+        return '' === $value ? null : $value;
+    }
+
     private static function queryFrom(Request $request): PostingQuery
     {
         $sort = $request->query->getString(PostingQuery::SORT, PostingQuery::BY_NAME);

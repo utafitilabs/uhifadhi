@@ -196,18 +196,46 @@ if (!HTMLScriptElement.supports || !HTMLScriptElement.supports('importmap')) (fu
 
         <div class="c stpostings" id="posted">
             <span class="tab">Who is posted here<span class="src">&middot; 0 people</span></span>
-                        <div class="lfilt" data-controller="uhifadhi--area-bundle--area-query" data-action="uhifadhi--shell-bundle--dropdown:choose->uhifadhi--area-bundle--area-query#chosen">
-                                <div class="dd" data-controller="uhifadhi--shell-bundle--dropdown" data-dd="src" data-default="" data-dd-value="">
-    <button type="button" class="dd-t" aria-haspopup="listbox" aria-expanded="false" aria-controls="dd-p-src"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="dd-i" width="16" height="16" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1l1-4Z"></path></g></svg><span class="dd-v" data-placeholder="Recorded anywhere">Recorded anywhere</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="dd-c" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg></button>
-    <div class="dd-p" id="dd-p-src" hidden>        <div class="dd-l" role="listbox" aria-label="Recorded anywhere">            <div role="group" aria-label="Recorded anywhere">                <button type="button" class="dd-o" role="option" tabindex="-1" aria-selected="true" data-value="" data-label="Recorded anywhere" data-find="recorded anywhere " data-default><span class="dd-ol">Recorded anywhere</span><span class="dd-m">0</span></button>            </div>            <div role="group" aria-label="Recorded"><div class="dd-h" aria-hidden="true"><span>Recorded</span><span data-dd-n>0</span></div>            </div>        </div>
-    </div>
-</div>
+                        <div class="lfilt">
+                                <details class="i-dd">
+    <summary class="mchip i-ddt">
+        <span class="i-ddval">recorded anywhere &middot; 0</span>
+        <span class="i-ddcaret">&#9662;</span>
+    </summary>
+    <div class="i-ddmenu" aria-label="src">
+                        <a class="i-ddopt on"
+           href="/areas/id-1/stations/id-3">
+            <span class="i-ddopt-l">Recorded anywhere</span>
+            <span class="i-ddopt-n">0</span>        </a>
+        <span class="i-ddsep"></span>
+                    </div>
+</details>
 
-                <div class="dd" data-controller="uhifadhi--shell-bundle--dropdown" data-dd="sort" data-default="az" data-dd-value="az">
-    <button type="button" class="dd-t" aria-haspopup="listbox" aria-expanded="false" aria-controls="dd-p-sort"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="dd-i" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m3 16l4 4l4-4M7 20V4m14 4l-4-4l-4 4m4-4v16"></path></svg><span class="dd-v" data-placeholder="Name A–Z">Name A–Z</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="dd-c" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg></button>
-    <div class="dd-p" id="dd-p-sort" hidden>        <div class="dd-l" role="listbox" aria-label="Name A–Z">            <div role="group" aria-label="Order"><div class="dd-h" aria-hidden="true"><span>Order</span><span data-dd-n>4</span></div>                <button type="button" class="dd-o" role="option" tabindex="-1" aria-selected="true" data-value="az" data-label="Name A–Z" data-find="name a–z az" data-default><span class="dd-ol">Name A–Z</span></button>                <button type="button" class="dd-o" role="option" tabindex="-1" aria-selected="false" data-value="newest" data-label="Newest posting" data-find="newest posting newest"><span class="dd-ol">Newest posting</span></button>                <button type="button" class="dd-o" role="option" tabindex="-1" aria-selected="false" data-value="since" data-label="Oldest posting" data-find="oldest posting since"><span class="dd-ol">Oldest posting</span></button>                <button type="button" class="dd-o" role="option" tabindex="-1" aria-selected="false" data-value="role" data-label="By position" data-find="by position role"><span class="dd-ol">By position</span></button>            </div>        </div>
-    </div>
-</div>
+                <details class="i-dd">
+    <summary class="mchip i-ddt">
+        <span class="i-ddval">name a–z</span>
+        <span class="i-ddcaret">&#9662;</span>
+    </summary>
+    <div class="i-ddmenu" aria-label="sort">
+                        <a class="i-ddopt on"
+           href="/areas/id-1/stations/id-3">
+            <span class="i-ddopt-l">Name A–Z</span>
+                    </a>
+        <span class="i-ddsep"></span>
+                            <a class="i-ddopt"
+               href="/areas/id-1/stations/id-3?sort=newest">
+                                <span class="i-ddopt-l">Newest posting</span>
+                            </a>
+                    <a class="i-ddopt"
+               href="/areas/id-1/stations/id-3?sort=since">
+                                <span class="i-ddopt-l">Oldest posting</span>
+                            </a>
+                    <a class="i-ddopt"
+               href="/areas/id-1/stations/id-3?sort=role">
+                                <span class="i-ddopt-l">By position</span>
+                            </a>
+            </div>
+</details>
 
                 <form class="lsearch" method="get" action="/areas/id-1/stations/id-3">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m21 21l-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></g></svg>
@@ -243,18 +271,76 @@ if (!HTMLScriptElement.supports || !HTMLScriptElement.supports('importmap')) (fu
                     </div>
 
         <div class="c stlogcard" id="log">
-            <span class="tab">What happened here<span class="src">&middot; 2 lines</span></span>
-                            <table class="tbl">
-                    <thead><tr><th>What happened</th><th>When</th></tr></thead>
-                    <tbody>
-                                            <tr><td><b>Now in West</b><span class="sub">the station was recorded</span></td><td><span class="mono d"><time datetime="wall-clock" data-localtime-format="day">wall-clock</time></span><time class="sub" datetime="wall-clock" data-localtime-format="clock">wall-clock</time></td></tr>
-                                            <tr><td><b>Station recorded</b></td><td><span class="mono d"><time datetime="wall-clock" data-localtime-format="day">wall-clock</time></span><time class="sub" datetime="wall-clock" data-localtime-format="clock">wall-clock</time></td></tr>
-                                        </tbody>
-                </table>
-                <div class="rdf-foot">
+            <span class="tab">What happened here<span class="src">&middot; 2 lines
+            </span></span>
+                            <div class="lfilt">
+    <details class="i-dd">
+    <summary class="mchip i-ddt">
+        <span class="i-ddval">every change &middot; 2</span>
+        <span class="i-ddcaret">&#9662;</span>
+    </summary>
+    <div class="i-ddmenu" aria-label="lkind">
+                        <a class="i-ddopt on"
+           href="/areas/id-1/stations/id-3">
+            <span class="i-ddopt-l">Every change</span>
+            <span class="i-ddopt-n">2</span>        </a>
+        <span class="i-ddsep"></span>
+                            <a class="i-ddopt"
+               href="/areas/id-1/stations/id-3?lkind=recorded">
+                                <span class="i-ddopt-l">Opened</span>
+                <span class="i-ddopt-n">1</span>            </a>
+                    <a class="i-ddopt"
+               href="/areas/id-1/stations/id-3?lkind=renamed">
+                                <span class="i-ddopt-l">Renamed</span>
+                <span class="i-ddopt-n">0</span>            </a>
+                    <a class="i-ddopt"
+               href="/areas/id-1/stations/id-3?lkind=point_moved">
+                                <span class="i-ddopt-l">Point moved</span>
+                <span class="i-ddopt-n">0</span>            </a>
+                    <a class="i-ddopt"
+               href="/areas/id-1/stations/id-3?lkind=zone_derived">
+                                <span class="i-ddopt-l">Zone re-derived</span>
+                <span class="i-ddopt-n">1</span>            </a>
+                    <a class="i-ddopt"
+               href="/areas/id-1/stations/id-3?lkind=posted">
+                                <span class="i-ddopt-l">Posted</span>
+                <span class="i-ddopt-n">0</span>            </a>
+                    <a class="i-ddopt"
+               href="/areas/id-1/stations/id-3?lkind=posting_ended">
+                                <span class="i-ddopt-l">Posting ended</span>
+                <span class="i-ddopt-n">0</span>            </a>
+                    <a class="i-ddopt"
+               href="/areas/id-1/stations/id-3?lkind=leader_appointed">
+                                <span class="i-ddopt-l">Leader appointed</span>
+                <span class="i-ddopt-n">0</span>            </a>
+                    <a class="i-ddopt"
+               href="/areas/id-1/stations/id-3?lkind=deactivated">
+                                <span class="i-ddopt-l">Closed</span>
+                <span class="i-ddopt-n">0</span>            </a>
+                    <a class="i-ddopt"
+               href="/areas/id-1/stations/id-3?lkind=reactivated">
+                                <span class="i-ddopt-l">Reopened</span>
+                <span class="i-ddopt-n">0</span>            </a>
+            </div>
+</details>
+
+    <form class="lsearch" method="get" action="/areas/id-1/stations/id-3">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m21 21l-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></g></svg>
+        <input class="fld" type="search" name="lq" value="" placeholder="Find a line&hellip;" aria-label="Find a line in what happened here">
+            </form>
+</div>
+    <table class="tbl">
+        <thead><tr><th>What happened</th><th>When</th></tr></thead>
+        <tbody>
+                    <tr><td><b>Now in West</b><span class="sub">the station was recorded</span></td><td><span class="mono d"><time datetime="wall-clock" data-localtime-format="day">wall-clock</time></span><time class="sub" datetime="wall-clock" data-localtime-format="clock">wall-clock</time></td></tr>
+                    <tr><td><b>Station recorded</b></td><td><span class="mono d"><time datetime="wall-clock" data-localtime-format="day">wall-clock</time></span><time class="sub" datetime="wall-clock" data-localtime-format="clock">wall-clock</time></td></tr>
+                </tbody>
+    </table>
+    <div class="rdf-foot">
     <span><span>2 lines</span> &middot; <details class="i-dd rdf-size"><summary><span class="pg">20</span> per page<span class="i-ddcaret" aria-hidden="true">&#9662;</span></summary><div class="i-ddmenu" aria-label="Rows per page">        <a class="i-ddopt on" href="/areas/id-1/stations/id-3?lper=20" aria-current="true"><span class="i-ddopt-l">20</span></a>        <a class="i-ddopt" href="/areas/id-1/stations/id-3?lper=50"><span class="i-ddopt-l">50</span></a>        <a class="i-ddopt" href="/areas/id-1/stations/id-3?lper=100"><span class="i-ddopt-l">100</span></a>        <a class="i-ddopt" href="/areas/id-1/stations/id-3?lper=all"><span class="i-ddopt-l">All</span></a>    </div></details></span>
     <span class="rdf-page">page <span class="pg">1</span> of 1</span>
 </div>
+
 
                     </div>
     </div>

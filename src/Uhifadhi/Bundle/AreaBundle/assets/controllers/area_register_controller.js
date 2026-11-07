@@ -28,21 +28,33 @@ import { Controller } from '@hotwired/stimulus';
  * A ROW THAT DOES NOT MATCH LEAVES; IT IS NEVER GREYED. A dimmed row still reads
  * as data — it says "this area is somehow lesser" rather than "not in your search".
  *
+ * THE REGISTER TABLE WEARS THE HOUSE BAR AND FOOT: its filter is a chip whose
+ * options are buttons (the chip names the choice and closes), and the foot's
+ * size chooser and arrows page what is left. A shape with no foot pages
+ * nothing.
+ *
  * NOTHING HERE KNOWS WHAT AN AREA IS. It searches, filters and sorts by the data
  * attributes the template stamped on each row, so a figure added to a row needs
  * no change in this file.
  */
 export default class extends Controller {
-    static targets = ['search', 'list', 'count', 'sortlabel'];
+    static targets = ['search', 'list', 'count', 'sortlabel', 'total', 'pager'];
+
+    static values = { noun: { type: String, default: 'areas' }, one: { type: String, default: 'area' } };
 
     connect() {
         this.filterName = 'all';
+        this.per = '20';
+        this.page = 1;
         // The default sort is last activity, descending — the card gallery's fixed
         // order and the table's initial sorted column both.
         this.sortKey = 'activity';
         this.sortDir = -1;
 
-        this.searchTarget?.addEventListener('input', () => this.apply());
+        this.searchTarget?.addEventListener('input', () => {
+            this.page = 1;
+            this.apply();
+        });
 
         // The whole row opens its area where the template made it clickable (the
         // table rows carry data-href; the cards and dock rows are real anchors and
@@ -68,9 +80,56 @@ export default class extends Controller {
         this.filterName = pill.dataset.filter || 'all';
 
         pill.parentElement
-            .querySelectorAll('a')
-            .forEach((a) => a.classList.toggle('on', a === pill));
+            .querySelectorAll('[data-filter]')
+            .forEach((a) => {
+                a.classList.toggle('on', a === pill);
+                if ('BUTTON' === a.tagName) {
+                    a.setAttribute('aria-pressed', a === pill ? 'true' : 'false');
+                }
+            });
 
+        // A chip's option names itself on the chip and closes it; "all" puts
+        // back the live count the chip read at first.
+        const chip = pill.closest('details');
+        if (chip) {
+            const value = chip.querySelector('.i-ddval');
+            this.chipAll ??= value.innerHTML;
+            value.innerHTML = 'all' === this.filterName ? this.chipAll : pill.dataset.chip;
+            chip.querySelector('summary')?.classList.toggle('on', 'all' !== this.filterName);
+            chip.open = false;
+        }
+
+        this.page = 1;
+        this.apply();
+    }
+
+    /** A size of the foot's chooser was picked. */
+    size(event) {
+        const option = event.target.closest('[data-per]');
+        if (!option) {
+            return;
+        }
+        this.per = option.dataset.per;
+        const chooser = option.closest('details');
+        chooser.querySelectorAll('[data-per]').forEach((o) => {
+            o.classList.toggle('on', o === option);
+            o.setAttribute('aria-pressed', o === option ? 'true' : 'false');
+        });
+        const summary = chooser.querySelector('summary');
+        const caret = summary.querySelector('.i-ddcaret')?.outerHTML ?? '';
+        summary.innerHTML = ('all' === this.per ? 'all on one page' : `<span class="pg">${this.per}</span> per page`) + caret;
+        chooser.open = false;
+        this.page = 1;
+        this.apply();
+    }
+
+    /** One of the foot's arrows. */
+    step(event) {
+        const arrow = event.target.closest('[data-go]');
+        if (!arrow) {
+            return;
+        }
+        this.page += Number(arrow.dataset.go);
         this.apply();
     }
 
@@ -135,6 +194,27 @@ export default class extends Controller {
         if (this.hasCountTarget) {
             this.countTarget.textContent = String(shown);
         }
+
+        this.paginate(rows.filter((row) => !row.hidden));
+    }
+
+    /** The foot's page of what the filters left; a shape with no foot shows it all. */
+    paginate(kept) {
+        if (!this.hasPagerTarget) {
+            return;
+        }
+        const per = 'all' === this.per ? kept.length || 1 : Number(this.per);
+        const pages = Math.max(1, Math.ceil(kept.length / per));
+        this.page = Math.min(Math.max(1, this.page), pages);
+        kept.forEach((row, at) => {
+            row.hidden = at < (this.page - 1) * per || at >= this.page * per;
+        });
+        if (this.hasTotalTarget) {
+            this.totalTarget.textContent = `${kept.length} ${1 === kept.length ? this.oneValue : this.nounValue}`;
+        }
+        const back = this.page > 1 ? '<button type="button" data-go="-1" aria-label="Previous page">&lsaquo;</button>' : '';
+        const on = this.page < pages ? '<button type="button" data-go="1" aria-label="Next page">&rsaquo;</button>' : '';
+        this.pagerTarget.innerHTML = `page <span class="pg">${this.page}</span> of ${pages}${back}${on}`;
     }
 
     compare(a, b) {

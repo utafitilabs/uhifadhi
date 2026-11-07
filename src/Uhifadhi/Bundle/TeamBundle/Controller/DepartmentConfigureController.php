@@ -30,6 +30,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\DepartmentKind;
 use Uhifadhi\Bundle\TeamBundle\Enum\DepartmentScopeEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\DuplicateDepartmentKindException;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
@@ -154,8 +155,25 @@ final readonly class DepartmentConfigureController
         }
         ksort($goalKinds);
 
+        // THE TWO REGISTERS' CHIPS COUNT THEIR WHOLE LIST: the kinds by
+        // whether a department carries them, the goal kinds by unit, the
+        // goal kinds with no unit last.
+        $kinds = $this->kinds->findAllOrdered();
+        $used = \count(array_filter($kinds, static fn (DepartmentKind $kind): bool => !$kind->getDepartments()->isEmpty()));
+        $units = array_count_values(array_map(static fn (array $kind): string => $kind['unit'], $goalKinds));
+        uksort($units, static fn (int|string $a, int|string $b): int => ['' === $a, (string) $a] <=> ['' === $b, (string) $b]);
+
         return new Response($this->twig->render('@Team/departments/configure_lists.html.twig', [
-            'kinds' => $this->kinds->findAllOrdered(),
+            'kinds' => $kinds,
+            'useOptions' => [
+                ['value' => '', 'label' => 'All', 'count' => \count($kinds)],
+                ['value' => 'used', 'label' => 'In use', 'count' => $used],
+                ['value' => 'unused', 'label' => 'Unused', 'count' => \count($kinds) - $used],
+            ],
+            'unitOptions' => [
+                ['value' => '', 'label' => 'Any unit', 'count' => \count($goalKinds)],
+                ...array_map(static fn (int|string $unit, int $n): array => ['value' => '' === $unit ? 'none' : (string) $unit, 'label' => '' === $unit ? 'no unit' : (string) $unit, 'count' => $n], array_keys($units), $units),
+            ],
             'unkinded' => $unkinded,
             'departments' => \count($departments),
             'scopes' => DepartmentScopeEnum::cases(),

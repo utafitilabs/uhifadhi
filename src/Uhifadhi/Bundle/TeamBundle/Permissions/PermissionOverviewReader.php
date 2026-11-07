@@ -59,6 +59,7 @@ final readonly class PermissionOverviewReader
      *     changesByMonth: list<array{key: string, month: string, changes: int}>,
      *     review: list<array{id: string, label: string, alarm: bool, count: int, summary: string}>,
      *     history: list<ChangeLine>,
+     *     historyChips: list<array{axis: string, value: string, on: bool, aria: string, sep: int, options: list<array{value: string, label: string, count: int, on: bool}>}>,
      *     freshness: array{asOf: ?\DateTimeImmutable, previousRun: ?\DateTimeImmutable, nextRun: \DateTimeImmutable, pending: bool, running: bool, lastFailure: ?string, questions: int, ms: int},
      * }
      */
@@ -96,9 +97,37 @@ final readonly class PermissionOverviewReader
             'review' => array_map(fn (array $l): array => [
                 'id' => $l['id'], 'label' => $l['label'], 'alarm' => $l['alarm'], 'count' => $l['count'], 'summary' => $this->summary($l['id'], $l['entries']),
             ], $standing['lists']),
-            'history' => array_map(static fn (PermissionChange $c): ChangeLine => ChangeLine::of($c), $this->changes->findPage(0, max(1, $this->changes->countAll()))),
+            'history' => $history = array_map(static fn (PermissionChange $c): ChangeLine => ChangeLine::of($c), $this->changes->findPage(0, max(1, $this->changes->countAll()))),
+            'historyChips' => [
+                self::historyChip('kind', 'all', 'All', 'Filter by kind of change', $history, static fn (ChangeLine $l): string => $l->kind, ucfirst(...)),
+                self::historyChip('by', 'anyone', 'Anyone', 'Filter by who made the change', $history, static fn (ChangeLine $l): string => $l->by, static fn (string $by): string => $by),
+            ],
             'freshness' => $this->findings->freshness(),
         ];
+    }
+
+    /**
+     * ONE CHIP OF THE HISTORY'S BAR: the lead option for every change, then
+     * one option a value the history holds, with how many changes carry it,
+     * in the value's order. The page's register controller recounts them as
+     * the other chip and the search narrow.
+     *
+     * @param list<ChangeLine>             $history
+     * @param callable(ChangeLine): string $of
+     * @param callable(string): string     $label
+     *
+     * @return array{axis: string, value: string, on: bool, aria: string, sep: int, options: list<array{value: string, label: string, count: int, on: bool}>}
+     */
+    private static function historyChip(string $axis, string $word, string $all, string $aria, array $history, callable $of, callable $label): array
+    {
+        $counts = array_count_values(array_map($of, $history));
+        ksort($counts, \SORT_NATURAL | \SORT_FLAG_CASE);
+        $options = [['value' => '', 'label' => $all, 'count' => \count($history), 'on' => true]];
+        foreach ($counts as $value => $n) {
+            $options[] = ['value' => (string) $value, 'label' => $label((string) $value), 'count' => $n, 'on' => false];
+        }
+
+        return ['axis' => $axis, 'value' => $word.' · '.\count($history), 'on' => false, 'aria' => $aria, 'sep' => 1, 'options' => $options];
     }
 
     /**

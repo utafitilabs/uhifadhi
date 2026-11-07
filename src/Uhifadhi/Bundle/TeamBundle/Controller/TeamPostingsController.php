@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
+use Uhifadhi\Bundle\ShellBundle\Service\TablePageService;
 use Uhifadhi\Bundle\TeamBundle\Model\PostingQuery;
 use Uhifadhi\Bundle\TeamBundle\Service\PostingBoard;
 
@@ -43,6 +44,7 @@ final readonly class TeamPostingsController
     public function __construct(
         private Environment $twig,
         private PostingBoard $board,
+        private TablePageService $tablePages,
     ) {
     }
 
@@ -51,10 +53,15 @@ final readonly class TeamPostingsController
     public function index(Request $request): Response
     {
         $query = PostingQuery::from($request);
+        $board = $this->board->read($query);
+        $table = $this->tablePages->read($request, \count($board['lines']));
 
         return new Response($this->twig->render('@Team/team/postings.html.twig', [
             'query' => $query,
-            ...$this->board->read($query),
+            ...$board,
+            'lines' => $table->slice($board['lines']),
+            'table' => $table,
+            'links' => $this->tablePages->links($request, $table),
         ]));
     }
 }

@@ -222,7 +222,6 @@
 .reg-name a { color: rgb(var(--c-tx)); text-decoration: none; }
 .reg-name a:hover { color: rgb(var(--c-acc)); }
 .reg-meta { font-size: 9px; color: rgb(var(--c-dim)); margin-top: 2px; }
-.reg-open { text-align: right; white-space: nowrap; }
 
 /* ── The right-now strip ──────────────────────────────────────────────────── */
 /* The KPI strip is a `.grid`, and the shell's grid carries the card-gap rhythm
@@ -670,18 +669,6 @@ tr.cmparked td { color: rgb(var(--c-dim)); }
 table.tbl td .cmdoor, table.tbl td .cmnodoor { vertical-align: middle; }
 /* The switch sits in a form; the form takes no room of its own. */
 .cmscroll td form { display: inline-flex; margin: 0; }
-
-/* The filter row the register wears: grouped dropdowns, a search, and the line
-   that says what is shown. */
-.cmfilt { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 0 12px; }
-.cmsearch { flex: 1 1 200px; min-width: 150px; }
-.cmsearch .fld { height: 28px; font-size: 12px; padding: 0 10px; border-radius: 8px; width: 100%; }
-.cmshown { font-family: var(--font-mono); font-size: 10px; letter-spacing: .06em; color: rgb(var(--c-dim)); white-space: nowrap; }
-.cmshown b { color: rgb(var(--c-fog)); font-weight: 700; }
-/* An option that is a button rather than a link wears the same row. */
-.cmfilt button.i-ddopt { border: 0; background: none; font: inherit; color: inherit; cursor: pointer; }
-.cmfilt button.i-ddopt.on { background: color-mix(in srgb, rgb(var(--c-acc)) 12%, transparent); }
-.cmfilt button.i-ddopt:hover { background: rgb(var(--c-raised)); }
 
 /* The trailing column head names a control, so it never wraps. */
 table.tbl th.cmact { white-space: nowrap; }

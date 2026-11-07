@@ -398,7 +398,7 @@ return static function (ContainerConfigurator $container): void {
 
     // SETTINGS › DELETIONS: the line every delete keeps, by day (ruled 30 Sep, #48).
     $services->set('team.controller.settings_deletions', SettingsDeletionsController::class)
-        ->args([service('twig'), service('shell.settings.section'), service('team.deletions'), service(DeletionRecordRepository::class)])
+        ->args([service('twig'), service('shell.settings.section'), service('team.deletions'), service(DeletionRecordRepository::class), service('shell.table_page')])
         ->tag('controller.service_arguments');
     $services->alias(SettingsDeletionsController::class, 'team.controller.settings_deletions')->public();
 
@@ -1447,6 +1447,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.people_facets'),
             service('team.access.tier_sight'),
             service('team.access.address_sight'),
+            service('shell.table_page'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(TeamController::class, 'team.controller.team')->public();
@@ -1547,6 +1548,7 @@ return static function (ContainerConfigurator $container): void {
             service(UserRepository::class),
             service('team.access.catalogue'),
             service('team.position_board'),
+            service('shell.table_page'),
             service('team.position_history'),
             service('team.positions'),
             service('security.csrf.token_manager'),
@@ -1697,7 +1699,7 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(PostingBoard::class, 'team.posting_board');
 
     $services->set('team.controller.postings', TeamPostingsController::class)
-        ->args([service('twig'), service('team.posting_board')])
+        ->args([service('twig'), service('team.posting_board'), service('shell.table_page')])
         ->tag('controller.service_arguments');
     $services->alias(TeamPostingsController::class, 'team.controller.postings')->public();
 
@@ -1824,6 +1826,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.rank_board'),
             service('team.settings'),
             service('team.csv_export'),
+            service('shell.table_page'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(RankController::class, 'team.controller.rank')->public();

@@ -23,11 +23,11 @@ use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
  * from memory, and which would have grown a sixth the first time a design asked.
  *
  * EVERY FIELD IS A QUERY PARAMETER, which is the whole mechanism of the roster's
- * tool row: the search box, the tier chips, the two selects and the page all
- * live in the URL, so a filtered roster is bookmarkable, shareable and survives
- * the back button. The tool row is a plain GET form and the tier chips are
- * ordinary links — the list works with no JavaScript at all, and a debounced
- * auto-submit would only ever be an enhancement on top.
+ * filter bar: the search box, the chips and the page all live in the URL, so a
+ * filtered roster is bookmarkable, shareable and survives the back button. The
+ * search is a plain GET form and every chip option is an ordinary link — the
+ * list works with no JavaScript at all. The page size is the shell pager's
+ * (`?per`), read off the request beside this object.
  *
  * EVERYTHING ARRIVING FROM A URL IS UNTRUSTED. {@see fromRequest()} is where a
  * typed page number, an invented tier and a stale position uuid all become
@@ -36,13 +36,6 @@ use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
  */
 final readonly class RosterQuery
 {
-    /**
-     * Twenty-five to a page. Stated as a constant because the roster's footer
-     * prints it — "12 people · 25 per page" is the fact that tells a reader
-     * when a second page will appear.
-     */
-    public const int PER_PAGE = 25;
-
     /**
      * The position filter's "— no position —" option.
      *

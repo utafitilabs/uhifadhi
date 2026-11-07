@@ -36,7 +36,7 @@ final readonly class StationRegister
      * travels with the answer rather than being a constant three screens
      * quietly disagree about.
      */
-    public const int PER_PAGE = 8;
+    public const int PER_PAGE = 20;
 
     /**
      * @param list<StationRow>   $rows     the rows in this page's window

@@ -1,0 +1,74 @@
+{# THE REGISTER FOOT — under every house table, even at one page: the count
+   and the page size at the left ("45 files · 20 per page", the sizes 20 ·
+   50 · 100 · All, "all on one page" at All), "page k of n" at the right with
+   an arrow only where there is a page to go to. The contract is
+   docs/register-foot.md.
+
+   A PAGE WRITES NONE OF ITS MARKUP. Paged by GET, every choice is a link the
+   shell's pager wrote (Service/TablePageService):
+
+     {% include '@Shell/_foot.html.twig' with {
+         count: table.total, noun: 'files', one: 'file',
+         perPage: table.size, page: table.page, pages: table.pages,
+         links: links,
+     } only %}
+
+   Paged in the browser, the choices are buttons and the page's own
+   controller moves them, reading the attributes it names in `hooks`:
+
+     {% include '@Shell/_foot.html.twig' with {
+         count: rows|length, noun: 'positions', one: 'position', perPage: 20,
+         client: true, hooks: {option: 'data-opt', pager: {'data-x-target': 'pager'}},
+     } only %}
+
+   PARAMETERS:
+     count    the rows the filters left, on every page
+     noun     what they are, plural; `one` the singular, the noun when absent
+     perPage  20, 50, 100 or all (0 is all)
+     page     this page, from 1 (1 when absent)
+     pages    how many pages; from the count and the size when absent
+     links    {sizes: {size: href}, previous: href|null, next: href|null}
+     client   true: buttons for the page's controller instead of links
+     hidden   true: the foot is drawn hidden (a register nothing matches)
+     hooks    for client: attributes, name → value, on `foot`, `count`,
+              `size` (the chooser), `menu` (its options' box) and `pager`;
+              `option` the attribute an option's size is in (data-per),
+              `all` the value All carries there (all), `go` the attribute
+              an arrow's step is in (data-go) #}
+{%- macro attrs(map) -%}
+    {%- for name, value in map ?? {} %} {{ name|e('html_attr') }}="{{ value }}"{% endfor -%}
+{%- endmacro -%}
+{%- set _client = client ?? false -%}
+{%- set _hooks = hooks ?? {} -%}
+{%- set _size = perPage ~ '' -%}
+{%- set _size = _size in ['all', '0', ''] ? 'all' : _size -%}
+{%- set _page = page ?? 1 -%}
+{%- set _pages = pages ?? ('all' == _size ? 1 : max(1, (count / (_size + 0))|round(0, 'ceil'))) -%}
+{%- set _one = one ?? noun -%}
+{%- set _option = _hooks.option ?? 'data-per' -%}
+{%- set _all = (_hooks.all ?? 'all') ~ '' -%}
+{%- set _go = _hooks.go ?? 'data-go' -%}
+<div class="rdf-foot"{{ _self.attrs(_hooks.foot ?? {}) }}{% if hidden ?? false %} hidden{% endif %}>
+    <span><span{{ _self.attrs(_hooks.count ?? {}) }}>{{ count|number_format }} {{ count == 1 ? _one : noun }}</span> &middot; <details class="i-dd rdf-size"{{ _self.attrs(_hooks.size ?? {}) }}><summary>
+        {%- if 'all' == _size %}all on one page{% else %}<span class="pg">{{ _size }}</span> per page{% endif -%}
+        <span class="i-ddcaret" aria-hidden="true">&#9662;</span></summary><div class="i-ddmenu" aria-label="Rows per page"{{ _self.attrs(_hooks.menu ?? {}) }}>
+        {%- for size in constant('Uhifadhi\\Bundle\\ShellBundle\\Model\\TablePage::SIZES') %}
+        {%- set _on = size == _size %}
+        {%- set _label = 'all' == size ? 'All' : size %}
+        {%- if _client %}
+        <button type="button" class="i-ddopt{{ _on ? ' on' }}" {{ _option|e('html_attr') }}="{{ 'all' == size ? _all : size }}" aria-pressed="{{ _on ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ _label }}</span></button>
+        {%- else %}
+        <a class="i-ddopt{{ _on ? ' on' }}" href="{{ links.sizes[size] }}"{% if _on %} aria-current="true"{% endif %}><span class="i-ddopt-l">{{ _label }}</span></a>
+        {%- endif %}
+        {%- endfor %}
+    </div></details></span>
+    <span class="rdf-page"{{ _self.attrs(_hooks.pager ?? {}) }}>page <span class="pg">{{ _page }}</span> of {{ _pages }}
+        {%- if _client %}
+        {%- if _page > 1 %}<button type="button" {{ _go|e('html_attr') }}="-1" aria-label="Previous page">&lsaquo;</button>{% endif %}
+        {%- if _page < _pages %}<button type="button" {{ _go|e('html_attr') }}="1" aria-label="Next page">&rsaquo;</button>{% endif %}
+        {%- else %}
+        {%- if links.previous ?? null %}<a href="{{ links.previous }}" aria-label="Previous page">&lsaquo;</a>{% endif %}
+        {%- if links.next ?? null %}<a href="{{ links.next }}" aria-label="Next page">&rsaquo;</a>{% endif %}
+        {%- endif -%}
+    </span>
+</div>

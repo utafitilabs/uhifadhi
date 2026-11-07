@@ -198,9 +198,14 @@ hooks — is in
   the tab icon.
 - [The dropdown](docs/dropdown.md) — the contract of the pill dropdown and its
   grouped panel.
+- [The attention banner](docs/banner.md) — the one row above the content that
+  says what waits on a decision, and its doors.
+- [The register foot and the pager](docs/register-foot.md) — the foot under every
+  house table, the pager that reads `?page` and `?per`, and the table's sub-line
+  and door cell.
 - [The component vocabulary](docs/components.md) — the classes a module writes on
-  its own elements: the plate, the card's tab, the KPI, the register table, the
-  pager and the person's mark.
+  its own elements: the plate, the card's tab, the KPI, an overview's parts, the
+  register table, the pager and the person's mark.
 - [Boundaries](docs/boundaries.md) — what the shell is not: the one URL it ships,
   why it requires no registry, and how much of the module grid it claims.
 - [Changing the contract](docs/changing-the-contract.md) — the policy for adding,

@@ -1,14 +1,12 @@
 {# ONE ZONE, READ.
 
-   Design: areas/<area>/zones/index.html, the picked state.
+   Design: areas/<area>/zones/detail.html.
 
    A RECORD, NOT A TAB: the zone's bare name as the h1, its context in the
-   quiet subline, the crumb one step longer, its own identity band, and no
-   tab strip — a zone is a thing inside the area rather than one of the ways
-   of looking at the area.
-
-   ITS FIGURES ARE IN ITS BAND. A record states them the way the station page
-   does; the row of cards belongs to the set, not to one of its members.
+   subline, the crumb one step longer, its facts strip as its own overview,
+   no tab strip. The index lists the cards, one row a card; the cards stand
+   in one column; every table is the house table under its bar and over its
+   foot, and the postings carry their station as a column, never a band row.
 
    IT ONLY READS. The ring, the name and the removal are the configure
    section's, and nothing here writes. #}
@@ -22,168 +20,169 @@
 {% endblock %}
 
 {% block shell_breadcrumbs %}
-    <a href="{{ path('area_index') }}">uhifadhi</a> /
-    <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name }}</a> /
-    <a href="{{ path('area_zones', {uuid: area.uuidString}) }}">zones</a> /
-    {{ zone.name|lower }}
+    <a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_index') }}">areas</a> / <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name|lower }}</a> / <a href="{{ path('area_zones', {uuid: area.uuidString}) }}">zones</a> / {{ zone.name|lower }}
 {% endblock %}
 
 {% block shell_page_title %}{{ zone.name }}{% endblock %}
 
 {% block shell_page_subtitle %}
-    Zone &middot; {{ area.name }}
-    {%- if lastImport and lastImport.importedAt %} &middot; imported
-        <time datetime="{{ lastImport.importedAt|date('c') }}" data-localtime-format="day">{{ lastImport.importedAt|date('j M Y') }}</time>
-    {%- endif -%}
+    Zone in {{ area.name }} &middot;
+    {%- if stationCount > 0 %} {{ stationCount }} {{ stationCount == 1 ? 'station' : 'stations' }}, {{ peopleTotal }} posted{% else %} no station stands in it{% endif -%}
 {% endblock %}
 
 {% block shell_page_actions %}
-    {# WHAT ELSE READS THIS GROUND — whatever modules report by zone, through
-       their own entry routes. The core names none of them. #}
-    {# ONE DOOR A MODULE. It was one per FIGURE, so a module publishing four
-       figures about this ground put "See incidents" in the header four
-       times. #}
+    {# ONE DOOR A MODULE, through its own entry route; the core names none. #}
     {% for door in moduleDoors %}
-        <a class="tgl w-act" href="{{ path(door.route, {uuid: area.uuidString}) }}">See {{ door.name|lower }} {{ ux_icon('shell:arrow-right') }}</a>
+        <a class="tgl w-act" href="{{ path(door.route, {uuid: area.uuidString}) }}">{{ door.name }} in the zone</a>
     {% endfor %}
+    {% if door('zones.configure', area) %}
+        <a class="tgl w-act" href="{{ path('area_zones_configure', {uuid: area.uuidString}) }}">Edit the zone</a>
+    {% endif %}
 {% endblock %}
 
 {% block shell_page %}
 {% set here = path('area_zone_show', {uuid: area.uuidString, zone: zone.uuidString}) %}
+{% set ctl = 'uhifadhi--area-bundle--area-query' %}
+{% set keep = app.request.query.all %}
 
-{# THE RECORD'S OWN BAND — the figures a zone has, and the ones no module
-   publishes said in words rather than drawn as noughts. #}
-<div class="factband">
-    <span class="f"><span class="k">Extent</span><span class="v">{{ row ? row.km2|number_format : '&mdash;'|raw }}<em>km&sup2;</em></span></span>
+<div class="factband ov-band">
+    <span class="f"><span class="k">Extent</span><span class="v">{{ row ? row.km2|number_format ~ ' km²' : '—' }}<em>from its boundary</em></span></span>
     <span class="f"><span class="k">Covered</span><span class="v">
-        {%- if covered %}{{ covered.display }}<em>{{ covered.unit ?: '%' }}</em>
+        {%- if covered and covered.isKnown %}{{ covered.display }} %<em>in {{ month }}</em>
         {%- else %}&mdash;<em>no module</em>{% endif -%}
     </span></span>
-    <span class="f"><span class="k">Stations</span><span class="v">
-        {{- stationCount ?: '&mdash;'|raw }}<em>
-        {%- if stationCount == 0 %}none{% elseif stationCount == 1 %}one station{% else %}stations{% endif -%}
-        </em></span></span>
-    <span class="f"><span class="k">People</span><span class="v">{{ peopleTotal ?: '&mdash;'|raw }}<em>stationed</em></span></span>
+    <span class="f"><span class="k">Stations</span><span class="v">{{ stationCount }}<em>{{ stationCount ? 'by their points' : 'none inside it' }}</em></span></span>
+    <span class="f"><span class="k">Posted</span><span class="v">{{ peopleTotal }}<em>{{ peopleTotal ? 'at its stations' : 'nobody' }}</em></span></span>
     {% for fact in figures %}
-        {# THE MODULE IS THE LABEL AND THE PERIOD IS THE UNIT — the month in
-           three letters, as the design writes it ("aug"). A band is a line of
-           SHORT facts: the figure's own caption is a sentence, and a sentence
-           under every figure is what made this band four rows tall. The zone
-           figures are always asked for a month, which is why three letters
-           say the whole of it. #}
-        <span class="f"><span class="k">{{ fact.figure.moduleName }}</span><span class="v">{{ fact.figure.display }}<em>{{ period.shortLabel }}</em></span></span>
+        <span class="f" data-module><span class="k">{{ fact.figure.moduleName }}</span><span class="v">{{ fact.figure.display }}<em>in {{ month }}</em></span></span>
     {% else %}
-        <span class="f"><span class="k">From the modules</span><span class="v">&mdash;<em>no module</em></span></span>
+        <span class="f" data-module><span class="k">From the modules</span><span class="v">&mdash;<em>no module</em></span></span>
     {% endfor %}
     <span class="sp"></span>
-    <a class="more" href="{{ path('area_zones', {uuid: area.uuidString}) }}">{{ area.name }}&rsquo;s zones &rarr;</a>
+    <a class="more" href="{{ path('area_zones_list', {uuid: area.uuidString}) }}">Every zone &rarr;</a>
 </div>
 
-<div class="recgrid">
-    <div class="col">
-        {# THE GROUND, with this zone lit among its siblings: a zone is read
-           against the area it divides, never on a plate of its own. #}
-        <div class="c">
-            <span class="tab">{{ zone.name }} on the ground<span class="src">&middot; the whole area, its zones and its stations &middot; {{ zone.name }} lit</span></span>
+{% embed '@Shell/_onpage.html.twig' with {rows: [
+    {id: 'ground', label: 'The ground'},
+    {id: 'stations', label: 'Its stations', count: stationCount},
+    {id: 'posted', label: 'Who works out of it', count: peopleTotal},
+    {id: 'log', label: 'What happened here', count: logTable.total},
+]} %}
+    {% block shell_onpage_main %}
+        <div class="c" id="ground">
+            <span class="tab">The zone on the ground<span class="src">&middot; {{ row ? row.km2|number_format ~ ' km²' : '—' }}{% if covered and covered.isKnown %} &middot; {{ covered.display }} % covered in {{ month }}{% endif %}</span></span>
             {{ render_map(map, {
                 'role': 'img',
-                'aria-label': zone.name ~ ' among the zones of ' ~ area.name,
+                'aria-label': zone.name ~ ' and the ground around it',
+                '--map-plate-height': 'min(58vh, 560px)',
             }) }}
         </div>
 
-        <div class="c">
-            <span class="tab">Stations in {{ zone.name }}<span class="src">&middot; {{ stationCount }} &middot; {{ peopleTotal }} {{ peopleTotal == 1 ? 'person' : 'people' }}</span></span>
-
+        <div class="c" id="stations">
+            <span class="tab">Its stations<span class="src">&middot; {{ stationCount }} &middot; {{ peopleTotal }} posted</span></span>
             {% if stationCount %}
                 <div class="lfilt">
                     <form class="lsearch" method="get" action="{{ here }}">
                         {{ ux_icon('shell:search') }}
-                        <input class="fld" type="search" name="q" value="{{ query.search }}" placeholder="Name or code&hellip;"
-                               aria-label="Search stations by name or code">
+                        <input class="fld" type="search" name="q" value="{{ search }}" placeholder="Find a station by name or code&hellip;" aria-label="Find a station by name or code">
+                        {% for k, v in keep|filter((v, k) => k not in ['q', 'page']) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
                     </form>
                 </div>
             {% endif %}
-
             {% if stations is empty %}
-                <div class="zdnone">
-                    <span class="stpin hollow"></span>
-                    <b>{{ stationCount ? 'No station matches' : 'No station in ' ~ zone.name }}</b>
-                    <span>{{ stationCount ? 'clear the search' : 'zones are presence-driven — ground nobody works may hold no station' }}</span>
+                <div class="zempty">
+                    <b class="zeh">{{ stationCount ? 'No station matches' : 'No station stands in ' ~ zone.name }}</b>
+                    <p class="zeb">{{ stationCount ? 'Clear the search, or search another name or code.' : 'Zones are presence-driven: ground nobody works may hold no station.' }}</p>
+                    {% if stationCount %}<span class="zea"><a class="btn sm" href="{{ here }}">Clear the filters</a></span>{% endif %}
                 </div>
             {% else %}
-                {# NO ZONE COLUMN: every row of one zone would answer it the same. #}
-                {{ include('@Area/zone/_stations.html.twig', {rows: stations, area: area, withZone: false}) }}
-                {{ include('@Area/_partial/_pager.html.twig', {
-                    query: query, page: stationsPage, pages: stationsPages,
-                    from: (stationsPage - 1) * perPage + 1, to: min(stationsPage * perPage, stationsMatching),
-                    total: stationsMatching, scope: stationCount, noun: 'stations',
-                }) }}
+                <table class="tbl">
+                    <thead><tr><th>Station</th><th>Code</th><th>Point</th><th class="num">Posted</th><th>Lead</th><th></th></tr></thead>
+                    <tbody>
+                    {% for station in stations %}
+                        <tr data-station><td><b>{{ station.name }}</b></td><td><span class="mono d">{{ station.code ?? '—' }}</span></td><td><span class="mono d">{{ station.point ? station.point.label : '—' }}</span></td><td class="num">{{ station.posted }}</td><td><span class="mono d">{{ leads[station.uuid] ?? '—' }}</span></td><td class="door"><a class="open-btn" href="{{ path('area_station_show', {uuid: area.uuidString, station: station.uuid}) }}">Open</a></td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {{ include('@Shell/_foot.html.twig', {
+                    count: stationTable.total, noun: 'stations', one: 'station',
+                    perPage: stationTable.size, page: stationTable.page, pages: stationTable.pages, links: stationLinks,
+                }, with_context: false) }}
             {% endif %}
-
-            <p class="zpicknote">A station&rsquo;s zone is read from its point &middot; it follows the boundary it falls inside</p>
         </div>
-    </div>
 
-    <div class="col">
-        <div class="c">
-            <span class="tab">People working out of {{ zone.name }}<span class="src">&middot; {{ peopleMatching }} of {{ peopleTotal }}</span></span>
-
+        <div class="c" id="posted">
+            <span class="tab">Who works out of it<span class="src">&middot;
+                {%- if peopleTotal == 0 %} nobody{% else %} {{ peopleTable.total == peopleTotal ? peopleTotal : peopleTable.total ~ ' of ' ~ peopleTotal }} {{ peopleTotal == 1 ? 'person' : 'people' }} &middot; {{ peopleStations }} {{ peopleStations == 1 ? 'station' : 'stations' }}{% endif -%}
+            </span></span>
             {% if peopleTotal %}
-                <div class="lfilt">
+                <div class="lfilt" data-controller="{{ ctl }}" data-action="uhifadhi--shell-bundle--dropdown:choose->{{ ctl }}#chosen">
+                    {% if stationCount > 1 %}
+                        {{ include('@Shell/_dropdown.html.twig', {
+                            name: 'station', label: 'Any station', icon: 'shell:map-pin', default: '', value: ask.station ?? '',
+                            groups: [
+                                {label: null, options: [{value: '', label: 'Any station', count: peopleTotal}]},
+                                {label: 'Its stations', options: stationOptions},
+                            ],
+                        }, with_context: false) }}
+                    {% endif %}
+                    {{ include('@Shell/_dropdown.html.twig', {
+                        name: 'position', label: 'Any position', icon: 'shell:user', default: '', value: ask.position ?? '',
+                        groups: [
+                            {label: null, options: [{value: '', label: 'Any position', count: peopleTotal}]},
+                            {label: 'Positions', options: positionOptions},
+                        ],
+                    }, with_context: false) }}
                     <form class="lsearch" method="get" action="{{ here }}">
                         {{ ux_icon('shell:search') }}
-                        <input class="fld" type="search" name="person" value="{{ peopleSearch }}" placeholder="Search by name&hellip;"
-                               aria-label="Search the people by name">
+                        <input class="fld" type="search" name="person" value="{{ ask.person }}" placeholder="Find a person or a station&hellip;" aria-label="Find a person or a station">
+                        {% for k, v in keep|filter((v, k) => k not in ['person', 'ppage']) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
                     </form>
                 </div>
             {% endif %}
-
             {% if people is empty %}
-                <div class="zdnone">
-                    <span class="tav hollow"></span>
-                    <b>{{ peopleTotal ? 'Nobody matches' : 'Nobody works out of ' ~ zone.name }}</b>
-                    <span>{{ peopleTotal ? 'clear the search' : (stationCount ? 'a station with nobody at it is a normal state' : 'no station to be stationed at') }}</span>
+                <div class="zempty">
+                    <b class="zeh">{{ peopleTotal ? 'Nobody matches' : 'Nobody works out of ' ~ zone.name }}</b>
+                    <p class="zeb">{{ peopleTotal ? 'No posting here answers these filters. Clear one, or search another name.' : (stationCount ? 'A station with nobody at it is a normal state, not an error.' : 'No station stands in it to be posted to.') }}</p>
+                    {% if peopleTotal %}<span class="zea"><a class="btn sm" href="{{ here }}">Clear the filters</a></span>{% endif %}
                 </div>
             {% else %}
-                <div class="plist">
+                {# NO BAND ROWS: the station is the first column, the rows ordered
+                   by it, the lead first and marked by its chip. #}
+                <table class="tbl">
+                    <thead><tr><th>Station</th><th>Person</th><th>Position</th><th>Department</th><th></th></tr></thead>
+                    <tbody>
                     {% for person in people %}
-                        <div class="pline">
-                            <span class="tav">{{ person.initials|slice(0, 1) }}</span>
-                            <b>{{ person.name }}</b>
-                            {% if person.role %}<em>{{ person.role }}</em>{% endif %}
-                            <span class="pat">{{ stationNames[person.stationUuid] ?? '' }}</span>
-                            {% if person.leader %}<span class="chip acc stlead">Leads</span>{% endif %}
-                        </div>
+                        <tr><td><span class="chip">{{ stationNames[person.stationUuid] ?? '—' }}</span></td><td><b>{{ person.name }}</b>{% if person.leader %} <span class="chip ok">leads</span>{% endif %}</td><td><span class="mono d">{{ person.role ?? '—' }}</span></td><td><span class="mono d">{{ person.department ?? '—' }}</span></td><td class="door"><a class="open-btn" href="{{ path('area_station_show', {uuid: area.uuidString, station: person.stationUuid}) }}">The station</a></td></tr>
                     {% endfor %}
-                </div>
-
-                {{ include('@Area/_partial/_pager.html.twig', {
-                    base: here, param: 'ppage', extra: peopleSearch ? '&person=' ~ peopleSearch : '',
-                    page: peoplePage, pages: peoplePages,
-                    from: (peoplePage - 1) * 4 + 1, to: min(peoplePage * 4, peopleMatching),
-                    total: peopleMatching, scope: peopleTotal, noun: 'people',
-                }) }}
+                    </tbody>
+                </table>
+                {{ include('@Shell/_foot.html.twig', {
+                    count: peopleTable.total, noun: 'people', one: 'person',
+                    perPage: peopleTable.size, page: peopleTable.page, pages: peopleTable.pages, links: peopleLinks,
+                }, with_context: false) }}
             {% endif %}
         </div>
 
-        {# WHAT HAPPENED HERE — the area's zone history mentioning this zone.
-           The sentence is the record, so that is what it is found by. #}
-        <div class="c">
-            <span class="tab">What happened here<span class="src">&middot; newest first</span></span>
-            {% if events is empty %}
+        <div class="c" id="log">
+            <span class="tab">What happened here<span class="src">&middot; {{ logTable.total }} {{ logTable.total == 1 ? 'line' : 'lines' }}</span></span>
+            {% if log is empty %}
                 <div class="use">Nothing has happened to {{ zone.name }} yet. Every import, rename and ring writes one line here.</div>
             {% else %}
-                <div class="zhist zhistcap">
-                    {% for event in events %}
-                        <div class="zhrow">
-                            <span class="zhdot{{ loop.first ? ' on' : '' }}"></span>
-                            <div><b>{{ event.headline }}{% if event.detail %} <span>&middot; {{ event.detail }}</span>{% endif %}</b></div>
-                            <time class="zhwhen" datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="day">{{ event.occurredAt|date('j M') }}</time>
-                        </div>
+                <table class="tbl">
+                    <thead><tr><th>What happened</th><th>When</th></tr></thead>
+                    <tbody>
+                    {% for event in log %}
+                        <tr><td><b>{{ event.headline }}</b>{% if event.detail %}<span class="sub">{{ event.detail }}</span>{% endif %}</td><td><span class="mono d"><time datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="day">{{ event.occurredAt|date('j M Y') }}</time></span><time class="sub" datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="clock">{{ event.occurredAt|date('H:i') }}</time></td></tr>
                     {% endfor %}
-                </div>
+                    </tbody>
+                </table>
+                {{ include('@Shell/_foot.html.twig', {
+                    count: logTable.total, noun: 'lines', one: 'line',
+                    perPage: logTable.size, page: logTable.page, pages: logTable.pages, links: logLinks,
+                }, with_context: false) }}
             {% endif %}
         </div>
-    </div>
-</div>
+    {% endblock %}
+{% endembed %}
 {% endblock %}

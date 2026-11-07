@@ -2,13 +2,14 @@
 
    Design: departments/configure-department.html. The same shape a person and
    a position have: the record's head, a "The record" door back, and one card
-   per operation. Three operations, and only three: RENAME; SCOPE — confine an
+   per operation: RENAME; SCOPE — confine an
    org-wide department to one area, or promote an area's department to
    org-wide, a reason required because authority moves with it; and DEACTIVATE,
    never delete — a department is an organizational fact that is wound down,
-   not erased. Every write returns here. #}
+   not erased; the MODULES it runs; its GOALS. #}
 {% extends '@Shell/page.html.twig' %}
 {% import '@Team/departments/_bits.html.twig' as di %}
+{% import '@Team/_partial/_table.html.twig' as tb %}
 
 {% set area = department.area %}
 {% set uuid = department.uuidString %}
@@ -126,6 +127,98 @@
                     </div>
                 </form>
             {% endif %}
+        </div>
+        {# MODULES — what it runs; switching one grants nothing and hides nothing. #}
+        <div class="c" {{ tb.wrap('modules', 'module') }}>
+            <span class="tab">Modules<span class="src">&middot; what {{ department.name }} runs</span></span>
+            {% set on = modules|filter(m => m.on)|length %}
+            <div class="lfilt">
+                {{ tb.chip('state', [
+                    {value: '', label: 'All', count: modules|length},
+                    {value: 'on', label: 'On', count: on},
+                    {value: 'off', label: 'Off', count: modules|length - on},
+                ]) }}
+                {{ tb.search('Find a module') }}
+            </div>
+            <table class="tbl" data-dept-modules-control>
+                <thead><tr><th>Module</th><th>Department</th><th class="door"></th></tr></thead>
+                <tbody>
+                {% for module in modules %}
+                    <tr {{ tb.row({state: module.on ? 'on' : 'off'}, module.name) }}{% if module.on %} data-dept-attached{% else %} data-dept-attach{% endif %}>
+                        <td><b>{{ module.name }}</b>{% if module.description %}<span class="sub">{{ module.description }}</span>{% endif %}</td>
+                        <td><span class="chip{{ module.on ? ' ok' }}">{{ module.on ? 'on' : 'off' }}</span></td>
+                        <td class="door">
+                            <form method="post" action="{{ path('team_department_module_toggle', {uuid: uuid, slug: module.slug}) }}">
+                                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                                <button class="softbtn{{ module.on ? ' danger' }}" type="submit">{{ module.on ? 'Switch off' : 'Switch on' }}</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {{ tb.none(modules is empty ? 'No module is installed.' : 'No module matches these filters.') }}
+            {{ tb.foot(modules|length, 'modules', 'module') }}
+            <p class="sbn">Switching a module on makes it <b>lead</b> for this department&rsquo;s people &mdash; it grants nothing and hides nothing. A module two departments run is one module, listed first for both.</p>
+        </div>
+
+        {# GOALS — what it says it will do, judged by whatever the modules publish. #}
+        <div class="c" {{ tb.wrap('goals', 'goal') }}>
+            <span class="tab">Goals<span class="src">&middot; {{ goals|length }} declared</span></span>
+            <div class="lfilt">{{ tb.search('Find a goal') }}</div>
+            <table class="tbl">
+                <thead><tr><th>Goal</th><th>Target</th><th>Answers for it</th><th>Closes</th><th>State</th><th class="door"></th></tr></thead>
+                <tbody>
+                {% for goal in goals %}
+                    <tr {{ tb.row({}, goal.statement) }}>
+                        <td><b>{{ goal.statement }}</b>{% if goal.kpiRef %}<span class="sub">{{ goal.kpiRef }}</span>{% endif %}</td>
+                        <td class="mono">{{ goal.direction.label }} {{ goal.target }}{{ goal.unit ? ' ' ~ goal.unit : '' }}</td>
+                        <td>{% if goal.owner %}{{ goal.owner.name }}{% else %}<em class="pnone">nobody yet</em>{% endif %}</td>
+                        <td><time datetime="{{ goal.closesAt|date('c') }}" data-localtime-format="day">{{ goal.closesAt|date('j M Y') }}</time></td>
+                        <td><span class="gdots"><i class="{{ goalStates[goal.uuidString].mark }}"></i></span>{{ goalStates[goal.uuidString].label }}</td>
+                        <td class="door">
+                            <form method="post" action="{{ path('team_department_goal_withdraw', {uuid: uuid, goal: goal.uuidString}) }}">
+                                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                                <button class="softbtn danger" type="submit"
+                                        {{ stimulus_controller('confirm-modal') }}
+                                        data-action="click->confirm-modal#ask"
+                                        data-confirm-modal-title-value="Withdraw “{{ goal.statement }}”?"
+                                        data-confirm-modal-message-value="The commitment is taken away entirely. Nothing else changes."
+                                        data-confirm-modal-confirm-label-value="Withdraw it"
+                                        data-confirm-modal-danger-value="true">Withdraw</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {{ tb.none(goals is empty ? 'No goal declared — which is not a miss.' : 'No goal matches this search.') }}
+            {{ tb.foot(goals|length, 'goals', 'goal') }}
+
+            <form class="crcard" method="post" action="{{ path('team_department_goal_declare', {uuid: uuid}) }}">
+                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                <div class="crgrid">
+                    <div class="crfield grow"><span class="crlab">The goal</span>
+                        <input class="fld" type="text" name="statement" maxlength="200" required placeholder="Cover 60 % of the ground every month" aria-label="What the goal says"></div>
+                    <div class="crfield"><span class="crlab">Direction</span>
+                        <span class="fsel"><select class="fld" name="direction" aria-label="Which way the goal is met"><option value="at_least">at least</option><option value="at_most">at most</option></select></span></div>
+                    <div class="crfield"><span class="crlab">Target</span>
+                        <input class="fld zfld-sm" type="text" name="target" inputmode="decimal" required placeholder="60" aria-label="The target"></div>
+                    <div class="crfield"><span class="crlab">Unit</span>
+                        <input class="fld zfld-sm" type="text" name="unit" maxlength="16" placeholder="%" aria-label="The target’s unit"></div>
+                </div>
+                <div class="crgrid">
+                    <div class="crfield"><span class="crlab">Answers for it</span>
+                        <span class="fsel"><select class="fld" name="owner" aria-label="The position that answers for it"><option value="">nobody yet</option>{% for position in positions %}<option value="{{ position.uuidString }}">{{ position.name }}</option>{% endfor %}</select></span></div>
+                    <div class="crfield"><span class="crlab">Opens</span>
+                        <input class="fld zfld-sm" type="date" name="opensAt" value="{{ goalWindow.opens }}" aria-label="The day the window opens"></div>
+                    <div class="crfield"><span class="crlab">Closes</span>
+                        <input class="fld zfld-sm" type="date" name="closesAt" value="{{ goalWindow.closes }}" aria-label="The day the window closes"></div>
+                    <div class="crfield grow"><span class="crlab">Judged by</span>
+                        <input class="fld" type="text" name="kpiRef" maxlength="80" placeholder="patrols.covered" aria-label="The published figure that answers it"></div>
+                    <button class="cta" type="submit">{{ ux_icon('shell:plus', {width: 14, height: 14}) }} Declare it</button>
+                </div>
+            </form>
         </div>
         {% if may_delete() %}
             {# A SUPER ADMIN DELETES (ruled 28 Sep, #48): its own page, counted and typed. #}

@@ -47,13 +47,46 @@ final class StationRecordTest extends WebTestCase
 
         self::assertStringContainsString('Eastgate Post', $body);
         self::assertStringContainsString('ST-01', $body);
-        self::assertStringContainsString('Who is stationed here', $body);
+        self::assertStringContainsString('Who is posted here', $body);
         self::assertStringContainsString('What happened here', $body);
         // The plate is the atlas's, wearing the house contract.
         self::assertStringContainsString('map-plate', $body);
         self::assertStringContainsString('map-legend', $body);
         // And no tab strip: a record is not one of the ways of looking at an area.
         self::assertStringNotContainsString('class="atabs"', $body);
+    }
+
+    /**
+     * THE RECORD'S SHAPE (design: areas/<area>/stations/detail.html): the
+     * facts strip as its own overview, the index one row a card, the cards
+     * in one column, the people and the log on the house table, each under
+     * its bar and over its foot; the code stays, as data.
+     */
+    public function testTheRecordIsTheStripTheIndexAndOneColumnOfHouseTables(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+
+        $body = $this->body($this->record($area, $station));
+
+        self::assertStringContainsString('class="factband ov-band"', $body);
+        foreach (['Zone', 'Code', 'Posted', 'Lead', 'Opened'] as $field) {
+            self::assertStringContainsString('<span class="k">'.$field.'</span>', $body);
+        }
+        preg_match_all('#<a class="onpage-row" href="\#([a-z]+)"[^>]*>.*?<span class="onpage-l">([^<]+)</span>#', $body, $rows);
+        self::assertSame(['ground', 'posted', 'point', 'log'], $rows[1]);
+        self::assertSame(['The ground', 'Who is posted here', 'The point', 'What happened here'], $rows[2]);
+        self::assertStringNotContainsString('recgrid', $body, 'One column: no side column.');
+        // The position and department dropdowns are drawn where the person
+        // seam answers; this host has none.
+        foreach (['src', 'sort'] as $axis) {
+            self::assertStringContainsString('data-dd="'.$axis.'"', $body);
+        }
+        self::assertMatchesRegularExpression('#<thead><tr><th>Person</th><th>Position</th><th>Recorded</th><th>Since</th><th></th></tr></thead>#', $body);
+        self::assertMatchesRegularExpression('#<td><b>J\. Mollel</b> <span class="chip ok">leads</span></td>#', $body);
+        self::assertMatchesRegularExpression('#<thead><tr><th>What happened</th><th>When</th></tr></thead>#', $body);
+        self::assertSame(2, substr_count($body, 'class="rdf-foot"'));
     }
 
     public function testTheBandNamesTheDerivedZoneAndTheLead(): void
@@ -67,7 +100,7 @@ final class StationRecordTest extends WebTestCase
         self::assertStringContainsString('>West<', $body);
         self::assertStringContainsString('derived', $body);
         self::assertStringContainsString('J. Mollel', $body);
-        self::assertStringContainsString('Leads', $body);
+        self::assertStringContainsString('<span class="chip ok">leads</span>', $body);
     }
 
     /**
@@ -82,7 +115,7 @@ final class StationRecordTest extends WebTestCase
         $this->signIn();
         [$area, $station] = $this->aStaffedPost();
 
-        self::assertStringNotContainsString('--map-plate-height:', $this->body($this->record($area, $station)));
+        self::assertStringContainsString('--map-plate-height:min(58vh, 560px)', $this->body($this->record($area, $station)));
     }
 
     /**
@@ -188,7 +221,7 @@ final class StationRecordTest extends WebTestCase
 
         $body = $this->body($this->record($area, $station));
 
-        self::assertStringContainsString('Nobody is stationed here', $body);
+        self::assertStringContainsString('Nobody is posted here', $body);
         self::assertStringNotContainsString('Clear the filters', $body);
     }
 
@@ -316,9 +349,9 @@ final class StationRecordTest extends WebTestCase
      */
     private function board(string $url): string
     {
-        preg_match_all('#<div class="pline">.*?</div>#s', $this->body($url), $lines);
+        preg_match('#<div class="c stpostings" id="posted">.*?<tbody>(.*?)</tbody>#s', $this->body($url), $table);
 
-        return implode("\n", $lines[0]);
+        return $table[1] ?? '';
     }
 
     /** @return array{0: AreaOfInterest, 1: Station} */

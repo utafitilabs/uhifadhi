@@ -66,7 +66,7 @@ final class PeriodFollowsTheClockTest extends WebTestCase
 
         $zones = $this->zoneList()->register($area, new ZoneListQuery());
 
-        self::assertSame('jan', $zones->period, 'The zones register captions January.');
+        self::assertSame('January', $zones->period, 'The zones register captions January.');
         self::assertSame(
             'January 2026',
             $this->periods()->month()->label,

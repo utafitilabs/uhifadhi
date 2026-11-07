@@ -1,65 +1,25 @@
-{# THE ZONES OF AN AREA, AS A TABLE.
+{# THE ZONES OF AN AREA, ON THE HOUSE TABLE.
 
-   Design: areas/<area>/zones/index.html, the zones card.
-
-   THE STATIONS TABLE'S TWIN, and drawn from the same partials: the grouped
-   dropdowns, the search and the pager are the shared ones, because two
-   registers of the same shape that are written twice are two registers that
-   drift.
+   Design: areas/<area>/zones/zones.html.
 
    A FIGURE IS PUBLISHED OR IT IS ABSENT. The extent, the stations and the
-   people are the area's own facts and are always numbers; Covered and every
-   module column come through the zone-figure seam, and where no installed
-   module answered the cell says so rather than drawing a nought. #}
-<div class="ovx-tbl">
-    <table class="tbl zdtbl zltbl">
-        <thead>
-            <tr>
-                <th>Zone</th>
-                <th class="num">Extent km&sup2;</th>
-                <th class="num">Covered</th>
-                <th class="num">Stations</th>
-                <th class="num">People stationed</th>
-                {% for slug, heading in columns %}<th class="num">{{ heading }} {{ period }}</th>{% endfor %}
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for row in rows %}
-            <tr>
-                <td class="zname">
-                    <span class="zn-in">
-                        <i class="zsw" data-cat="{{ row.cat }}"></i>
-                        <b>{{ row.name }}</b>
-                    </span>
-                </td>
-                <td class="num"><b>{{ row.km2|number_format }}</b></td>
-                <td class="num">
-                    {%- if row.covered and row.covered.isKnown -%}
-                        <b>{{ row.covered.display }}</b>%
-                    {%- else -%}
-                        <em class="pnone">no KPI yet</em>
-                    {%- endif -%}
-                </td>
-                <td class="num">{% if row.stations %}<b>{{ row.stations }}</b>{% else %}<em class="pnone">none</em>{% endif %}</td>
-                <td class="num">{% if row.people %}<b>{{ row.people }}</b>{% else %}<em class="pnone">none</em>{% endif %}</td>
-                {% for slug, heading in columns %}
-                    {% set figure = row.figures[slug]|default(null) %}
-                    <td class="num">
-                        {%- if figure and figure.isKnown -%}
-                            <b>{{ figure.display }}</b>{{ figure.unit }}
-                        {%- else -%}
-                            <em class="pnone">no KPI yet</em>
-                        {%- endif -%}
-                    </td>
-                {% endfor %}
-                {# THE ROW OPENS THE ZONE, and so does the control at its end:
-                   one destination, stated once. #}
-                <td class="act">
-                    <a class="open-btn" href="{{ path('area_zone_show', {uuid: area.uuidString, zone: row.uuid}) }}">Open {{ ux_icon('shell:chevron-right') }}</a>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
+   people posted are the area's own facts and are always numbers; Covered and
+   every module column come through the zone-figure seam, and where no
+   installed module answered the cell is a dash rather than a nought. #}
+{%- macro figure(figure) -%}
+    {%- if figure and figure.isKnown -%}
+        {{ figure.display }}{{ figure.unit == '%' ? ' %' : figure.unit }}
+    {%- else -%}
+        <span class="mono d" title="no module publishes it">&mdash;</span>
+    {%- endif -%}
+{%- endmacro -%}
+<table class="tbl" data-zones>
+    <thead><tr><th>Zone</th><th class="num">km&sup2;</th><th class="num">Covered</th><th class="num">Stations</th><th class="num">Posted</th>{% for slug, heading in columns %}<th class="num">{{ heading }}</th>{% endfor %}<th></th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+        <tr data-zone><td><b>{{ row.name }}</b></td><td class="num">{{ row.km2|number_format }}</td><td class="num">{{ _self.figure(row.covered) }}</td><td class="num">{{ row.stations }}</td><td class="num">{{ row.people }}</td>
+            {%- for slug, heading in columns %}<td class="num">{{ _self.figure(row.figures[slug]|default(null)) }}</td>{% endfor -%}
+            <td class="door"><a class="open-btn" href="{{ path('area_zone_show', {uuid: area.uuidString, zone: row.uuid}) }}">Open</a></td></tr>
+    {% endfor %}
+    </tbody>
+</table>

@@ -30,11 +30,8 @@ use Uhifadhi\Contracts\Kpi\ZoneRef;
  * THE ZONES OF AN AREA, AS A REGISTER — the table the zones tab lists them
  * in, filtered, ordered and paged on the server.
  *
- * THE STATIONS TABLE'S TWIN. A zone is read the way a station is: a card, a
- * row of grouped dropdowns, a search, ten rows and a pager. The two are not
- * two designs, so they are not two implementations either — the filter, the
- * pager and the table markup are the shared partials, and this assembles
- * what they draw.
+ * THE STATIONS TABLE'S TWIN. A zone is read the way a station is: a card,
+ * the house dropdowns, a search, the house table and the house foot.
  *
  * WHAT STANDS ON THE GROUND IS THE AREA'S OWN FACT; what has happened on it
  * is a module's. The counts of posts and people are counted here from the
@@ -111,7 +108,7 @@ final readonly class ZoneListService
         $scope = \count($rows);
         $searched = self::searched($rows, $query->search);
         $matching = self::withStations($searched, $query->stations);
-        $ordered = self::ordered($matching, $query->order);
+        $ordered = self::ordered($matching, $query->sort);
 
         $total = \count($ordered);
         $pages = max(1, (int) ceil($total / $perPage));
@@ -125,17 +122,16 @@ final readonly class ZoneListService
             // two answers are what picking one would do to the list in front
             // of the reader.
             stations: [
-                new FilterOption(ZoneListQuery::WITH, 'with stations', \count(self::withStations($searched, ZoneListQuery::WITH))),
-                new FilterOption(ZoneListQuery::WITHOUT, 'without', \count(self::withStations($searched, ZoneListQuery::WITHOUT))),
+                new FilterOption(ZoneListQuery::WITH, 'With a station', \count(self::withStations($searched, ZoneListQuery::WITH))),
+                new FilterOption(ZoneListQuery::WITHOUT, 'Without a station', \count(self::withStations($searched, ZoneListQuery::WITHOUT))),
             ],
             columns: $columns,
             page: $page,
             pages: $pages,
             stationTotal: array_sum($stations),
             peopleTotal: array_sum($people),
-            // THE HEADING SAYS WHAT IT COUNTS OVER, in the design's own short
-            // form: "Patrols sep" rather than a column nobody can date.
-            period: mb_strtolower($figures->period->from->format('M')),
+            // THE CARD'S QUALIFIER SAYS WHAT THE MODULE COLUMNS COUNT OVER.
+            period: $figures->period->from->format('F'),
             perPage: $perPage,
         );
     }

@@ -70,7 +70,21 @@
    because a scrollbar drawn across a card is furniture. */
 .hscroll { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
 .hscroll::-webkit-scrollbar { display: none; }
-.pa-board .tbl { min-width: 620px; }
+/* THE TABLE HOLDS ITS CARD at a fixed layout (DesignsProjects/uhifadhi-web/
+   departments/performance-pages.css): the department takes its share, the
+   door column wraps, and nothing pushes the page sideways — the eight
+   columns of Staffing read at 1440px with no overflow. */
+.pa-board table.tbl.heat { table-layout: fixed; width: 100%; min-width: 0; }
+.pa-board table.tbl.heat th:first-child { width: 24%; }
+.pa-board table.tbl.heat th.perf-openhead { width: 10%; }
+.pa-board table.tbl.heat th, .pa-board table.tbl.heat td { overflow-wrap: break-word; min-width: 0; }
+.pa-board table.tbl.heat td.perf-open { white-space: normal; }
+.pa-board table.tbl.heat .open-btn { white-space: normal; max-width: 100%; box-sizing: border-box; }
+.pa-board table.tbl.heat .mono, .pa-board table.tbl.heat .hcell { white-space: normal; min-width: 0; max-width: 100%; }
+.pa-board .dept, .pa-board .dept > div { min-width: 0; }
+.pa-board .dept b { white-space: normal; }
+/* A CARD UNDER THE INDEX is one of a column, full width. */
+.onpage-main > .pfc { margin: 0 0 20px; }
 /* THE TABLE ITSELF — its head, its bands, its rows, its heat cells and the
    legend under it — is the atlas's heat table (`atlas_heatmap()`, heat.css).
    What stays here is the card it sits in and the scroll around it. */
@@ -219,8 +233,9 @@
    its data, so a topic's record has a height a reader can learn. */
 .tpch { display: grid; gap: 16px; margin: 0 0 18px; align-items: start; }
 .tpch.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.tpch.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-@media (max-width: 1180px) { .tpch.three { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* THREE CHARTS ARE ONE ROW WIDE AND THEN A PAIR, as the topic designs lay them. */
+.tpch.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tpch.three > :first-child { grid-column: 1 / -1; }
 @media (max-width: 900px) { .tpch.two, .tpch.three { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── what changed ────────────────────────────────────────────────────────── */
@@ -258,25 +273,8 @@
 .tpcard .mv .i.bad { background: rgb(var(--c-fail)); }
 .tpcard .mv .i.attention { background: rgb(var(--c-warn)); }
 
-/* ── two cards on one row end together ───────────────────────────────────── */
-/* The house rule the overview widgets already follow: cards sharing a row
-   stretch to the tallest and pin their foot to the bottom, so neither leaves
-   a hole under it. Both cards here are bounded — the first few movements, the
-   first few decisions — so the stretch is a few pixels of body, never a page
-   of air. */
-.grid.spinerow-eq { align-items: stretch; }
-.grid.spinerow-eq > .pfc { height: 100%; margin: 0; display: flex; flex-direction: column; }
-.grid.spinerow-eq > .pfc > .pfc-bd { flex: 1; }
-.grid.spinerow-eq > .pfc > .pfc-ft { margin-top: auto; }
-
-/* ── a decision ──────────────────────────────────────────────────────────── */
-/* WHAT IS WRONG AND WHAT IS BEING ASKED, one above the other: half of it
-   would be a figure with an opinion. The department's mark leads, because a
-   decision nobody owns is the kind that waits. */
-.mvrow.dcn { align-items: flex-start; }
-.mvrow .mk {
-    flex: none; width: 26px; height: 26px; border-radius: 9px; display: grid; place-items: center;
-    background: rgb(var(--c-raised)); border: 1px solid var(--c-ln2); color: rgb(var(--c-fog));
-    font: 700 9.5px "JetBrains Mono", ui-monospace, monospace; line-height: normal;
-}
-.mvrow .l .ask { display: block; margin-top: 2px; color: rgb(var(--c-dim)); font-size: 12px; }
+/* THE MATRIX'S BAR AND FOOT — the house filter bar above the board and the
+   register foot under it, inset as the card's head is. */
+.pfc-bd.flush > .pfc-bar { padding: 12px 16px 0; margin-bottom: 12px; }
+.pfc-bd.flush > .rdf-foot, .pfc-bd.flush > .dp-none { margin-left: 16px; margin-right: 16px; }
+.pfc-bd.flush > .rdf-foot { padding-bottom: 12px; }

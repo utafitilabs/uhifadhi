@@ -2,6 +2,11 @@
 
    Design: areas/<area>/stations/detail.html.
 
+   ITS FACTS STRIP IS ITS OVERVIEW; the index lists the cards, one row a
+   card (a module's contributed band included); the cards stand in one
+   column; the people and the log are house tables under their bar and over
+   their foot. The station's code stays, as data.
+
    A RECORD PAGE, NOT AN AREA TAB: the crumb and the header, no tab strip —
    the shape the incident detail page wears, because a station is a thing
    inside the area rather than one of the ways of looking at it.
@@ -34,37 +39,37 @@
 {% block shell_page_title %}{{ station.name }}{% endblock %}
 
 {% block shell_page_subtitle %}
-    {%- if station.code %}{{ station.code }} &middot; {% endif -%}
-    {{ zone ? zone.name : 'no zone' }} &middot; {{ posted }} stationed
+    Station in {{ zone ? zone.name : 'no zone' }} &middot; {{ posted }} posted
     {%- if not station.active %} &middot; closed{% endif -%}
 {% endblock %}
 
 {% block shell_page_actions %}
     {# THE RECORD IS EDITED ON THE AREA'S CONFIGURE PAGE, in the Stations
-       section beside Zones. This page only reads, so the control is a link
-       out and not a form. #}
+       section beside Zones. This page only reads, so the controls are links
+       out and not forms. #}
     <a class="tgl w-act" href="{{ path('area_stations_configure', {uuid: area.uuidString}) }}?open={{ station.uuidString }}">{{ ux_icon('shell:square-pen') }} Edit the station</a>
+    {% if door('assignments.manage') %}
+        <a class="cta" href="{{ path('area_stations_configure', {uuid: area.uuidString}) }}?open={{ station.uuidString }}">Post someone</a>
+    {% endif %}
 {% endblock %}
 
 {% block shell_page %}
 {% set here = path('area_station_show', {uuid: area.uuidString, station: station.uuidString}) %}
+{% set ctl = 'uhifadhi--area-bundle--area-query' %}
+{% set q = 'Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery' %}
 
-{# THE IDENTITY BAND, the same .factband every area tab wears.
-
-   ON DUTY IS THE ROSTER'S and no module publishes it yet, so the Stationed fact
-   states the number it knows and says nothing it does not. The qualifier
-   arrives through PostingDutyProviderInterface when the roster rework lands. #}
-<div class="factband stband">
+{# THE FACTS STRIP. ON DUTY IS THE ROSTER'S and no module publishes it yet,
+   so Posted states the number it knows and says nothing it does not. #}
+<div class="factband ov-band">
     <span class="f"><span class="k">Zone</span><span class="v">{{ zone ? zone.name : '&mdash;'|raw }}<em>{{ zone ? 'derived' : 'unzoned' }}</em></span></span>
-    {% if station.code %}<span class="f"><span class="k">Code</span><span class="v">{{ station.code }}</span></span>{% endif %}
-    <span class="f"><span class="k">Stationed</span><span class="v">{{ posted }}</span></span>
+    {% if station.code %}<span class="f"><span class="k">Code</span><span class="v">{{ station.code }}<em>the call sign</em></span></span>{% endif %}
+    <span class="f"><span class="k">Posted</span><span class="v">{{ posted }}</span></span>
     <span class="f"><span class="k">Lead</span><span class="v">{{ leader ? leader.name : '&mdash;'|raw }}</span></span>
     {% if station.elevationM %}
         <span class="f"><span class="k">Elevation</span><span class="v">{{ station.elevationM|number_format }} m{% if station.locality %}<em>{{ station.locality }}</em>{% endif %}</span></span>
     {% endif %}
     {# OPEN OR CLOSED IS ALWAYS A FACT, whether or not anybody wrote down the
-       day it started: a cell that vanished with the date would take the state
-       of the station with it. #}
+       day it started. #}
     <span class="f"><span class="k">Opened</span><span class="v">
         {%- if station.openedAt -%}
             <time datetime="{{ station.openedAt|date('c') }}" data-localtime-format="day">{{ station.openedAt|date('j M Y') }}</time>
@@ -74,124 +79,116 @@
         <em>{{ station.active ? 'active' : 'closed' }}</em>
     </span></span>
     <span class="sp"></span>
-    {% if zone %}<a class="more" href="{{ path('area_stations', {uuid: area.uuidString}) }}?zone={{ zone.uuidString }}">{{ zone.name }} zone &rarr;</a>{% endif %}
+    {% if zone %}<a class="more" href="{{ path('area_stations_list', {uuid: area.uuidString, zone: zone.uuidString}) }}">Stations in {{ zone.name }} &rarr;</a>{% endif %}
 </div>
 
-<div class="recgrid">
-    <div class="col">
-        <div class="c">
+{% set rows_ = [{id: 'ground', label: 'The ground'}, {id: 'posted', label: 'Who is posted here', count: posted}] %}
+{% for band in bands %}{% set rows_ = rows_|merge([{id: band.section.id, label: band.section.label}]) %}{% endfor %}
+{% set rows_ = rows_|merge([{id: 'point', label: 'The point'}, {id: 'log', label: 'What happened here', count: logTable.total}]) %}
+
+{% set people = rows %}
+{% embed '@Shell/_onpage.html.twig' with {rows: rows_} %}
+    {% block shell_onpage_main %}
+        <div class="c" id="ground">
             <span class="tab">The ground around the station<span class="src">
-                {%- if station.code %}&middot; {{ station.code }} {% endif -%}
+                {%- if coordinates %}&middot; {{ coordinates }} {% endif -%}
                 {%- if station.elevationM %}&middot; {{ station.elevationM|number_format }} m{% endif -%}
             </span></span>
-            {# Fixed at the height the design draws it: a record's plate that changed
-               height with the window would be a different page on every screen. #}
             {{ render_map(map, {
                 'role': 'img',
                 'aria-label': station.name ~ ' and the ground around it',
+                '--map-plate-height': 'min(58vh, 560px)',
             }) }}
         </div>
 
-        <div class="c stpostings">
-            <span class="tab">Who is stationed here<span class="src">&middot; {{ posted }} {{ posted == 1 ? 'person' : 'people' }}
+        <div class="c stpostings" id="posted">
+            <span class="tab">Who is posted here<span class="src">&middot; {{ posted }} {{ posted == 1 ? 'person' : 'people' }}
                 {%- if leader %} &middot; led by {{ leader.name }}{% endif -%}
             </span></span>
-
-            {# THE FILTER BAR IS GROUPED DROPDOWNS, the house pattern, and every
-               option is a LINK: the address is the state, so a filtered board
-               can be sent to somebody and a browser can go back to it. The
-               panel is a <details>, which opens with no script of ours.
-
-               DUTY IS NOT HERE. Who is on duty today is the roster's, and no
-               module publishes it yet; the chip and its ?duty= arrive with
-               PostingDutyProviderInterface in the roster rework. #}
-            <div class="lfilt stfilt">
+            {# DUTY IS NOT HERE. Who is on duty today is the roster's, and no
+               module publishes it yet. #}
+            <div class="lfilt" data-controller="{{ ctl }}" data-action="uhifadhi--shell-bundle--dropdown:choose->{{ ctl }}#chosen">
                 {% if facets.knowsRoles %}
-                    {{ include('@Area/_partial/_filter.html.twig', {
-                        label: 'role', all: 'role', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::ROLE'),
-                        chosen: query.role, options: facets.roleOptions, query: query, here: here,
-                    }) }}
-                    {{ include('@Area/_partial/_filter.html.twig', {
-                        label: 'dept', all: 'dept', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::DEPARTMENT'),
-                        chosen: query.department, options: facets.departmentOptions, query: query, here: here,
-                    }) }}
+                    {{ include('@Shell/_dropdown.html.twig', {
+                        name: constant(q ~ '::ROLE'), label: 'Any position', icon: 'shell:user', default: '', value: query.role ?? '',
+                        groups: [
+                            {label: null, options: [{value: '', label: 'Any position', count: posted}]},
+                            {label: 'Positions', options: facets.roleOptions|map(o => {value: o.value, label: o.label, count: o.count})},
+                        ],
+                    }, with_context: false) }}
+                    {{ include('@Shell/_dropdown.html.twig', {
+                        name: constant(q ~ '::DEPARTMENT'), label: 'All departments', icon: 'shell:users', default: '', value: query.department ?? '',
+                        groups: [
+                            {label: null, options: [{value: '', label: 'All departments', count: posted}]},
+                            {label: 'Departments', options: facets.departmentOptions|map(o => {value: o.value, label: o.label, count: o.count})},
+                        ],
+                    }, with_context: false) }}
                 {% endif %}
-                {{ include('@Area/_partial/_filter.html.twig', {
-                    label: 'source', all: 'source', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::SOURCE'),
-                    chosen: query.source, options: facets.sourceOptions, query: query, here: here,
-                }) }}
-                {{ include('@Area/_partial/_filter.html.twig', {
-                    label: 'a&ndash;z', all: 'order', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::SORT'),
-                    chosen: query.sort == 'az' ? null : query.sort,
-                    options: [{value: 'since', label: 'by how long', count: 0, cat: null}], query: query, here: here,
-                }) }}
-
+                {{ include('@Shell/_dropdown.html.twig', {
+                    name: constant(q ~ '::SOURCE'), label: 'Recorded anywhere', icon: 'shell:square-pen', default: '', value: query.source ?? '',
+                    groups: [
+                        {label: null, options: [{value: '', label: 'Recorded anywhere', count: posted}]},
+                        {label: 'Recorded', options: facets.sourceOptions|map(o => {value: o.value, label: o.value == 'here' ? 'Written here' : 'From their page', count: o.count})},
+                    ],
+                }, with_context: false) }}
+                {{ include('@Shell/_dropdown.html.twig', {
+                    name: constant(q ~ '::SORT'), label: 'Name A–Z', icon: 'shell:arrow-up-down', default: 'az', value: query.sort,
+                    groups: [
+                        {label: 'Order', options: [
+                            {value: 'az', label: 'Name A–Z', count: null},
+                            {value: 'newest', label: 'Newest posting', count: null},
+                            {value: 'since', label: 'Oldest posting', count: null},
+                            {value: 'role', label: 'By position', count: null},
+                        ]},
+                    ],
+                }, with_context: false) }}
                 <form class="lsearch" method="get" action="{{ here }}">
                     {{ ux_icon('shell:search') }}
-                    <input class="fld" type="search" name="q" value="{{ query.search }}" placeholder="Search&hellip;"
-                           aria-label="Search the people stationed here">
+                    <input class="fld" type="search" name="q" value="{{ query.search }}" placeholder="Find a person&hellip;" aria-label="Find a person posted here">
                     {% for k, v in query.with('q', null) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
                 </form>
             </div>
 
-            {% if rows is empty %}
-                {# AN EMPTY STATE THAT NAMES A PAGE OWES A DOOR TO IT. This one
-                   said assignments are made on the area's configure page and left
-                   the reader to find it — the owner could not, which is the
-                   whole defect. The door goes to the same address the header's
-                   own control opens, with this station already open, so
-                   arriving and assignment somebody is one click and not a search.
-
-                   GATED ON WHAT THE DOOR IS FOR, not on what the page behind it
-                   costs to open: assignment somebody is `assignments.manage`, which
-                   is what the write at the far end of this journey asks for, and
-                   somebody who may only read the stations would arrive at a page
-                   with no form on it. Absent rather than disabled: a door closing
-                   in somebody's face is worse than no door. #}
+            {% if people is empty %}
+                {# AN EMPTY STATE THAT NAMES A PAGE OWES A DOOR TO IT, gated on
+                   what the door is for: posting somebody is `assignments.manage`. #}
                 <div class="zempty stpplnone">
-                    <b class="zeh">{{ query.isFiltered ? 'Nobody matches' : 'Nobody is stationed here' }}</b>
-                    <p class="zeb">{% if query.isFiltered %}No assignment here answers these filters. Clear one, or search another name.{% else %}A station with nobody at it is a normal state, not an error. Assignments are made on the area&rsquo;s configure page.{% endif %}</p>
+                    <b class="zeh">{{ query.isFiltered ? 'Nobody matches' : 'Nobody is posted here' }}</b>
+                    <p class="zeb">{% if query.isFiltered %}No posting here answers these filters. Clear one, or search another name.{% else %}A station with nobody at it is a normal state, not an error.{% endif %}</p>
                     {% if query.isFiltered %}
                         <span class="zea"><a class="btn sm" href="{{ here }}">Clear the filters</a></span>
                     {% elseif door('assignments.manage') %}
-                        <span class="zea"><a class="btn sm" href="{{ path('area_stations_configure', {uuid: area.uuidString}) }}?open={{ station.uuidString }}">Station somebody &rarr;</a></span>
+                        <span class="zea"><a class="btn sm" href="{{ path('area_stations_configure', {uuid: area.uuidString}) }}?open={{ station.uuidString }}">Post someone &rarr;</a></span>
                     {% endif %}
                 </div>
             {% else %}
-                <div class="plist">
-                    {% for row in rows %}
-                        <div class="pline">
-                            <span class="tav{{ row.leader ? ' leads' : '' }}">{{ row.initials }}</span>
-                            <b>{{ row.name }}</b>
-                            {% if row.leader %}<span class="chip acc stlead">Leads</span>{% endif %}
-                            {% if row.role %}<em>{{ row.role }}</em>{% endif %}
-                            <span class="stsrc {{ row.source.value }}"><i></i>{{ row.source.value == 'here' ? 'written here' : 'from their page' }}</span>
-                            <time class="stwhen" datetime="{{ row.since|date('c') }}" data-localtime-format="day">{{ row.since|date('j M Y') }}</time>
-                        </div>
+                <table class="tbl">
+                    <thead><tr><th>Person</th><th>Position</th><th>Recorded</th><th>Since</th><th></th></tr></thead>
+                    <tbody>
+                    {% for row in people %}
+                        <tr><td><b>{{ row.name }}</b>{% if row.leader %} <span class="chip ok">leads</span>{% endif %}</td><td><span class="mono d">{{ row.role ?? '—' }}</span>{% if row.department %}<span class="sub">{{ row.department }}</span>{% endif %}</td><td><span class="mono d">{{ row.source.value == 'here' ? 'written here' : 'from their page' }}</span></td><td><span class="mono d"><time datetime="{{ row.since|date('c') }}" data-localtime-format="day">{{ row.since|date('j M Y') }}</time></span></td><td class="door">{% if door('assignments.manage') %}<a class="btn sm" href="{{ path('area_stations_configure', {uuid: area.uuidString}) }}?open={{ station.uuidString }}">End posting</a>{% endif %}</td></tr>
                     {% endfor %}
-                </div>
+                    </tbody>
+                </table>
+                {{ include('@Shell/_foot.html.twig', {
+                    count: peopleTable.total, noun: 'people', one: 'person',
+                    perPage: peopleTable.size, page: peopleTable.page, pages: peopleTable.pages, links: peopleLinks,
+                }, with_context: false) }}
             {% endif %}
         </div>
 
-        {# WHAT THE MODULES PUT ON THIS STATION. The station is the area's and
-           the watch is the roster's, so a band like "Watch and presence" is
-           CONTRIBUTED and arrives after the area's own cards. With no such
-           module installed the column simply ends here — the area draws no
-           placeholder for a section nobody offered. #}
+        {# WHAT THE MODULES PUT ON THIS STATION, after the area's own cards;
+           with no such module installed there is no card and no index row. #}
         {% for band in bands %}
             {{ include('@Area/_partial/_station_band.html.twig', {band: band}, with_context = false) }}
         {% endfor %}
-    </div>
 
-    <div class="col">
-        <div class="c">
+        <div class="c" id="point">
             <span class="tab">The point</span>
             <div class="rln"><span class="fog">Coordinates</span><span class="mono">{{ coordinates ?? '&mdash;'|raw }}</span></div>
             {% if station.locality %}<div class="rln"><span class="fog">Where</span><span class="mono">{{ station.locality }}</span></div>{% endif %}
-            {# WHAT "INSIDE THIS STATION" MEANS. Stated wherever the station is read,
-               because it is the line between a day claimed here that is
-               verified and one that is not — and a station with no ring has no
-               inside, which is a fact rather than a blank. #}
+            {# WHAT "INSIDE THIS STATION" MEANS: the line between a day claimed
+               here that is verified and one that is not. #}
             <div class="rln"><span class="fog">Catchment</span><span class="mono">
                 {%- if station.catchmentM -%}
                     {{ station.catchmentM >= 1000 ? (station.catchmentM / 1000)|round(2) ~ ' km' : station.catchmentM ~ ' m' }}
@@ -200,10 +197,8 @@
                     no ring &mdash; a check-in claiming this station cannot be verified against it
                 {%- endif -%}
             </span></div>
-
             {# WHAT THE MODULES PUBLISH — one row per module, through the
-               station seam. The Open link is the module's own entry route,
-               which the core resolves; no figure carries a URL. #}
+               station seam. #}
             <div class="stsep">What the modules publish<span>{{ dockPeriod.label }}</span></div>
             {% if dock is empty %}
                 <div class="use">No module publishes figures for this station yet.</div>
@@ -221,22 +216,25 @@
             {% endif %}
         </div>
 
-        <div class="c stlogcard">
-            <span class="tab">What happened here<span class="src">&middot; {{ eventCount }} {{ eventCount == 1 ? 'line' : 'lines' }}</span></span>
+        <div class="c stlogcard" id="log">
+            <span class="tab">What happened here<span class="src">&middot; {{ logTable.total }} {{ logTable.total == 1 ? 'line' : 'lines' }}</span></span>
             {% if events is empty %}
-                <div class="use">Nothing has happened at this station yet. Every move, assignment and closure writes one line here.</div>
+                <div class="use">Nothing has happened at this station yet. Every move, posting and closure writes one line here.</div>
             {% else %}
-                <div class="zhist stlog zhistcap">
+                <table class="tbl">
+                    <thead><tr><th>What happened</th><th>When</th></tr></thead>
+                    <tbody>
                     {% for event in events %}
-                        <div class="zhrow">
-                            <span class="zhdot{{ event.kind.isClosure ? ' bad' : (loop.first ? ' on' : '') }}"></span>
-                            <div><b>{{ event.headline }}{% if event.detail %} <span>&middot; {{ event.detail }}</span>{% endif %}</b></div>
-                            <time class="zhwhen" datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="day">{{ event.occurredAt|date('j M') }}</time>
-                        </div>
+                        <tr><td><b>{{ event.headline }}</b>{% if event.detail %}<span class="sub">{{ event.detail }}</span>{% endif %}</td><td><span class="mono d"><time datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="day">{{ event.occurredAt|date('j M Y') }}</time></span><time class="sub" datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="clock">{{ event.occurredAt|date('H:i') }}</time></td></tr>
                     {% endfor %}
-                </div>
+                    </tbody>
+                </table>
+                {{ include('@Shell/_foot.html.twig', {
+                    count: logTable.total, noun: 'lines', one: 'line',
+                    perPage: logTable.size, page: logTable.page, pages: logTable.pages, links: logLinks,
+                }, with_context: false) }}
             {% endif %}
         </div>
-    </div>
-</div>
+    {% endblock %}
+{% endembed %}
 {% endblock %}

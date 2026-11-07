@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Twig;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\DomCrawler\Crawler;
 use Twig\Environment;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\TestKernel;
 use Uhifadhi\Bundle\TeamBundle\Twig\MatrixRuntime;
@@ -47,6 +48,25 @@ final class RenderMatrixTest extends TestCase
         self::assertStringContainsString('class="hscroll pa-board"', $html);
         self::assertStringContainsString('<table class="tbl heat">', $html);
         self::assertStringContainsString('the host', $html);
+    }
+
+    /**
+     * EVERY TABLE HAS THE BAR AND THE FOOT: a chip of the scopes the rows
+     * are grouped under, each with its count, the search at the right, and
+     * the register foot counting the departments.
+     */
+    public function testTheMatrixWearsTheHouseBarAndFoot(): void
+    {
+        $card = new Crawler(self::render(self::staffing()));
+
+        $wrap = $card->filter('[data-controller="uhifadhi--team-bundle--table-filter"]');
+        self::assertSame('tbody tr.perf-row', $wrap->attr('data-uhifadhi--team-bundle--table-filter-rows-value'));
+        self::assertSame('tbody tr.pfscope', $wrap->attr('data-uhifadhi--team-bundle--table-filter-band-value'));
+        $chip = $wrap->filter('.lfilt details.i-dd[data-axis="scope"]');
+        self::assertSame('All', $chip->filter('.i-ddopt-l')->first()->text());
+        self::assertGreaterThan(1, $chip->filter('.i-ddopt')->count());
+        self::assertCount(1, $wrap->filter('.lfilt .lsearch input[type="search"]'));
+        self::assertMatchesRegularExpression('/^\d+ departments?/', trim($wrap->filter('.rdf-foot > span')->first()->text()));
     }
 
     /** Every column is a header, in the order the topic published them. */
@@ -189,7 +209,7 @@ final class RenderMatrixTest extends TestCase
         self::assertStringContainsString('class="pfc-ft"', $html);
         self::assertStringContainsString('class="legend"', $html);
         self::assertStringContainsString('leads the column', $html);
-        self::assertStringContainsString('not a zero', $html);
+        self::assertStringContainsString('not measured yet — not a zero', $html);
     }
 
     /** A column that published a total says it in its own header. */

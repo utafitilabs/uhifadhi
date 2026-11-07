@@ -52,8 +52,7 @@ enum Comparison: string
     public function label(FigurePeriod $period): string
     {
         return match ($this) {
-            self::Previous => 'Previous period — '.$this->of($period)->label,
-            self::LastYear => 'Same period last year — '.$this->of($period)->label,
+            self::Previous, self::LastYear => 'Against '.$this->of($period)->label,
         };
     }
 }

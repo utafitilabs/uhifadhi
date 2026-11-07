@@ -31,6 +31,7 @@ use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
 use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
+use Uhifadhi\Bundle\ShellBundle\Service\TablePageService;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
@@ -42,8 +43,6 @@ use Uhifadhi\Bundle\TeamBundle\Exception\MissingVisibilityChangeReasonException;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentRow;
-use Uhifadhi\Bundle\TeamBundle\Performance\DepartmentsBand;
-use Uhifadhi\Bundle\TeamBundle\Performance\PeriodKind;
 use Uhifadhi\Bundle\TeamBundle\Performance\RequiredPeriod;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
@@ -54,12 +53,11 @@ use Uhifadhi\Bundle\TeamBundle\Security\DepartmentReach;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentRecordService;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
-use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionTabs;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
-use Uhifadhi\Contracts\Performance\PerformanceScope;
 
 /**
  * THE ORG CHART'S HOME — the area-aware department manager, the per-department
@@ -159,10 +157,10 @@ final readonly class DepartmentController
         private AreaAuthority $authority,
         private ModuleCatalogue $catalogue,
         private DepartmentPerformance $performance,
-        private PerformanceTopics $topics,
-        private DepartmentsBand $band,
         private DepartmentPalette $palette,
         private DepartmentReach $reach,
+        private DepartmentRecordService $record,
+        private TablePageService $tablePages,
         /**
          * WHAT PERIOD IT IS NOW, from whoever publishes one — rather
          * than the wall clock this read used to ask, which made the
@@ -200,17 +198,12 @@ final readonly class DepartmentController
         // the rows — so the counts, the table and the address never disagree.
         $rows = $this->rows($departments);
         $listed = $query->order(array_values(array_filter($rows, $query->matches(...))));
-
-        // THE BAND READS THE PAGE'S OWN SCOPE AND WINDOW. A reader who
-        // narrowed the register to one area is asking about that area,
-        // and a band that answered for the organization would be the
-        // page contradicting its own filter.
-        $bandScope = $this->bandScope($query, $areas);
-        $periodKind = PeriodKind::fromRequest($request->query->getString('period'));
-        $bandPeriod = $periodKind->period(RequiredPeriod::of($this->periods)->now());
+        $table = $this->tablePages->read($request, \count($listed));
 
         return new Response($this->twig->render('@Team/departments/index.html.twig', [
-            'rows' => $listed,
+            'rows' => $table->slice($listed),
+            'table' => $table,
+            'links' => $this->tablePages->links($request, $table),
             // LISTED, NOT READ (#74): named at the foot of the table, never opened.
             'outside' => $this->reach->listedOnly($this->departments->findAllOrdered()),
             'total' => \count($rows),
@@ -230,22 +223,6 @@ final readonly class DepartmentController
             'columns' => [
                 'name' => 'Department', 'modules' => 'Modules', 'positions' => 'Positions', 'seats' => 'Seats', 'goals' => 'Goals',
             ],
-            /*
-             * WHAT THE DEPARTMENTS DID, over the scope and window the
-             * page is showing — the modules' own figures through the
-             * performance seam, so a figure here and the same figure on
-             * the Performance page cannot disagree.
-             */
-            'bandScope' => $bandScope->label,
-            'periodKinds' => PeriodKind::labels(),
-            'periodKind' => $periodKind->value,
-            'periodUrls' => $this->periodUrls($query),
-            'band' => $this->band->build(
-                $this->topics->forScope($bandScope, $bandPeriod),
-                $bandScope,
-                $bandPeriod,
-                \count($areas),
-            ),
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
         ]));
     }
@@ -367,101 +344,50 @@ final readonly class DepartmentController
     }
 
     /**
-     * WHERE EACH SEGMENT OF THE PERIOD GROUP GOES, carrying the
-     * register's own filter with it: changing the window is not
-     * changing which departments are listed.
-     *
-     * @return array<string, string>
-     */
-    private function periodUrls(DepartmentQuery $query): array
-    {
-        $urls = [];
-        foreach (PeriodKind::cases() as $kind) {
-            $urls[$kind->value] = $this->router->generate(self::REGISTER, $query->with('period', $kind->value));
-        }
-
-        return $urls;
-    }
-
-    /**
-     * WHOSE FIGURES THE BAND SHOWS: the organization's, or the one area
-     * the register has been narrowed to.
-     *
-     * @param list<AreaInterface> $areas
-     */
-    private function bandScope(DepartmentQuery $query, array $areas): PerformanceScope
-    {
-        foreach ($areas as $area) {
-            if (null !== $query->placement && $query->placement === $area->getUuidString()) {
-                return PerformanceScope::area($query->placement, (string) $area->getName());
-            }
-        }
-
-        return PerformanceScope::organization();
-    }
-
-    /**
-     * THE LENS — a department's own page, area-aware and openable from every row.
-     *
-     * It carries the department's real facts: its scope, its area when it has
-     * one, its code, the positions filed under it, and the modules it attaches —
-     * which lead its overview and are where every figure on its performance tab
-     * comes from. A department with nothing attached leads with nothing, and the
-     * page says so rather than inventing a card.
-     *
-     * The modules OFFERED are the registry's catalogue: the rows in the table
-     * that a registered provider still answers for. A module nobody installed is
-     * not offered, because attaching it would point at code this deployment does
-     * not have.
+     * A DEPARTMENT'S RECORD — Overview, People & access and Settings, with
+     * what needs a decision as the banner above them. It reads; Configure
+     * writes. An organization-wide department is read across every area or
+     * at the one `?area=` names; an area department at its own.
      */
     #[Route('/departments/{uuid}', name: self::RECORD, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
     #[IsGranted('departments.read')]
-    public function show(string $uuid): Response
+    public function show(Request $request, string $uuid): Response
     {
         $department = $this->department($uuid);
         if (!$this->reach->reads($department)) {
             throw new AccessDeniedException('A department is read by the people who belong to it or support it.');
         }
 
-        $positions = $owned = $this->membership->positionsIn($department);
-
-        // THE TWO HALVES OF THE ATTACHMENT CONTROL, split here rather than in
-        // Twig: the modules this department leads with, and the ones it could.
-        $attached = $department->getModules()->toArray();
-        $detached = [];
-        foreach ($this->catalogue->all() as $module) {
-            if (!$department->hasModule($module)) {
-                $detached[] = $module;
+        $areas = $department->isOrgLevel() ? $this->areas() : [];
+        $reading = null;
+        foreach ($areas as $area) {
+            if ($area->getUuidString() === $request->query->getString('area')) {
+                $reading = $area;
             }
         }
+
+        $kpis = $this->performance->kpisFor($department);
+        $people = $this->record->people($department);
+        $goals = $this->record->goals($this->goals->findForDepartment($department), $this->goalStates($department), $kpis);
+        $configure = $this->router->generate(self::CONFIGURE, ['uuid' => $uuid]);
+        $figures = $this->record->figures($kpis, $reading?->getName());
 
         return new Response($this->twig->render('@Team/departments/show.html.twig', [
             'department' => $department,
             'mayManage' => $this->mayManage($department),
             'mark' => $this->mark((string) $department->getName()),
-            'positions' => $positions,
-            'headcount' => $this->users->countActiveHoldingAnyPosition($owned),
-            'holders' => $this->holders(),
-            'attached' => $attached,
-            'detached' => $detached,
-            'kpis' => $this->performance->kpisFor($department),
-            // WHAT IT SAID IT WOULD DO, and how each one reads today. The
-            // state is derived from the figure that answers it, so a page
-            // and a rail can never disagree about whether a goal was met.
-            'goals' => $this->goals->findForDepartment($department),
-            'goalStates' => $this->goalStates($department),
-            // THE DEFAULT WINDOW IS THIS MONTH, resolved here rather than in
-            // the template: a form's default is the server's answer, and a
-            // date printed in a template is a date in the server's zone.
-            'goalWindow' => [
-                'opens' => new \DateTimeImmutable('first day of this month')->format('Y-m-d'),
-                'closes' => new \DateTimeImmutable('last day of this month')->format('Y-m-d'),
-            ],
-            // HOW MANY DEPARTMENTS EACH MODULE SERVES, so a card can say "shared"
-            // truthfully. One query for the page; a per-card count is how two rows
-            // come to disagree about one module.
-            'sharing' => $this->departments->countByModule(),
-            'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
+            'areas' => $areas,
+            'reading' => $reading,
+            'facts' => $this->record->facts($department, $people),
+            'figures' => $figures,
+            'sparks' => $this->record->sparklines($figures),
+            'goals' => $goals,
+            'attention' => $this->record->attention($goals, $configure),
+            'sources' => $this->record->sources($department, $kpis),
+            'positions' => $this->record->positions($people),
+            'people' => $people,
+            'history' => $this->record->history($department),
+            'modules' => $this->record->modules($department),
         ]));
     }
 
@@ -491,6 +417,13 @@ final readonly class DepartmentController
             'headcount' => $this->users->countActiveHoldingAnyPosition($positions),
             'areas' => $this->areas(),
             'visibilities' => DepartmentVisibilityEnum::cases(),
+            'modules' => $this->record->modules($department),
+            'goals' => $this->goals->findForDepartment($department),
+            'goalStates' => $this->goalStates($department),
+            'goalWindow' => [
+                'opens' => new \DateTimeImmutable('first day of this month')->format('Y-m-d'),
+                'closes' => new \DateTimeImmutable('last day of this month')->format('Y-m-d'),
+            ],
             'returnTo' => $this->router->generate(self::CONFIGURE, ['uuid' => $uuid]),
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
         ]));
@@ -957,22 +890,7 @@ final readonly class DepartmentController
      */
     private function goalStates(Department $department): array
     {
-        $published = [];
-        foreach ($this->performance->kpisFor($department) as $kpi) {
-            $published[$kpi->moduleSlug.'.'.$kpi->key] = $kpi->value;
-        }
-
-        $now = RequiredPeriod::of($this->periods)->now();
-        $states = [];
-        foreach ($this->goals->findForDepartment($department) as $goal) {
-            $ref = $goal->getKpiRef();
-            $states[(string) $goal->getUuidString()] = $goal->stateFor(
-                null === $ref ? null : ($published[$ref] ?? null),
-                $now,
-            );
-        }
-
-        return $states;
+        return $this->record->goalStates($department, $this->performance->kpisFor($department), RequiredPeriod::of($this->periods)->now());
     }
 
     private function mark(string $name): string

@@ -18,13 +18,12 @@ namespace Uhifadhi\Bundle\AreaBundle\Model;
  * from, and the answers the filter row offers.
  *
  * THE SHAPE IS THE STATION REGISTER'S, because the two tables are twins: the
- * same card, the same grouped dropdowns, the same pager. A second shape here
- * would be a second table that drifts.
+ * same card, the same house dropdowns, the same foot.
  */
 final readonly class ZoneRegister
 {
-    /** The design's own page size: eleven zones page at ten. */
-    public const int PER_PAGE = 10;
+    /** The house foot's resting page size. */
+    public const int PER_PAGE = 20;
 
     /**
      * @param list<ZoneListRow>     $rows         the page's rows

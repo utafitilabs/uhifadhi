@@ -45,6 +45,7 @@ Escape, an outside click or tabbing away closes.
 | `searchable` | true draws the search pill |
 | `default` | optional: the value that does not count as "set" (`data-default`) |
 | `end` | optional: true aligns the panel to the trigger's right edge |
+| `sm` | optional: true draws the compact head trigger, `.dd-sm` |
 | `placeholder` | optional: the trigger's text while nothing is chosen |
 | `search` | optional: the search field's placeholder |
 | `none` | optional: the line shown when a search finds nothing |
@@ -57,6 +58,17 @@ nothing.
 
 `none` is a literal in Twig (it reads as null), so the partial reads that
 parameter off `_context`; a page passes it as any other key.
+
+### The compact head trigger
+
+A dropdown in a page head's action row (Scope, Period, Compare) is the row's
+size: `sm: true` adds `.dd-sm`, and the trigger is 32px high with a 9px radius,
+12px 600 text (700 when set) and 14px icon and chevron, as every house button in
+that row. Only the trigger shrinks: the panel, its search and its rows of at
+least 40px are the dropdown's own, restated under `.dd-sm` so a row that sizes
+its buttons does not size them. The design's `.pp-dd.pp-dd-sm`
+(`house-dropdown.css`). A page sets the width it needs on its own qualified
+selector.
 
 ## The controller
 
@@ -82,7 +94,7 @@ The shell's names stand in for the design's, value for value. Mono text is
 
 | Design | Shell |
 |---|---|
-| `.pp-dd`, `.pp-dd-end`, `.pp-set` | `.dd`, `.dd-end`, `.dd-set` |
+| `.pp-dd`, `.pp-dd-end`, `.pp-set`, `.pp-dd-sm` | `.dd`, `.dd-end`, `.dd-set`, `.dd-sm` |
 | `.page.pp-dd-lift` | `.page.dd-lift` |
 | `.pp-ddt`, `.pp-ddi`, `.pp-ddv`, `.pp-ddc` | `.dd-t`, `.dd-i`, `.dd-v`, `.dd-c` |
 | `.pp-ddp`, `.pp-ddq`, `.pp-ddl`, `.pp-ddh` | `.dd-p`, `.dd-q`, `.dd-l`, `.dd-h` |

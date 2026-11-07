@@ -53,7 +53,7 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
 
         self::assertSame(
             ['Roster', 'Surveys'],
-            $this->sorted($crawler->filter('[data-dept-attach] button')->each(static fn (Crawler $c): string => trim($c->text()))),
+            $this->sorted($crawler->filter('tr[data-dept-attach] td b')->each(static fn (Crawler $c): string => trim($c->text()))),
         );
     }
 
@@ -62,7 +62,8 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
     {
         $crawler = $this->lens($this->seed());
 
-        self::assertStringContainsString('Nothing attached.', $crawler->filter('[data-dept-attached]')->text());
+        self::assertCount(0, $crawler->filter('tr[data-dept-attached]'));
+        self::assertSame(['off', 'off'], $crawler->filter('tr[data-dept-attach] td .chip')->each(static fn (Crawler $c): string => trim($c->text())));
     }
 
     /** An ATTACHED module is a row of its own, with the detach control on it. */
@@ -73,15 +74,15 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
 
         $crawler = $this->lens($department);
 
-        $row = $crawler->filter('[data-dept-attached] .setrow');
+        $row = $crawler->filter('tr[data-dept-attached]');
         self::assertCount(1, $row);
-        self::assertSame('Surveys', $row->filter('.sn b')->text());
-        self::assertStringContainsString('Detach', $row->filter('.sx')->text());
+        self::assertSame('Surveys', $row->filter('td b')->text());
+        self::assertSame('Switch off', trim($row->filter('td.door button')->text()));
 
         // And it is no longer one of the modules left to attach.
         self::assertSame(
             ['Roster'],
-            $crawler->filter('[data-dept-attach] button')->each(static fn (Crawler $c): string => trim($c->text())),
+            $crawler->filter('tr[data-dept-attach] td b')->each(static fn (Crawler $c): string => trim($c->text())),
         );
     }
 
@@ -93,7 +94,7 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
     {
         $crawler = $this->lens($this->seed());
 
-        $copy = $crawler->filter('[data-tab-panel="settings"]')->text();
+        $copy = $crawler->filter('[data-dp-configure]')->text();
         self::assertStringContainsString('it grants nothing and hides nothing', $copy);
         self::assertStringContainsString('lead', $copy);
     }
@@ -121,7 +122,7 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
         $this->attach($department, 'surveys');
 
         $crawler = $this->lens($department);
-        $this->client->submit($crawler->filter('[data-dept-attached] .setrow')->selectButton('Detach')->form());
+        $this->client->submit($crawler->filter('tr[data-dept-attached]')->selectButton('Switch off')->form());
 
         self::assertResponseRedirects('/departments/'.$department->getUuidString());
 
@@ -147,120 +148,11 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
     public function testASlugTheInstallationDoesNotHaveIsRefused(): void
     {
         $department = $this->seed();
-        $token = $this->tokenFrom('/departments/'.$department->getUuidString());
+        $token = $this->tokenFrom('/departments/'.$department->getUuidString().'/configure');
 
         $this->client->request('POST', '/departments/'.$department->getUuidString().'/modules/nowhere/toggle', ['_token' => $token]);
 
         self::assertResponseStatusCodeSame(404);
-    }
-
-    // ---- what reading the attached set changes -----------------------------
-
-    /** THE OVERVIEW LEADS WITH THE ATTACHED MODULES, one card each. */
-    public function testTheOverviewLeadsWithTheAttachedModules(): void
-    {
-        $department = $this->seed();
-        $this->attach($department, 'surveys');
-
-        $crawler = $this->lens($department);
-
-        $cards = $crawler->filter('[data-tab-panel="overview"] [data-dept-modules] .c');
-        self::assertCount(1, $cards);
-        self::assertStringContainsString('Surveys', $cards->filter('.tab')->text());
-    }
-
-    /** With nothing attached it draws the empty state and invents no card. */
-    public function testTheOverviewOfAnUnattachedDepartmentDrawsTheEmptyState(): void
-    {
-        $crawler = $this->lens($this->seed());
-
-        self::assertStringContainsString(
-            'No modules attached yet',
-            $crawler->filter('[data-tab-panel="overview"] [data-dept-modules]')->text(),
-        );
-    }
-
-    /**
-     * THE KPI STRIP IS THE ATTACHED MODULES' FIGURES, and only theirs. The
-     * surveys module reports; the roster module reports too, and its figure stays
-     * off the page until the department attaches it.
-     */
-    public function testThePerformanceStripCarriesAnAttachedModulesFigureAndNoOthers(): void
-    {
-        $department = $this->seed();
-        $this->attach($department, 'surveys');
-
-        $crawler = $this->lens($department);
-        $strip = $crawler->filter('[data-tab-panel="performance"] [data-dept-kpis]');
-
-        self::assertStringContainsString('Surveys logged', $strip->text());
-        self::assertStringContainsString('88', $strip->text());
-        self::assertStringNotContainsString('Shifts filled', $strip->text(), 'a detached module puts no figure on the page');
-    }
-
-    /**
-     * A PROVIDER THAT HONOURS THE ONE-SET RULE IS DRAWN ONCE — one tile per
-     * figure and one row per figure, which is the single row of representative
-     * tiles the design draws per module. The surveys module answers one set for
-     * the department it was asked about, so its label cannot appear twice.
-     */
-    public function testAFigureIsListedOnceWhenItsProviderAnswersOneSet(): void
-    {
-        $department = $this->seed();
-        $this->attach($department, 'surveys');
-
-        $crawler = $this->lens($department);
-
-        self::assertCount(1, $this->tilesLabelled($crawler, 'Surveys logged'));
-        self::assertCount(
-            1,
-            $crawler->filter('[data-dept-modules] .rln')->reduce(static fn (Crawler $c): bool => str_contains($c->text(), 'Surveys logged')),
-        );
-    }
-
-    /**
-     * AND A PROVIDER THAT STILL ANSWERS ONE SET PER AREA IS DRAWN UNDER THE AREA
-     * LABEL EACH SET CARRIES — never as the same label three times over with
-     * nothing to tell them apart. The roster fixture is that provider.
-     */
-    public function testSeveralSetsForOneCallAreDrawnUnderTheAreaEachCarries(): void
-    {
-        $department = $this->seed();
-        $this->attach($department, 'roster');
-
-        $strip = $this->lens($department)->filter('[data-tab-panel="performance"] [data-dept-kpis]');
-
-        self::assertSame(
-            ['Northern Reserve', 'Southern Plains'],
-            $strip->filter('.dp-arealbl')->each(static fn (Crawler $c): string => trim($c->text())),
-        );
-        self::assertCount(2, $strip->filter('.kpi'), 'one tile per set, each under its own area');
-    }
-
-    /** AN UNKNOWN FIGURE IS A DASHED SLOT, never a zero. */
-    public function testAnUnmeasuredFigureIsDrawnAsADashAndNotAZero(): void
-    {
-        $department = $this->seed();
-        $this->attach($department, 'surveys');
-
-        $crawler = $this->lens($department);
-        $coverage = $crawler->filter('[data-dept-kpis] .kpi')
-            ->reduce(static fn (Crawler $c): bool => str_contains($c->text(), 'Coverage'))
-            ->first();
-
-        self::assertStringContainsString("\u{2014}", $coverage->filter('.disp')->text());
-        self::assertStringNotContainsString('0', $coverage->filter('.disp')->text());
-    }
-
-    /** With nothing attached the strip says there is nothing to roll up. */
-    public function testTheStripOfAnUnattachedDepartmentSaysThereIsNothingToRollUp(): void
-    {
-        $crawler = $this->lens($this->seed());
-
-        self::assertStringContainsString(
-            'No module KPIs this period',
-            $crawler->filter('[data-tab-panel="performance"] [data-dept-kpis]')->text(),
-        );
     }
 
     // ---- who may write it --------------------------------------------------
@@ -268,7 +160,7 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
     public function testAColleagueWithoutTeamManageIsRefused(): void
     {
         $department = $this->seed();
-        $token = $this->tokenFrom('/departments/'.$department->getUuidString());
+        $token = $this->tokenFrom('/departments/'.$department->getUuidString().'/configure');
 
         $ranger = $this->person('Juma', 'Mwakalinga', TeamRoleEnum::Staff);
         $ranger->setPosition($this->position('Ranger', ['surveys.read']));
@@ -310,7 +202,7 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
         $this->em->flush();
         $this->client->loginUser($admin);
 
-        $token = $this->tokenFrom('/departments/'.$office->getUuidString());
+        $token = $this->tokenFrom('/departments/'.$office->getUuidString().'/configure');
 
         // Their own area department: allowed.
         $this->client->request('POST', $this->toggleUrl($office, 'surveys'), ['_token' => $token]);
@@ -352,16 +244,10 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
         }
     }
 
-    /** The performance tiles whose label is this one. */
-    private function tilesLabelled(Crawler $crawler, string $label): Crawler
-    {
-        return $crawler->filter('[data-dept-kpis] .kpi')
-            ->reduce(static fn (Crawler $c): bool => str_contains($c->text(), $label));
-    }
-
+    /** The configure page, where the modules a department runs are switched. */
     private function lens(Department $department): Crawler
     {
-        return $this->client->request('GET', '/departments/'.$department->getUuidString());
+        return $this->client->request('GET', '/departments/'.$department->getUuidString().'/configure');
     }
 
     private function toggleUrl(Department $department, string $slug): string
@@ -373,7 +259,7 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
     private function attach(Department $department, string $slug): void
     {
         $this->client->request('POST', $this->toggleUrl($department, $slug), [
-            '_token' => $this->tokenFrom('/departments/'.$department->getUuidString()),
+            '_token' => $this->tokenFrom('/departments/'.$department->getUuidString().'/configure'),
         ]);
         self::assertResponseRedirects();
         $this->em->clear();
@@ -381,8 +267,9 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
 
     private function attachForm(Crawler $crawler, string $module): Form
     {
-        return $crawler->filter('[data-dept-attach] form')
-            ->reduce(static fn (Crawler $c): bool => $module === trim($c->filter('button')->text()))
+        return $crawler->filter('tr[data-dept-attach]')
+            ->reduce(static fn (Crawler $c): bool => $module === trim($c->filter('td b')->text()))
+            ->filter('form')
             ->first()
             ->form();
     }

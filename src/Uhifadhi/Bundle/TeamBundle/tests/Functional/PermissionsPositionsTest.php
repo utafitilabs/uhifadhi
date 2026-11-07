@@ -103,10 +103,10 @@ final class PermissionsPositionsTest extends WebTestCaseWithSchema
         self::assertSame(['Naomi Kileo', 'Desta Haile'], $rows->each(static fn (Crawler $c): string => $c->filter('td')->eq(0)->filter('a')->text()), 'Super Admins first, then by name');
         $naomi = $this->org->personNamed('Naomi Kileo');
         self::assertSame('/team/'.$naomi->getUuidString(), $rows->eq(0)->filter('td')->eq(0)->filter('a')->attr('href'));
-        self::assertSame(['placed: the whole organization', 'placed: the whole organization'], $rows->each(static fn (Crawler $c): string => $c->filter('td .pp-sub')->text()));
+        self::assertSame(['placed: the whole organization', 'placed: the whole organization'], $rows->each(static fn (Crawler $c): string => $c->filter('td .sub')->text()));
         self::assertSame(['tier t-super: Super Admin', 'tier t-admin: Admin'], $rows->each(static fn (Crawler $c): string => $c->filter('td span.tier')->attr('class').': '.$c->filter('td span.tier')->text()));
-        self::assertSame(['Open →', 'Open →'], $rows->each(static fn (Crawler $c): string => $c->filter('td.pp-door a.more')->text()));
-        self::assertSame('/team/'.$naomi->getUuidString(), $rows->eq(0)->filter('td.pp-door a.more')->attr('href'));
+        self::assertSame(['Open →', 'Open →'], $rows->each(static fn (Crawler $c): string => $c->filter('td.door a.more')->text()));
+        self::assertSame('/team/'.$naomi->getUuidString(), $rows->eq(0)->filter('td.door a.more')->attr('href'));
         self::assertSame(['{"tier":["super_admin"]}', '{"tier":["admin"]}'], $rows->each(static fn (Crawler $c): ?string => $c->attr('data-pa-f')));
         self::assertSame('naomi kileo', $rows->eq(0)->attr('data-pa-q'));
 
@@ -263,7 +263,7 @@ final class PermissionsPositionsTest extends WebTestCaseWithSchema
             ['Patrol, security and inspection', 'Driver', 'Head of Operations', 'People officer', 'Rhino coordinator', 'Station head', 'Tourism warden'],
             $rows->each(static fn (Crawler $c): string => $c->filter('.pq-name')->text()),
         );
-        self::assertCount(7, $rows->filter('td.pp-door .pq-chev[aria-expanded="false"]'));
+        self::assertCount(7, $rows->filter('td.door .pq-chev[aria-expanded="false"]'));
         self::assertCount(0, $rows->filter('.pq-open'), 'every row starts closed');
 
         $ranger = $this->org->positionNamed('Patrol, security and inspection');
@@ -271,15 +271,15 @@ final class PermissionsPositionsTest extends WebTestCaseWithSchema
         $cells = $row->children();
         self::assertCount(4, $cells);
         self::assertSame('/team/positions/'.$ranger->getUuidString(), $row->filter('td')->eq(0)->filter('.pq-nm a.pq-name')->attr('href'));
-        self::assertSame('pp-sub pq-sum', $cells->eq(0)->filter('span.pp-sub')->attr('class'));
+        self::assertSame('sub pq-sum', $cells->eq(0)->filter('span.sub')->attr('class'));
         self::assertSame('3 permissions across 2 resources: Surveys, Stations', $row->filter('.pq-sum')->text());
         self::assertSame('num', $cells->eq(1)->attr('class'));
         self::assertSame('5', $cells->eq(1)->filter('a')->text());
         self::assertSame('/team?position='.$ranger->getUuidString(), $cells->eq(1)->filter('a')->attr('href'));
         self::assertSame('5 people in Patrol, security and inspection', $cells->eq(1)->filter('a')->attr('aria-label'));
-        self::assertCount(0, $cells->eq(1)->filter('.pp-sub'), 'no seats, no sub-line');
+        self::assertCount(0, $cells->eq(1)->filter('.sub'), 'no seats, no sub-line');
         self::assertSame('in named areas', $cells->eq(2)->text());
-        self::assertSame('pp-door', $cells->eq(3)->attr('class'));
+        self::assertSame('door', $cells->eq(3)->attr('class'));
         self::assertCount(0, $row->filter('.pq-nm .chip'), 'nothing to raise');
 
         $body = $row->nextAll()->first();
@@ -301,7 +301,7 @@ final class PermissionsPositionsTest extends WebTestCaseWithSchema
         $rows = $this->page()->filter('#positions table.pq-tbl tbody tr.pq-r');
         $head = $rows->reduce(static fn (Crawler $c): bool => 'Station head' === $c->filter('.pq-name')->text());
 
-        self::assertSame('of 3 seats', $head->filter('td.num .pp-sub')->text());
+        self::assertSame('of 3 seats', $head->filter('td.num .sub')->text());
     }
 
     public function testAClosedRowCarriesItsAlarms(): void

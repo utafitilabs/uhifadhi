@@ -1,113 +1,78 @@
-{# PERFORMANCE · BRIEFING — what changed, and what to decide.
+{# PERFORMANCE · BRIEFING — what needs a decision, the goals, and what changed.
 
-   PORTED from departments/performance/briefing.html: the band of the goals'
-   own figures, the line under it, "what changed" one row a topic, and the
-   goal ledger.
+   PORTED from departments/performance/briefing.html: what needs a decision
+   as the banner above the page, then the index and its two cards at full
+   width, one column — the goals and what changed. No strip: strips and
+   figures belong to the Overview (ruled 7 Nov).
 
-   IT ADDS UP NOTHING OF ITS OWN. The band is the Goals topic's five, the
-   movements are each topic's own sentence, and the ledger is the Goals
-   topic's matrix in the one grammar every matrix is drawn in. A briefing that
-   computed any of it would be a second answer to a question already answered
-   on the page before it.
-
-   THE LEDGER LEADS, then the two cards of equal height. A director opens
-   this page to see where the goals stand; what changed and what to decide
-   are the two readings OF that, so they sit beside each other under it. #}
+   IT ADDS UP NOTHING OF ITS OWN. The decisions and the movements are each
+   topic's own sentences, and the goals are the Goals topic's matrix in the
+   one grammar every matrix is drawn in. A briefing that computed any of it
+   would be a second answer to a question already answered on the page
+   before it. #}
 {% extends '@Team/performance/_frame.html.twig' %}
+{% import '@Team/departments/_bits.html.twig' as di %}
 
 {% block title %}Briefing · Performance{% endblock %}
 
 {% block perf_crumb %}<a href="{{ path('team_performance') }}">performance</a> / briefing{% endblock %}
 
 {% block perf_page %}
-    {% if goals %}
-        <div class="factband">
-            {% for kpi in goals %}
-                <span class="f">
-                    <span class="k">{{ kpi.label }}</span>
-                    <span class="v">{{ kpi.isKnown ? kpi.value|round(kpi.value == kpi.value|round ? 0 : 1) : '—' }}
-                        {%- if kpi.caption %}<em>{{ kpi.caption }}</em>{% endif %}</span>
-                </span>
-            {% endfor %}
-            <span class="sp"></span>
-            <a class="more" href="{{ path('team_performance_topic', {key: 'goals'}) }}">The goals topic {{ ux_icon('shell:arrow-right') }}</a>
-        </div>
-    {% endif %}
+    {# WHAT NEEDS A DECISION — what is wrong and what is being asked, both in
+       the topic's own words, against the department it belongs to. #}
+    {{ di.attention('Needs a decision', decisions|map(row => {
+        head: row.decision.what,
+        cause: (row.decision.departmentName ? row.decision.departmentName ~ ' · ' : '') ~ row.decision.ask,
+        door: 'Open',
+        url: row.decision.url ?? row.url,
+    })) }}
 
-    <h2 class="zone">Goals declared</h2>
+    {% embed '@Shell/_onpage.html.twig' with {rows: [
+        {id: 'tp-ledger', label: 'Goals', count: ledger ? ledger.rows|length : null},
+        {id: 'changed', label: 'What changed', count: moved|length},
+    ]} %}
+        {% block shell_onpage_main %}
+            {% if ledger %}
+                {{ render_matrix(ledger, {
+                    title: 'Goals',
+                    caption: 'grouped by scope; a department that declared nothing is a row that says so',
+                    publisher: 'Built in',
+                    openLabel: 'Open',
+                    id: 'tp-ledger',
+                }) }}
+            {% else %}
+                <section class="pfc" id="tp-ledger">
+                    <div class="pfc-hd"><span class="t">Goals</span></div>
+                    <div class="pfc-bd"><p class="perf-empty">This installation publishes no goals topic, so there are no goals to draw.</p></div>
+                </section>
+            {% endif %}
 
-    {% if ledger %}
-        {{ render_matrix(ledger, {
-            title: 'The goal ledger',
-            caption: 'grouped by scope; a department that declared nothing is a row that says so',
-            publisher: 'the host',
-            openLabel: 'Open',
-            id: 'tp-ledger',
-        }) }}
-    {% else %}
-        <p class="perf-empty">This installation publishes no goals topic, so there is no ledger to draw.</p>
-    {% endif %}
-
-    <h2 class="zone">What changed, and what to decide</h2>
-
-    {# TWO CARDS OF EQUAL HEIGHT. They are two readings of the same period —
-       what moved, and what somebody has to do about it — so neither leads. #}
-    <div class="grid g2 spinerow-eq">
-        <div class="pfc">
-            <div class="pfc-hd">
-                <span class="t">What changed</span>
-                <span class="s">&middot; {{ period.label }} against {{ previous.label }}</span>
-                <span class="sp"></span>
-                <span class="n">{{ moved|length }} {{ moved|length == 1 ? 'movement' : 'movements' }}</span>
-            </div>
-            <div class="pfc-bd">
-                {% if moved %}
-                    <div class="mvlist">
-                        {% for row in moved %}
-                            {# THE SENTENCE IS THE TOPIC'S AND THE TONE IS THE
-                               PLATFORM'S — the same bargain a calendar pill and a
-                               state chip strike. #}
-                            <a class="mvrow" href="{{ row.url }}">
-                                <span class="i {{ row.movement.tone.value }}"></span>
-                                <span class="l"><b>{{ row.topic }}</b>{{ row.movement.sentence }}</span>
-                                <span class="ov-open">Open {{ ux_icon('shell:chevron-right') }}</span>
-                            </a>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="perf-empty">No topic has anything to report for this period, which is not the same as a period in which nothing happened.</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="pfc">
-            <div class="pfc-hd">
-                <span class="t">Needs a decision</span>
-                <span class="s">&middot; the ones a director acts on first</span>
-                <span class="sp"></span>
-                <span class="n">{{ decisions|length }} of {{ raised }}</span>
-            </div>
-            <div class="pfc-bd">
-                {% if decisions %}
-                    <div class="mvlist">
-                        {% for row in decisions %}
-                            {# WHAT IS WRONG AND WHAT IS BEING ASKED, both in the
-                               topic's own words: half of it would be a figure
-                               with an opinion. #}
-                            <a class="mvrow dcn" href="{{ row.url }}">
-                                <span class="mk">{{ row.decision.departmentMark }}</span>
-                                <span class="l">
-                                    <b>{{ row.decision.what }}</b>
-                                    <span class="ask">{{ row.decision.ask }}</span>
-                                </span>
-                                <span class="ov-open">Open {{ ux_icon('shell:chevron-right') }}</span>
-                            </a>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="perf-empty">Nothing is waiting on a decision this period — which is a reading of the period, not an empty card.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+            <section class="pfc" id="changed">
+                <div class="pfc-hd">
+                    <span class="t">What changed</span>
+                    <span class="s">&middot; {{ period.label }} against {{ previous.label }}</span>
+                    <span class="sp"></span>
+                    <span class="n">{{ moved|length }} {{ moved|length == 1 ? 'movement' : 'movements' }}</span>
+                </div>
+                <div class="pfc-bd">
+                    {% if moved %}
+                        <div class="mvlist">
+                            {% for row in moved %}
+                                {# THE SENTENCE IS THE TOPIC'S AND THE TONE IS THE
+                                   PLATFORM'S — the same bargain a calendar pill and a
+                                   state chip strike. #}
+                                <a class="mvrow" href="{{ row.url }}">
+                                    <span class="i {{ row.movement.tone.value }}"></span>
+                                    <span class="l"><b>{{ row.topic }}</b>{{ row.movement.sentence }}</span>
+                                    <span class="ov-open">Open {{ ux_icon('shell:chevron-right') }}</span>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="perf-empty">No topic has anything to report for this period, which is not the same as a period in which nothing happened.</p>
+                    {% endif %}
+                </div>
+            </section>
+        {% endblock %}
+    {% endembed %}
 {% endblock %}

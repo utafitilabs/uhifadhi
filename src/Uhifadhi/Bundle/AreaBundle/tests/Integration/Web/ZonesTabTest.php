@@ -21,69 +21,81 @@ use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 use Uhifadhi\Bundle\AreaBundle\Enum\PostingSource;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverviewService;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
 
 /**
- * THE ZONES TAB, OVER REAL HTTP — how an area is divided, read.
+ * THE ZONES HUB · OVERVIEW — how an area is divided, stated.
  *
- * PICK ALL ZONES OR ONE. This is the all-zones state: the area's band, the
- * area's figures, the whole ground on one plate, and under it the stations
- * and the people those zones account for. Picking one is the zone record,
- * which is the same surface one step in.
- *
- * A LENS, NOT A FENCE. Reading it is for anybody who may see the area; every
- * write is on the configure section, and the only control here that changes
- * anything is the Configure action the frame draws.
+ * Design: areas/<area>/zones/index.html. One strip of its own, Overview ·
+ * Zones; the banner names the zones no station stands in; the strip, the four
+ * figures, the plate and two plots belong here, and it lists nothing — the
+ * register is the hub's other page.
  */
 #[CoversClass(ZoneController::class)]
+#[CoversClass(ZoneOverviewService::class)]
 final class ZonesTabTest extends WebTestCase
 {
-    public function testTheTabDrawsTheBandTheFiguresThePlateAndBothCards(): void
+    public function testTheHubCarriesItsOwnStripInPlaceOfTheAreaTabs(): void
     {
         $this->boot();
         $this->signIn();
         [$area] = $this->anAreaWithAZonedPost();
 
-        $body = $this->body($this->tab($area));
-
-        self::assertStringContainsString('People stationed', $body);
-        // The ground, wearing the house map contract.
-        self::assertStringContainsString('map-plate', $body);
-        self::assertStringContainsString('map-legend', $body);
-        // And the two cards under it.
-        self::assertStringContainsString('Eastgate Post', $body);
-        self::assertStringContainsString('J. Mollel', $body);
-        self::assertStringContainsString('class="atabs"', $body);
+        foreach (['' => 'Overview', '/list' => 'Zones'] as $suffix => $lit) {
+            $body = $this->body($this->tab($area).$suffix);
+            self::assertSame(1, substr_count($body, 'class="atabs"'), 'One tab strip per page.');
+            preg_match('#<div class="atabs">(.*?)</div>#s', $body, $strip);
+            preg_match_all('#<a href="[^"]*"( class="on")?>([^<]+)</a>#', $strip[1] ?? '', $tabs, \PREG_SET_ORDER);
+            self::assertSame(['Overview', 'Zones'], array_map(static fn (array $tab): string => $tab[2], $tabs));
+            self::assertSame([$lit], array_values(array_map(static fn (array $tab): string => $tab[2], array_filter($tabs, static fn (array $tab): bool => '' !== $tab[1]))));
+            self::assertMatchesRegularExpression('#<h1[^>]*>\s*Zones\s*</h1>#', $body);
+        }
     }
 
-    /**
-     * THE BAND IS FOLLOWED BY THE FIGURES, and by nothing in between.
-     *
-     * RULED 2026-09-20: the selection row goes. "All zones · the whole area"
-     * named a selection the page cannot change — the picker is the sidebar —
-     * and it put two module actions a third of the way down a page whose
-     * first job is to state the set. What it said, the band and the heading
-     * already say.
-     */
-    public function testTheBandIsFollowedByTheFiguresWithNoSelectionRow(): void
+    public function testTheOverviewStatesTheSetAndListsNothing(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area] = $this->anAreaWithAZonedPost();
+        $this->aZone($area, 'Eastern Sector', self::AN_EAST_HALF);
+
+        $body = $this->body($this->tab($area));
+
+        self::assertStringContainsString('<span class="banner-t"><b>1 zone has no station</b> <span class="banner-c">Eastern Sector</span>', $body);
+        self::assertStringContainsString('href="'.$this->tab($area).'/list?stations=none"', $body);
+        self::assertStringContainsString('class="factband ov-band"', $body);
+        foreach (['Zones', 'Zoned', 'Unzoned', 'Stations', 'Imported'] as $field) {
+            self::assertStringContainsString('<span class="k">'.$field.'</span>', $body);
+        }
+        self::assertStringContainsString('2<em>presence-driven</em>', $body);
+        self::assertStringContainsString('1<em>0 in no zone</em>', $body);
+        self::assertStringContainsString('class="grid kstrip ov-kpis"', $body);
+        self::assertSame(4, substr_count($body, 'class="c kpi"'));
+        self::assertMatchesRegularExpression('#Zones with a station</span>\s*<b class="disp">1</b>\s*<span class="sub">of 2 zones</span>#', $body);
+        self::assertStringContainsString('All zones on the ground', $body);
+        self::assertStringContainsString('map-plate', $body);
+        self::assertStringContainsString('map-legend', $body);
+        self::assertStringContainsString('class="grid g2 ov-plots"', $body);
+        self::assertStringContainsString('Extent by zone', $body);
+        self::assertStringContainsString('Covered in ', $body);
+        self::assertStringContainsString('Stations on the area', $body);
+        self::assertStringNotContainsString('<table', $body, 'The Overview lists nothing; the register does.');
+        self::assertStringNotContainsString('J. Mollel', $body, 'The people posted are the Stations hub\'s.');
+    }
+
+    public function testTheOverviewDrawsNoBannerWhenEveryZoneHasAStation(): void
     {
         $this->boot();
         $this->signIn();
         [$area] = $this->anAreaWithAZonedPost();
 
-        $body = $this->body($this->tab($area));
-
-        self::assertStringNotContainsString('zsel', $body);
-        // The plate's own heading still says it — "All zones on the ground" is
-        // what the card is about, and the row that went was the selection.
-        self::assertStringNotContainsString('<h2', $body);
-        self::assertMatchesRegularExpression('#</div>\s*<div class="grid kstrip">#', $body);
+        self::assertStringNotContainsString('class="banner', $this->body($this->tab($area)));
     }
 
     /**
      * NO MODULE PUBLISHES ABOUT A ZONE HERE, so the cards that would carry a
-     * module's figure say so and keep their slot — a row of three where the
-     * design has four is a different design.
+     * module's figure say so and keep their slot.
      */
     public function testTheModuleFiguresSayNobodyPublishesRatherThanBeingDropped(): void
     {
@@ -94,10 +106,10 @@ final class ZonesTabTest extends WebTestCase
         $body = $this->body($this->tab($area));
 
         self::assertSame(4, substr_count($body, 'class="c kpi"'));
-        self::assertStringContainsString('no module publishes this', $body);
+        self::assertSame(3, substr_count($body, 'no module publishes this'));
     }
 
-    /** An area nobody has zoned says what a zone is, rather than drawing an empty table. */
+    /** An area nobody has zoned says what a zone is, rather than drawing an empty plate. */
     public function testAnAreaWithNoZoneSaysWhatAZoneIs(): void
     {
         $this->boot();
@@ -109,41 +121,16 @@ final class ZonesTabTest extends WebTestCase
         self::assertStringContainsString('lens', $body);
     }
 
-    /** The stations card carries the house filter row, and the address is its state. */
-    public function testTheStationsCardFiltersOffTheAddress(): void
-    {
-        $this->boot();
-        $this->signIn();
-        [$area] = $this->anAreaWithAZonedPost();
-        $this->stations()->add($area, 'Eastern Outpost', -29.25, -3.2);
-
-        self::assertSame(['Eastgate Post'], $this->listed($this->tab($area).'?q=eastgate'));
-        self::assertSame(['Eastern Outpost'], $this->listed($this->tab($area).'?zone=unzoned'));
-        self::assertSame(['Eastern Outpost'], $this->listed($this->tab($area).'?lead=no'));
-    }
-
-    /** The people card searches by name, on a key of its own. */
-    public function testThePeopleCardSearchesByName(): void
-    {
-        $this->boot();
-        $this->signIn();
-        [$area] = $this->anAreaWithAZonedPost();
-
-        $body = $this->body($this->tab($area).'?person=ndosi');
-
-        self::assertStringContainsString('T. Ndosi', $body);
-        self::assertStringNotContainsString('>J. Mollel<', $body);
-    }
-
-    public function testAViewerWhoMayNotSeeTheAreaIsRefused(): void
+    public function testAViewerWhoMayNotSeeTheAreaIsRefusedEverywhereInTheHub(): void
     {
         $this->boot([]);
         $this->signIn();
         [$area] = $this->anAreaWithAZonedPost();
 
-        $this->browser()->request('GET', $this->tab($area));
-
-        self::assertSame(Response::HTTP_FORBIDDEN, $this->browser()->getResponse()->getStatusCode());
+        foreach (['', '/list'] as $suffix) {
+            $this->browser()->request('GET', $this->tab($area).$suffix);
+            self::assertSame(Response::HTTP_FORBIDDEN, $this->browser()->getResponse()->getStatusCode(), $suffix);
+        }
     }
 
     // ---------------------------------------------------------------- fixtures
@@ -158,23 +145,6 @@ final class ZonesTabTest extends WebTestCase
         $this->browser()->request('GET', $url);
 
         return (string) $this->browser()->getResponse()->getContent();
-    }
-
-    /**
-     * The stations card's rows alone — the plate names every post in the
-     * area on purpose, so "not in the card" is asked of the card.
-     *
-     * @return list<string>
-     */
-    private function listed(string $url): array
-    {
-        // THE ZONES TABLE IS THE STATIONS TABLE'S TWIN and writes the same
-        // row markup, so the question is asked of the stations table by
-        // name: the one that is not the zones list.
-        preg_match('#<table class="tbl zdtbl">(.*?)</table>#s', $this->body($url), $table);
-        preg_match_all('#<td class="zname">.*?<b>([^<]+)</b>#s', $table[1] ?? '', $found);
-
-        return array_map(trim(...), $found[1]);
     }
 
     /** @return array{0: AreaOfInterest, 1: Zone} */

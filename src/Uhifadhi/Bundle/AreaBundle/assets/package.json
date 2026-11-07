@@ -30,6 +30,11 @@
                 "fetch": "eager",
                 "enabled": true
             },
+            "area-query": {
+                "main": "controllers/area_query_controller.js",
+                "fetch": "eager",
+                "enabled": true
+            },
             "station-point": {
                 "main": "controllers/station_point_controller.js",
                 "fetch": "lazy",

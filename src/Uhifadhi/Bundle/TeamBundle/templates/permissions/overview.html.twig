@@ -25,7 +25,7 @@
     {{ pp.drift(drift.lines, drift.unreviewed, token, 'team_permissions_overview', tools.analysis ? tools.analysis ~ '#drift' : null) }}
 
     {# THE BAND — the run's own figures. #}
-    <div class="factband pp-band">
+    <div class="factband ov-band">
         <span class="f"><span class="k">As of</span><span class="v">{% if freshness.asOf %}{{ pp.stamp(freshness.asOf) }}<em>next run {{ pp.stamp(freshness.nextRun) }}</em>{% else %}{{ shell_as_of(null) }}{% endif %}</span></span>
         <span class="f"><span class="k">Positions</span><span class="v">{{ k.positions }}</span></span>
         <span class="f"><span class="k">People</span><span class="v">{{ k.people }}</span></span>
@@ -35,7 +35,7 @@
     </div>
 
     {# FOUR FIGURES, the Team overview's row. #}
-    <div class="grid kstrip pp-kpis">
+    <div class="grid kstrip ov-kpis">
         <div class="c kpi"><span class="tab">Positions</span><b class="disp">{{ k.positions }}</b><span class="sub">{{ k.vacant }} vacant &middot; {{ k.locked }} locked</span></div>
         <div class="c kpi"><span class="tab">People</span><b class="disp">{{ k.people }}</b><span class="sub">{{ k.staff }} staff &middot; {{ k.above }} above the matrix</span></div>
         <div class="c kpi"><span class="tab">Exceptions</span><b class="disp">{{ k.exceptionsInForce }}</b><span class="sub">in force &middot; {{ k.notInForce }} held, not in force</span></div>
@@ -43,7 +43,7 @@
     </div>
 
     {# FOUR PLOTS, the Team overview's cards. #}
-    <div class="grid g2 pp-ov">
+    <div class="grid g2 ov-plots">
         <div class="c">
             <span class="tab">Resources by positions holding them<span class="src">&middot; {{ concernsByPositions|length }}</span></span>
             {{ atlas_bars(concerns) }}
@@ -55,7 +55,7 @@
             <div class="sxmore"><span>{{ shownPositions }} of {{ k.positions }}</span><span class="sp"></span>{% if tools.positions %}<a href="{{ tools.positions }}">The positions &rarr;</a>{% endif %}</div>
         </div>
     </div>
-    <div class="grid g2 pp-ov">
+    <div class="grid g2 ov-plots">
         <div class="c">
             <span class="tab">Who can act, by place<span class="src">&middot; {{ whoCanActByPlace|length }} places</span></span>
             {{ atlas_chart(places, '', '', {'--chart-height': '114px', 'role': 'img', 'aria-label': whoCanActByPlace|map(p => p.name ~ ' ' ~ p.people)|join(', ')}) }}
@@ -77,8 +77,8 @@
                 {% for list in review %}
                     <tr>
                         <td class="num{{ list.alarm and list.count > 0 ? ' pp-bad' }}">{{ list.count }}</td>
-                        <td>{{ list.label }}<span class="pp-sub" title="{{ list.summary }}">{{ list.summary }}</span></td>
-                        <td class="pp-door">{% if tools.analysis %}<a class="more" href="{{ tools.analysis }}#{{ list.id }}">Analysis &rarr;</a>{% endif %}</td>
+                        <td>{{ list.label }}<span class="sub" title="{{ list.summary }}">{{ list.summary }}</span></td>
+                        <td class="door">{% if tools.analysis %}<a class="more" href="{{ tools.analysis }}#{{ list.id }}">Analysis &rarr;</a>{% endif %}</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -100,7 +100,7 @@
                 <tbody>
                     {%- for line in history %}
                     <tr data-pa-r{% if loop.index > 20 %} hidden{% endif %}>
-                        <td class="pp-hd">{{ line.lead }} {{ line.on }}{% if line.tail %} {{ line.tail }}{% endif %}<span class="pp-sub">{{ line.by }} &middot; {{ pp.stamp(line.when) }}</span></td>
+                        <td class="pp-hd">{{ line.lead }} {{ line.on }}{% if line.tail %} {{ line.tail }}{% endif %}<span class="sub">{{ line.by }} &middot; {{ pp.stamp(line.when) }}</span></td>
                         <td><span class="ph-diff">
                             {%- for part in line.diff -%}
                                 {%- if part[0] == 'was' -%}<s>{{ part[1] }}</s>{% if not loop.last %} &rarr; {% endif %}

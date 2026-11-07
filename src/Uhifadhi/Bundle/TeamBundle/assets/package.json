@@ -75,6 +75,18 @@
                 "name": "uhifadhi--team-bundle--permission-check",
                 "fetch": "lazy",
                 "enabled": true
+            },
+            "choice-link": {
+                "main": "controllers/choice_link_controller.js",
+                "name": "uhifadhi--team-bundle--choice-link",
+                "fetch": "lazy",
+                "enabled": true
+            },
+            "table-filter": {
+                "main": "controllers/table_filter_controller.js",
+                "name": "uhifadhi--team-bundle--table-filter",
+                "fetch": "lazy",
+                "enabled": true
             }
         },
         "importmap": {}

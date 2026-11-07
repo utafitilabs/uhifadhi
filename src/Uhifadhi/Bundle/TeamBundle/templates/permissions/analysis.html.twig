@@ -84,7 +84,7 @@
                         <thead><tr><th scope="col">Who</th>{% for target in power.targets %}<th scope="col" class="pa-tc">{{ target }}</th>{% endfor %}<th scope="col" aria-label="Check"></th></tr></thead>
                         <tbody>
                             {%- for row in power.rows %}
-                            <tr data-pa-r data-pa-f="{{ row.f }}" data-pa-q="{{ row.q }}"{% if loop.index > 20 %} hidden{% endif %}><th scope="row" class="pa-rh">{% if row.url %}<a href="{{ row.url }}">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}<span class="pp-sub">{{ row.kind }}</span></th>{% for ok in row.cells %}<td class="pa-tc"><span class="au-v pp-v {{ ok ? 'ok' : 'no' }}">{{ ok ? 'allowed' : 'refused' }}</span></td>{% endfor %}<td class="pp-door">{% if row.url %}<a class="more" href="{{ row.url }}">Check &rarr;</a>{% endif %}</td></tr>
+                            <tr data-pa-r data-pa-f="{{ row.f }}" data-pa-q="{{ row.q }}"{% if loop.index > 20 %} hidden{% endif %}><th scope="row" class="pa-rh">{% if row.url %}<a href="{{ row.url }}">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}<span class="sub">{{ row.kind }}</span></th>{% for ok in row.cells %}<td class="pa-tc"><span class="au-v pp-v {{ ok ? 'ok' : 'no' }}">{{ ok ? 'allowed' : 'refused' }}</span></td>{% endfor %}<td class="door">{% if row.url %}<a class="more" href="{{ row.url }}">Check &rarr;</a>{% endif %}</td></tr>
                             {%- endfor %}
                         </tbody>
                     </table>
@@ -104,7 +104,7 @@
                 <div class="lfilt">{% for c in reg.chips %}{{ an.chip(c) }}{% endfor %}{{ an.search(reg) }}</div>
                 {%- if list.id == 'reach-nothing' %}
                     <table class="tbl pa-st"><thead><tr><th scope="col">Person</th><th scope="col">Why</th><th scope="col"></th></tr></thead><tbody>
-                        {%- for x in e %}<tr{{ an.row(x, loop) }}><th scope="row" class="pa-rh pa-b">{{ x.name }}<span class="pp-sub">{{ x.position }}</span></th><td class="pa-s">{{ x.why|slice(0, 1)|upper }}{{ x.why|slice(1) }}</td><td class="pp-door">{% if x.url %}<a class="more" href="{{ x.url }}">Check &rarr;</a>{% endif %}</td></tr>{% endfor %}
+                        {%- for x in e %}<tr{{ an.row(x, loop) }}><th scope="row" class="pa-rh pa-b">{{ x.name }}<span class="sub">{{ x.position }}</span></th><td class="pa-s">{{ x.why|slice(0, 1)|upper }}{{ x.why|slice(1) }}</td><td class="door">{% if x.url %}<a class="more" href="{{ x.url }}">Check &rarr;</a>{% endif %}</td></tr>{% endfor %}
                     </tbody></table>
                 {%- elseif list.id == 'not-in-force' or list.id == 'not-honoured' %}
                     <table class="tbl pa-st"><thead><tr><th scope="col">Position &middot; permission</th><th scope="col">Reason</th><th scope="col"></th></tr></thead><tbody>
@@ -112,7 +112,7 @@
                     </tbody></table>
                 {%- elseif list.id == 'gaining' %}
                     <table class="tbl pa-st"><thead><tr><th scope="col">Who</th><th scope="col">Power</th><th scope="col"></th></tr></thead><tbody>
-                        {%- for x in e %}<tr{{ an.row(x, loop) }}><th scope="row" class="pa-rh pa-b">{{ x.who }}<span class="pp-sub">{{ x.kind }}</span></th><td class="pa-s">{{ x.power }}</td>{{ an.open(x.door) }}</tr>{% endfor %}
+                        {%- for x in e %}<tr{{ an.row(x, loop) }}><th scope="row" class="pa-rh pa-b">{{ x.who }}<span class="sub">{{ x.kind }}</span></th><td class="pa-s">{{ x.power }}</td>{{ an.open(x.door) }}</tr>{% endfor %}
                     </tbody></table>
                 {%- elseif list.id == 'vacant' %}
                     <table class="tbl pa-st"><thead><tr><th scope="col">Position</th><th scope="col">Vacant since</th><th scope="col"></th></tr></thead><tbody>
@@ -120,11 +120,11 @@
                     </tbody></table>
                 {%- elseif list.id == 'exceptions' %}
                     <table class="tbl pa-st pa-st-exc"><thead><tr><th scope="col">Position &middot; permission</th><th scope="col">By</th><th scope="col">Reason</th><th scope="col"></th></tr></thead><tbody>
-                        {%- for x in e %}<tr{{ an.row(x, loop) }}>{{ an.position(x) }}<td class="pa-s">{{ x.by }}{% if x.at %}<span class="pp-sub">{{ pp.stamp(x.at) }}</span>{% endif %}</td><td class="pa-s pa-dim">{{ x.reason }}</td>{{ an.open(x.door) }}</tr>{% endfor %}
+                        {%- for x in e %}<tr{{ an.row(x, loop) }}>{{ an.position(x) }}<td class="pa-s">{{ x.by }}{% if x.at %}<span class="sub">{{ pp.stamp(x.at) }}</span>{% endif %}</td><td class="pa-s pa-dim">{{ x.reason }}</td>{{ an.open(x.door) }}</tr>{% endfor %}
                     </tbody></table>
                 {%- elseif list.id == 'self-changes' %}
                     <table class="tbl pa-st"><thead><tr><th scope="col">Who</th><th scope="col">What</th><th scope="col"></th></tr></thead><tbody>
-                        {%- for x in e %}<tr{{ an.row(x, loop) }}><th scope="row" class="pa-rh pa-b">{{ x.who }}{% if x.at %}<span class="pp-sub">{{ pp.stamp(x.at) }}</span>{% endif %}</th><td class="pa-s">their own {{ x.what }} <span class="ph-diff"><s>{{ x.before }}</s> &rarr; <i>{{ x.after }}</i></span></td>{{ an.open(x.door) }}</tr>{% endfor %}
+                        {%- for x in e %}<tr{{ an.row(x, loop) }}><th scope="row" class="pa-rh pa-b">{{ x.who }}{% if x.at %}<span class="sub">{{ pp.stamp(x.at) }}</span>{% endif %}</th><td class="pa-s">their own {{ x.what }} <span class="ph-diff"><s>{{ x.before }}</s> &rarr; <i>{{ x.after }}</i></span></td>{{ an.open(x.door) }}</tr>{% endfor %}
                     </tbody></table>
                 {%- endif %}
                 {{ an.foot(reg) }}
@@ -148,11 +148,11 @@
                 <div class="lfilt">{% for c in reg.chips %}{{ an.chip(c) }}{% endfor %}{{ an.search(reg) }}</div>
                 <table class="tbl pa-st pa-st-drift"><thead><tr><th scope="col">Position &middot; permission</th>{% for head in drift.heads %}<th scope="col" class="num pa-plh">{{ head }}</th>{% endfor %}<th scope="col"></th></tr></thead><tbody>
                     {%- for row in drift.rows %}
-                    <tr{{ an.row(row, loop) }}{% if row.reviewed %} class="pa-done"{% endif %}><th scope="row" class="pa-rh pa-b">{{ row.subject }}<span class="pp-sub">{{ row.label }}</span>
-                        {%- for o in row.other %}<span class="pp-sub">{{ o.place }} <span class="ph-diff pa-diff"><s>{{ o.was }}</s>&rarr;<i>{{ o.now }}</i></span></span>{% endfor -%}
+                    <tr{{ an.row(row, loop) }}{% if row.reviewed %} class="pa-done"{% endif %}><th scope="row" class="pa-rh pa-b">{{ row.subject }}<span class="sub">{{ row.label }}</span>
+                        {%- for o in row.other %}<span class="sub">{{ o.place }} <span class="ph-diff pa-diff"><s>{{ o.was }}</s>&rarr;<i>{{ o.now }}</i></span></span>{% endfor -%}
                         </th>
                         {%- for cell in row.cells %}<td class="num">{% if cell %}<span class="ph-diff pa-diff"><s>{{ cell.was }}</s>&rarr;<i>{{ cell.now }}</i></span>{% endif %}</td>{% endfor -%}
-                        <td class="pp-door"><span class="pa-acts">{% if row.door %}<a class="more" href="{{ row.door }}">Verify live &rarr;</a>{% endif %}<form method="post" action="{{ path('team_permissions_drift_reviewed') }}"><input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="back" value="team_permissions_analysis">{% for id in row.ids %}<input type="hidden" name="ids[]" value="{{ id }}">{% endfor %}<button type="submit" class="btn sm pp-b"{{ row.reviewed ? ' disabled' }}>{{ row.reviewed ? 'Reviewed' : 'Mark reviewed' }}</button></form></span></td></tr>
+                        <td class="door"><span class="pa-acts">{% if row.door %}<a class="more" href="{{ row.door }}">Verify live &rarr;</a>{% endif %}<form method="post" action="{{ path('team_permissions_drift_reviewed') }}"><input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="back" value="team_permissions_analysis">{% for id in row.ids %}<input type="hidden" name="ids[]" value="{{ id }}">{% endfor %}<button type="submit" class="btn sm"{{ row.reviewed ? ' disabled' }}>{{ row.reviewed ? 'Reviewed' : 'Mark reviewed' }}</button></form></span></td></tr>
                     {%- endfor %}
                 </tbody></table>
                 {{ an.foot(reg) }}

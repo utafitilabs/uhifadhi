@@ -130,6 +130,12 @@
                 "fetch": "eager",
                 "enabled": true
             },
+            "area-query": {
+                "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/area_query_controller.js",
+                "name": "uhifadhi--area-bundle--area-query",
+                "fetch": "eager",
+                "enabled": true
+            },
             "register-fold": {
                 "main": "../src/Uhifadhi/Bundle/ShellBundle/assets/controllers/register_fold_controller.js",
                 "fetch": "eager",
@@ -187,6 +193,18 @@
             "permission-check": {
                 "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/permission_check_controller.js",
                 "name": "uhifadhi--team-bundle--permission-check",
+                "fetch": "lazy",
+                "enabled": true
+            },
+            "choice-link": {
+                "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/choice_link_controller.js",
+                "name": "uhifadhi--team-bundle--choice-link",
+                "fetch": "lazy",
+                "enabled": true
+            },
+            "table-filter": {
+                "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/table_filter_controller.js",
+                "name": "uhifadhi--team-bundle--table-filter",
                 "fetch": "lazy",
                 "enabled": true
             }

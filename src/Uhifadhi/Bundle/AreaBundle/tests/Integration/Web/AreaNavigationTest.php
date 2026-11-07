@@ -307,6 +307,23 @@ final class AreaNavigationTest extends WebTestCase
         self::assertSame(['Patrols'], self::litUnder($row));
     }
 
+    /** EVERY PAGE OF THE STATIONS HUB LIGHTS THE STATIONS ROW, the register's and the postings' as the Overview's. */
+    public function testEveryPageOfTheStationsHubLightsTheStationsRow(): void
+    {
+        $this->boot();
+        $uuid = (string) $this->anArea('Northern Conservation Reserve')->getUuidString();
+
+        foreach (['area_stations' => '', 'area_stations_list' => '/list', 'area_stations_postings' => '/postings'] as $route => $suffix) {
+            $lit = [];
+            foreach ($this->areaRow($this->navAtRoute('/areas/'.$uuid.'/stations'.$suffix, $route))->children as $screen) {
+                if ($screen->current || [] !== self::litUnder($screen)) {
+                    $lit[] = $screen->label;
+                }
+            }
+            self::assertSame(['Stations'], $lit, $route);
+        }
+    }
+
     /**
      * THE AREA ROW MARKS THE PLACE THE VIEWER IS IN, LIT LEAF OR NOT. The
      * design draws the place rung as `cur` rather than as the accent, so it says

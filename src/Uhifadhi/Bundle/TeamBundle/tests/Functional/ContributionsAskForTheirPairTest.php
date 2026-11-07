@@ -141,32 +141,32 @@ final class ContributionsAskForTheirPairTest extends WebTestCaseWithSchema
     }
 
     /**
-     * A CELL'S DOOR ASKS THE PAIR OF WHERE IT LEADS. The vacancies cell on the
-     * departments' overview names positions and points at their register,
-     * which enforces `positions.read`; a departments reader gets the names
-     * and no door.
+     * A BANNER'S DOOR ASKS THE PERMISSION OF WHERE IT LEADS. The vacancies
+     * line of the departments' overview banner names a position and points at
+     * the positions register, which enforces `positions.read`; a departments
+     * reader gets the line and no door.
      */
-    public function testTheVacanciesCellDrawsNoDoorToThePositionsRegisterWithoutItsPair(): void
+    public function testTheVacanciesLineDrawsNoDoorToThePositionsRegisterWithoutItsPermission(): void
     {
+        $this->position('Field Assistant');
         $this->reader(['departments.read']);
 
-        $this->client->request('GET', '/departments/overview');
+        $crawler = $this->client->request('GET', '/departments/overview');
 
         self::assertResponseIsSuccessful();
-        $body = (string) $this->client->getResponse()->getContent();
-        self::assertStringContainsString('Positions nobody holds', $body);
-        self::assertStringNotContainsString('Positions in Team', $body);
-        self::assertStringNotContainsString('href="/team/positions"', $body);
+        self::assertStringContainsString('1 position is held by nobody', $crawler->filter('.banner')->text());
+        self::assertStringNotContainsString('href="/team/positions"', (string) $this->client->getResponse()->getContent());
     }
 
-    /** And with the pair, the door is there. */
-    public function testTheVacanciesCellDrawsItsDoorWithThePair(): void
+    /** And with the permission, the door is there. */
+    public function testTheVacanciesLineDrawsItsDoorWithThePermission(): void
     {
+        $this->position('Field Assistant');
         $this->reader(['departments.read', 'positions.read']);
 
-        $this->client->request('GET', '/departments/overview');
+        $crawler = $this->client->request('GET', '/departments/overview');
 
-        self::assertStringContainsString('Positions in Team', (string) $this->client->getResponse()->getContent());
+        self::assertCount(1, $crawler->filter('.banner .banner-acts a[href="/team/positions"]'));
     }
 
     /**

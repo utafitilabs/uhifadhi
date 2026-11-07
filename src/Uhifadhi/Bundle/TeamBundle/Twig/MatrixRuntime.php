@@ -87,7 +87,7 @@ final readonly class MatrixRuntime implements RuntimeExtensionInterface
                 new HeatLegendEntry(HeatTint::Leads, 'leads the column'),
                 new HeatLegendEntry(HeatTint::Mid, 'mid'),
                 new HeatLegendEntry(HeatTint::Trails, 'trails the column'),
-                new HeatLegendEntry(HeatTint::None, "no figure yet \u{2014} not a zero"),
+                new HeatLegendEntry(HeatTint::None, "not measured yet \u{2014} not a zero"),
             ],
             \sprintf("A placing inside one column and one band \u{2014} never a verdict on a department, and not drawn where fewer than %d in the band have a figure.", MatrixPlacing::FEWEST),
         );

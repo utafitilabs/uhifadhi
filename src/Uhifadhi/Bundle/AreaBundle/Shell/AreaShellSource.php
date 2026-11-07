@@ -221,13 +221,15 @@ final class AreaShellSource implements AreaShellSourceInterface
             return 'Modules';
         }
 
+        // A HUB'S PAGES LIGHT THE HUB: the Stations hub is three routes
+        // (Overview, the register, the postings), the Zones hub two.
         foreach ([
-            'Zones' => 'area_zones',
-            'Stations' => 'area_stations',
-            'Departments' => 'area_departments',
-            'Overview' => 'area_show',
-        ] as $label => $name) {
-            if ($route === $name) {
+            'Zones' => ['area_zones', 'area_zones_list'],
+            'Stations' => ['area_stations', 'area_stations_list', 'area_stations_postings'],
+            'Departments' => ['area_departments'],
+            'Overview' => ['area_show'],
+        ] as $label => $names) {
+            if (\in_array($route, $names, true)) {
                 return $label;
             }
         }

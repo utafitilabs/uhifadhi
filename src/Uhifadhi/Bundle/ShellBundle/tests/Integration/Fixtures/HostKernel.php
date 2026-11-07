@@ -165,6 +165,7 @@ class HostKernel extends TestKernel
         $services->alias('test.shell.user_badge', 'shell.user_badge')->public();
         $services->alias('test.shell.contract', 'shell.contract')->public();
         $services->alias('test.shell.theme', 'shell.theme')->public();
+        $services->alias('test.shell.table_page', 'shell.table_page')->public();
     }
 
     /**

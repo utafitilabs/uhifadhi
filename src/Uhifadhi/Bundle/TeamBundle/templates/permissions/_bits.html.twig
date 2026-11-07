@@ -19,25 +19,22 @@
 {% macro stamp(instant) %}<time datetime="{{ instant|date('c') }}" data-localtime-format="stamp">{{ instant|date('j M')|lower }} &middot; {{ instant|date('H:i') }}</time>{% endmacro %}
 
 {# THE DRIFT BANNER — answers that changed since the run before with no
-   history line touching them; absent while there is none. `open` is where
-   the drift card is. #}
+   history line touching them; absent while there is none. The shell's
+   attention banner (@Shell/_banner.html.twig), its words and doors set here;
+   reviewed, it keeps the record in the ok tone. `open` is where the drift
+   card is. #}
 {% macro drift(lines, unreviewed, token, back, open) %}
     {%- set changed = lines|reduce((n, line) => n + line.places|length, 0) -%}
     {%- if changed > 0 %}
         {%- set done = unreviewed == 0 %}
-        <div class="pp-drift{{ done ? ' pp-done' }}"{% if open != '#drift' %} id="drift"{% endif %}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-            <span class="pp-dtext"><b>{{ done ? changed ~ ' unrecorded changes · marked reviewed' : changed ~ (changed == 1 ? ' answer changed' : ' answers changed') ~ ' with no recorded change' }}</b> <span class="pp-dcause">nothing in the history explains it</span></span>
-            <span class="pp-dacts">
-                {% if open %}<a class="btn sm" href="{{ open }}">Open</a>{% endif %}
-                {% if not done %}
-                    <form method="post" action="{{ path('team_permissions_drift_reviewed') }}">
-                        <input type="hidden" name="_token" value="{{ token }}">
-                        <input type="hidden" name="back" value="{{ back }}">
-                        <button type="submit" class="btn sm pp-b">Mark reviewed</button>
-                    </form>
-                {% endif %}
-            </span>
-        </div>
+        {%- set actions = open ? {'Open': open} : {} %}
+        {%- if not done %}{% set actions = actions|merge({'Mark reviewed': {action: path('team_permissions_drift_reviewed'), fields: {_token: token, back: back}}}) %}{% endif %}
+        {% include '@Shell/_banner.html.twig' with {
+            title: done ? changed ~ ' unrecorded changes · marked reviewed' : changed ~ (changed == 1 ? ' answer changed' : ' answers changed') ~ ' with no recorded change',
+            text: 'nothing in the history explains it',
+            actions: actions,
+            tone: done ? 'ok' : 'warn',
+            id: open != '#drift' ? 'drift' : null,
+        } only %}
     {%- endif %}
 {%- endmacro %}

@@ -24,6 +24,7 @@ use Uhifadhi\Bundle\AreaBundle\Controller\MeController;
 use Uhifadhi\Bundle\AreaBundle\Controller\OrgDashboardController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationEditController;
+use Uhifadhi\Bundle\AreaBundle\Controller\StationPostingsController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationRecordController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationsController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneConfigureController;
@@ -48,7 +49,10 @@ use Uhifadhi\Bundle\AreaBundle\Service\MyDashboard;
 use Uhifadhi\Bundle\AreaBundle\Service\OrgOverviewCatalogue;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceStreamService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationNoticeStore;
+use Uhifadhi\Bundle\AreaBundle\Service\StationOverviewService;
+use Uhifadhi\Bundle\AreaBundle\Service\StationPostingsService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverviewService;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaFigure;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetupCheck;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetupDecision;
@@ -307,25 +311,29 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(AreaEditController::class, 'area.controller.edit')->public();
 
     /*
-     * THE ZONES TAB — how the area is divided, read: the set's figures, the
-     * whole ground on one plate, and the stations and people those zones
-     * account for. The picker is the sidebar, not a column of the page.
+     * THE ZONES HUB — how the area is divided, read: the Overview states the
+     * set, the register lists every zone.
      */
+    $services->set('area.zone_overview', ZoneOverviewService::class)
+        ->args([
+            service(StationRepository::class),
+            service('area.register'),
+            service('area.zone_figures'),
+            service('registry.area_modules'),
+            service('registry.entry_routes'),
+            service('atlas.periods'),
+        ]);
+
     $services->set('area.controller.zone', ZoneController::class)
         ->args([
             service('twig'),
             service('area.zone_set'),
-            service('area.station_register'),
             service(StationRepository::class),
             service(PostingRepository::class),
-            service('area.posting_board'),
-            service('area.register'),
             service('area.zone_plate'),
-            service('area.zone_figures'),
             service('area.zone_list'),
-            service('registry.area_modules'),
-            service('registry.entry_routes'),
-            service('atlas.periods'),
+            service('area.zone_overview'),
+            service('shell.table_page'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(ZoneController::class, 'area.controller.zone')->public();
@@ -347,6 +355,7 @@ return static function (ContainerConfigurator $container): void {
             service('registry.area_modules'),
             service('registry.entry_routes'),
             service('atlas.periods'),
+            service('shell.table_page'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(ZoneRecordController::class, 'area.controller.zone_record')->public();
@@ -386,6 +395,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.station_sections'),
             service('registry.area_modules'),
             service('atlas.periods'),
+            service('shell.table_page'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(StationRecordController::class, 'area.controller.station_record')->public();
@@ -447,6 +457,21 @@ return static function (ContainerConfigurator $container): void {
      * EVERY STATION IN ONE AREA — the tab. It reads; the section beside it is
      * where a post is added, moved and staffed.
      */
+    $services->set('area.station_overview', StationOverviewService::class)
+        ->args([
+            service(StationRepository::class),
+            service(PostingRepository::class),
+            service('area.posting_board'),
+            service('area.zone_set'),
+            service('area.station_figures'),
+            service('registry.area_modules'),
+            service('registry.entry_routes'),
+            service('atlas.periods'),
+        ]);
+
+    $services->set('area.station_postings', StationPostingsService::class)
+        ->args([service(StationRepository::class), service(PostingRepository::class), service('area.posting_board')]);
+
     $services->set('area.controller.stations', StationsController::class)
         ->args([
             service('twig'),
@@ -455,16 +480,17 @@ return static function (ContainerConfigurator $container): void {
             service(PostingRepository::class),
             service('area.posting_board'),
             service('area.zone_set'),
-            service(ZoneRepository::class),
-            service('area.register'),
             service('area.zone_plate'),
-            service('area.station_figures'),
-            service('registry.area_modules'),
-            service('registry.entry_routes'),
-            service('atlas.periods'),
+            service('area.station_overview'),
+            service('shell.table_page'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(StationsController::class, 'area.controller.stations')->public();
+
+    $services->set('area.controller.station_postings', StationPostingsController::class)
+        ->args([service('twig'), service('area.station_postings'), service('router'), service('shell.table_page')])
+        ->tag('controller.service_arguments');
+    $services->alias(StationPostingsController::class, 'area.controller.station_postings')->public();
 
     /*
      * THE STATIONS SECTION — a screen for the reason Zones is one: it writes,

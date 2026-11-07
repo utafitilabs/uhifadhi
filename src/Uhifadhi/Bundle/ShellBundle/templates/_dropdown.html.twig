@@ -37,6 +37,8 @@
      searchable   true draws the search pill
      default      the value that does not count as set
      end          true aligns the panel to the trigger's right edge
+     sm           true draws the compact head trigger (dd-sm), for a page
+                  head's action row
      placeholder  the trigger's text while nothing is chosen
      search       the search field's placeholder
      none         the line shown when a search finds nothing
@@ -62,7 +64,7 @@
     {%- endfor -%}
 {%- endif -%}
 {%- set _set = _chosen is not null and (_default is null or not ((_chosen.value ~ '') is same as(_default))) -%}
-<div class="dd{% if _set %} dd-set{% endif %}{% if _context['end'] ?? false %} dd-end{% endif %}" data-controller="{{ _name }}" data-dd="{{ name }}"{% if _default is not null %} data-default="{{ _default }}"{% endif %} data-dd-value="{{ _chosen is not null ? _chosen.value : '' }}">
+<div class="dd{% if _set %} dd-set{% endif %}{% if _context['end'] ?? false %} dd-end{% endif %}{% if sm ?? false %} dd-sm{% endif %}" data-controller="{{ _name }}" data-dd="{{ name }}"{% if _default is not null %} data-default="{{ _default }}"{% endif %} data-dd-value="{{ _chosen is not null ? _chosen.value : '' }}">
     <button type="button" class="dd-t" aria-haspopup="listbox" aria-expanded="false" aria-controls="dd-p-{{ name }}">
         {%- if icon ?? null %}{{ ux_icon(icon, {class: 'dd-i', width: 16, height: 16, 'aria-hidden': 'true'}) }}{% endif -%}
         <span class="dd-v" data-placeholder="{{ _placeholder }}">{{ _chosen is not null ? _chosen.label : _placeholder }}</span>

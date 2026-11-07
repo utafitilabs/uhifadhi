@@ -8,6 +8,39 @@
 
 Not released yet.
 
+ * A DEPARTMENT'S RECORD (the design's departments/ecology/index.html): `GET /departments/{uuid}`
+   draws three panels — Overview (the facts strip Belong · Support · Modules, the figures with their
+   change, sparkline and source, the goals as cards against their targets, What produced these
+   numbers), People & access (the index beside Who is in it, Members and History) and Settings (the
+   modules it runs, read) — with what needs a decision as the banner above them and, for an
+   organization-wide department, the area being read on the head's dropdown (`?area=`). The record
+   writes nothing: switching modules and declaring and withdrawing goals moved to its Configure page.
+   `Service\DepartmentRecordService` (`team.department_record`) reads it all, the goal states
+   included. Every table on the department and performance pages wears the house `.lfilt` bar
+   (`details.i-dd` chips with their counts, the search) and the register foot through
+   `@Shell/_foot.html.twig`: the register (its four filters as chips, every option an address, paged
+   through `TablePageService`; "showing n of m" gone), the Modules matrix, the area's Departments
+   tab (no strip; a `kind` chip; the departments behind a goal as the banner) and the topic matrix
+   on every topic page and the Briefing. Rows the server wrote are narrowed and paged by the new
+   `table-filter` Stimulus controller (`_partial/_table.html.twig`, `_partial/_filter_chip.html.twig`).
+   The attention banner is the shell's (`@Shell/_banner.html.twig`); the page-head dropdowns take
+   `sm`. A topic page names its topic in the page head, its publisher on the line under it, and lays
+   three charts as one wide and a pair. `Performance\DepartmentsBand` is gone, as nothing read it.
+ * DEPARTMENTS AND PERFORMANCE (the 8 Nov design round): the register drops its strip and wears
+   its scope and its four filters (placement, module, goals, seats) on the shell's dropdown, every
+   option an address through the new `choice-link` controller (`_partial/_link_dropdown.html.twig`,
+   `_partial/_filter_dropdown.html.twig`); the register's period control goes with the strip, as
+   nothing left on the page reads a period. The Departments Overview opens on one attention banner
+   above its strip (the departments reading no module, the positions nobody holds, each with its
+   door; `departments/_bits.html.twig` `attention()`), and its shipped composition is the figures,
+   the staffing and scope bars and the modules per department; the Modules matrix carries its
+   attention as the banner, with no strip and no attention cards. Performance: Scope, Period and
+   Compare with on the shell's dropdown in every screen's head (the period by what it works out to,
+   "August 2026"; the comparison "Against July 2026"); the strip on the Overview alone; a topic
+   page without it and published "Built in"; the Briefing is what needs a decision as the banner
+   (every decision, no cap), then the index over two full-width cards, Goals and What changed;
+   the matrix at a fixed layout with no sideways scroll; its legend says "not measured yet — not
+   a zero". The page head's dropdowns take the compact 32px trigger.
  * TEAM › PERMISSIONS › CHECK (#66, the 8 Nov design): `Controller\PermissionsCheckController`
    (`team.controller.permissions_check`) serves `GET /team/permissions/check?person=&q=&target=`,
    Super Admin by tier, drawn by `Permissions\CheckListing`: three shell dropdowns and Check; the

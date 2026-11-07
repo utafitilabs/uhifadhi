@@ -6,9 +6,12 @@
    same three things through the same seam, so one template draws both and a
    module's record cannot quietly lack an ability the host's has.
 
+   A TOPIC PAGE CARRIES ITS OWN FIGURES AND NO STRIP: the strip is the
+   Overview's, and a page shows one tab strip only (ruled 7 Nov).
+
    WHAT THE DESIGN DRAWS THAT IS NOT HERE YET, named rather than dropped: the
-   six-figure band under the head and the sentence beneath it. Both are the
-   topic's own words about its own figures, and no seam publishes them. #}
+   sentence beside who publishes the topic. It is the topic's own words about
+   its own figures, and no seam publishes it. #}
 {% extends '@Team/performance/_frame.html.twig' %}
 
 {% block title %}{{ topic }} · Performance{% endblock %}
@@ -18,33 +21,15 @@
     <a href="{{ path('team_performance_topics') }}">topics</a> / {{ topic|lower }}
 {% endblock %}
 
+{% block shell_page_title %}{{ topic }}{% endblock %}
+
 {% block perf_page %}
     {# THE LINE THAT SAYS WHAT THIS TOPIC IS AND WHO PUBLISHES IT. A figure a
        module computed and one the host computed are different promises, and a
        reader who cannot tell them apart cannot tell whom to ask about one. #}
     <div class="tphead">
-        <span class="t">{{ topic }}</span>
-        <span class="sp"></span>
         <span class="by{{ byModule ? ' mod' }}" title="Who publishes this topic">{{ publisher }}</span>
-    </div>
-
-    {# THE SIX THE ORGANIZATION IS READ BY, the same six on every screen of
-       this section — picked by key from the host's own three topics, so a
-       module never changes the organization's own band. #}
-    <div class="factband">
-        {% for figure in band %}
-            <span class="f">
-                <span class="k">{{ figure.label }}</span>
-                <span class="v">{{ figure.figure ?: '—' }}
-                    {%- if figure.caption or figure.delta %}<em>
-                        {{- figure.caption }}
-                        {%- if figure.caption and figure.delta %} &middot; {% endif %}
-                        {%- if figure.delta %}<span class="d{{ figure.tone ? ' ' ~ figure.tone }}">{{ figure.delta }}</span>{% endif %}
-                    </em>{% endif %}</span>
-            </span>
-        {% endfor %}
         <span class="sp"></span>
-        <a class="more" href="{{ path('team_performance_briefing') }}">What needs a decision {{ ux_icon('shell:arrow-right') }}</a>
     </div>
 
     <div class="tpk">

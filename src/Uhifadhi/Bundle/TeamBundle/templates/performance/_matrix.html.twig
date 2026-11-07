@@ -8,8 +8,11 @@
 
    THE TABLE AND ITS LEGEND ARE THE ATLAS'S — `atlas_heatmap()` and
    `atlas_heat_legend()`. What is written here is the card around them, the
-   silent sideways scroll and the sort controller that reads the table's
-   head. #}
+   silent sideways scroll, the sort controller that reads the table's
+   head, and the house bar and foot over its rows (the `table-filter`
+   controller: a chip of the scopes the rows are grouped under, the search,
+   the register foot). #}
+{% import '@Team/_partial/_table.html.twig' as tb %}
 <section class="pfc"{% if id %} id="{{ id }}"{% endif %}>
     <div class="pfc-hd">
         {% if title %}<span class="t">{{ title }}</span>{% endif %}
@@ -29,10 +32,17 @@
             <p class="perf-empty">No department reads this topic yet, which is not the same as every department scoring nothing.</p>
         </div>
     {% else %}
-        <div class="pfc-bd flush">
+        {% set scopes = [{value: '', label: 'All', count: view.rowCount}] %}
+        {% for band in view.bands %}
+            {% set scopes = scopes|merge([{value: band.name, label: band.name, count: band.count}]) %}
+        {% endfor %}
+        <div class="pfc-bd flush" {{ tb.wrap('departments', 'department') }} data-uhifadhi--team-bundle--table-filter-rows-value="tbody tr.perf-row" data-uhifadhi--team-bundle--table-filter-band-value="tbody tr.pfscope">
+            <div class="lfilt pfc-bar">{{ tb.chip('scope', scopes) }}{{ tb.search('Find a department') }}</div>
             <div class="hscroll pa-board" data-controller="uhifadhi--team-bundle--matrix">
                 {{ atlas_heatmap(view, openLabel, ux_icon('shell:chevron-right')) }}
             </div>
+            {{ tb.none('No department matches these filters.') }}
+            {{ tb.foot(view.rowCount, 'departments', 'department') }}
         </div>
 
         {# THE LEGEND IS PART OF THE MATRIX: a shade nobody explained is a

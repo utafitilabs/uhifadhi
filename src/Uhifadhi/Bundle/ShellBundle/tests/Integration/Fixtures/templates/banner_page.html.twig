@@ -1,0 +1,13 @@
+{# A MODULE PAGE WITH BANNERS: each drawn by the shell from the data it is
+   handed. The page writes nothing of their markup. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}a page with banners{% endblock %}
+{% block shell_page_title %}a page with banners{% endblock %}
+
+{% block shell_page %}
+    {% for banner in banners %}
+        {% include '@Shell/_banner.html.twig' with banner only %}
+    {% endfor %}
+    <div class="c">the content</div>
+{% endblock %}

@@ -126,7 +126,7 @@
 .sxdot.inh { background: none; border: 1.5px solid color-mix(in srgb, var(--acc) 60%, transparent); }
 .sxdot.no { background: none; border: 1.5px dashed color-mix(in srgb, var(--fog) 34%, transparent); }
 .sxmxkey {
-    display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 2px 0 12px;
-    font-family: var(--font-mono); font-size: 9.5px; color: var(--dim);
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: var(--sx-key-margin, 2px 0 12px);
+    font-family: var(--font-mono); font-size: var(--sx-key-size, 9.5px); color: var(--dim);
 }
 .sxmxkey span { display: inline-flex; align-items: center; gap: 6px; }

@@ -1,0 +1,71 @@
+{# THE ATTENTION BANNER — one row above the content, drawn only when there is
+   something to act on: an icon, the sentence (its head in the heavier
+   weight, the cause in fog), its doors at the right. Attention sits here and
+   nowhere else on a page: never in a card, a dot or an index. The design's
+   (DesignsProjects/uhifadhi-web/house-banner.css, the .pp-drift rules). The
+   contract is docs/banner.md.
+
+   A PAGE WRITES NONE OF ITS MARKUP. It includes this partial with its data:
+
+     {% include '@Shell/_banner.html.twig' with {
+         title: '4 answers changed with no recorded change',
+         text: 'nothing in the history explains it',
+         actions: {
+             'Open': '#drift',
+             'Mark reviewed': {action: path('…'), fields: {_token: token}},
+         },
+     } only %}
+
+   PARAMETERS:
+     title    the head, in the heavier weight; empty or null draws no banner
+     text     the cause after it, in fog; optional
+     actions  label → door: a string is a link's href, a mapping
+              {action, fields?, method?} a form whose fields are hidden
+              inputs and whose button is the label (method post unless given)
+     tone     warn (the default), fail, info or ok — the reviewed state, the
+              attention settled and the banner kept as the record
+     icon     a namespaced ux-icons name in place of the tone's
+     id       the wrapper's id, for a door that links to the banner
+     label    names the banner as a region (role="region", aria-label)
+     lines    [{title, text?, actions?}] in place of title/text/actions: one
+              icon, then a line a thing to act on; an empty list draws none #}
+{%- set _tone = tone ?? 'warn' -%}
+{%- set _icon = icon ?? {warn: 'shell:triangle-alert', fail: 'shell:triangle-alert', info: 'shell:info', ok: 'shell:triangle-alert'}[_tone] -%}
+{%- set _lines = lines ?? null -%}
+{%- set _single = _lines is null -%}
+{%- if _single -%}
+    {%- set _lines = (title ?? null) is empty ? [] : [{title: title, text: text ?? null, actions: actions ?? {}}] -%}
+{%- endif -%}
+{%- macro line(line) -%}
+    <span class="banner-t"><b>{{ line.title }}</b>{% if line.text ?? null %} <span class="banner-c">{{ line.text }}</span>{% endif %}</span>
+    {%- if (line.actions ?? {}) is not empty %}
+    <span class="banner-acts">
+        {%- for label, door in line.actions %}
+        {%- if door is iterable %}
+        <form method="{{ door.method ?? 'post' }}" action="{{ door.action }}">
+            {%- for name, value in door.fields ?? {} %}
+            <input type="hidden" name="{{ name }}" value="{{ value }}">
+            {%- endfor %}
+            <button type="submit" class="btn sm">{{ label }}</button>
+        </form>
+        {%- else %}
+        <a class="btn sm" href="{{ door }}">{{ label }}</a>
+        {%- endif %}
+        {%- endfor %}
+    </span>
+    {%- endif %}
+{%- endmacro -%}
+{%- if _lines is not empty %}
+<div class="banner banner-{{ _tone }}{{ _single ? '' : ' banner-lines' }}"{% if id ?? null %} id="{{ id }}"{% endif %}{% if label ?? null %} role="region" aria-label="{{ label }}"{% endif %}>
+    {{- ux_icon(_icon, {class: 'banner-i', width: 16, height: 16, 'aria-hidden': 'true'}) -}}
+    {%- if _single %}
+    {{ _self.line(_lines|first) }}
+    {%- else %}
+    <ul class="banner-l">
+        {%- for line in _lines %}
+        <li>{{ _self.line(line) }}</li>
+        {%- endfor %}
+    </ul>
+    {%- endif %}
+</div>
+{%- endif %}

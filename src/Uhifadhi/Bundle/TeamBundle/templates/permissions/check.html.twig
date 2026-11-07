@@ -194,7 +194,7 @@
                 </div>
                 <table class="tbl pp-ex"><thead><tr><th scope="col">Person</th><th scope="col">Question</th><th scope="col">Why</th><th scope="col" aria-label="Run"></th></tr></thead><tbody data-action="click->{{ ctl }}#run">
                     {%- for r in w.rows %}
-                    <tr data-kind="{{ r.kind }}" data-order="{{ loop.index0 }}" data-person="{{ r.person }}" data-place="{{ r.place }}" data-find="{{ r.find }}"{% if loop.index > page %} hidden{% endif %}><td>{{ r.person }}<span class="pp-sub">{{ r.position }}</span></td><td>{{ r.question }}<span class="pp-sub">{{ r.place }}</span></td><td><span class="chip {{ r.chip }}">{{ r.why }}</span></td><td class="pp-exd"><a class="more" href="{{ r.href }}">Run &rarr;</a></td></tr>
+                    <tr data-kind="{{ r.kind }}" data-order="{{ loop.index0 }}" data-person="{{ r.person }}" data-place="{{ r.place }}" data-find="{{ r.find }}"{% if loop.index > page %} hidden{% endif %}><td>{{ r.person }}<span class="sub">{{ r.position }}</span></td><td>{{ r.question }}<span class="sub">{{ r.place }}</span></td><td><span class="chip {{ r.chip }}">{{ r.why }}</span></td><td class="pp-exd"><a class="more" href="{{ r.href }}">Run &rarr;</a></td></tr>
                     {%- endfor %}
                 </tbody></table>
                 <div class="rdf-foot"><span><span data-pc-count>{{ w.count }} {{ w.count == 1 ? 'person' : 'people' }} &middot;</span> {{ m.size('worth', page, sizes) }}</span><span class="rdf-page" data-pc-page>{{ m.pager(w.count, page) }}</span></div>

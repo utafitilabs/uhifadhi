@@ -33,34 +33,42 @@
     {# THE WAY OUT TO THE WHOLE REGISTER. An org-wide department is not this
        area's to change, and the organization's register is where it is. #}
     <a class="cta" href="{{ path('team_departments') }}">{{ ux_icon('shell:building-2') }} Manage departments {{ ux_icon('shell:arrow-right') }}</a>
+    <a class="tgl w-act" href="{{ path('area_departments_configure', {uuid: area.uuidString}) }}">{{ ux_icon('shell:settings', {width: 15, height: 15}) }} Configure</a>
 {% endblock %}
 
 {% block shell_page %}
 {% set here = path('area_departments', {uuid: area.uuidString}) %}
 
-{# THE IDENTITY BAND, the same one every area tab wears — with the two facts
-   this tab is about. #}
-<div class="factband">
-    <span class="f"><span class="k">Departments</span><span class="v">{{ ownCount + orgCount }}<em>{{ ownCount }} of this area, {{ orgCount }} org-wide</em></span></span>
-    {# TWO FACTS, NOT A RATIO. A department's positions are derived from the
-       people placed in it, so every one of them is held and "M of N filled"
-       could only ever print "N of N". #}
-    <span class="f"><span class="k">Own people</span><span class="v">{{ people }}<em>{{ positionCount }} position{{ positionCount == 1 ? '' : 's' }}</em></span></span>
-    <span class="sp"></span>
-    <a class="more" href="{{ path('area_departments_configure', {uuid: area.uuidString}) }}">Configure departments &rarr;</a>
-</div>
 
-<div class="ov-find dpfind">
+{% set lines = [] %}
+{% for row in behind %}
+    {% set lines = lines|merge([row.department.name ~ ', ' ~ row.statement ~ ' at ' ~ row.now ~ ' against ' ~ row.target]) %}
+{% endfor %}
+{% set doors = {} %}
+{% for row in behind %}
+    {% set doors = doors|merge({(row.department.name): path('team_department_show', {uuid: row.department.uuidString})}) %}
+{% endfor %}
+{% include '@Shell/_banner.html.twig' with {
+    title: behind is empty ? null : behind|length ~ (behind|length == 1 ? ' department is behind its goal' : ' departments are behind their goal'),
+    text: '— ' ~ lines|join('; '),
+    actions: doors,
+    label: 'Needs a decision',
+} only %}
+
+<div class="lfilt">
+    {{ include('@Team/_partial/_filter_chip.html.twig', {
+        key: 'kind', name: 'kind', all: 'All', total: listedTotal,
+        chosen: kind, options: kindOptions,
+    }) }}
     <form class="lsearch" method="get" action="{{ here }}">
-        {{ ux_icon('shell:search') }}
+        {% if kind %}<input type="hidden" name="kind" value="{{ kind }}">{% endif %}
+        {{ ux_icon('shell:search', {width: 14, height: 14}) }}
         <input class="fld" type="search" name="q" value="{{ query.search }}" placeholder="Find a department&hellip;"
                aria-label="Find a department">
     </form>
-    <span class="sp"></span>
-    <span class="cnt">{{ ownCount + orgCount }} departments read {{ area.name }} &middot; {{ ownCount }} of this area &middot; {{ orgCount }} org-wide</span>
 </div>
 
-{% for group in groups %}
+{% for group in groups|filter(g => kind is null or g.key == kind) %}
     <details class="nvsec" open>
         <summary class="deptgroup nvgrp">
             <span class="nvfold">{{ ux_icon('shell:chevron-right') }}</span>
@@ -102,4 +110,8 @@
         {% endif %}
     </details>
 {% endfor %}
+{% include '@Shell/_foot.html.twig' with {
+    count: table.total, noun: 'departments', one: 'department',
+    perPage: table.size, page: table.page, pages: table.pages, links: links,
+} only %}
 {% endblock %}

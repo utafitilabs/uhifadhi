@@ -45,46 +45,51 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
 final class DepartmentScreenTest extends WebTestCaseWithSchema
 {
     /**
-     * THE BAND CARRIES WHAT THE DEPARTMENTS DID, not how many of them
-     * there are; the count of what is listed is said at the end of the
+     * A LIST TAB CARRIES NO STRIP (ruled 7 Nov: strips and figures belong to
+     * an Overview), and the count of what is listed is said at the end of the
      * filter row, where a count of what is being listed belongs.
      */
-    public function testTheBandCarriesTheFiguresAndTheFilterRowSaysWhatIsShown(): void
+    public function testTheRegisterCarriesNoStripAndTheFootSaysWhatIsShown(): void
     {
         $crawler = $this->screen();
 
-        $band = $crawler->filter('.factband .f .k')->each(static fn (Crawler $c): string => $c->text());
+        self::assertCount(0, $crawler->filter('.factband'));
+        self::assertCount(0, $crawler->filter('.ovstripnote'));
+        self::assertCount(0, $crawler->filter('.tm-shown'));
 
-        self::assertContains('Areas', $band);
-        self::assertContains('Seats filled', $band);
-        self::assertContains('Goals', $band);
-        self::assertNotContains('Departments', $band, 'a count of the rows is not a figure about the organization');
-
-        self::assertSame('showing 3 of 3', trim(preg_replace('/\s+/', ' ', $crawler->filter('.lfilt .tm-shown')->text()) ?? ''));
-        self::assertSame('showing 1 of 3', trim(preg_replace('/\s+/', ' ', $this->client->request('GET', '/departments?q=wetland')->filter('.lfilt .tm-shown')->text()) ?? ''));
+        self::assertStringStartsWith('3 departments', trim(preg_replace('/\s+/', ' ', $crawler->filter('.rdf-foot > span')->first()->text()) ?? ''));
+        self::assertSame('page 1 of 1', trim($crawler->filter('.rdf-foot .rdf-page')->text()));
+        self::assertStringStartsWith('1 department', trim(preg_replace('/\s+/', ' ', $this->client->request('GET', '/departments?q=wetland')->filter('.rdf-foot > span')->first()->text()) ?? ''));
+        self::assertCount(3, $this->named($this->client->request('GET', '/departments?page=9')), 'a page past the last is the last');
     }
 
-    /** The register wears the same two controls the performance section does. */
-    public function testTheHeaderCarriesTheScopeAndThePeriod(): void
+    /**
+     * THE SCOPE IS THE HOUSE DROPDOWN IN THE PAGE HEAD, and every option is an
+     * address: it is the placement filter seen from the head, one parameter.
+     */
+    public function testTheHeaderCarriesTheScopeOnTheHouseDropdown(): void
     {
         $crawler = $this->screen();
 
-        self::assertGreaterThan(0, $crawler->filter('.pgact .ov-ctl .i-dd')->count(), 'the scope, as addresses');
-        self::assertSame(
-            ['Month', 'Quarter', 'Year'],
-            $crawler->filter('.pgact .periodpick a')->each(static fn (Crawler $c): string => $c->text()),
-        );
+        $scope = $crawler->filter('.pgact .dp-link .dd[data-dd="scope"]');
+        self::assertCount(1, $scope);
+        self::assertSame('Organization — all areas', $scope->filter('.dd-v')->text());
+        self::assertSame(['Organization — all areas', 'Northern Reserve'], $scope->filter('.dd-o')->each(static fn (Crawler $c): string => (string) $c->attr('data-label')));
+        self::assertCount(0, $crawler->filter('.pgact .ov-ctl'));
+        self::assertCount(0, $crawler->filter('.pgact .periodpick'));
 
-        // A NARROWED REGISTER NARROWS THE BAND: a page that filtered its
-        // rows to one area and kept the organization's figures would be
-        // contradicting its own filter.
         $north = $this->north;
         self::assertNotNull($north, 'the register was seeded with an area');
+        $urls = json_decode((string) $crawler->filter('.pgact .dp-link')->attr('data-uhifadhi--team-bundle--choice-link-urls-value'), true);
+        $uuid = (string) $north->getUuidString();
+        self::assertIsArray($urls);
+        self::assertSame('/departments?placement='.$uuid, $urls[$uuid]);
 
         $narrowed = $this->client->request('GET', '/departments?placement='.$north->getUuidString());
 
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Northern Reserve', $narrowed->filter('.pgact .i-ddval')->text());
+        self::assertSame('Northern Reserve', $narrowed->filter('.pgact .dd[data-dd="scope"] .dd-v')->text());
+        self::assertCount(1, $narrowed->filter('.pgact .dd.dd-set[data-dd="scope"]'));
     }
 
     // ---- the register lists both scope groups, area-first -----------------
@@ -173,9 +178,19 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         self::assertSame(['Ecology', 'Protection Service'], $this->named($this->client->request('GET', '/departments?placement=org')));
         self::assertSame(['Wetland Management'], $this->named($this->client->request('GET', '/departments?placement='.$this->uuidOf('__area:Northern Reserve'))));
 
-        $options = $crawler->filter('.lfilt .i-dd')->first()->filter('.i-ddopt');
-        self::assertSame(['all placements', 'Org-wide', 'Northern Reserve'], $options->each(static fn (Crawler $c): string => trim($c->filter('.i-ddopt-l')->text())));
-        self::assertSame(['2', '1'], $options->filter('.i-ddopt-n')->each(static fn (Crawler $c): string => trim($c->text())));
+        self::assertSame(
+            ['placement', 'module', 'goals', 'seats'],
+            $crawler->filter('.lfilt details.i-dd')->each(static fn (Crawler $c): string => (string) $c->attr('data-axis')),
+            'the four filters are the house chips',
+        );
+        self::assertCount(0, $crawler->filter('.lfilt .dd'), 'no searchable dropdown in a filter bar');
+        $chip = $crawler->filter('.lfilt details.i-dd[data-axis="placement"]');
+        self::assertSame('all placements · 3', trim($chip->filter('summary.mchip.i-ddt .i-ddval')->text()));
+        $options = $chip->filter('.i-ddmenu a.i-ddopt');
+        self::assertSame(['All placements', 'Org-wide', 'Northern Reserve'], $options->filter('.i-ddopt-l')->each(static fn (Crawler $c): string => $c->text()));
+        self::assertSame(['3', '2', '1'], $options->filter('.i-ddopt-n')->each(static fn (Crawler $c): string => $c->text()));
+        self::assertSame('/departments?placement=org', $options->eq(1)->attr('href'));
+        self::assertSame('org-wide · 2', trim($this->client->request('GET', '/departments?placement=org')->filter('.lfilt details.i-dd[data-axis="placement"] .i-ddval')->text()));
     }
 
     /** The module, goals and seats dropdowns filter the same way. */
@@ -293,97 +308,6 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
 
             self::assertSame($show, $row->filter('.ov-nm')->attr('href'), $name.' name links to its record');
             self::assertSame($show, $row->filter('a.open-btn')->attr('href'), $name.' Open links to its record');
-        }
-    }
-
-    /** And the lens opens, carrying the department's name and its scope. */
-    public function testTheAreaLevelLensOpensAndReadsAsAreaScoped(): void
-    {
-        $this->screen();
-
-        $crawler = $this->client->request('GET', '/departments/'.$this->uuidOf('Wetland Management'));
-
-        self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Wetland Management', $crawler->filter('.dpthead h1')->text());
-        self::assertStringContainsString('Northern Reserve', $crawler->filter('.dpthead .scope.area')->text());
-        self::assertStringContainsString('confined to Northern Reserve', $crawler->filter('.scoperule')->first()->text());
-    }
-
-    public function testTheOrgLevelLensReadsAcrossEveryArea(): void
-    {
-        $this->screen();
-
-        $crawler = $this->client->request('GET', '/departments/'.$this->uuidOf('Ecology'));
-
-        self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Org-level', $crawler->filter('.dpthead .scope.org')->text());
-        self::assertStringContainsString('reads across every area', $crawler->filter('.scoperule')->first()->text());
-    }
-
-    /**
-     * THE IDENTITY CARD IS ON THE OVERVIEW TAB ONLY — the page-chrome ruling. It
-     * lives inside the Overview panel, so it is present once and hidden with that
-     * panel; the header/breadcrumb and the scope strip carry name+scope on every
-     * tab instead.
-     */
-    public function testTheIdentityCardLivesOnTheOverviewPanelAlone(): void
-    {
-        $this->screen();
-
-        $crawler = $this->client->request('GET', '/departments/'.$this->uuidOf('Ecology'));
-
-        $factbands = $crawler->filter('.factband');
-        self::assertCount(1, $factbands, 'exactly one identity card');
-        self::assertSame(
-            'overview',
-            $factbands->closest('[data-tab-panel]')?->attr('data-tab-panel'),
-            'the identity card is inside the Overview panel',
-        );
-        // The scope strip is NOT inside any tab panel — it sits above the tabs,
-        // so scope reads on every tab.
-        self::assertNull($crawler->filter('.scoperule')->first()->closest('[data-tab-panel]'));
-    }
-
-    /** KPIs, when the follow-up wires them, are laid on a single row (kstrip). */
-    public function testThePerformanceKpisSitOnASingleRow(): void
-    {
-        $this->screen();
-
-        $crawler = $this->client->request('GET', '/departments/'.$this->uuidOf('Ecology'));
-
-        self::assertGreaterThan(0, $crawler->filter('[data-tab-panel="performance"] .grid.kstrip')->count());
-    }
-
-    /**
-     * EVERY CARD SITS IN A ROW OF THE PAGE GRID, because the card declares no
-     * margin and never has: `.c` is a plate, `.grid` is the composition, and the
-     * 20px between two cards is the grid's gap. A `.c` written straight into the
-     * page body therefore touches whatever follows it — which is what the lens
-     * did, with four card edges meeting at 0px and the position note pinned to
-     * the card above it.
-     */
-    public function testEveryCardOnTheLensSitsInARowOfThePageGrid(): void
-    {
-        $this->screen();
-
-        $crawler = $this->client->request('GET', '/departments/'.$this->uuidOf('Ecology'));
-
-        $cards = $crawler->filter('.pgbody .c');
-        self::assertGreaterThanOrEqual(5, $cards->count(), 'the lens draws a card on every one of its tabs');
-
-        foreach ($cards as $card) {
-            $node = new Crawler($card);
-            $label = $node->filter('.tab')->text('?');
-
-            self::assertNotNull(
-                $node->closest('.grid'),
-                \sprintf('the card "%s" is in no .grid row, so nothing declares the gap under it', $label),
-            );
-            self::assertStringContainsString(
-                'grid',
-                (string) ($card->parentNode instanceof \DOMElement ? $card->parentNode->getAttribute('class') : ''),
-                \sprintf('the card "%s" is a bare child of the page body rather than a cell of a grid row', $label),
-            );
         }
     }
 

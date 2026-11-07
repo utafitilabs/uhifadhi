@@ -95,7 +95,7 @@ final class ComponentSheetsTest extends TestCase
         self::assertMatchesRegularExpression('/\.sxbars\s*\{[^}]*gap:\s*7px;\s*margin:\s*12px 0 2px/', $chart);
         self::assertMatchesRegularExpression('/\.sxbar\s*\{[^}]*grid-template-columns:\s*minmax\(0, 162px\) minmax\(0, 1fr\) auto/', $chart);
         self::assertMatchesRegularExpression('/\.sxbar \.t\s*\{[^}]*height:\s*14px/', $chart);
-        self::assertMatchesRegularExpression('/\.sxmxkey\s*\{[^}]*gap:\s*16px[^}]*font-size:\s*9\.5px/', $chart);
+        self::assertMatchesRegularExpression('/\.sxmxkey\s*\{[^}]*gap:\s*16px[^}]*font-size:\s*var\(--sx-key-size, 9\.5px\)/', $chart);
         foreach (['.sxdot.v', '.sxdot.b', '.sxdot.inh', '.sxdot.no'] as $mark) {
             self::assertStringContainsString($mark.' {', $chart);
         }

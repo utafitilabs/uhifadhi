@@ -220,6 +220,24 @@ final class DropdownIncludeTest extends ContractTestCase
         self::assertCount(0, $person->filter('[aria-selected="true"]'));
     }
 
+    /**
+     * THE COMPACT HEAD TRIGGER — a dropdown in a page head's action row is the
+     * row's 32px with a 9px radius, 12/600 text and 14px icons; only the
+     * trigger shrinks, the panel keeps its rows of at least 40px.
+     */
+    public function testSmallIsTheCompactHeadTrigger(): void
+    {
+        $small = $this->page([[...self::AREA, 'name' => 'scope', 'sm' => true]])->filter('div.dd[data-dd="scope"]');
+        self::assertSame(['dd', 'dd-end', 'dd-sm'], self::classes($small));
+        self::assertSame(['dd'], self::classes($this->page([[...self::PERSON, 'value' => null]])->filter('div.dd[data-dd="person"]')), 'full size unless asked');
+
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', $this->stylesheet());
+        self::assertMatchesRegularExpression('/\.dd\.dd-sm \.dd-t\s*\{[^}]*height:\s*32px[^}]*border-radius:\s*9px[^}]*font-size:\s*12px[^}]*font-weight:\s*600/', $css);
+        self::assertMatchesRegularExpression('/\.dd\.dd-sm\.dd-set \.dd-t\s*\{[^}]*font-weight:\s*700/', $css);
+        self::assertMatchesRegularExpression('/\.dd\.dd-sm \.dd-i,\s*\.dd\.dd-sm \.dd-c\s*\{[^}]*width:\s*14px;\s*height:\s*14px/', $css);
+        self::assertMatchesRegularExpression('/\.dd\.dd-sm \.dd-o\s*\{[^}]*min-height:\s*40px/', $css, 'the rows stay at 40px under any row that sizes buttons');
+    }
+
     /** Every class the dropdown writes is one the shell's sheet defines. */
     public function testEveryClassTheDropdownWritesIsShipped(): void
     {

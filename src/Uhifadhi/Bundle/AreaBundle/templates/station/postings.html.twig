@@ -1,0 +1,96 @@
+{# THE STATIONS HUB · POSTINGS — who is posted where, under their station.
+
+   Design: areas/<area>/stations/postings.html.
+
+   The house bar (zone, station, position and the search), the house table
+   with the station as its first column and the rows ordered by it, the lead
+   first and marked by its chip; the house foot under it. Posting
+   somebody happens on the station; the Team reads it, never writes it. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}{{ area.name }} · postings{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_index') }}">areas</a> / <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name|lower }}</a> / stations
+{% endblock %}
+
+{% block shell_page_title %}Stations{% endblock %}
+
+{% block shell_page_subtitle %}Every station in {{ area.name }}, where it stands and who is posted to it.{% endblock %}
+
+{% block shell_page_tabs %}{{ include('@Area/station/_hub_tabs.html.twig') }}{% endblock %}
+
+{% block shell_page %}
+{% set here = path('area_stations_postings', {uuid: area.uuidString}) %}
+{% set ctl = 'uhifadhi--area-bundle--area-query' %}
+{% set params = {zone: ask.zone, station: ask.station, position: ask.position, q: ask.q == '' ? null : ask.q}|filter(v => v is not null) %}
+<div class="grid">
+    <div class="c">
+        <span class="tab">Who is posted where<span class="src">&middot;
+            {%- if board.total == board.scope %} {{ board.scope }}{% else %} {{ board.total }} of {{ board.scope }}{% endif %} &middot; {{ board.stations }} {{ board.stations == 1 ? 'station' : 'stations' }}
+        </span></span>
+
+        <div class="lfilt" data-controller="{{ ctl }}" data-action="uhifadhi--shell-bundle--dropdown:choose->{{ ctl }}#chosen">
+            {{ include('@Shell/_dropdown.html.twig', {
+                name: 'zone', label: 'All zones', icon: 'shell:map', default: '', value: ask.zone ?? '',
+                groups: [
+                    {label: null, options: [{value: '', label: 'All zones', count: board.scope}]},
+                    {label: 'Zones', options: board.zones|map(o => {value: o.value, label: o.label, count: o.count})},
+                ],
+            }, with_context: false) }}
+            {{ include('@Shell/_dropdown.html.twig', {
+                name: 'station', label: 'Every station', icon: 'shell:map-pin', default: '', value: ask.station ?? '', searchable: true, search: 'Find a station…',
+                groups: [
+                    {label: null, options: [{value: '', label: 'Every station', count: board.scope}]},
+                    {label: 'Stations', options: board.stationOptions|map(o => {value: o.value, label: o.label, count: o.count})},
+                ],
+            }, with_context: false) }}
+            {{ include('@Shell/_dropdown.html.twig', {
+                name: 'position', label: 'Any position', icon: 'shell:user', default: '', value: ask.position ?? '',
+                groups: [
+                    {label: null, options: [{value: '', label: 'Any position', count: board.scope}]},
+                    {label: 'Positions', options: board.positions|map(o => {value: o.value, label: o.label, count: o.count})},
+                ],
+            }, with_context: false) }}
+
+            <form class="lsearch" method="get" action="{{ here }}">
+                {{ ux_icon('shell:search') }}
+                <input class="fld" type="search" name="q" value="{{ ask.q }}" placeholder="Find a person or a station&hellip;" aria-label="Find a person or a station">
+                {% for k, v in params|filter((v, k) => k != 'q') %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+                {% if table.size != '20' %}<input type="hidden" name="per" value="{{ table.size }}">{% endif %}
+            </form>
+        </div>
+
+        {% if rows is empty %}
+            <div class="zempty">
+                <b class="zeh">{{ board.scope == 0 ? 'Nobody is posted in this area yet' : 'Nobody matches' }}</b>
+                <p class="zeb">{{ board.scope == 0 ? 'Somebody is posted at a station, on the station’s record — never to a zone.' : 'Nobody posted here answers these filters. Clear one, or search another name.' }}</p>
+                {% if board.scope > 0 %}<span class="zea"><a class="btn sm" href="{{ here }}">Clear the filters</a></span>{% endif %}
+            </div>
+        {% else %}
+            {# NO BAND ROWS: the station is the first column, the rows ordered
+               by it, the lead marked by its chip. #}
+            <table class="tbl">
+                <colgroup><col style="width:24%"><col style="width:28%"><col style="width:16%"><col style="width:20%"><col style="width:12%"></colgroup>
+                <thead><tr><th>Station</th><th>Person</th><th>Position</th><th>Department</th><th></th></tr></thead>
+                <tbody>
+                {% for row in rows %}
+                    <tr><td><span class="chip">{{ row.station.name }}</span><span class="sub">{{ row.station.code ? row.station.code ~ ' · ' }}{{ row.station.zone ?? 'No zone' }}</span></td><td><b>{{ row.person.name }}</b>{% if row.person.leader %} <span class="chip ok">leads</span>{% endif %}</td><td><span class="mono d">{{ row.person.role ?? '—' }}</span></td><td><span class="mono d">{{ row.person.department ?? '—' }}</span></td><td class="door"><a class="open-btn" href="{{ path('area_station_show', {uuid: area.uuidString, station: row.station.uuid}) }}">The station</a></td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {{ include('@Shell/_foot.html.twig', {
+                count: table.total, noun: 'people', one: 'person',
+                perPage: table.size, page: table.page, pages: table.pages, links: links,
+            }, with_context: false) }}
+        {% endif %}
+
+        <div class="sxfoot"><span>Posting somebody happens on the station; the Team reads it, never writes it.</span><span class="sp"></span>{% if teamPostings %}<a class="tgl" href="{{ teamPostings }}">Postings in every area</a>{% endif %}</div>
+    </div>
+</div>
+{% endblock %}

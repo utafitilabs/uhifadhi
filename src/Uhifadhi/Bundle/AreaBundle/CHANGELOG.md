@@ -18,6 +18,41 @@
 
 Not released yet.
 
+ * THE STATIONS TAB IS A HUB OF THREE PAGES under one strip of its own,
+   Overview · Stations · Postings, in place of the area's tabs. The Overview
+   (`area_stations`) holds the shell's banner naming the stations nobody is
+   posted to, the summary strip, four figures, the plate and two ranked plots
+   (people by station, stations by zone), and lists nothing. The register
+   moves to `area_stations_list` (`/areas/{uuid}/stations/list`): the house
+   table under four house dropdowns and the search, over the shell's foot and
+   its page size (20, 50, 100 or all, `?per=`). The postings are
+   `area_stations_postings` (`/areas/{uuid}/stations/postings`): the station
+   is the first column and the rows are ordered by it, the lead marked by its
+   chip, with no band rows; filtered by zone, station, position and a search.
+   A dropdown's choice loads the address (`area-query` controller).
+
+ * THE ZONES TAB IS A HUB OF TWO PAGES, Overview · Zones, under a strip of
+   its own. The Overview (`area_zones`) holds the banner naming the zones no
+   station stands in, the strip (zones, zoned and unzoned ground, stations,
+   the last import), four figures (the zones holding a station and up to
+   three a module publishes by zone, one card a figure), the plate and two
+   plots (extent by zone, covered by zone); it lists nothing. The register
+   is `area_zones_list` (`/areas/{uuid}/zones/list`): the house table under
+   two house dropdowns (stations or not, the order) and the search, over the
+   shell's foot. Its query keys are the house ones: `sort`, `stations`, `q`,
+   `page`, `per`, twenty a page.
+
+ * THE ZONE AND STATION RECORDS ARE ONE COLUMN UNDER AN INDEX. Each keeps
+   its facts strip as its overview, carries the shell's index one row a card
+   and draws its cards in one column, the plate capped at `min(58vh, 560px)`.
+   The zone record's stations, the people working out of it (the station a
+   column, never a band row; filtered by station, position and a search) and
+   its log are house tables, each over its own foot with its own keys. The
+   station record's people (filtered by position, department, where it was
+   recorded and four orders: name, newest, oldest, position) and its log are
+   house tables over their feet; a contributed band gets its own index row.
+   `PostingQuery` gains the `newest` and `role` orders.
+
  * THE LIVE PLATES SUBSCRIBE IN THE PROTOCOL THE HUB SPEAKS (#61): `PresenceStreamService`
    states `match` to a hub the installation configured with `protocol_version: '1.0'`, and
    `topic` to a 0.x hub, so an installation moves to Mercure 1.0 by its own `mercure.yaml` and

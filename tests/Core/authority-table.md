@@ -92,9 +92,12 @@ department confined to Kilimani.
 | area_stations_configure | GET /areas/{kilimani}/configure/stations | `stations.read` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
 | area_zones_configure | GET /areas/{kilimani}/configure/zones | `zones.read` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
 | area_stations | GET /areas/{kilimani}/stations | `stations.read` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
+| area_stations_list | GET /areas/{kilimani}/stations/list | `stations.read` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
+| area_stations_postings | GET /areas/{kilimani}/stations/postings | `stations.read` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
 | area_station_show | GET /areas/{kilimani}/stations/{station} | `stations.read` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
 | area_station_delete | GET /areas/{kilimani}/stations/{station}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
 | area_zones | GET /areas/{kilimani}/zones | `zones.read` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
+| area_zones_list | GET /areas/{kilimani}/zones/list | `zones.read` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
 | area_zone_show | GET /areas/{kilimani}/zones/{zone} | `zones.read` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
 | area_zones_export | GET /areas/{kilimani}/zones/export.geojson | `zones.export` | sign-in | sign-in | refused | allowed | refused | refused | allowed | allowed |
 | area_live_sheet · own record | GET /live/{own} | `areas.read` | sign-in | sign-in | not found | not found | not found | not found | not found | not found |

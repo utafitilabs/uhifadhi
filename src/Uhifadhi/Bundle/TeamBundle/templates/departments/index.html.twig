@@ -1,15 +1,16 @@
 {# DEPARTMENTS — the register.
 
    PORTED from the canonical design DesignsProjects/uhifadhi-web/departments/
-   index.html (ruled 2026-09-22): the create form, the organization's identity
-   band, then ONE TABLE on the People-table idiom — grouped dropdown filters,
-   a search, sortable headers, a two-line name cell and one fact per column.
-   A row carries one door, Open; a department is changed on its own configure
-   page (rename, scope, deactivate — never delete), the shape a person and a
-   position already have.
+   index.html: the scope in the head, then ONE TABLE on the People-table idiom
+   — four house dropdowns, a search, sortable headers, a two-line name cell
+   and one fact per column. No strip: strips and figures belong to the
+   section's Overview. A row carries one door, Open; a department is changed
+   on its own configure page (rename, scope, deactivate — never delete), the
+   shape a person and a position already have.
 
-   WHAT THE DESIGN DRAWS THAT IS THE RICH-LENS FOLLOW-UP, and so not here yet:
-   the Widgets button in the header (the department's widget board). #}
+   WHAT THE DESIGN DRAWS THAT IS NOT HERE: the Widgets button in the header
+   (the department's widget board), and the Period dropdown — with the strip
+   gone nothing on this page reads a period. #}
 {% extends '@Shell/page.html.twig' %}
 {% import '@Team/positions/_bits.html.twig' as pm %}
 {% import '@Team/departments/_bits.html.twig' as di %}
@@ -30,36 +31,26 @@
 {% block shell_page_subtitle %}Every department, created and scoped here.{% endblock %}
 
 {% block shell_page_actions %}
-    {# THE SAME TWO CONTROLS THE PERFORMANCE SECTION WEARS, because they ask
-       the same two questions of the same seam: whose figures, and over what
-       window. Every option is a link — the address is the state. #}
-    <label class="ov-ctl">
-        <span class="k">Scope</span>
-        <details class="i-dd">
-            <summary class="mchip i-ddt">
-                <span class="i-ddval">{{ bandScope }}</span>
-                <span class="i-ddcaret">&#9662;</span>
-            </summary>
-            <div class="i-ddmenu">
-                <span class="i-ddhead">whose figures</span>
-                {# THE SCOPE IS THE PLACEMENT FILTER seen from the band's side:
-                   narrowing the figures to one area lists that area's
-                   departments, and the two cannot disagree because they are
-                   one parameter. #}
-                <a class="i-ddopt{{ query.placement ? '' : ' on' }}" href="{{ path('team_departments', query.with('placement', null)) }}">
-                    <span class="i-ddopt-l">Organization &mdash; all areas</span>
-                </a>
-                {% for area in areas %}
-                    <a class="i-ddopt{{ query.placement == area.uuidString ? ' on' }}"
-                       href="{{ path('team_departments', query.with('placement', area.uuidString)) }}">
-                        <span class="i-ddopt-l">{{ area.name }}</span>
-                    </a>
-                {% endfor %}
-            </div>
-        </details>
-    </label>
-
-    {{ include('@Shell/_period_group.html.twig', {kinds: periodKinds, chosen: periodKind, urls: periodUrls}, with_context = false) }}
+    {# THE SCOPE, ON THE HOUSE DROPDOWN: the placement filter seen from the
+       head, so the two cannot disagree — they are one parameter, and every
+       option is an address. #}
+    {%- set placementKey = constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\DepartmentQuery::PLACEMENT') -%}
+    {%- set scopeUrls = {'': path('team_departments', query.with(placementKey, null))} -%}
+    {%- set scopeAreas = [] -%}
+    {%- for area in areas -%}
+        {%- set scopeUrls = scopeUrls|merge({(area.uuidString): path('team_departments', query.with(placementKey, area.uuidString))}) -%}
+        {%- set scopeAreas = scopeAreas|merge([{value: area.uuidString, label: area.name}]) -%}
+    {%- endfor -%}
+    {{ include('@Team/_partial/_link_dropdown.html.twig', {
+        sm: true,
+        name: 'scope', label: 'Scope', icon: 'shell:map', end: true, default: '',
+        value: (areas|filter(area => area.uuidString == query.placement)|length > 0) ? query.placement : '',
+        groups: [
+            {label: 'scope', options: [{value: '', label: 'Organization — all areas'}]},
+            {label: 'Areas', options: scopeAreas},
+        ],
+        urls: scopeUrls,
+    }, with_context = false) }}
 {% endblock %}
 
 {% block shell_page %}
@@ -70,28 +61,6 @@
         {% set anyDepartments = departments|length > 0 %}
 
         {% if anyDepartments %}
-            {# THE ORGANIZATION, ONCE — the slim identity band every register
-               wears. IT CARRIES WHAT THE DEPARTMENTS DID, not how many of
-               them there are: the modules' own figures through the
-               performance seam, then the ground, the seats and the goals. A
-               count of the cards below is a fact about the page, and it
-               reads under the filters where such a count belongs. #}
-            <div class="factband">
-                {% for figure in band %}
-                    <span class="f">
-                        <span class="k">{{ figure.label }}</span>
-                        <span class="v">{{ figure.figure ?: '—' }}
-                            {%- if figure.caption or figure.delta %}<em>
-                                {{- figure.caption }}
-                                {%- if figure.caption and figure.delta %} &middot; {% endif %}
-                                {%- if figure.delta %}<span class="d{{ figure.tone ? ' ' ~ figure.tone }}">{{ figure.delta }}</span>{% endif %}
-                            </em>{% endif %}</span>
-                    </span>
-                {% endfor %}
-                <span class="sp"></span>
-                <a class="more" href="{{ path('team_performance') }}">Performance &rarr;</a>
-            </div>
-
             {# THE REGISTER IS ONE TABLE (ruled 2026-09-22, design departments/
                index.html): the People table's idiom — four grouped dropdowns,
                a search, what is shown — with a TWO-LINE NAME CELL (the
@@ -101,22 +70,26 @@
             <div class="c">
             <span class="tab">Departments<span class="src">&middot; {{ total }} &middot; where people are placed, and what each reads</span></span>
             <div class="lfilt">
-                {{ include('@Team/_partial/_filter.html.twig', {
+                {{ include('@Team/_partial/_filter_chip.html.twig', {
                     key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\DepartmentQuery::PLACEMENT'),
-                    label: 'placement', all: 'all placements', chosen: query.placement, options: placementOptions, query: query,
-                }, with_context: false) }}
-                {{ include('@Team/_partial/_filter.html.twig', {
+                    name: 'placement', all: 'All placements', total: total,
+                    chosen: query.placement, options: placementOptions, query: query,
+                }) }}
+                {{ include('@Team/_partial/_filter_chip.html.twig', {
                     key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\DepartmentQuery::MODULE'),
-                    label: 'module', all: 'any module', chosen: query.module, options: moduleOptions, query: query,
-                }, with_context: false) }}
-                {{ include('@Team/_partial/_filter.html.twig', {
+                    name: 'module', all: 'Any module', total: total,
+                    chosen: query.module, options: moduleOptions, query: query,
+                }) }}
+                {{ include('@Team/_partial/_filter_chip.html.twig', {
                     key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\DepartmentQuery::GOALS'),
-                    label: 'goals', all: 'any goals', chosen: query.goals, options: goalsOptions, query: query,
-                }, with_context: false) }}
-                {{ include('@Team/_partial/_filter.html.twig', {
+                    name: 'goals', all: 'Any goals', total: total,
+                    chosen: query.goals, options: goalsOptions, query: query,
+                }) }}
+                {{ include('@Team/_partial/_filter_chip.html.twig', {
                     key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\DepartmentQuery::SEATS'),
-                    label: 'seats', all: 'any seats', chosen: query.seats, options: seatsOptions, query: query,
-                }, with_context: false) }}
+                    name: 'seats', all: 'Any seats', total: total,
+                    chosen: query.seats, options: seatsOptions, query: query,
+                }) }}
                 <form class="lsearch" method="get" action="{{ path('team_departments') }}">
                     {% for field, value in query.with(constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\DepartmentQuery::SEARCH'), null) %}
                         <input type="hidden" name="{{ field }}" value="{{ value }}">
@@ -125,10 +98,6 @@
                     <input class="fld" type="search" name="{{ constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\DepartmentQuery::SEARCH') }}"
                            value="{{ query.search }}" placeholder="Find a department&hellip;" aria-label="Find a department">
                 </form>
-                {# WHAT IS SHOWN, said at the end of the row: a filtered list
-                   that does not state its filter is a list somebody will
-                   read as the whole register. #}
-                <span class="tm-shown">showing <b>{{ rows|length }}</b> of {{ total }}</span>
             </div>
 
             {# THE FOLD (ruled 2026-09-22, option G): a chevron folds a row open
@@ -218,6 +187,10 @@
                 {% endfor %}
                 </tbody>
             </table>
+            {% include '@Shell/_foot.html.twig' with {
+                count: table.total, noun: 'departments', one: 'department',
+                perPage: table.size, page: table.page, pages: table.pages, links: links,
+            } only %}
             </div>
         {% else %}
             <div class="pm-first">

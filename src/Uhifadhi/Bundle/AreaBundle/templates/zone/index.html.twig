@@ -1,16 +1,15 @@
-{# THE ZONES OF ONE AREA — the spatial lens, read.
+{# THE ZONES HUB · OVERVIEW — how an area is divided, stated.
 
    Design: areas/<area>/zones/index.html.
 
-   PICK ALL ZONES OR ONE. This is the all-zones state: the area's band, the
-   area's figures, the whole ground on one plate, and under it the stations
-   those zones account for and the people working out of them. Picking one is
-   the zone record, the same surface one step in; the picker is the SIDEBAR,
-   which is what lets this column keep the band's full width.
+   The banner names the zones no station stands in and opens them in the
+   register; the strip and the four figures belong here and nowhere else in
+   the hub; the plate draws every zone and station on the ground; the two
+   plots rank the zones by extent and by the share counted as covered. It
+   lists nothing: the register is the hub's other page.
 
    A LENS, NOT A FENCE. Reading the scheme is for anybody who may see the
-   area; the writes are the configure section's, and the one control here
-   that changes anything is the Configure action the frame draws itself. #}
+   area; the writes are the configure section's. #}
 {% extends '@Shell/page.html.twig' %}
 
 {% block title %}{{ area.name }} · zones{% endblock %}
@@ -21,73 +20,25 @@
 {% endblock %}
 
 {% block shell_breadcrumbs %}
-    <a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name }}</a> / zones
+    <a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_index') }}">areas</a> / <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name|lower }}</a> / zones
 {% endblock %}
 
-{% block shell_page_title %}{{ area.name }}{% endblock %}
+{% block shell_page_title %}Zones{% endblock %}
 
-{% block shell_page_subtitle %}Pick all zones or one, and read it: the figures, the ground and who works there.{% endblock %}
+{% block shell_page_subtitle %}{{ area.name }}&rsquo;s zones: the ground each one covers and what is worked from it.{% endblock %}
+
+{% block shell_page_actions %}
+    <a class="tgl w-act" href="{{ path('area_stations', {uuid: area.uuidString}) }}">Stations on the area</a>
+{% endblock %}
+
+{% block shell_page_tabs %}{{ include('@Area/zone/_hub_tabs.html.twig') }}{% endblock %}
 
 {% block shell_page %}
-{% set here = path('area_zones', {uuid: area.uuidString}) %}
+{% set o = overview %}
+{% set list = path('area_zones_list', {uuid: area.uuidString}) %}
 
-{# THE IDENTITY BAND, the same one every area tab wears. #}
-<div class="factband">
-    <span class="f"><span class="k">Area</span><span class="v">{{ areaKm2|number_format }}<em>km&sup2;</em></span></span>
-    <span class="f"><span class="k">Zones</span><span class="v">
-        {%- if set.count > 0 -%}{{ set.count }}<em>presence-driven</em>{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
-    </span></span>
-    <span class="f"><span class="k">Stations</span><span class="v">
-        {%- if stationCount > 0 -%}{{ stationCount }}<em>{{ staffed }} stationed</em>{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
-    </span></span>
-    {% if area.iucnCategory %}<span class="f"><span class="k">IUCN</span><span class="v">{{ area.iucnCategory }}</span></span>{% endif %}
-    {% if area.establishedYear %}<span class="f"><span class="k">Established</span><span class="v">{{ area.establishedYear }}</span></span>{% endif %}
-    <span class="sp"></span>
-    {% if door('areas.configure', area) %}
-        <a class="more" href="{{ path('shell_area_configure', {uuid: area.uuidString, section: 'settings'}) }}">Area settings &rarr;</a>
-    {% endif %}
-</div>
-
-{# FOUR FIGURES, NEVER FIVE (ruled): a strip is four to a row, and a fifth
-   wrapped onto a second line on a small laptop — "nobody wants that kpi
-   style". Two are the area's own and two are whatever the modules publish
-   about a zone; a card whose module is not installed says so and keeps its
-   slot, or the row would be two.
-
-   AND THE COUNT OF ZONES IS NOT ONE OF THEM. The band above already says how
-   many there are, and the register below is the list of them: a figure whose
-   answer is on the same screen twice is the one to drop. #}
-<div class="grid kstrip">
-    <div class="c kpi">
-        <span class="tab">Stations</span>
-        <b class="disp">{{ stationCount }}</b>
-        <span class="sub">{{ staffed }} stationed</span>
-    </div>
-    <div class="c kpi">
-        <span class="tab">People stationed</span>
-        <b class="disp">{{ peopleTotal }}</b>
-        <span class="sub">across {{ staffed }} {{ staffed == 1 ? 'station' : 'stations' }}</span>
-    </div>
-    {% for module in modules %}
-        <div class="c kpi">
-            <span class="tab">{{ module.label }}</span>
-            <b class="disp">{{ module.display }}{{ module.unit }}</b>
-            <span class="sub">{{ module.module|lower }} &middot; {{ module.caption|lower }}</span>
-        </div>
-    {% endfor %}
-    {% if modules|length < moduleCards %}
-        {% for _ in 1..(moduleCards - modules|length) %}
-            <div class="c kpi">
-                <span class="tab">From the modules</span>
-                <b class="disp">&mdash;</b>
-                <span class="sub">no module publishes this</span>
-            </div>
-        {% endfor %}
-    {% endif %}
-</div>
-
-<div class="grid">
-    {% if set.isEmpty %}
+{% if set.isEmpty %}
+    <div class="grid">
         <div class="c zempty">
             <b class="zeh">This area has no zones yet</b>
             <p class="zeb">A zone is <b>a lens, not a fence</b>: it gives every module a second way to group
@@ -96,171 +47,78 @@
                 and no zone layer anywhere in the product. The stations and the people are still here, unzoned.</p>
             <span class="zea"><a class="btn sm" href="{{ path('area_zones_configure', {uuid: area.uuidString}) }}">Configure zones {{ ux_icon('shell:arrow-right') }}</a></span>
         </div>
-    {% else %}
-        {# ONE MAP CONTRACT: the controls where every plate puts them, the key
-           below, hue the zone — the same ground the configure section draws. #}
-        <div class="c">
-            <span class="tab">All zones on the ground<span class="src">&middot; the whole area &middot; {{ set.count }} {{ set.count == 1 ? 'zone' : 'zones' }} &middot; {{ stationCount }} {{ stationCount == 1 ? 'station' : 'stations' }}</span></span>
+    </div>
+{% else %}
+    {% set n = o.unstationed|length %}
+    {{ include('@Shell/_banner.html.twig', {
+        title: n > 0 ? n ~ (n == 1 ? ' zone has' : ' zones have') ~ ' no station' : null,
+        text: o.unstationed|join(', '),
+        actions: {'Zones': list ~ '?stations=none'},
+    }, with_context: false) }}
+
+    <div class="factband ov-band">
+        <span class="f"><span class="k">Zones</span><span class="v">{{ o.zones }}<em>presence-driven</em></span></span>
+        <span class="f"><span class="k">Zoned</span><span class="v">{{ o.zonedKm2|number_format }} km&sup2;<em>of {{ o.areaKm2|number_format }}</em></span></span>
+        <span class="f"><span class="k">Unzoned</span><span class="v">{{ o.unzonedKm2|number_format }} km&sup2;<em>in no zone, and legal</em></span></span>
+        <span class="f"><span class="k">Stations</span><span class="v">{{ o.stations }}<em>{{ o.stationsUnzoned }} in no zone</em></span></span>
+        <span class="f"><span class="k">Imported</span><span class="v">
+            {%- if o.importedAt -%}
+                <time datetime="{{ o.importedAt|date('c') }}" data-localtime-format="day">{{ o.importedAt|date('j M Y') }}</time><em>one GeoJSON{% if o.importedFeatures %} &middot; {{ o.importedFeatures }} {{ o.importedFeatures == 1 ? 'feature' : 'features' }}{% endif %}</em>
+            {%- else -%}
+                &mdash;<em>no import recorded</em>
+            {%- endif -%}
+        </span></span>
+        <span class="sp"></span>
+    </div>
+
+    {# FOUR FIGURES. One is the area's own and three are what the modules
+       publish by zone; a figure no installed module publishes reads a dash
+       and the card stays. #}
+    <div class="grid kstrip ov-kpis">
+        <div class="c kpi">
+            <span class="tab">Zones with a station</span>
+            <b class="disp">{{ o.zonesWithAStation }}</b>
+            <span class="sub">of {{ o.zones }} {{ o.zones == 1 ? 'zone' : 'zones' }}</span>
+        </div>
+        {% for module in o.modules %}
+            <div class="c kpi">
+                <span class="tab">{{ module.label }}</span>
+                <b class="disp">{{ module.display }}{{ module.unit == '%' ? ' %' : module.unit }}</b>
+                <span class="sub">{{ module.caption|lower }} &middot; inside a zone</span>
+            </div>
+        {% endfor %}
+        {% if o.modules|length < moduleCards %}
+            {% for _ in 1..(moduleCards - o.modules|length) %}
+                <div class="c kpi">
+                    <span class="tab">From the modules</span>
+                    <b class="disp">&mdash;</b>
+                    <span class="sub">no module publishes this</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="grid">
+        <div class="c" id="map">
+            <span class="tab">All zones on the ground<span class="src">&middot; the whole area &middot; {{ o.zones }} {{ o.zones == 1 ? 'zone' : 'zones' }} &middot; {{ o.stations }} {{ o.stations == 1 ? 'station' : 'stations' }}</span></span>
             {{ render_map(map, {
                 'role': 'img',
                 'aria-label': area.name ~ ', its zones and its stations',
             }) }}
         </div>
-    {% endif %}
-
-    {# THE ZONES THEMSELVES, AS A REGISTER — owner-ruled 09-20: the tab lists
-       every zone the way it lists every station, so the table is the same
-       table and the picker in the sidebar is still the picker. #}
-    <div class="c">
-        <span class="tab">Zones in the area<span class="src">&middot; {{ zones.scope }} &middot; {{ zones.stationTotal }} {{ zones.stationTotal == 1 ? 'station' : 'stations' }} &middot; {{ zones.peopleTotal }} {{ zones.peopleTotal == 1 ? 'person' : 'people' }}</span></span>
-
-        {% if not zones.isEmpty %}
-            <div class="lfilt">
-                {{ include('@Area/_partial/_filter.html.twig', {
-                    label: 'order', all: 'order', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\ZoneListQuery::ORDER'),
-                    chosen: zoneQuery.order == 'name' ? null : zoneQuery.order,
-                    options: [
-                        {value: 'extent', label: 'extent', count: 0, cat: null},
-                        {value: 'covered', label: 'covered', count: 0, cat: null},
-                        {value: 'stations', label: 'stations', count: 0, cat: null},
-                    ],
-                    query: zoneQuery,
-                }) }}
-                {{ include('@Area/_partial/_filter.html.twig', {
-                    label: 'has stations', all: 'stations, any', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\ZoneListQuery::STATIONS'),
-                    chosen: zoneQuery.stations,
-                    chosenLabel: zoneQuery.stations == 'some' ? 'with stations' : (zoneQuery.stations == 'none' ? 'without' : null),
-                    options: zones.stations, query: zoneQuery,
-                }) }}
-
-                {# ITS OWN SEARCH KEY: three lists on one page, and two of them
-                   searching under `q` would mean typing in one filtered the
-                   other. #}
-                <form class="lsearch" method="get" action="{{ here }}">
-                    {{ ux_icon('shell:search') }}
-                    <input class="fld" type="search" name="{{ constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\ZoneListQuery::SEARCH') }}"
-                           value="{{ zoneQuery.search }}" placeholder="Zone name&hellip;" aria-label="Search zones by name">
-                    {% for k, v in zoneQuery.with(constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\ZoneListQuery::SEARCH'), null) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
-                </form>
-            </div>
-        {% endif %}
-
-        {% if zones.isEmpty or zones.rows is empty %}
-            <div class="zdnone">
-                <i class="zsw hollow"></i>
-                <b>{{ zones.isEmpty ? 'No zone imported yet' : 'No zone matches' }}</b>
-                <span>{{ zones.isEmpty
-                    ? 'import one GeoJSON of the area’s zones from Configure &middot; the stations below stay unzoned'|raw
-                    : 'clear the search, or widen a filter' }}</span>
-            </div>
-        {% else %}
-            {{ include('@Area/zone/_list.html.twig', {
-                rows: zones.rows, area: area, columns: zones.columns, period: zones.period,
-            }) }}
-            {{ include('@Area/_partial/_pager.html.twig', {
-                here: here, query: zoneQuery, page: zones.page, pages: zones.pages,
-                from: zones.from, to: zones.to, total: zones.total, scope: zones.scope, noun: 'zones',
-            }) }}
-        {% endif %}
-
-        <p class="zpicknote">A zone&rsquo;s stations are read from their points &middot; the row opens the zone</p>
     </div>
 
-    {# THE STATIONS IN THE SELECTION, found by filter rather than by zone: the
-       zone is a column here and one of the answers the bar offers. #}
-    <div class="c">
-        <span class="tab">Stations in the area<span class="src">&middot; {{ register.scope }} &middot; {{ peopleTotal }} {{ peopleTotal == 1 ? 'person' : 'people' }}</span></span>
-
-        <div class="lfilt stfilt">
-            {% if not set.isEmpty %}
-                {{ include('@Area/_partial/_filter.html.twig', {
-                    label: 'zone', all: 'zone', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::ZONE'),
-                    chosen: query.zone, chosenLabel: register.zoneLabel(query.zone), options: register.zones, query: query,
-                }) }}
-            {% endif %}
-            {{ include('@Area/_partial/_filter.html.twig', {
-                label: 'posted', all: 'posted', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::POSTED'),
-                chosen: query.posted, chosenLabel: query.posted == 'yes' ? 'somebody posted' : (query.posted == 'no' ? 'nobody posted' : null), options: register.posted, query: query,
-            }) }}
-            {{ include('@Area/_partial/_filter.html.twig', {
-                label: 'lead', all: 'lead', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::LEAD'),
-                chosen: query.lead, chosenLabel: query.lead == 'yes' ? 'lead appointed' : (query.lead == 'no' ? 'no lead' : null), options: register.lead, query: query,
-            }) }}
-            {{ include('@Area/_partial/_filter.html.twig', {
-                label: 'order', all: 'order', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::SORT'),
-                chosen: query.sort == 'name' ? null : query.sort,
-                options: [
-                    {value: 'posted', label: 'most stationed', count: 0, cat: null},
-                    {value: 'zone', label: 'by zone', count: 0, cat: null},
-                ],
-                query: query,
-            }) }}
-
-            <form class="lsearch" method="get" action="{{ here }}">
-                {{ ux_icon('shell:search') }}
-                <input class="fld" type="search" name="q" value="{{ query.search }}" placeholder="Name or code&hellip;"
-                       aria-label="Search stations by name or code">
-                {% for k, v in query.with('q', null) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
-            </form>
+    <div class="grid g2 ov-plots">
+        <div class="c">
+            <span class="tab">Extent by zone<span class="src">&middot; {{ o.areaKm2|number_format }} km&sup2; &middot; {{ o.zones }} {{ o.zones == 1 ? 'zone' : 'zones' }}</span></span>
+            {{ atlas_bars(o.byExtent) }}
+            <div class="sxmore"><span>{{ o.zones }} {{ o.zones == 1 ? 'zone' : 'zones' }}{{ o.unzonedKm2 > 0 ? ' and no zone' }} &middot; nothing hidden</span><span class="sp"></span><a href="{{ list }}">The zones &rarr;</a></div>
         </div>
-
-        {% if register.isEmpty %}
-            <div class="zdnone">
-                <span class="stpin hollow"></span>
-                <b>{{ query.isFiltered ? 'No station matches' : 'No station in this area' }}</b>
-                <span>{{ query.isFiltered ? 'clear the search, or widen a filter' : 'a station is a named point — a gate, a station, a camp' }}</span>
-            </div>
-        {% else %}
-            {{ include('@Area/zone/_stations.html.twig', {rows: register.rows, area: area, withZone: true}) }}
-            {{ include('@Area/_partial/_pager.html.twig', {
-                here: here, query: query, page: register.page, pages: register.pages,
-                from: register.from, to: register.to, total: register.total, scope: register.scope, noun: 'stations',
-            }) }}
-        {% endif %}
-
-        <p class="zpicknote">A station&rsquo;s zone is read from its point &middot; it follows the boundary it falls inside</p>
-    </div>
-
-    {# EVERYBODY WORKING OUT OF ONE OF THOSE STATIONS. A zone has no people of its
-       own; it has the ground its stations stand on. #}
-    <div class="c">
-        <span class="tab">People working out of the area<span class="src">&middot; {{ peopleMatching }} of {{ peopleTotal }}</span></span>
-
-        <div class="lfilt">
-            <form class="lsearch" method="get" action="{{ here }}">
-                {{ ux_icon('shell:search') }}
-                <input class="fld" type="search" name="person" value="{{ peopleSearch }}" placeholder="Search by name&hellip;"
-                       aria-label="Search the people by name">
-            </form>
+        <div class="c">
+            <span class="tab">Covered in {{ o.month }}<span class="src">&middot; by zone</span></span>
+            {{ atlas_bars(o.byCovered) }}
+            <div class="sxmore"><span>{{ o.byCovered.bars|length }} of {{ o.zones }} {{ o.zones == 1 ? 'zone' : 'zones' }} &middot; {{ o.byCovered.bars|length == o.zones ? 'nothing hidden' : 'the rest unpublished' }}</span><span class="sp"></span><a href="{{ list }}?sort=covered">The zones &rarr;</a></div>
         </div>
-
-        {% if people is empty %}
-            <div class="zdnone">
-                <span class="tav hollow"></span>
-                <b>{{ peopleSearch ? 'Nobody matches' : 'Nobody works out of this area yet' }}</b>
-                <span>{{ peopleSearch ? 'clear the search' : 'somebody is stationed at a station, never to a zone' }}</span>
-            </div>
-        {% else %}
-            <div class="plist">
-                {% for person in people %}
-                    <div class="pline">
-                        <span class="tav">{{ person.initials|slice(0, 1) }}</span>
-                        <b>{{ person.name }}</b>
-                        {% if person.role %}<em>{{ person.role }}</em>{% endif %}
-                        <span class="pat">{{ stationNames[person.stationUuid] ?? '' }}</span>
-                        {% if person.department %}<span class="pdept">{{ person.department }}</span>{% endif %}
-                        {% if person.leader %}<span class="chip acc stlead">Leads</span>{% endif %}
-                    </div>
-                {% endfor %}
-            </div>
-
-            {{ include('@Area/_partial/_pager.html.twig', {
-                base: here, param: 'ppage', extra: peopleSearch ? '&person=' ~ peopleSearch : '',
-                page: peoplePage, pages: peoplePages,
-                from: (peoplePage - 1) * 6 + 1, to: min(peoplePage * 6, peopleMatching),
-                total: peopleMatching, scope: peopleTotal, noun: 'people',
-            }) }}
-        {% endif %}
     </div>
-</div>
+{% endif %}
 {% endblock %}

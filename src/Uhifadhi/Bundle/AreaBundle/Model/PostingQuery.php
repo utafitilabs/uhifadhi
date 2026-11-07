@@ -36,7 +36,9 @@ final readonly class PostingQuery
     /** The orders the bar offers, and the only ones it accepts. */
     public const string BY_NAME = 'az';
     public const string BY_SINCE = 'since';
-    public const array SORTS = [self::BY_NAME, self::BY_SINCE];
+    public const string BY_NEWEST = 'newest';
+    public const string BY_ROLE = 'role';
+    public const array SORTS = [self::BY_NAME, self::BY_NEWEST, self::BY_SINCE, self::BY_ROLE];
 
     public function __construct(
         public ?string $role = null,

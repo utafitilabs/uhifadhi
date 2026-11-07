@@ -9,6 +9,8 @@
    is not an answer, so a department that does not read a module gets a dashed
    ring and a title that says so in words. #}
 {% extends '@Shell/page.html.twig' %}
+{% import '@Team/departments/_bits.html.twig' as di %}
+{% import '@Team/_partial/_table.html.twig' as tb %}
 
 {% block title %}Departments{% endblock %}
 
@@ -26,17 +28,28 @@
 
 {% block shell_page %}
     <div data-dp>
-        <div class="factband">
-            <span class="f"><span class="k">Departments</span><span class="v">{{ rows|length }}</span></span>
-            <span class="f"><span class="k">Modules installed</span><span class="v">{{ modules|length }}</span></span>
-            <span class="f"><span class="k">Attachments</span><span class="v">{{ attachments }}<em>{{ rows|length - readsNothing|length }} departments</em></span></span>
-            <span class="f"><span class="k">Read by nobody</span><span class="v">{{ unread|length }}<em>{{ unread|length > 0 ? unread|map(m => m.name ?? m.slug)|join(', ') : 'every module is read' }}</em></span></span>
-            <span class="f"><span class="k">No module</span><span class="v">{{ readsNothing|length }}<em>departments</em></span></span>
-        </div>
+        {# WHAT NEEDS ATTENTION, IN THE BANNER ABOVE THE MATRIX: the installed
+           modules no department attaches, and the departments attaching none. #}
+        {%- set attention = [] -%}
+        {%- for module in unread -%}
+            {%- set attention = attention|merge([{head: (module.name ?? module.slug) ~ ' is attached by no department', cause: 'installed, and nothing it holds counts in a department’s figures'}]) -%}
+        {%- endfor -%}
+        {%- if readsNothing is not empty -%}
+            {%- set attention = attention|merge([{
+                head: readsNothing|length ~ (readsNothing|length == 1 ? ' department reads' : ' departments read') ~ ' no module',
+                cause: readsNothing|map(d => d.name)|join(', ') ~ ' — ' ~ (readsNothing|length == 1 ? 'it does not appear' : 'none of them appears') ~ ' on Performance',
+                door: 'The register', url: path('team_departments'),
+            }]) -%}
+        {%- endif %}
+        {{ di.attention('Needs attention', attention) }}
 
-        <div class="c">
+        {% set scopes = rows|reduce((carry, row) => carry|merge({(row.scope): (carry[row.scope] ?? 0) + 1}), {}) %}
+        {% set scopeOptions = [{value: '', label: 'All', count: rows|length}] %}
+        {% for scope, count in scopes %}{% set scopeOptions = scopeOptions|merge([{value: scope|lower|replace({' ': '-'}), label: scope, count: count}]) %}{% endfor %}
+        <div class="c" {{ tb.wrap('departments', 'department') }}>
             <span class="tab">Which department reads which module<span class="src">&middot; {{ rows|length }} &times; {{ modules|length }}</span></span>
             {{ atlas_key(key) }}
+            <div class="lfilt">{{ tb.chip('scope', scopeOptions) }}{{ tb.search('Find a department') }}</div>
             <table class="tbl sxmx">
                 <thead>
                 <tr>
@@ -48,7 +61,7 @@
                 </thead>
                 <tbody>
                 {% for row in rows %}
-                    <tr>
+                    <tr {{ tb.row({scope: row.scope|lower|replace({' ': '-'})}, row.department.name) }}>
                         <td><b><a href="{{ path('team_department_show', {uuid: row.department.uuidString}) }}">{{ row.department.name }}</a></b></td>
                         <td><span class="mono d">{{ row.scope }}</span></td>
                         {% for cell in row.cells %}
@@ -68,30 +81,10 @@
                 {% endif %}
                 </tbody>
             </table>
+            {{ tb.none('No department matches these filters.') }}
+            {{ tb.foot(rows|length, 'departments', 'department') }}
             <div class="sxfoot"><span>Attaching a module is done on the department&rsquo;s own card in the register &mdash; this matrix reads, it does not write.</span><span class="sp"></span><a class="tgl" href="{{ path('team_departments') }}">The register</a></div>
         </div>
 
-        <div class="grid g2">
-            <div class="c">
-                <span class="tab">Modules no department reads<span class="src">&middot; needs attention</span></span>
-                {% for module in unread %}
-                    <div class="rln"><span>{{ module.name ?? module.slug }}</span><span class="mono d">installed &middot; attached by nobody</span></div>
-                {% else %}
-                    <div class="rln"><span class="d">Every installed module is read by at least one department.</span></div>
-                {% endfor %}
-                <div class="sxmore"><span>{{ unread|length }} of {{ modules|length }} modules</span><span class="sp"></span><a href="{{ path('team_departments') }}">The register &rarr;</a></div>
-            </div>
-
-            <div class="c">
-                <span class="tab">Departments that read nothing<span class="src">&middot; needs attention</span></span>
-                {% for department in readsNothing|slice(0, 5) %}
-                    <div class="rln"><span><a href="{{ path('team_department_show', {uuid: department.uuidString}) }}">{{ department.name }}</a></span><span class="mono d">{{ department.orgLevel ? 'org-wide' : department.area.name }}</span></div>
-                {% else %}
-                    <div class="rln"><span class="d">Every department reads at least one module.</span></div>
-                {% endfor %}
-                <p class="use">A department with no module has people and positions but no figure of its own, so it does not reach Performance.</p>
-                <div class="sxmore"><span>{{ min(readsNothing|length, 5) }} of {{ readsNothing|length }} departments</span><span class="sp"></span><a href="{{ path('team_departments') }}">The register &rarr;</a></div>
-            </div>
-        </div>
     </div>
 {% endblock %}

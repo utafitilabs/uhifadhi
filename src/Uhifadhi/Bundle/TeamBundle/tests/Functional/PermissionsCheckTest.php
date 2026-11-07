@@ -350,8 +350,8 @@ final class PermissionsCheckTest extends WebTestCaseWithSchema
 
         $first = $rows->eq(0);
         $position = $this->org->personNamed($worth[0]['person']['name'])->getPosition()?->getName() ?? 'no position';
-        self::assertSame($position, $first->filter('td')->eq(0)->filter('span.pp-sub')->text(), 'the position as the sub-line');
-        self::assertSame($worth[0]['place']['name'], $first->filter('td')->eq(1)->filter('span.pp-sub')->text(), 'the place under the question');
+        self::assertSame($position, $first->filter('td')->eq(0)->filter('span.sub')->text(), 'the position as the sub-line');
+        self::assertSame($worth[0]['place']['name'], $first->filter('td')->eq(1)->filter('span.sub')->text(), 'the place under the question');
         self::assertSame($worth[0]['why'], $first->filter('td')->eq(2)->text());
         self::assertCount(1, $first->filter('.chip.warn'));
         self::assertSame('Run →', $first->filter('td.pp-exd a.more')->text());

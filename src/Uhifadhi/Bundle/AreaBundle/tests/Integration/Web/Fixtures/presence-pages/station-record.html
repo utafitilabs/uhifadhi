@@ -138,22 +138,26 @@ if (!HTMLScriptElement.supports || !HTMLScriptElement.supports('importmap')) (fu
     <a href="/areas/id-1">Sample Reserve</a> /
         <a href="/areas/id-1/stations">stations</a> /
     eastgate post
-</div><div class="pghead"><div><h1 class="pg">Eastgate Post</h1><p class="pgsub">ST-01 &middot; West &middot; 0 stationed</p></div><div class="pgact w-pgact">        <a class="tgl w-act" href="/areas/id-1/configure/stations?open=id-3"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1l1-4Z"></path></g></svg> Edit the station</a>
-</div></div><div class="pgbody">
-<div class="factband stband">
+</div><div class="pghead"><div><h1 class="pg">Eastgate Post</h1><p class="pgsub">    Station in West &middot; 0 posted</p></div><div class="pgact w-pgact">        <a class="tgl w-act" href="/areas/id-1/configure/stations?open=id-3"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1l1-4Z"></path></g></svg> Edit the station</a>
+            <a class="cta" href="/areas/id-1/configure/stations?open=id-3">Post someone</a>
+    </div></div><div class="pgbody">
+<div class="factband ov-band">
     <span class="f"><span class="k">Zone</span><span class="v">West<em>derived</em></span></span>
-    <span class="f"><span class="k">Code</span><span class="v">ST-01</span></span>    <span class="f"><span class="k">Stationed</span><span class="v">0</span></span>
+    <span class="f"><span class="k">Code</span><span class="v">ST-01<em>the call sign</em></span></span>    <span class="f"><span class="k">Posted</span><span class="v">0</span></span>
     <span class="f"><span class="k">Lead</span><span class="v">&mdash;</span></span>
             <span class="f"><span class="k">Opened</span><span class="v">&mdash;<em>active</em>
     </span></span>
     <span class="sp"></span>
-    <a class="more" href="/areas/id-1/stations?zone=id-2">West zone &rarr;</a></div>
+    <a class="more" href="/areas/id-1/stations/list?zone=id-2">Stations in West &rarr;</a></div>
 
-<div class="recgrid">
-    <div class="col">
-        <div class="c">
-            <span class="tab">The ground around the station<span class="src">&middot; ST-01 </span></span>
-                        <div class="map-plate" data-controller="uhifadhi--atlas-bundle--map-plate" data-atlas-plate>
+
+<script>(function(){var c=false;try{c=localStorage.getItem('uhifadhi-pp-nav')==='closed'}catch(e){}if(c||window.matchMedia('(max-width:900px)').matches){document.documentElement.classList.add('onpage-closed')}})()</script>
+<div class="onpage">
+    <nav class="onpage-nav" aria-label="On this page" data-controller="uhifadhi--shell-bundle--onpage" data-action="click->uhifadhi--shell-bundle--onpage#go">
+        <div class="onpage-top"><p class="onpage-h">On this page</p><button type="button" class="onpage-tg" aria-expanded="true" aria-label="Collapse index" title="Collapse index" data-uhifadhi--shell-bundle--onpage-target="toggle" data-action="click->uhifadhi--shell-bundle--onpage#toggle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m11 17l-5-5l5-5m7 10l-5-5l5-5"></path></svg></button></div>        <a class="onpage-row" href="#ground"><i class="onpage-dot" aria-hidden="true" title="The ground"></i><span class="onpage-l">The ground</span></a>        <a class="onpage-row" href="#posted"><i class="onpage-dot" aria-hidden="true" title="Who is posted here"></i><span class="onpage-l">Who is posted here</span><b class="onpage-n">0</b></a>        <a class="onpage-row" href="#watch"><i class="onpage-dot" aria-hidden="true" title="Watch and presence"></i><span class="onpage-l">Watch and presence</span></a>        <a class="onpage-row" href="#point"><i class="onpage-dot" aria-hidden="true" title="The point"></i><span class="onpage-l">The point</span></a>        <a class="onpage-row" href="#log"><i class="onpage-dot" aria-hidden="true" title="What happened here"></i><span class="onpage-l">What happened here</span><b class="onpage-n">2</b></a>    </nav>
+    <div class="onpage-main">        <div class="c" id="ground">
+            <span class="tab">The ground around the station<span class="src">&middot; -3.20000, -29.75000 </span></span>
+            <div class="map-plate" style="--map-plate-height:min(58vh, 560px)" data-controller="uhifadhi--atlas-bundle--map-plate" data-atlas-plate>
         <div class="map-body">
         
         <div class="viewer" data-uhifadhi--atlas-bundle--map-plate-target="frame"><div data-controller="symfony--ux-leaflet-map--map" data-symfony--ux-leaflet-map--map-provider-options-value="{}" data-symfony--ux-leaflet-map--map-center-value="{&quot;lat&quot;:0,&quot;lng&quot;:0}" data-symfony--ux-leaflet-map--map-zoom-value="2" data-symfony--ux-leaflet-map--map-fit-bounds-to-markers-value="false" data-symfony--ux-leaflet-map--map-options-value="{&quot;tileLayer&quot;:false,&quot;attributionControlOptions&quot;:{&quot;position&quot;:&quot;bottomleft&quot;,&quot;prefix&quot;:false},&quot;@provider&quot;:&quot;leaflet&quot;}" data-symfony--ux-leaflet-map--map-markers-value="[]" data-symfony--ux-leaflet-map--map-polygons-value="[]" data-symfony--ux-leaflet-map--map-polylines-value="[]" data-symfony--ux-leaflet-map--map-circles-value="[]" data-symfony--ux-leaflet-map--map-rectangles-value="[]" data-symfony--ux-leaflet-map--map-extra-value="{&quot;atlas&quot;:{&quot;layers&quot;:[{&quot;id&quot;:&quot;area.zones.set&quot;,&quot;features&quot;:{&quot;type&quot;:&quot;FeatureCollection&quot;,&quot;features&quot;:[{&quot;type&quot;:&quot;Feature&quot;,&quot;properties&quot;:{&quot;zone&quot;:&quot;West&quot;,&quot;label&quot;:&quot;West&quot;},&quot;geometry&quot;:{&quot;type&quot;:&quot;MultiPolygon&quot;,&quot;coordinates&quot;:[[[[-30,-3.6],[-29.5,-3.6],[-29.5,-2.8],[-30,-2.8],[-30,-3.6]]]]}}]},&quot;url&quot;:null,&quot;swatch&quot;:&quot;var(--plate-acc)&quot;,&quot;shape&quot;:&quot;fill&quot;,&quot;visible&quot;:true,&quot;style&quot;:[],&quot;rules&quot;:[{&quot;property&quot;:&quot;zone&quot;,&quot;values&quot;:[&quot;West&quot;],&quot;style&quot;:{&quot;color&quot;:&quot;var(--cat-p-1)&quot;,&quot;fillColor&quot;:&quot;var(--cat-p-1)&quot;}}],&quot;tooltip&quot;:null,&quot;popup&quot;:null,&quot;featureId&quot;:null,&quot;labels&quot;:false,&quot;sheet&quot;:null},{&quot;id&quot;:&quot;area.stations&quot;,&quot;features&quot;:{&quot;type&quot;:&quot;FeatureCollection&quot;,&quot;features&quot;:[{&quot;type&quot;:&quot;Feature&quot;,&quot;properties&quot;:{&quot;label&quot;:&quot;Eastgate Post&quot;,&quot;posted&quot;:0,&quot;here&quot;:true,&quot;zone&quot;:null,&quot;hue&quot;:null},&quot;geometry&quot;:{&quot;type&quot;:&quot;Point&quot;,&quot;coordinates&quot;:[-29.75,-3.2]}},{&quot;type&quot;:&quot;Feature&quot;,&quot;properties&quot;:{&quot;label&quot;:&quot;Westgate Post&quot;,&quot;posted&quot;:0,&quot;here&quot;:false,&quot;zone&quot;:null,&quot;hue&quot;:null},&quot;geometry&quot;:{&quot;type&quot;:&quot;Point&quot;,&quot;coordinates&quot;:[-29.9,-3.3]}}]},&quot;url&quot;:null,&quot;swatch&quot;:&quot;var(--plate-acc)&quot;,&quot;shape&quot;:&quot;fill&quot;,&quot;visible&quot;:true,&quot;style&quot;:[],&quot;rules&quot;:[{&quot;property&quot;:&quot;here&quot;,&quot;values&quot;:[true],&quot;style&quot;:{&quot;color&quot;:&quot;var(--plate-acc)&quot;,&quot;fillColor&quot;:&quot;var(--plate-acc)&quot;}}],&quot;tooltip&quot;:null,&quot;popup&quot;:null,&quot;featureId&quot;:null,&quot;labels&quot;:true,&quot;sheet&quot;:null}],&quot;boundary&quot;:{&quot;geojson&quot;:{&quot;type&quot;:&quot;MultiPolygon&quot;,&quot;coordinates&quot;:[[[[-30,-3.6],[-29,-3.6],[-29,-2.8],[-30,-2.8],[-30,-3.6]]]]},&quot;scrim&quot;:true},&quot;baseLayers&quot;:[&quot;satellite&quot;,&quot;osm&quot;],&quot;fullscreen&quot;:true,&quot;fit&quot;:true,&quot;subject&quot;:{&quot;geojson&quot;:{&quot;type&quot;:&quot;Point&quot;,&quot;coordinates&quot;:[-29.75,-3.2]},&quot;zoom&quot;:12},&quot;live&quot;:null,&quot;pick&quot;:null}}" role="img" aria-label="Eastgate Post and the ground around it" class="map-canvas map-chrome-host"></div></div>
@@ -190,56 +194,31 @@ if (!HTMLScriptElement.supports || !HTMLScriptElement.supports('importmap')) (fu
 
         </div>
 
-        <div class="c stpostings">
-            <span class="tab">Who is stationed here<span class="src">&middot; 0 people</span></span>
+        <div class="c stpostings" id="posted">
+            <span class="tab">Who is posted here<span class="src">&middot; 0 people</span></span>
+                        <div class="lfilt" data-controller="uhifadhi--area-bundle--area-query" data-action="uhifadhi--shell-bundle--dropdown:choose->uhifadhi--area-bundle--area-query#chosen">
+                                <div class="dd" data-controller="uhifadhi--shell-bundle--dropdown" data-dd="src" data-default="" data-dd-value="">
+    <button type="button" class="dd-t" aria-haspopup="listbox" aria-expanded="false" aria-controls="dd-p-src"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="dd-i" width="16" height="16" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1l1-4Z"></path></g></svg><span class="dd-v" data-placeholder="Recorded anywhere">Recorded anywhere</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="dd-c" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg></button>
+    <div class="dd-p" id="dd-p-src" hidden>        <div class="dd-l" role="listbox" aria-label="Recorded anywhere">            <div role="group" aria-label="Recorded anywhere">                <button type="button" class="dd-o" role="option" tabindex="-1" aria-selected="true" data-value="" data-label="Recorded anywhere" data-find="recorded anywhere " data-default><span class="dd-ol">Recorded anywhere</span><span class="dd-m">0</span></button>            </div>            <div role="group" aria-label="Recorded"><div class="dd-h" aria-hidden="true"><span>Recorded</span><span data-dd-n>0</span></div>            </div>        </div>
+    </div>
+</div>
 
-                        <div class="lfilt stfilt">
-                                <details class="i-dd">
-    <summary class="mchip i-ddt">
-        <span class="i-ddval">source</span>
-        <span class="i-ddcaret">&#9662;</span>
-    </summary>
-    <div class="i-ddmenu">
-        <span class="i-ddhead">source</span>
-        <a class="i-ddopt on"
-           href="/areas/id-1/stations/id-3">
-            <span class="i-ddopt-l">source</span>
-        </a>
-        <span class="i-ddsep"></span>
-            </div>
-</details>
-
-                <details class="i-dd">
-    <summary class="mchip i-ddt">
-        <span class="i-ddval">order</span>
-        <span class="i-ddcaret">&#9662;</span>
-    </summary>
-    <div class="i-ddmenu">
-        <span class="i-ddhead">a&ndash;z</span>
-        <a class="i-ddopt on"
-           href="/areas/id-1/stations/id-3">
-            <span class="i-ddopt-l">order</span>
-        </a>
-        <span class="i-ddsep"></span>
-                    <a class="i-ddopt"
-               href="/areas/id-1/stations/id-3?sort=since">
-                                <span class="i-ddopt-l">by how long</span>
-                            </a>
-            </div>
-</details>
-
+                <div class="dd" data-controller="uhifadhi--shell-bundle--dropdown" data-dd="sort" data-default="az" data-dd-value="az">
+    <button type="button" class="dd-t" aria-haspopup="listbox" aria-expanded="false" aria-controls="dd-p-sort"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="dd-i" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m3 16l4 4l4-4M7 20V4m14 4l-4-4l-4 4m4-4v16"></path></svg><span class="dd-v" data-placeholder="Name A–Z">Name A–Z</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="dd-c" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9l6 6l6-6"></path></svg></button>
+    <div class="dd-p" id="dd-p-sort" hidden>        <div class="dd-l" role="listbox" aria-label="Name A–Z">            <div role="group" aria-label="Order"><div class="dd-h" aria-hidden="true"><span>Order</span><span data-dd-n>4</span></div>                <button type="button" class="dd-o" role="option" tabindex="-1" aria-selected="true" data-value="az" data-label="Name A–Z" data-find="name a–z az" data-default><span class="dd-ol">Name A–Z</span></button>                <button type="button" class="dd-o" role="option" tabindex="-1" aria-selected="false" data-value="newest" data-label="Newest posting" data-find="newest posting newest"><span class="dd-ol">Newest posting</span></button>                <button type="button" class="dd-o" role="option" tabindex="-1" aria-selected="false" data-value="since" data-label="Oldest posting" data-find="oldest posting since"><span class="dd-ol">Oldest posting</span></button>                <button type="button" class="dd-o" role="option" tabindex="-1" aria-selected="false" data-value="role" data-label="By position" data-find="by position role"><span class="dd-ol">By position</span></button>            </div>        </div>
+    </div>
+</div>
 
                 <form class="lsearch" method="get" action="/areas/id-1/stations/id-3">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m21 21l-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></g></svg>
-                    <input class="fld" type="search" name="q" value="" placeholder="Search&hellip;"
-                           aria-label="Search the people stationed here">
+                    <input class="fld" type="search" name="q" value="" placeholder="Find a person&hellip;" aria-label="Find a person posted here">
                                     </form>
             </div>
 
                                             <div class="zempty stpplnone">
-                    <b class="zeh">Nobody is stationed here</b>
-                    <p class="zeb">A station with nobody at it is a normal state, not an error. Assignments are made on the area&rsquo;s configure page.</p>
-                                            <span class="zea"><a class="btn sm" href="/areas/id-1/configure/stations?open=id-3">Station somebody &rarr;</a></span>
+                    <b class="zeh">Nobody is posted here</b>
+                    <p class="zeb">A station with nobody at it is a normal state, not an error.</p>
+                                            <span class="zea"><a class="btn sm" href="/areas/id-1/configure/stations?open=id-3">Post someone &rarr;</a></span>
                                     </div>
                     </div>
 
@@ -253,33 +232,30 @@ if (!HTMLScriptElement.supports || !HTMLScriptElement.supports('importmap')) (fu
 </div>
 </div>
 
-            </div>
-
-    <div class="col">
-        <div class="c">
+        
+        <div class="c" id="point">
             <span class="tab">The point</span>
             <div class="rln"><span class="fog">Coordinates</span><span class="mono">-3.20000, -29.75000</span></div>
                                     <div class="rln"><span class="fog">Catchment</span><span class="mono">300 m
                     of the station point &mdash; a check-in claiming this station is verified inside it</span></div>
-
                         <div class="stsep">What the modules publish<span>September 2026</span></div>
                             <div class="use">No module publishes figures for this station yet.</div>
                     </div>
 
-        <div class="c stlogcard">
+        <div class="c stlogcard" id="log">
             <span class="tab">What happened here<span class="src">&middot; 2 lines</span></span>
-                            <div class="zhist stlog zhistcap">
-                                            <div class="zhrow">
-                            <span class="zhdot on"></span>
-                            <div><b>Now in West <span>&middot; the station was recorded</span></b></div>
-                            <time class="zhwhen" datetime="wall-clock" data-localtime-format="day">wall-clock</time>
-                        </div>
-                                            <div class="zhrow">
-                            <span class="zhdot"></span>
-                            <div><b>Station recorded</b></div>
-                            <time class="zhwhen" datetime="wall-clock" data-localtime-format="day">wall-clock</time>
-                        </div>
-                                    </div>
+                            <table class="tbl">
+                    <thead><tr><th>What happened</th><th>When</th></tr></thead>
+                    <tbody>
+                                            <tr><td><b>Now in West</b><span class="sub">the station was recorded</span></td><td><span class="mono d"><time datetime="wall-clock" data-localtime-format="day">wall-clock</time></span><time class="sub" datetime="wall-clock" data-localtime-format="clock">wall-clock</time></td></tr>
+                                            <tr><td><b>Station recorded</b></td><td><span class="mono d"><time datetime="wall-clock" data-localtime-format="day">wall-clock</time></span><time class="sub" datetime="wall-clock" data-localtime-format="clock">wall-clock</time></td></tr>
+                                        </tbody>
+                </table>
+                <div class="rdf-foot">
+    <span><span>2 lines</span> &middot; <details class="i-dd rdf-size"><summary><span class="pg">20</span> per page<span class="i-ddcaret" aria-hidden="true">&#9662;</span></summary><div class="i-ddmenu" aria-label="Rows per page">        <a class="i-ddopt on" href="/areas/id-1/stations/id-3?lper=20" aria-current="true"><span class="i-ddopt-l">20</span></a>        <a class="i-ddopt" href="/areas/id-1/stations/id-3?lper=50"><span class="i-ddopt-l">50</span></a>        <a class="i-ddopt" href="/areas/id-1/stations/id-3?lper=100"><span class="i-ddopt-l">100</span></a>        <a class="i-ddopt" href="/areas/id-1/stations/id-3?lper=all"><span class="i-ddopt-l">All</span></a>    </div></details></span>
+    <span class="rdf-page">page <span class="pg">1</span> of 1</span>
+</div>
+
                     </div>
     </div>
 </div>

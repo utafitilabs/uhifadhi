@@ -34,6 +34,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\StationSectionService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 use Uhifadhi\Bundle\AtlasBundle\Calendar\Periods;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
+use Uhifadhi\Bundle\ShellBundle\Service\TablePageService;
 use Uhifadhi\Contracts\Area\StationSurface;
 use Uhifadhi\Contracts\Kpi\StationRef;
 
@@ -61,6 +62,10 @@ final readonly class StationRecordController
     /** The pair the record enforces, and the one every door to it asks. */
     public const string READ = 'stations.read';
 
+    /** What happened here pages on keys of its own; the people take the house pair. */
+    public const string LOG_PAGE = 'lpage';
+    public const string LOG_PER = 'lper';
+
     public function __construct(
         private Environment $twig,
         private StationRepository $stations,
@@ -79,6 +84,7 @@ final readonly class StationRecordController
          * the 14th, wrong on the 1st, and unpinnable by a test.
          */
         private Periods $periods,
+        private TablePageService $pager,
     ) {
     }
 
@@ -98,6 +104,9 @@ final readonly class StationRecordController
 
         $query = self::queryFrom($request);
         $board = $this->board->at($station, $query);
+        $people = $this->pager->read($request, \count($board['rows']));
+        $events = $this->events->findByStation($station, \PHP_INT_MAX);
+        $log = $this->pager->read($request, \count($events), self::LOG_PAGE, self::LOG_PER);
         $view = $this->set->view($area);
 
         $posts = [];
@@ -137,13 +146,16 @@ final readonly class StationRecordController
             'area' => $area,
             'station' => $station,
             'zone' => $station->getZone(),
-            'rows' => $board['rows'],
+            'rows' => $people->slice($board['rows']),
+            'peopleTable' => $people,
+            'peopleLinks' => $this->pager->links($request, $people),
             'facets' => $board['facets'],
             'posted' => $board['total'],
             'leader' => $board['leader'],
             'query' => $query,
-            'events' => $this->events->findByStation($station),
-            'eventCount' => $this->events->countByStation($station),
+            'events' => $log->slice($events),
+            'logTable' => $log,
+            'logLinks' => $this->pager->links($request, $log, self::LOG_PAGE, self::LOG_PER),
             'bands' => $bands,
             'dock' => $dock->dockFor((string) $station->getUuidString()),
             'dockPeriod' => $dock->period,

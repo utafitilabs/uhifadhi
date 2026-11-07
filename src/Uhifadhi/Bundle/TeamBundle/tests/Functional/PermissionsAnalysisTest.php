@@ -395,18 +395,18 @@ final class PermissionsAnalysisTest extends WebTestCaseWithSchema
     {
         $this->runNow();
         $this->driftTheRangers();
-        $row = $this->page()->filter('#drift tbody tr')->reduce(static fn (Crawler $c): bool => str_starts_with($c->filter('th.pa-rh')->text(), self::RANGERS) && 'Surveys · record' === $c->filter('th .pp-sub')->text())->first();
+        $row = $this->page()->filter('#drift tbody tr')->reduce(static fn (Crawler $c): bool => str_starts_with($c->filter('th.pa-rh')->text(), self::RANGERS) && 'Surveys · record' === $c->filter('th .sub')->text())->first();
 
         self::assertCount(0, $row->filter('th form, th a, th button'), 'no action stacked under a name');
         self::assertSame(self::RANGERS, $row->filter('th.pa-rh')->getNode(0)?->firstChild?->textContent, 'the position on the primary line');
-        self::assertSame('Surveys · record', $row->filter('th .pp-sub')->text(), 'the permission its mono sub-line');
-        $door = $row->filter('td.pp-door');
+        self::assertSame('Surveys · record', $row->filter('th .sub')->text(), 'the permission its mono sub-line');
+        $door = $row->filter('td.door');
         self::assertCount(1, $door);
-        self::assertSame('pp-door', $row->filter('td')->last()->attr('class'));
+        self::assertSame('door', $row->filter('td')->last()->attr('class'));
         self::assertCount(1, $door->filter('.pa-acts'), 'both doors on one line');
         self::assertSame('Verify live →', $door->filter('.pa-acts a.more')->text());
         self::assertStringStartsWith('/team/permissions/check?person=', (string) $door->filter('a.more')->attr('href'));
-        self::assertSame('Mark reviewed', trim($door->filter('form button.pp-b')->text()));
+        self::assertSame('Mark reviewed', trim($door->filter('form button.btn.sm')->text()));
         self::assertSame(['Position · permission', 'The whole organization', 'Kilimani Game Reserve', 'Mlima Mkuu', 'Sinde Flats', 'Ziwa Kavu', ''], $this->page()->filter('#drift table.pa-st-drift thead th')->each(static fn (Crawler $c): string => $c->text()));
     }
 
@@ -437,11 +437,11 @@ final class PermissionsAnalysisTest extends WebTestCaseWithSchema
         self::assertCount(0, $table->filter('tr.pa-grp'), 'no band rows');
         $rows = $table->filter('tbody tr');
         self::assertSame(array_column($power['rows'], 'name'), $rows->each(static fn (Crawler $c): string => (string) $c->filter('th.pa-rh')->getNode(0)?->firstChild?->textContent));
-        self::assertSame(array_column($power['rows'], 'kind'), $rows->each(static fn (Crawler $c): string => $c->filter('th.pa-rh .pp-sub')->text()), 'tier or position, under the name');
+        self::assertSame(array_column($power['rows'], 'kind'), $rows->each(static fn (Crawler $c): string => $c->filter('th.pa-rh .sub')->text()), 'tier or position, under the name');
         $first = $rows->eq(0)->filter('td.pa-tc .au-v.pp-v');
         self::assertSame('allowed', $first->eq(0)->text());
         self::assertStringContainsString('ok', (string) $first->eq(0)->attr('class'));
-        $door = $rows->eq(0)->filter('td.pp-door a.more');
+        $door = $rows->eq(0)->filter('td.door a.more');
         self::assertSame('Check →', $door->text());
         self::assertStringStartsWith('/team/permissions/check?person=', (string) $door->attr('href'));
         self::assertStringContainsString('q=make-admin', (string) $door->attr('href'));
@@ -487,10 +487,10 @@ final class PermissionsAnalysisTest extends WebTestCaseWithSchema
         $entry = $lists['reach-nothing']['entries'][0];
         $person = $reach->filter('tbody tr')->eq(0);
         self::assertSame($entry['name'], $person->filter('th.pa-rh')->getNode(0)?->firstChild?->textContent);
-        self::assertSame($entry['position'] ?? 'no position', $person->filter('th.pa-rh .pp-sub')->text(), 'the position under the name');
+        self::assertSame($entry['position'] ?? 'no position', $person->filter('th.pa-rh .sub')->text(), 'the position under the name');
         self::assertSame(ucfirst(\is_string($entry['why']) ? $entry['why'] : ''), $person->filter('td.pa-s')->text());
-        self::assertSame('Check →', $person->filter('td.pp-door a.more')->text());
-        self::assertStringStartsWith('/team/permissions/check?person=', (string) $person->filter('td.pp-door a.more')->attr('href'));
+        self::assertSame('Check →', $person->filter('td.door a.more')->text());
+        self::assertStringStartsWith('/team/permissions/check?person=', (string) $person->filter('td.door a.more')->attr('href'));
 
         $rhino = $this->org->positionNamed('Rhino coordinator')->getUuidString();
         $officer = $this->org->positionNamed('People officer')->getUuidString();
@@ -498,25 +498,25 @@ final class PermissionsAnalysisTest extends WebTestCaseWithSchema
             self::assertSame(['Position · permission', 'Reason', ''], $page->filter('#'.$id.' thead th')->each(static fn (Crawler $c): string => $c->text()), $id);
             $row = $page->filter('#'.$id.' tbody tr')->eq(0);
             self::assertSame($position, $row->filter('th.pa-rh')->getNode(0)?->firstChild?->textContent, $id);
-            self::assertSame($lists[$id]['entries'][0]['pairLabel'], $row->filter('th.pa-rh .pp-sub')->text(), $id.': the permission as the sub-line');
+            self::assertSame($lists[$id]['entries'][0]['pairLabel'], $row->filter('th.pa-rh .sub')->text(), $id.': the permission as the sub-line');
             self::assertSame($reason, $row->filter('td.pa-s')->text(), $id);
-            self::assertSame('Open →', $row->filter('td.pp-door a.more')->text(), $id);
-            self::assertSame('/team/positions/'.$uuid, $row->filter('td.pp-door a.more')->attr('href'), $id);
+            self::assertSame('Open →', $row->filter('td.door a.more')->text(), $id);
+            self::assertSame('/team/positions/'.$uuid, $row->filter('td.door a.more')->attr('href'), $id);
         }
         self::assertSame('nobody below Super Admin can raise themselves', $page->filter('#gaining p.pa-s.pa-one')->text());
         self::assertSame(['Position', 'Vacant since', ''], $page->filter('#vacant thead th')->each(static fn (Crawler $c): string => $c->text()));
         self::assertSame('Tourism warden', $page->filter('#vacant tbody th')->text());
         self::assertCount(1, $page->filter('#vacant tbody .pp-t time'));
-        self::assertSame('/team/positions/'.$this->org->positionNamed('Tourism warden')->getUuidString(), $page->filter('#vacant tbody td.pp-door a.more')->attr('href'));
+        self::assertSame('/team/positions/'.$this->org->positionNamed('Tourism warden')->getUuidString(), $page->filter('#vacant tbody td.door a.more')->attr('href'));
 
         $exception = $page->filter('#exceptions tbody tr')->eq(0);
         self::assertSame(['Position · permission', 'By', 'Reason', ''], $page->filter('#exceptions thead th')->each(static fn (Crawler $c): string => $c->text()));
         self::assertSame('Head of Operations', $exception->filter('th.pa-rh')->getNode(0)?->firstChild?->textContent);
-        self::assertSame($lists['exceptions']['entries'][0]['pairLabel'], $exception->filter('th.pa-rh .pp-sub')->text());
+        self::assertSame($lists['exceptions']['entries'][0]['pairLabel'], $exception->filter('th.pa-rh .sub')->text());
         self::assertSame('Naomi Kileo', $exception->filter('td.pa-s')->eq(0)->getNode(0)?->firstChild?->textContent);
-        self::assertCount(1, $exception->filter('td.pa-s')->eq(0)->filter('.pp-sub time'), 'the time under who gave it');
+        self::assertCount(1, $exception->filter('td.pa-s')->eq(0)->filter('.sub time'), 'the time under who gave it');
         self::assertSame('Runs every operation across the four areas.', $exception->filter('td.pa-s')->eq(1)->text());
-        self::assertSame('Open →', $exception->filter('td.pp-door a.more')->text());
+        self::assertSame('Open →', $exception->filter('td.door a.more')->text());
         self::assertSame('Nobody changed their own standing.', $page->filter('#self-changes .au-why.pa-none')->text());
     }
 
@@ -536,18 +536,18 @@ final class PermissionsAnalysisTest extends WebTestCaseWithSchema
         $row = $card->filter('tbody tr');
         self::assertCount(1, $row);
         self::assertSame('Naomi Kileo', $row->filter('th.pa-rh')->getNode(0)?->firstChild?->textContent);
-        self::assertCount(1, $row->filter('th.pa-rh .pp-sub time'), 'when, under who');
+        self::assertCount(1, $row->filter('th.pa-rh .sub time'), 'when, under who');
         self::assertSame('their own tier Super Admin → Admin', self::squash($row->filter('td.pa-s')->text()));
         self::assertSame(['Super Admin', 'Admin'], $row->filter('.ph-diff s, .ph-diff i')->each(static fn (Crawler $c): string => $c->text()));
-        self::assertSame('Open →', $row->filter('td.pp-door a.more')->text());
-        self::assertSame('/team/'.$naomi->getUuidString(), $row->filter('td.pp-door a.more')->attr('href'));
+        self::assertSame('Open →', $row->filter('td.door a.more')->text());
+        self::assertSame('/team/'.$naomi->getUuidString(), $row->filter('td.door a.more')->attr('href'));
     }
 
     public function testDriftIsTheBannerAndTheLastCardAndMarkReviewedComesBackHere(): void
     {
         $this->runNow();
         $page = $this->page();
-        self::assertCount(0, $page->filter('.pp-drift'), 'no drift, no banner');
+        self::assertCount(0, $page->filter('.banner'), 'no drift, no banner');
         self::assertSame('No answer changed without a history line.', $page->filter('#drift .au-why.pa-none')->text());
         self::assertStringContainsString('pa-alarm', (string) $page->filter('.onpage-main > .c#drift')->attr('class'));
 
@@ -557,10 +557,10 @@ final class PermissionsAnalysisTest extends WebTestCaseWithSchema
         self::assertGreaterThan(0, $changed);
 
         $page = $this->page();
-        $banner = $page->filter('.pp-drift');
-        self::assertSame($changed.' answers changed with no recorded change', $banner->filter('.pp-dtext b')->text());
-        self::assertSame('nothing in the history explains it', $banner->filter('.pp-dcause')->text());
-        self::assertSame('#drift', $banner->filter('.pp-dacts a.btn.sm')->attr('href'));
+        $banner = $page->filter('.banner');
+        self::assertSame($changed.' answers changed with no recorded change', $banner->filter('.banner-t b')->text());
+        self::assertSame('nothing in the history explains it', $banner->filter('.banner-c')->text());
+        self::assertSame('#drift', $banner->filter('.banner-acts a.btn.sm')->attr('href'));
         self::assertSame('team_permissions_analysis', $banner->filter('form input[name="back"]')->attr('value'));
 
         $card = $page->filter('.onpage-main > .c#drift');
@@ -572,7 +572,7 @@ final class PermissionsAnalysisTest extends WebTestCaseWithSchema
         $line = $card->filter('tbody tr')->reduce(static fn (Crawler $c): bool => str_starts_with($c->filter('th.pa-rh')->text(), self::RANGERS));
         self::assertGreaterThan(0, $line->count());
         $first = $line->eq(0);
-        self::assertCount(1, $first->filter('th .pp-sub'));
+        self::assertCount(1, $first->filter('th .sub'));
         self::assertSame('3→4', str_replace(' ', '', $first->filter('td')->eq(1)->text()), 'Kilimani: the ranger in Ecology passes now');
         self::assertSame((string) \count($drift['lines']), $page->filter('.onpage-row[href="#drift"] .onpage-n')->text());
 
@@ -590,8 +590,8 @@ final class PermissionsAnalysisTest extends WebTestCaseWithSchema
 
         $reviewed = $this->client->followRedirect()->filter('#drift tbody tr')->reduce(static fn (Crawler $c): bool => str_contains((string) $c->attr('class'), 'pa-done'));
         self::assertCount(1, $reviewed);
-        self::assertSame('Reviewed', trim($reviewed->filter('button.pp-b')->text()));
-        self::assertNotNull($reviewed->filter('button.pp-b')->attr('disabled'));
+        self::assertSame('Reviewed', trim($reviewed->filter('button.btn.sm')->text()));
+        self::assertNotNull($reviewed->filter('button.btn.sm')->attr('disabled'));
     }
 
     public function testBeforeAnyRunThePageSaysNotComputedYet(): void
@@ -600,7 +600,7 @@ final class PermissionsAnalysisTest extends WebTestCaseWithSchema
 
         self::assertStringContainsString('not computed yet', $page->filter('.pghead .pp-fresh')->text());
         self::assertStringContainsString('not computed yet', $page->filter('#question .pa-none')->text());
-        self::assertCount(0, $page->filter('.pp-drift'));
+        self::assertCount(0, $page->filter('.banner'));
         self::assertCount(9, $page->filter('.onpage-row'));
         self::assertCount(9, $page->filter('.onpage-main > .c'), 'the question, seven lists, the drift');
     }

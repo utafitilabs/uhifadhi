@@ -35,6 +35,7 @@ use Uhifadhi\Bundle\ShellBundle\Service\SettingsNavigation;
 use Uhifadhi\Bundle\ShellBundle\Service\SettingsReading;
 use Uhifadhi\Bundle\ShellBundle\Service\SettingsSection;
 use Uhifadhi\Bundle\ShellBundle\Service\Stylesheets;
+use Uhifadhi\Bundle\ShellBundle\Service\TablePageService;
 use Uhifadhi\Bundle\ShellBundle\Service\Theme;
 use Uhifadhi\Bundle\ShellBundle\Service\UserBadgeReader;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
@@ -170,6 +171,11 @@ return static function (ContainerConfigurator $container): void {
     // configuration, and a welcome screen that reported a list somebody typed
     // would be wrong the first time anybody installed a module.
     $services->set('shell.installation', Installation::class);
+
+    // THE PAGER: the house foot's pages and links, read off the request.
+    // Aliased by class so a module's explicit wiring can name it.
+    $services->set('shell.table_page', TablePageService::class);
+    $services->alias(TablePageService::class, 'shell.table_page');
 
     /*
      * THE WELCOME PAGE, as a controller service.

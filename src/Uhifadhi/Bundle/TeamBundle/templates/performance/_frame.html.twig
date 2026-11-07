@@ -32,55 +32,53 @@
 {% endblock %}
 
 {% block shell_page_actions %}
-    {# THE SCOPE IS A PLACE, so every option is a link and the control needs
-       no script of ours: the organization's page and one area's page are two
-       addresses, and either can be sent to somebody. #}
-    <label class="ov-ctl">
-        <span class="k">Scope</span>
-        <details class="i-dd">
-            <summary class="mchip i-ddt">
-                <span class="i-ddval">{{ scope.label }}</span>
-                <span class="i-ddcaret">&#9662;</span>
-            </summary>
-            <div class="i-ddmenu">
-                <span class="i-ddhead">whose performance</span>
-                <a class="i-ddopt{{ scope.isOrganization ? ' on' }}" href="{{ path('team_performance', {period: kind.value}) }}">
-                    <span class="i-ddopt-l">{{ organization }}</span>
-                </a>
-                {% for area in areas %}
-                    <a class="i-ddopt{{ scope.areaUuid == area.uuidString ? ' on' }}"
-                       href="{{ path('team_performance', {period: kind.value, area: area.uuidString}) }}">
-                        <span class="i-ddopt-l">{{ area.name }}</span>
-                    </a>
-                {% endfor %}
-            </div>
-        </details>
-    </label>
+    {# THE THREE CONTROLS ARE THE HOUSE DROPDOWN, and every option is an
+       address: the organization's page and one area's page, this month and
+       this quarter, are pages that can be sent to somebody.
 
-    {{ include('@Shell/_period_group.html.twig', {kinds: kinds, chosen: kind.value, urls: urls}, with_context = false) }}
+       WHAT THE PERIOD IS READ AGAINST offers two comparisons and not three:
+       "the declared target" is not a period — it compares a figure with what
+       somebody committed to, which is a goal's business and already answered
+       in the ledger's Pace column. #}
+    {%- set scopeUrls = {'': path('team_performance', {period: kind.value})} -%}
+    {%- set scopeAreas = [] -%}
+    {%- for area in areas -%}
+        {%- set scopeUrls = scopeUrls|merge({(area.uuidString): path('team_performance', {period: kind.value, area: area.uuidString})}) -%}
+        {%- set scopeAreas = scopeAreas|merge([{value: area.uuidString, label: area.name}]) -%}
+    {%- endfor -%}
+    {{ include('@Team/_partial/_link_dropdown.html.twig', {
+        sm: true,
+        name: 'scope', label: 'Scope', icon: 'shell:map', end: true, default: '',
+        value: scope.isOrganization ? '' : scope.areaUuid,
+        groups: [
+            {label: 'scope', options: [{value: '', label: organization}]},
+            {label: 'Areas', options: scopeAreas},
+        ],
+        urls: scopeUrls,
+    }, with_context = false) }}
 
-    {# WHAT THE PERIOD IS READ AGAINST. Two options and not the design's
-       three: "the declared target" is not a period — it compares a figure
-       with what somebody committed to, which is a goal's business and is
-       already answered in the ledger's Pace column. Two kinds of comparison
-       behind one control would make "up 3" mean two things on one page. #}
-    <label class="ov-ctl sm">
-        <span class="k">Compare with</span>
-        <details class="i-dd">
-            <summary class="mchip i-ddt">
-                <span class="i-ddval">{{ compare.label(period) }}</span>
-                <span class="i-ddcaret">&#9662;</span>
-            </summary>
-            <div class="i-ddmenu">
-                <span class="i-ddhead">what the movement is measured against</span>
-                {% for option in comparisons %}
-                    <a class="i-ddopt{{ option.on ? ' on' }}" href="{{ option.url }}">
-                        <span class="i-ddopt-l">{{ option.label }}</span>
-                    </a>
-                {% endfor %}
-            </div>
-        </details>
-    </label>
+    {{ include('@Team/_partial/_link_dropdown.html.twig', {
+        sm: true,
+        name: 'period', label: 'Period', end: true, default: (periods|first).value,
+        value: kind.value,
+        groups: [
+            {label: 'period', options: periods|slice(0, 1)},
+            {label: 'Spans', options: periods|slice(1)},
+        ],
+        urls: urls,
+    }, with_context = false) }}
+
+    {%- set compareUrls = {} -%}
+    {%- for option in comparisons -%}
+        {%- set compareUrls = compareUrls|merge({(option.value): option.url}) -%}
+    {%- endfor -%}
+    {{ include('@Team/_partial/_link_dropdown.html.twig', {
+        sm: true,
+        name: 'compare', label: 'Compare with', icon: 'shell:arrow-right-left', end: true, default: (comparisons|first).value,
+        value: (comparisons|filter(option => option.on)|first).value,
+        groups: [{label: 'compare with', options: comparisons|map(option => {value: option.value, label: option.label})}],
+        urls: compareUrls,
+    }, with_context = false) }}
 {% endblock %}
 
 {% block shell_page %}{% block perf_page %}{% endblock %}{% endblock %}

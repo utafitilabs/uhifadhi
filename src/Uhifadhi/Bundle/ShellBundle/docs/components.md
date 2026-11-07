@@ -73,9 +73,10 @@ you write on an element; the parts each one brings are in the table.
 | The card's quiet door | `.more` (direct child of `.c`) | pinned to the card's top edge, lower case; **at most one per card** — page actions go in the page header, row actions on the row |
 | The KPI plate | `.kpi` | `b`/`.disp` the number, `em` the unit, `.sub` the sub-line, `.hot` for the one that matters |
 | The KPI strip | `.kstrip` | a modifier on `.grid`, never alone |
-| The register table | `table.tbl` | `th` `td` `.num`, and the row's hover |
+| An overview's parts | `.factband.ov-band` `.ov-kpis` `.ov-plots` | the strip, the four figures and the plots in the house type pairs: strip labels 9.5px .16em, values 13.5/600, their words 12/400; figures 26/700 mono, their line 11/400; plot footers 11px, their door 11/700, the key 11px |
+| The register table | `table.tbl` | `th` `td` `.num`, and the row's hover; `.sub` a cell's dim mono sub-line, `td.door` the last column's door ([the foot](register-foot.md#the-house-tables-sub-line-and-door)) |
 | The meta row | `.rln` | the two halves are yours (`.k`/`.v`, a `.mono` figure, a colour word); the last row drops the rule |
-| The pager | `.rdf-foot` `.rdf-page` | `.pg`, the page you are on |
+| The pager | `.rdf-foot` `.rdf-page` | `.pg`, the page you are on, `.rdf-size` the size chooser; drawn by `@Shell/_foot.html.twig` ([the register foot](register-foot.md)) |
 | The person's mark | `.avatar` | — |
 | The row affordance | `.open-btn` | fills on the **row's** hover, not its own |
 | The quiet button | `.tgl` | the secondary to `.cta` |

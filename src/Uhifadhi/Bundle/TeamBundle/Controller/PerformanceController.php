@@ -83,9 +83,6 @@ final readonly class PerformanceController
      */
     public const array SURFACE = ['_uhifadhi_module' => PerformanceSectionTabs::SURFACE];
 
-    /** How many of the raised decisions the briefing prints before it counts the rest. */
-    public const int DECISIONS_SHOWN = 5;
-
     /** What the scope picker calls the organization, on the page and in the picker. */
     public const string ORGANIZATION = 'Organization — all areas';
 
@@ -125,6 +122,10 @@ final readonly class PerformanceController
 
         return new Response($this->twig->render('@Team/performance/overview.html.twig', [
             ...$this->frame($scope, $period, $kind, $compare, self::ROUTE),
+            // THE OVERVIEW'S OWN STRIP, picked by key from the host's own
+            // three topics — a module never changes the organization's band,
+            // and no other screen of the section carries one.
+            'band' => $this->band->build($topics, $scope, $period),
             'cards' => $this->cards->strip(
                 $topics,
                 $scope,
@@ -214,7 +215,7 @@ final readonly class PerformanceController
             ),
             'matrix' => $topic->matrix($scope, $period),
             'publisher' => PerformanceTopicProviderInterface::HOST === $topic->moduleSlug()
-                ? 'the host'
+                ? 'Built in'
                 : $topic->moduleSlug().' module',
         ]));
     }
@@ -224,7 +225,7 @@ final readonly class PerformanceController
      * a director opens first.
      *
      * IT ADDS UP NOTHING OF ITS OWN. Every line on it is published: the
-     * band is the Goals topic's own five figures, "what changed" is one
+     * goals are the Goals topic's own matrix, "what changed" is one
      * line per topic that can write one
      * ({@see TopicMovementInterface}),
      * and the ledger is the Goals topic's matrix drawn in the one
@@ -241,11 +242,9 @@ final readonly class PerformanceController
 
         $moved = [];
         $decisions = [];
-        $raised = 0;
         foreach ($topics as $topic) {
             if ($topic instanceof TopicDecisionsInterface) {
                 $own = $topic->decisions($scope, $period);
-                $raised += \count($own);
                 foreach ($own as $decision) {
                     $decisions[] = ['topic' => $topic->title(), 'decision' => $decision, 'url' => $this->urls->generate(
                         self::TOPIC_ROUTE,
@@ -270,18 +269,10 @@ final readonly class PerformanceController
 
         return new Response($this->twig->render('@Team/performance/briefing.html.twig', [
             ...$this->frame($scope, $period, $kind, $compare, self::BRIEFING_ROUTE),
-            // THE BAND IS THE GOALS TOPIC'S OWN FIVE, by the keys it
-            // published them under — a briefing that summed them itself
-            // would be a second answer to a question already answered.
-            'goals' => $goals?->kpis($scope, $period) ?? [],
             'ledger' => $goals?->matrix($scope, $period),
             'moved' => $moved,
-            // THE FIRST FEW, AND HOW MANY THERE ARE IN ALL. "5 of 12" is
-            // a decision about attention, and it is the page's to make —
-            // a card that listed twelve would be a list nobody reads to
-            // the end of.
-            'decisions' => \array_slice($decisions, 0, self::DECISIONS_SHOWN),
-            'raised' => $raised,
+            // EVERY DECISION, one line of the banner above the page each.
+            'decisions' => $decisions,
         ]));
     }
 
@@ -315,10 +306,6 @@ final readonly class PerformanceController
     private function frame(PerformanceScope $scope, FigurePeriod $period, PeriodKind $kind, Comparison $compare, string $current): array
     {
         return [
-            // THE SAME SIX ON EVERY SCREEN OF THE SECTION, picked by key
-            // from the host's own three topics — a module never changes
-            // the organization's own band.
-            'band' => $this->band->build($this->topics->forScope($scope, $period), $scope, $period),
             'scope' => $scope,
             'organization' => self::ORGANIZATION,
             'areas' => $this->areas(),
@@ -328,8 +315,16 @@ final readonly class PerformanceController
             // the same object.
             'previous' => $period->against(),
             'kind' => $kind,
-            'kinds' => PeriodKind::labels(),
             'urls' => $this->periodUrls($scope, $compare),
+            // EACH WINDOW BY THE PERIOD IT WORKS OUT TO NOW — "August 2026",
+            // never "Month" — since that is what a reader picks.
+            'periods' => array_map(
+                fn (PeriodKind $each): array => [
+                    'value' => $each->value,
+                    'label' => $each->period(RequiredPeriod::of($this->periods)->now())->label,
+                ],
+                PeriodKind::cases(),
+            ),
             'compare' => $compare,
             'comparisons' => $this->comparisons($scope, $period, $kind, $compare),
         ];
@@ -340,13 +335,14 @@ final readonly class PerformanceController
      * scope and the period keep, so a reader can send the page they are
      * looking at to somebody.
      *
-     * @return list<array{label: string, url: string, on: bool}>
+     * @return list<array{value: string, label: string, url: string, on: bool}>
      */
     private function comparisons(PerformanceScope $scope, FigurePeriod $period, PeriodKind $kind, Comparison $chosen): array
     {
         $offered = [];
         foreach (Comparison::cases() as $case) {
             $offered[] = [
+                'value' => $case->value,
                 'label' => $case->label($period),
                 'url' => $this->urls->generate(self::ROUTE, [
                     'period' => $kind->value,

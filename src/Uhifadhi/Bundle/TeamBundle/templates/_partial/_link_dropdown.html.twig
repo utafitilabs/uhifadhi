@@ -1,0 +1,22 @@
+{# THE HOUSE DROPDOWN, WHERE EVERY OPTION IS AN ADDRESS — the shell's
+   @Shell/_dropdown.html.twig inside the `choice-link` controller, which opens
+   the address of the option chosen. The page is still the state: the trigger
+   reads the chosen option from the server, and every address is written here.
+
+   PARAMETERS: those of @Shell/_dropdown.html.twig, and
+     urls   {value: address} for every option, the lead row's included #}
+{%- set _ctl = 'uhifadhi--team-bundle--choice-link' -%}
+<span class="dp-link" data-controller="{{ _ctl }}" data-{{ _ctl }}-urls-value="{{ urls|json_encode }}" data-action="uhifadhi--shell-bundle--dropdown:choose->{{ _ctl }}#go">
+    {{- include('@Shell/_dropdown.html.twig', {
+        name: name,
+        label: label,
+        icon: icon ?? null,
+        groups: groups,
+        value: value ?? null,
+        default: _context['default'] ?? null,
+        end: _context['end'] ?? false,
+        placeholder: placeholder ?? null,
+        searchable: searchable ?? false,
+        sm: sm ?? false,
+    }, with_context = false) -}}
+</span>

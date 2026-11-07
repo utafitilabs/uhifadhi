@@ -52,7 +52,7 @@ final class DepartmentWidgets implements WidgetSurfaceInterface
     /** What the composition this bundle ships with is CALLED when it leads the strip. */
     public const string DEFAULT_LABEL = 'The whole reading';
 
-    public const string DEFAULT_DESCRIPTION = 'Every cell the section publishes, in the order the organization is read from the outside in: the figures, how each department is staffed and scoped, what it reads, and what is waiting on somebody.';
+    public const string DEFAULT_DESCRIPTION = 'The organization read from the outside in: the figures, how each department is staffed and scoped, and what it reads. What is waiting on somebody is the banner above.';
 
     public function catalog(): WidgetCatalog
     {
@@ -91,7 +91,7 @@ final class DepartmentWidgets implements WidgetSurfaceInterface
                     'default',
                     self::DEFAULT_LABEL,
                     self::DEFAULT_DESCRIPTION,
-                    ['kpis' => 12, 'staffing' => 6, 'scope' => 6, 'modules' => 6, 'unattached' => 6, 'vacancies' => 6, 'goals' => 6],
+                    ['kpis' => 12, 'staffing' => 6, 'scope' => 6, 'modules' => 12],
                 ),
                 new WidgetPreset(
                     'staffing',

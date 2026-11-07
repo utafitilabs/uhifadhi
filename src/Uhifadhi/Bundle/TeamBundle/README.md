@@ -217,9 +217,15 @@ somebody wrote about themselves says so ("changed their own rank to …").
 ## A department is a lens: the modules it attaches
 
 A department **attaches** modules from the registry's catalogue, and that is the
-whole of what a department does to a page. The attached modules lead its own
-dashboard, one card each, and the figures on its performance tab are those
-modules' KPIs. Attaching **grants nothing and hides nothing**: no permission
+whole of what a department does to a page. Its record
+(`GET /departments/{uuid}`) has three panels: Overview (the facts strip, the
+attached modules' figures read across every area or at the one `?area=` names,
+the goals as cards against their targets, and the modules each figure comes
+from), People & access (who belongs to it and who supports it, its members and
+its history) and Settings (the modules it runs, read). What needs a decision —
+a goal at risk or off track, a goal nobody can measure — is the banner above
+them. The record reads; its Configure page switches the modules and declares
+and withdraws the goals. Attaching **grants nothing and hides nothing**: no permission
 moves, no row becomes unreachable, and a module two departments attach is one
 module — the same rows, listed first for both, neither able to hide anything from
 the other. It takes no reason and leaves no audit line for exactly that reason;
@@ -450,7 +456,7 @@ Staffing and a module's Patrols alike:
 {{ include('@Team/performance/_stylesheets.html.twig') }}
 {{ render_matrix(topic.matrix(scope, period), {
     title: topic.title,
-    publisher: 'the host',
+    publisher: 'Built in',
 }) }}
 ```
 
@@ -464,6 +470,13 @@ out here, inside one column and one band, and is not drawn at all where fewer
 than three departments in the band have a figure. A column with no polarity is
 never tinted, an absence is dashed rather than pale, and the legend under every
 matrix says what a shade is *not*.
+
+The section's screens carry their scope, period and comparison on the house
+dropdown in the page head, every option an address; the organization's strip is
+the Overview's alone, a topic page carries its own figures, and the Briefing is
+what needs a decision as the banner above the page, then the index over its two
+cards, the goals and what changed. The matrix holds its card at a fixed layout
+and never scrolls sideways.
 
 The board's own vocabulary ships as a second sheet, `bundles/team/performance.css`
 (`TeamBundle::PERFORMANCE_STYLESHEET`), linked by the partial above; the sort in

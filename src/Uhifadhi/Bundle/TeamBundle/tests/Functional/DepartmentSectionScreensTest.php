@@ -66,6 +66,29 @@ final class DepartmentSectionScreensTest extends WebTestCaseWithSchema
     }
 
     /**
+     * THE OVERVIEW SAYS WHAT NEEDS ATTENTION IN ONE BANNER ABOVE THE STRIP —
+     * the departments reading no module and the positions nobody holds, each
+     * with its door — and no card of it below.
+     */
+    public function testTheOverviewCarriesItsAttentionInOneBannerAboveTheStrip(): void
+    {
+        $crawler = $this->overview();
+
+        $banner = $crawler->filter('.banner');
+        self::assertCount(1, $banner);
+        self::assertCount(1, $crawler->filter('.banner + .factband'), 'the banner sits above the strip');
+        self::assertSame(
+            ['3 departments read no module', '1 position is held by nobody'],
+            $banner->filter('.banner-l > li .banner-t b')->each(static fn (Crawler $c): string => $c->text()),
+        );
+        self::assertSame(
+            ['/departments/modules', '/team/positions'],
+            $banner->filter('.banner-l > li .banner-acts a')->each(static fn (Crawler $c): string => (string) $c->attr('href')),
+        );
+        self::assertStringContainsString('Field Assistant', $banner->filter('.banner-l > li')->eq(1)->text());
+    }
+
+    /**
      * THE IDENTITY BAND STATES FACTS AS FRAGMENTS, not sentences, and it is the
      * same band an area's overview opens with.
      */
@@ -143,6 +166,28 @@ final class DepartmentSectionScreensTest extends WebTestCaseWithSchema
         self::assertCount(3, $crawler->filter('.sxmx tbody tr:not(.sxgrp)'));
     }
 
+    /**
+     * WHAT NEEDS ATTENTION IS THE BANNER ABOVE THE MATRIX (ruled 7 Nov), one
+     * line a thing to act on with its door, and no strip and no card of it:
+     * a module nobody attaches, and the departments that attach none.
+     */
+    public function testTheMatrixCarriesItsAttentionInTheBanner(): void
+    {
+        $crawler = $this->matrix();
+
+        self::assertCount(0, $crawler->filter('.factband'));
+        $banner = $crawler->filter('.banner');
+        self::assertCount(1, $banner);
+        self::assertSame('Needs attention', $banner->attr('aria-label'));
+        $lines = $banner->filter('.banner-l > li');
+        self::assertCount(1, $lines, 'with no module installed, nothing is attached by nobody');
+        self::assertSame('3 departments read no module', $lines->filter('.banner-t b')->text());
+        self::assertStringContainsString('Ecology, Protection Service, Wetland Management', $lines->filter('.banner-c')->text());
+        self::assertSame('/departments', $lines->filter('.banner-acts a')->attr('href'));
+        self::assertStringNotContainsString('needs attention', $crawler->filter('.pgbody')->text());
+        self::assertCount(1, $crawler->filter('.banner + .c .sxmx'), 'the banner leads, the matrix follows');
+    }
+
     /** THE MATRIX'S KEY IS THE ATLAS'S DOT KEY: present, absent, and the sentence after them. */
     public function testTheMatrixKeyIsTheAtlasDotKey(): void
     {
@@ -160,6 +205,19 @@ final class DepartmentSectionScreensTest extends WebTestCaseWithSchema
             ->each(static fn (Crawler $c): string => $c->text());
 
         self::assertSame(['org-wide', 'org-wide', 'Northern Reserve'], $scopes);
+    }
+
+    /** The matrix is a table, so it wears the house bar and the foot. */
+    public function testTheMatrixWearsTheHouseBarAndFoot(): void
+    {
+        $card = $this->matrix()->filter('[data-controller="uhifadhi--team-bundle--table-filter"]');
+
+        $chip = $card->filter('.lfilt details.i-dd[data-axis="scope"]');
+        self::assertSame(['All', 'org-wide', 'Northern Reserve'], $chip->filter('.i-ddopt-l')->each(static fn (Crawler $c): string => $c->text()));
+        self::assertSame(['3', '2', '1'], $chip->filter('.i-ddopt-n')->each(static fn (Crawler $c): string => $c->text()));
+        self::assertCount(1, $card->filter('.lfilt .lsearch input'));
+        self::assertCount(3, $card->filter('.sxmx tbody tr[data-find]'));
+        self::assertStringStartsWith('3 departments', trim((string) preg_replace('/\s+/', ' ', $card->filter('.rdf-foot > span')->first()->text())));
     }
 
     /** THE MATRIX READS AND DOES NOT WRITE: no checkbox, no form. */
@@ -190,9 +248,9 @@ final class DepartmentSectionScreensTest extends WebTestCaseWithSchema
         );
 
         self::assertSame(
-            ['kpis', 'staffing', 'scope', 'modules', 'unattached', 'vacancies', 'goals'],
+            ['kpis', 'staffing', 'scope', 'modules'],
             $cells,
-            'The shipped direction is every cell, in the order the organization is read from the outside in.',
+            'The shipped direction reads the organization from the outside in; what waits on somebody is the banner.',
         );
     }
 

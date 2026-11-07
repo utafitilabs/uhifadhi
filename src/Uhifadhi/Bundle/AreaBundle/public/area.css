@@ -1578,3 +1578,10 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 .md-g.c3 { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
 .md-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 @media (max-width: 1100px) { .md-g.c2, .md-g.c2e, .md-g.c3 { grid-template-columns: 1fr; } }
+
+/* ==========================================================================
+   AREA · THE BAR'S DROPDOWNS at the widths the designs set them: 200px, the
+   station picker 240px.
+   ========================================================================== */
+.lfilt > .dd { flex: none; width: 200px; }
+.lfilt > .dd[data-dd="station"] { width: 240px; }

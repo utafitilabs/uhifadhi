@@ -25,7 +25,6 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 use Uhifadhi\Bundle\AreaBundle\Model\PostingQuery;
 use Uhifadhi\Bundle\AreaBundle\Model\PostingRow;
-use Uhifadhi\Bundle\AreaBundle\Model\StationQuery;
 use Uhifadhi\Bundle\AreaBundle\Model\StationRow;
 use Uhifadhi\Bundle\AreaBundle\Model\ZoneFigureSet;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
@@ -38,22 +37,20 @@ use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 use Uhifadhi\Bundle\AtlasBundle\Calendar\Periods;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleEntryRouteResolver;
+use Uhifadhi\Bundle\ShellBundle\Service\TablePageService;
 use Uhifadhi\Contracts\Kpi\DepartmentKpi;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneRef;
 
 /**
- * ONE ZONE, READ.
+ * ONE ZONE, READ — a record page (design: areas/<area>/zones/detail.html).
  *
- * A RECORD, NOT A TAB. A picked zone wears the station page's treatment: its
- * bare name as the h1, its context demoted to the quiet subline, the crumb
- * one step longer, its own identity band — and no tab strip, because a zone
- * is a thing inside the area rather than one of the ways of looking at the
- * area. The frame draws no Configure here for the same reason.
- *
- * ITS FIGURES ARE IN ITS BAND. A record states them there the way the station
- * page does — extent, covered, stations, people, and what the modules
- * publish — and carries no row of cards; the cards belong to the set.
+ * A RECORD, NOT A TAB: its bare name as the h1, its context in the subline,
+ * the crumb one step longer, its facts strip as its own overview, no tab
+ * strip. The index lists its cards, one row a card, and the cards stand in
+ * one column: the ground, its stations, who works out of it, what happened
+ * here. Every table is the house table under its bar and over its foot, each
+ * with its own keys, because three tables share one address.
  *
  * IT ONLY READS. The ring, the name and the removal are the configure
  * section's, and nothing here writes.
@@ -62,13 +59,19 @@ final readonly class ZoneRecordController
 {
     public const string ROUTE = 'area_zone_show';
 
-    /** The people card searches on a key of its own; the stations card owns `q`. */
-    public const string PERSON_QUERY = 'person';
-    public const string PEOPLE_PAGE = 'ppage';
+    /** The stations table searches and pages on the house keys. */
+    public const string STATION_QUERY = 'q';
 
-    /** A record's column is narrower than the tab's, and its cards page sooner. */
-    public const int STATIONS_PER_PAGE = 5;
-    public const int PEOPLE_PER_PAGE = 4;
+    /** Who works out of it: its own search, filters and pages. */
+    public const string PERSON_QUERY = 'person';
+    public const string PERSON_STATION = 'station';
+    public const string PERSON_POSITION = 'position';
+    public const string PEOPLE_PAGE = 'ppage';
+    public const string PEOPLE_PER = 'pper';
+
+    /** What happened here: its own pages. */
+    public const string LOG_PAGE = 'lpage';
+    public const string LOG_PER = 'lper';
 
     public function __construct(
         private Environment $twig,
@@ -81,13 +84,8 @@ final readonly class ZoneRecordController
         private ZoneFigureService $figures,
         private AreaModuleService $areaModules,
         private ModuleEntryRouteResolver $entryRoutes,
-        /**
-         * WHAT PERIOD IT IS NOW, from the one source that decides it. This
-         * was `FigurePeriod::month(new \DateTimeImmutable())` written here
-         * and in ten other places, each asking the wall clock: correct on
-         * the 14th, wrong on the 1st, and unpinnable by a test.
-         */
         private Periods $periods,
+        private TablePageService $pager,
     ) {
     }
 
@@ -113,82 +111,84 @@ final readonly class ZoneRecordController
             }
         }
 
-        // THE POSTS ON THIS GROUND, searched by name or code and nothing else:
-        // every other filter of the register would answer the same on every
-        // row of one zone.
-        $search = trim($request->query->getString(StationQuery::SEARCH));
-        $stations = [];
-        $posts = [];
-        foreach ($this->stations->findByZone($zone) as $station) {
-            $posted = $this->postings->countStandingByStation($station);
-            $stations[] = StationRow::of(
-                $station,
-                $posted,
-                null !== $this->postings->findLeaderAt($station),
-                $row?->cat,
-            );
-            $posts[] = [
-                'uuid' => (string) $station->getUuidString(),
-                'name' => (string) $station->getName(),
-                'point' => $station->getPoint(),
-                'posted' => $posted,
-                'here' => false,
-            ];
+        $people = $this->board->board($this->postings->findStandingByZone($zone), new PostingQuery())['rows'];
+        $leads = [];
+        foreach ($people as $person) {
+            if ($person->leader) {
+                $leads[$person->stationUuid] = $person->name;
+            }
         }
 
-        $matching = array_values(array_filter(
-            $stations,
-            static fn (StationRow $station): bool => $station->matches($search),
-        ));
+        $search = trim($request->query->getString(self::STATION_QUERY));
+        $stations = [];
+        $names = [];
+        foreach ($this->stations->findByZone($zone) as $station) {
+            $posted = $this->postings->countStandingByStation($station);
+            $stations[] = StationRow::of($station, $posted, null !== $this->postings->findLeaderAt($station), $row?->cat);
+            $names[(string) $station->getUuidString()] = (string) $station->getName();
+        }
+        $matching = array_values(array_filter($stations, static fn (StationRow $station): bool => $station->matches($search)));
+        $stationTable = $this->pager->read($request, \count($matching));
 
-        $pages = max(1, (int) ceil(\count($matching) / self::STATIONS_PER_PAGE));
-        $page = max(1, min($request->query->getInt(StationQuery::PAGE, 1), $pages));
+        $ask = [
+            self::PERSON_STATION => self::answer($request, self::PERSON_STATION),
+            self::PERSON_POSITION => self::answer($request, self::PERSON_POSITION),
+            self::PERSON_QUERY => trim($request->query->getString(self::PERSON_QUERY)),
+        ];
+        $found = self::peopleAnswering($people, $ask, $names);
+        $peopleTable = $this->pager->read($request, \count($found), self::PEOPLE_PAGE, self::PEOPLE_PER);
 
-        $people = $this->peopleOf($zone, $request);
+        $log = $this->events->findMentioning($area, (string) $zone->getName(), \PHP_INT_MAX);
+        $logTable = $this->pager->read($request, \count($log), self::LOG_PAGE, self::LOG_PER);
 
-        /*
-         * ONE QUESTION OF THE SEAM PER REQUEST, however many facts the band
-         * reads out of the answer.
-         */
         $figures = $this->figures->collect(
             [new ZoneRef((string) $zone->getUuidString(), (string) $area->getUuidString(), null === $row ? (string) $zone->getName() : $row->name)],
             $this->periods->month(),
             fn (string $slug): bool => $this->areaModules->isActive($area, $slug),
         );
 
+        $posts = [];
+        foreach ($this->stations->findByArea($area) as $post) {
+            $posts[] = [
+                'uuid' => (string) $post->getUuidString(),
+                'name' => (string) $post->getName(),
+                'point' => $post->getPoint(),
+                'posted' => $this->postings->countStandingByStation($post),
+                'here' => false,
+            ];
+        }
+
         return new Response($this->twig->render('@Area/zone/record.html.twig', [
             'area' => $area,
             'zone' => $zone,
             'row' => $row,
-            'query' => new StationQuery(search: $search, page: $page),
-            'stations' => \array_slice($matching, ($page - 1) * self::STATIONS_PER_PAGE, self::STATIONS_PER_PAGE),
+            'search' => $search,
+            'stations' => $stationTable->slice($matching),
             'stationCount' => \count($stations),
-            'stationsMatching' => \count($matching),
-            'stationsPage' => $page,
-            'stationsPages' => $pages,
-            'perPage' => self::STATIONS_PER_PAGE,
-            ...$people,
+            'stationTable' => $stationTable,
+            'stationLinks' => $this->pager->links($request, $stationTable),
+            'leads' => $leads,
+            'people' => $peopleTable->slice($found),
+            'peopleTotal' => \count($people),
+            'peopleTable' => $peopleTable,
+            'peopleLinks' => $this->pager->links($request, $peopleTable, self::PEOPLE_PAGE, self::PEOPLE_PER),
+            'peopleStations' => \count(array_unique(array_map(static fn (PostingRow $person): string => $person->stationUuid, $found))),
+            'ask' => $ask,
+            'stationOptions' => self::stationOptions($people, $names),
+            'positionOptions' => self::positionOptions($people),
+            'stationNames' => $names,
+            'log' => $logTable->slice($log),
+            'logTable' => $logTable,
+            'logLinks' => $this->pager->links($request, $logTable, self::LOG_PAGE, self::LOG_PER),
             'covered' => $figures->covered((string) $zone->getUuidString()),
             'figures' => $this->moduleFacts($figures, (string) $zone->getUuidString()),
-            // THE BAND'S UNIT IS THE PERIOD — one short word under each
-            // module's figure, where the figure's own caption is a
-            // sentence and a sentence is what made the band four rows.
             'period' => $figures->period,
-            /*
-             * ONE DOOR A MODULE, and every module that published
-             * anything about this ground gets one — including the one
-             * whose only figure is the covered share, which the band
-             * states on its own. The header used to repeat a module's
-             * name once per figure.
-             */
+            'month' => $figures->period->from->format('F'),
             'moduleDoors' => $this->moduleDoors($figures, (string) $zone->getUuidString()),
-            'events' => $this->events->findMentioning($area, (string) $zone->getName()),
-            'lastImport' => $view->lastImport,
             /*
              * THE PLATE IS ABOUT THIS ZONE. It draws the whole area, the
-             * other zones and every post, because a zone is read against
-             * its neighbours — but opening on all of that put the zone at a
-             * quarter of the plate's width, which is a page about the park.
+             * other zones and every station, because a zone is read against
+             * its neighbours, fitted to the zone.
              */
             'map' => $this->plates->focusOn(
                 $this->plates->picker($area, $view->rows, $posts),
@@ -198,40 +198,79 @@ final readonly class ZoneRecordController
     }
 
     /**
-     * THE PEOPLE WORKING OUT OF THIS GROUND — everybody at a post inside the
-     * zone, searched by name and bounded by a page.
+     * THE PEOPLE A QUESTION LEAVES, ordered by station (the station's name,
+     * then the lead first, then by name): the order and the station chip
+     * carry the grouping, never a band row.
      *
-     * @return array{people: list<PostingRow>, peopleTotal: int, peopleMatching: int, peoplePage: int, peoplePages: int, peopleSearch: string, stationNames: array<string, string>}
+     * @param list<PostingRow>                                                   $people
+     * @param array{station: string|null, position: string|null, person: string} $ask
+     * @param array<string, string>                                              $names
+     *
+     * @return list<PostingRow>
      */
-    private function peopleOf(Zone $zone, Request $request): array
+    private static function peopleAnswering(array $people, array $ask, array $names): array
     {
-        $search = trim($request->query->getString(self::PERSON_QUERY));
-        $all = $this->board->board($this->postings->findStandingByZone($zone), new PostingQuery())['rows'];
+        $needle = mb_strtolower($ask[self::PERSON_QUERY]);
+        $found = array_values(array_filter($people, static fn (PostingRow $person): bool => (null === $ask[self::PERSON_STATION] || $person->stationUuid === $ask[self::PERSON_STATION])
+            && (null === $ask[self::PERSON_POSITION] || $person->role === $ask[self::PERSON_POSITION])
+            && ('' === $needle || str_contains(mb_strtolower($person->name.' '.($names[$person->stationUuid] ?? '')), $needle))));
 
-        $matching = '' === $search
-            ? $all
-            : array_values(array_filter(
-                $all,
-                static fn (PostingRow $person): bool => str_contains(mb_strtolower($person->name), mb_strtolower($search)),
-            ));
+        usort($found, static fn (PostingRow $a, PostingRow $b): int => strnatcasecmp($names[$a->stationUuid] ?? '', $names[$b->stationUuid] ?? '')
+            ?: $b->leader <=> $a->leader
+            ?: strnatcasecmp($a->name, $b->name));
 
-        $pages = max(1, (int) ceil(\count($matching) / self::PEOPLE_PER_PAGE));
-        $page = max(1, min($request->query->getInt(self::PEOPLE_PAGE, 1), $pages));
+        return $found;
+    }
 
-        $names = [];
-        foreach ($this->stations->findByZone($zone) as $station) {
-            $names[(string) $station->getUuidString()] = (string) $station->getName();
+    /**
+     * @param list<PostingRow>      $people
+     * @param array<string, string> $names
+     *
+     * @return list<array{value: string, label: string, count: int}>
+     */
+    private static function stationOptions(array $people, array $names): array
+    {
+        $counts = [];
+        foreach ($people as $person) {
+            $counts[$person->stationUuid] = ($counts[$person->stationUuid] ?? 0) + 1;
         }
 
-        return [
-            'people' => \array_slice($matching, ($page - 1) * self::PEOPLE_PER_PAGE, self::PEOPLE_PER_PAGE),
-            'peopleTotal' => \count($all),
-            'peopleMatching' => \count($matching),
-            'peoplePage' => $page,
-            'peoplePages' => $pages,
-            'peopleSearch' => $search,
-            'stationNames' => $names,
-        ];
+        $options = [];
+        foreach ($names as $uuid => $name) {
+            $options[] = ['value' => $uuid, 'label' => $name, 'count' => $counts[$uuid] ?? 0];
+        }
+
+        return $options;
+    }
+
+    /**
+     * @param list<PostingRow> $people
+     *
+     * @return list<array{value: string, label: string, count: int}>
+     */
+    private static function positionOptions(array $people): array
+    {
+        $counts = [];
+        foreach ($people as $person) {
+            if (null !== $person->role) {
+                $counts[$person->role] = ($counts[$person->role] ?? 0) + 1;
+            }
+        }
+        ksort($counts, \SORT_NATURAL | \SORT_FLAG_CASE);
+
+        $options = [];
+        foreach ($counts as $position => $n) {
+            $options[] = ['value' => (string) $position, 'label' => (string) $position, 'count' => $n];
+        }
+
+        return $options;
+    }
+
+    private static function answer(Request $request, string $key): ?string
+    {
+        $value = trim($request->query->getString($key));
+
+        return '' === $value ? null : $value;
     }
 
     /**

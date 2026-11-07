@@ -1,0 +1,110 @@
+{# THE STATIONS HUB · STATIONS — every station of the area, one flat table.
+
+   Design: areas/<area>/stations/stations.html.
+
+   The house bar above (four house dropdowns: zone, posted, lead, order, and
+   the search), the house table, the house foot under it. The address is the
+   question, so the Overview's banner opens `?posted=no` already chosen. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}{{ area.name }} · stations{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_index') }}">areas</a> / <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name|lower }}</a> / stations
+{% endblock %}
+
+{% block shell_page_title %}Stations{% endblock %}
+
+{% block shell_page_subtitle %}Every station in {{ area.name }}, where it stands and who is posted to it.{% endblock %}
+
+{% block shell_page_tabs %}{{ include('@Area/station/_hub_tabs.html.twig') }}{% endblock %}
+
+{% block shell_page %}
+{% set here = path('area_stations_list', {uuid: area.uuidString}) %}
+{% set q = 'Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery' %}
+{% set ctl = 'uhifadhi--area-bundle--area-query' %}
+<div class="grid">
+    <div class="c">
+        <span class="tab">Every station<span class="src">&middot;
+            {%- if register.total == register.scope %} {{ register.scope }}{% else %} {{ register.total }} of {{ register.scope }}{% endif -%}
+        </span></span>
+
+        <div class="lfilt" data-controller="{{ ctl }}" data-action="uhifadhi--shell-bundle--dropdown:choose->{{ ctl }}#chosen">
+            {{ include('@Shell/_dropdown.html.twig', {
+                name: constant(q ~ '::ZONE'), label: 'All zones', icon: 'shell:map', default: '', value: query.zone ?? '',
+                groups: [
+                    {label: null, options: [{value: '', label: 'All zones', count: register.scope}]},
+                    {label: 'Zones', options: register.zones|map(o => {value: o.value, label: o.value == constant(q ~ '::UNZONED') ? 'No zone' : o.label, count: o.count})},
+                ],
+            }, with_context: false) }}
+            {{ include('@Shell/_dropdown.html.twig', {
+                name: constant(q ~ '::POSTED'), label: 'Posted or not', icon: 'shell:user', default: '', value: query.posted ?? '',
+                groups: [
+                    {label: null, options: [{value: '', label: 'Posted or not', count: register.scope}]},
+                    {label: 'Posted', options: register.posted|map(o => {value: o.value, label: o.label, count: o.count})},
+                ],
+            }, with_context: false) }}
+            {{ include('@Shell/_dropdown.html.twig', {
+                name: constant(q ~ '::LEAD'), label: 'Led or not', icon: 'shell:chevron-up', default: '', value: query.lead ?? '',
+                groups: [
+                    {label: null, options: [{value: '', label: 'Led or not', count: register.scope}]},
+                    {label: 'Lead', options: register.lead|map(o => {value: o.value, label: o.value == 'yes' ? 'A leader appointed' : 'No leader', count: o.count})},
+                ],
+            }, with_context: false) }}
+            {{ include('@Shell/_dropdown.html.twig', {
+                name: constant(q ~ '::SORT'), label: 'Name A–Z', icon: 'shell:arrow-up-down', default: 'name', value: query.sort,
+                groups: [
+                    {label: 'Order', options: [
+                        {value: 'name', label: 'Name A–Z', count: null},
+                        {value: 'posted', label: 'Most posted', count: null},
+                        {value: 'zone', label: 'By zone', count: null},
+                    ]},
+                ],
+            }, with_context: false) }}
+
+            <form class="lsearch" method="get" action="{{ here }}">
+                {{ ux_icon('shell:search') }}
+                <input class="fld" type="search" name="q" value="{{ query.search }}" placeholder="Find a station by name or code&hellip;" aria-label="Find a station by name or code">
+                {% for k, v in query.with('q', null) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+                {% if table.size != '20' %}<input type="hidden" name="per" value="{{ table.size }}">{% endif %}
+            </form>
+        </div>
+
+        {% if register.isEmpty %}
+            <div class="zempty">
+                <b class="zeh">{{ register.scope == 0 ? 'No station in this area yet' : 'No station matches' }}</b>
+                <p class="zeb">{{ register.scope == 0 ? 'A station is a named point — a gate, a post, a camp. The first one is added in Configure.' : 'Nothing in this area answers these filters. Clear one, or search another name or code.' }}</p>
+                <span class="zea"><a class="btn sm" href="{{ register.scope == 0 ? path('area_stations_configure', {uuid: area.uuidString}) : here }}">{{ register.scope == 0 ? 'Configure stations' : 'Clear the filters' }}</a></span>
+            </div>
+        {% else %}
+            <table class="tbl">
+                <thead><tr><th>Station</th><th>Code</th><th>Zone</th><th>Point</th><th class="num">Posted</th><th>Lead</th><th></th></tr></thead>
+                <tbody>
+                {% for row in register.rows %}
+                    <tr data-station>
+                        <td><b>{{ row.name }}</b></td>
+                        <td><span class="mono d">{{ row.code ?? '—' }}</span></td>
+                        <td><span class="mono d">{{ row.zoneName ?? 'No zone' }}</span></td>
+                        <td><span class="mono d">{{ row.point ? row.point.label : '—' }}</span></td>
+                        <td class="num">{{ row.posted }}</td>
+                        <td><span class="mono d">{{ leads[row.uuid] ?? '—' }}</span></td>
+                        <td class="door"><a class="open-btn" href="{{ path('area_station_show', {uuid: area.uuidString, station: row.uuid}) }}">Open</a></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {{ include('@Shell/_foot.html.twig', {
+                count: table.total, noun: 'stations', one: 'station',
+                perPage: table.size, page: table.page, pages: table.pages, links: links,
+            }, with_context: false) }}
+        {% endif %}
+
+        <div class="sxfoot"><span>A station&rsquo;s zone is read from its point, so it follows the boundary it falls inside.</span><span class="sp"></span><a class="tgl" href="{{ path('area_stations_configure', {uuid: area.uuidString}) }}">Add a station</a></div>
+    </div>
+</div>
+{% endblock %}

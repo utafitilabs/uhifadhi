@@ -1,0 +1,7 @@
+{# THE ZONES HUB'S OWN STRIP — Overview · Zones, in place of the area's tabs:
+   one strip per page, and the hub's pages are its own. #}
+{%- set route = app.request.attributes.get('_route') -%}
+{{- include('@Shell/_area_tabs.html.twig', {tabs: [
+    {label: 'Overview', url: path('area_zones', {uuid: area.uuidString}), current: route == 'area_zones'},
+    {label: 'Zones', url: path('area_zones_list', {uuid: area.uuidString}), current: route == 'area_zones_list'},
+]}, with_context: false) -}}

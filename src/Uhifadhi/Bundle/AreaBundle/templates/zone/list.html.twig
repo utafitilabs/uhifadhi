@@ -1,0 +1,86 @@
+{# THE ZONES HUB · ZONES — every zone of the area, one flat table.
+
+   Design: areas/<area>/zones/zones.html.
+
+   The house bar above (stations or not, the order, and the search), the
+   house table, the house foot under it. The address is the question, so the
+   Overview's banner opens `?stations=none` already chosen. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}{{ area.name }} · zones{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_index') }}">areas</a> / <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name|lower }}</a> / <a href="{{ path('area_zones', {uuid: area.uuidString}) }}">zones</a> / every zone
+{% endblock %}
+
+{% block shell_page_title %}Zones{% endblock %}
+
+{% block shell_page_subtitle %}Every zone in {{ area.name }}, its ground and what was worked in it in {{ zones.period }}.{% endblock %}
+
+{% block shell_page_actions %}
+    <a class="tgl w-act" href="{{ path('area_stations', {uuid: area.uuidString}) }}">Stations on the area</a>
+{% endblock %}
+
+{% block shell_page_tabs %}{{ include('@Area/zone/_hub_tabs.html.twig') }}{% endblock %}
+
+{% block shell_page %}
+{% set here = path('area_zones_list', {uuid: area.uuidString}) %}
+{% set q = 'Uhifadhi\\Bundle\\AreaBundle\\Model\\ZoneListQuery' %}
+{% set ctl = 'uhifadhi--area-bundle--area-query' %}
+<div class="grid">
+    <div class="c">
+        <span class="tab">Every zone<span class="src">&middot;
+            {%- if zones.total == zones.scope %} {{ zones.scope }}{% else %} {{ zones.total }} of {{ zones.scope }}{% endif %} &middot; {{ zones.period }}
+        </span></span>
+
+        <div class="lfilt" data-controller="{{ ctl }}" data-action="uhifadhi--shell-bundle--dropdown:choose->{{ ctl }}#chosen">
+            {{ include('@Shell/_dropdown.html.twig', {
+                name: constant(q ~ '::STATIONS'), label: 'Stations or not', icon: 'shell:map-pin', default: '', value: query.stations ?? '',
+                groups: [
+                    {label: null, options: [{value: '', label: 'Stations or not', count: zones.scope}]},
+                    {label: 'Stations', options: zones.stations|map(o => {value: o.value, label: o.label, count: o.count})},
+                ],
+            }, with_context: false) }}
+            {{ include('@Shell/_dropdown.html.twig', {
+                name: constant(q ~ '::SORT'), label: 'Name A–Z', icon: 'shell:arrow-up-down', default: 'name', value: query.sort,
+                groups: [
+                    {label: 'Order', options: [
+                        {value: 'name', label: 'Name A–Z', count: null},
+                        {value: 'extent', label: 'Largest first', count: null},
+                        {value: 'covered', label: 'Most covered', count: null},
+                        {value: 'stations', label: 'Most stations', count: null},
+                    ]},
+                ],
+            }, with_context: false) }}
+
+            <form class="lsearch" method="get" action="{{ here }}">
+                {{ ux_icon('shell:search') }}
+                <input class="fld" type="search" name="{{ constant(q ~ '::SEARCH') }}" value="{{ query.search }}" placeholder="Find a zone by name&hellip;" aria-label="Find a zone by name">
+                {% for k, v in query.with(constant(q ~ '::SEARCH'), null) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+                {% if table.size != '20' %}<input type="hidden" name="per" value="{{ table.size }}">{% endif %}
+            </form>
+        </div>
+
+        {% if zones.isEmpty or zones.rows is empty %}
+            <div class="zempty">
+                <b class="zeh">{{ zones.isEmpty ? 'No zone in this area yet' : 'No zone matches' }}</b>
+                <p class="zeb">{{ zones.isEmpty ? 'Import one GeoJSON of the area’s zones from Configure; until then every station is unzoned.' : 'No zone in ' ~ area.name ~ ' answers these filters. Clear one, or search another name.' }}</p>
+                <span class="zea"><a class="btn sm" href="{{ zones.isEmpty ? path('area_zones_configure', {uuid: area.uuidString}) : here }}">{{ zones.isEmpty ? 'Configure zones' : 'Clear the filters' }}</a></span>
+            </div>
+        {% else %}
+            {{ include('@Area/zone/_list.html.twig', {rows: zones.rows, area: area, columns: zones.columns}, with_context: false) }}
+            {{ include('@Shell/_foot.html.twig', {
+                count: table.total, noun: 'zones', one: 'zone',
+                perPage: table.size, page: table.page, pages: table.pages, links: links,
+            }, with_context: false) }}
+        {% endif %}
+
+        <div class="sxfoot"><span>{{ unzonedKm2|number_format }} km&sup2; of {{ area.name }} lies in no zone; a stretch nobody works may belong to none.</span><span class="sp"></span><a class="tgl" href="{{ path('area_zones_configure', {uuid: area.uuidString}) }}">Import zones</a></div>
+    </div>
+</div>
+{% endblock %}

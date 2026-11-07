@@ -43,6 +43,7 @@ final class SurveyKpiProvider implements DepartmentKpiProviderInterface
                 moduleName: 'Surveys',
                 value: 88.0,
                 previous: 79.0,
+                spark: [64.0, 71.0, 79.0, 88.0],
                 caption: 'Surveys module',
             ),
             new DepartmentKpi(

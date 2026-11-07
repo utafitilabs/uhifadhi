@@ -70,23 +70,37 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
     }
 
     /**
-     * THE PERIOD IS IN THE ADDRESS, as three segments — so a reader who
-     * wants this quarter does not open a menu, and the page they are
-     * looking at can be sent to somebody.
+     * THE HEAD'S THREE CONTROLS ARE THE HOUSE DROPDOWN — scope, period and
+     * what the period is read against — and every option is an address, so
+     * the page a reader is looking at can be sent to somebody.
      */
-    public function testThePeriodIsASegmentedGroupOfAddresses(): void
+    public function testTheHeadCarriesScopePeriodAndComparisonOnTheHouseDropdown(): void
     {
         $crawler = $this->page();
 
         self::assertSame(
-            ['Month', 'Quarter', 'Year'],
-            $crawler->filter('.periodpick a')->each(static fn (Crawler $c): string => $c->text()),
+            ['scope', 'period', 'compare'],
+            $crawler->filter('.pgact .dp-link .dd')->each(static fn (Crawler $c): string => (string) $c->attr('data-dd')),
         );
-        self::assertSame('Month', $crawler->filter('.periodpick a.on')->text());
+        self::assertCount(0, $crawler->filter('.pgact .ov-ctl'));
+        self::assertCount(0, $crawler->filter('.pgact .periodpick'));
+
+        $period = $crawler->filter('.pgact .dd[data-dd="period"]');
+        $month = new \DateTimeImmutable()->format('F Y');
+        self::assertSame($month, $period->filter('.dd-v')->text());
+        self::assertSame(['period', 'Spans'], $period->filter('.dd-h > span:first-child')->each(static fn (Crawler $c): string => $c->text()));
+        self::assertSame(['month', 'quarter', 'year'], $period->filter('.dd-o')->each(static fn (Crawler $c): string => (string) $c->attr('data-value')));
+
+        $compare = $crawler->filter('.pgact .dd[data-dd="compare"]');
+        self::assertSame('Against '.new \DateTimeImmutable('first day of last month')->format('F Y'), $compare->filter('.dd-v')->text());
+
+        $urls = json_decode((string) $period->closest('.dp-link')?->attr('data-uhifadhi--team-bundle--choice-link-urls-value'), true);
+        self::assertSame('/departments/performance?period=quarter&compare=previous', ((array) $urls)['quarter']);
 
         $quarter = $this->client->request('GET', '/departments/performance?period=quarter');
 
-        self::assertSame('Quarter', $quarter->filter('.periodpick a.on')->text());
+        self::assertCount(1, $quarter->filter('.pgact .dd.dd-set[data-dd="period"]'));
+        self::assertSame('quarter', $quarter->filter('.pgact .dd[data-dd="period"]')->attr('data-dd-value'));
         self::assertStringContainsString('Quarter', $quarter->filter('p.pgsub')->text());
     }
 
@@ -98,7 +112,7 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/departments/performance?period=fortnight');
 
         self::assertResponseIsSuccessful();
-        self::assertSame('Month', $crawler->filter('.periodpick a.on')->text());
+        self::assertSame('month', $crawler->filter('.pgact .dd[data-dd="period"]')->attr('data-dd-value'));
     }
 
     /** The scope is a place too: the organization, or one area, by address. */
@@ -106,14 +120,16 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
     {
         $crawler = $this->page();
 
-        $options = $crawler->filter('.i-ddmenu .i-ddopt-l')->each(static fn (Crawler $c): string => $c->text());
+        $options = $crawler->filter('.pgact .dd[data-dd="scope"] .dd-o')->each(static fn (Crawler $c): string => (string) $c->attr('data-label'));
 
+        self::assertSame('Organization — all areas', $options[0]);
         self::assertContains('Northern Reserve', $options);
 
         $area = $this->client->request('GET', '/departments/performance?area='.$this->north->getUuidString());
 
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Northern Reserve', $area->filter('p.pgsub')->text());
+        self::assertSame('Northern Reserve', $area->filter('.pgact .dd[data-dd="scope"] .dd-v')->text());
     }
 
     /**
@@ -279,7 +295,7 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
         $record = $this->client->request('GET', $href);
 
         self::assertResponseIsSuccessful();
-        self::assertSame('Quarter', $record->filter('.periodpick a.on')->text());
+        self::assertSame('quarter', $record->filter('.pgact .dd[data-dd="period"]')->attr('data-dd-value'));
     }
 
     /**
@@ -293,11 +309,18 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/departments/performance/topics/staffing');
 
         self::assertResponseIsSuccessful();
-        self::assertSame('Staffing', $crawler->filter('.tphead .t')->text());
-        self::assertSame('the host', $crawler->filter('.tphead .by')->text());
+        self::assertSame('Staffing', trim($crawler->filter('h1.pg')->text()), 'the page head names the topic');
+        self::assertCount(0, $crawler->filter('.tphead .t'), 'and the line under it names who publishes it');
+        self::assertSame('by', $crawler->filter('.tphead > span')->first()->attr('class'));
+        self::assertSame('Built in', $crawler->filter('.tphead .by')->text());
+        self::assertCount(0, $crawler->filter('.factband'), 'a topic page carries its own figures, not the hub\'s strip');
+        self::assertCount(1, $crawler->filter('.tpk'));
         self::assertCount(4, $crawler->filter('.tpk .c.kpi'), 'exactly four, or a reader cannot tell a short row from a quiet month');
         self::assertCount(1, $crawler->filter('#tp-matrix.pfc'));
         self::assertGreaterThan(0, $crawler->filter('#tp-matrix .legend')->count());
+        self::assertCount(1, $crawler->filter('#tp-matrix .lfilt details.i-dd[data-axis="scope"]'));
+        self::assertCount(1, $crawler->filter('#tp-matrix .rdf-foot'));
+        self::assertSame(['scope', 'period', 'compare'], $crawler->filter('.pgact .dd.dd-sm')->each(static fn (Crawler $c): string => (string) $c->attr('data-dd')), 'the head dropdowns take the compact trigger');
     }
 
     /**
@@ -340,12 +363,11 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
     }
 
     /**
-     * THE BRIEFING ADDS UP NOTHING OF ITS OWN: the band is the Goals
-     * topic's five figures, "what changed" is one line per topic that
-     * can write one, and the ledger is the Goals matrix in the one
-     * grammar every matrix is drawn in.
+     * THE BRIEFING ADDS UP NOTHING OF ITS OWN, AND CARRIES NO STRIP: what
+     * needs a decision is the banner above the page, then the index and its
+     * two cards, the goals and what changed, one column at full width.
      */
-    public function testTheBriefingReadsTheGoalsFiguresTheMovementsAndTheLedger(): void
+    public function testTheBriefingIsTheBannerTheIndexAndTwoCards(): void
     {
         $this->seed();
 
@@ -353,41 +375,33 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
 
         self::assertResponseIsSuccessful();
         self::assertSame('Briefing', $crawler->filter('.atabs a.on')->text());
+        self::assertCount(0, $crawler->filter('.factband'));
+        self::assertCount(0, $crawler->filter('h2.zone'));
+        self::assertCount(0, $crawler->filter('.grid.spinerow-eq'));
 
-        // The band is the goals topic's own, by the keys it published them under.
-        $band = $crawler->filter('.factband .f .k')->each(static fn (Crawler $c): string => $c->text());
-        self::assertContains('Declared', $band);
-        self::assertContains('Met', $band);
-
-        // THE LEDGER LEADS, then the two readings of it side by side —
-        // a director opens this page to see where the goals stand.
-        self::assertSame(['Goals declared', 'What changed, and what to decide'], $crawler->filter('h2.zone')->each(
-            static fn (Crawler $c): string => $c->text(),
-        ));
-        self::assertCount(1, $crawler->filter('#tp-ledger.pfc'));
-        self::assertCount(2, $crawler->filter('.grid.spinerow-eq > .pfc'), 'two cards of equal height, neither leading');
+        self::assertSame(['Goals', 'What changed'], $crawler->filter('.onpage-nav .onpage-l')->each(static fn (Crawler $c): string => $c->text()));
+        self::assertSame(['#tp-ledger', '#changed'], $crawler->filter('.onpage-nav a.onpage-row')->each(static fn (Crawler $c): string => (string) $c->attr('href')));
+        self::assertSame(['tp-ledger', 'changed'], $crawler->filter('.onpage-main > .pfc')->each(static fn (Crawler $c): string => (string) $c->attr('id')));
+        self::assertSame('Goals', $crawler->filter('#tp-ledger .pfc-hd .t')->text());
+        self::assertCount(1, $crawler->filter('#tp-ledger .lfilt details.i-dd[data-axis="scope"]'), 'the Goals table wears the house bar');
+        self::assertCount(1, $crawler->filter('#tp-ledger .lfilt .lsearch'));
+        self::assertCount(1, $crawler->filter('#tp-ledger .rdf-foot'), 'and the foot');
+        self::assertSame('What changed', $crawler->filter('#changed .pfc-hd .t')->text());
     }
 
     /**
-     * A DECISION STATES WHAT IS WRONG AND WHAT IS BEING ASKED, in the
-     * topic's own words, against the department it belongs to — and
-     * the card says how many there are in all.
+     * WHAT NEEDS A DECISION IS THE BANNER ABOVE THE PAGE, never a card — and a
+     * period with nothing to decide draws no banner at all. (The banner's
+     * lines: AttentionBannerTest.).
      */
-    public function testTheDecisionsCardNamesTheDepartmentAndTheAsk(): void
+    public function testWhatNeedsADecisionIsTheBannerAndNeverACard(): void
     {
         $this->seed();
 
         $crawler = $this->client->request('GET', '/departments/performance/briefing');
-        $card = $crawler->filter('.grid.spinerow-eq > .pfc')->eq(1);
 
-        self::assertSame('Needs a decision', $card->filter('.pfc-hd .t')->text());
-        self::assertMatchesRegularExpression('/^\d+ of \d+$/', $card->filter('.pfc-hd .n')->text());
-
-        $rows = $card->filter('.mvrow.dcn');
-        if ($rows->count() > 0) {
-            self::assertNotSame('', $rows->first()->filter('.mk')->text(), 'a decision names whose it is');
-            self::assertNotSame('', $rows->first()->filter('.l .ask')->text(), 'and what is being asked');
-        }
+        self::assertCount(0, $crawler->filter('.pfc .mvrow.dcn'), 'no decisions card');
+        self::assertCount(0, $crawler->filter('.banner'), 'nothing in the seed waits on a decision');
     }
 
     /**
@@ -413,24 +427,21 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
     }
 
     /**
-     * THE SAME SIX ON EVERY SCREEN of the section, picked by key from
-     * the host's own three topics — a band assembled from whatever a
-     * module happened to publish would be a different band per
-     * installation.
+     * THE ORGANIZATION'S SIX ARE THE OVERVIEW'S STRIP, picked by key from the
+     * host's own three topics — a band assembled from whatever a module
+     * happened to publish would be a different band per installation. A
+     * topic page carries its own figures and no strip (ruled 7 Nov).
      */
-    public function testTheOrganizationsBandIsTheSameSixOnEveryScreen(): void
+    public function testTheOrganizationsBandIsTheOverviewsAlone(): void
     {
         $this->seed();
 
-        $expected = array_values(OrganizationBand::FIGURES);
+        $band = $this->client->request('GET', '/departments/performance')
+            ->filter('.factband .f .k')
+            ->each(static fn (Crawler $c): string => $c->text());
 
-        foreach (['/departments/performance', '/departments/performance/topics/staffing'] as $path) {
-            $band = $this->client->request('GET', $path)
-                ->filter('.factband .f .k')
-                ->each(static fn (Crawler $c): string => $c->text());
-
-            self::assertSame($expected, $band, $path.' draws the organization\'s own band');
-        }
+        self::assertSame(array_values(OrganizationBand::FIGURES), $band);
+        self::assertCount(0, $this->client->request('GET', '/departments/performance/topics/staffing')->filter('.factband'));
     }
 
     /**

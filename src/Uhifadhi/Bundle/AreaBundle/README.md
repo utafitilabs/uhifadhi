@@ -491,8 +491,13 @@ remove.
 | One area's overview | `area_show` · `/areas/{uuid}` | `areas.read` |
 | Its module grid | `area_modules` · `/areas/{uuid}/modules` | `modules.read` |
 | Its Modules configure section | `area_modules_configure` · `/areas/{uuid}/configure/modules` | `modules.configure` |
-| Its zones | `area_zones` · `/areas/{uuid}/zones` | `zones.read` |
-| Its stations | `area_stations` · `/areas/{uuid}/stations` | `stations.read` |
+| Its zones hub · Overview | `area_zones` · `/areas/{uuid}/zones` | `zones.read` |
+| Its zones hub · Zones, the register | `area_zones_list` · `/areas/{uuid}/zones/list?stations=&sort=&q=&page=&per=` | `zones.read` |
+| One zone, its record | `area_zone_show` · `/areas/{uuid}/zones/{zone}?q=&page=&per=&station=&position=&person=&ppage=&pper=&lpage=&lper=` | `zones.read` |
+| Its stations hub · Overview | `area_stations` · `/areas/{uuid}/stations` | `stations.read` |
+| Its stations hub · Stations, the register | `area_stations_list` · `/areas/{uuid}/stations/list?zone=&posted=&lead=&sort=&q=&page=&per=` | `stations.read` |
+| Its stations hub · Postings | `area_stations_postings` · `/areas/{uuid}/stations/postings?zone=&station=&position=&q=&page=&per=` | `stations.read` |
+| One station, its record | `area_station_show` · `/areas/{uuid}/stations/{station}?role=&dept=&src=&sort=&q=&page=&per=&lpage=&lper=` | `stations.read` |
 | Edit its identity or boundary | `area_edit` · `GET,POST /areas/{uuid}/edit` | `areas.configure` |
 
 Two POST addresses sit under the Modules section and carry the same

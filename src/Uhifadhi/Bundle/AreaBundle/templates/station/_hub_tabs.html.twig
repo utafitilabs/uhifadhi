@@ -1,0 +1,8 @@
+{# THE STATIONS HUB'S OWN STRIP — Overview · Stations · Postings, in place of
+   the area's tabs: one strip per page, and the hub's pages are its own. #}
+{%- set route = app.request.attributes.get('_route') -%}
+{{- include('@Shell/_area_tabs.html.twig', {tabs: [
+    {label: 'Overview', url: path('area_stations', {uuid: area.uuidString}), current: route == 'area_stations'},
+    {label: 'Stations', url: path('area_stations_list', {uuid: area.uuidString}), current: route == 'area_stations_list'},
+    {label: 'Postings', url: path('area_stations_postings', {uuid: area.uuidString}), current: route == 'area_stations_postings'},
+]}, with_context: false) -}}

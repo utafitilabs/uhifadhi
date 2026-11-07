@@ -1,0 +1,15 @@
+{# A MODULE PAGE WITH REGISTER FEET: each drawn by the shell from the data it
+   is handed, under a house table. The page writes nothing of their markup. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}a page with feet{% endblock %}
+{% block shell_page_title %}a page with feet{% endblock %}
+
+{% block shell_page %}
+    {% for foot in feet %}
+        <div class="c" data-table="{{ loop.index }}">
+            <table class="tbl"><tbody><tr><td>a row<span class="sub">its sub-line</span></td><td class="door"><a class="more" href="/x">Open &rarr;</a></td></tr></tbody></table>
+            {% include '@Shell/_foot.html.twig' with foot only %}
+        </div>
+    {% endfor %}
+{% endblock %}

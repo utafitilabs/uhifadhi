@@ -47,13 +47,13 @@ final class PostingDoorTest extends WebTestCase
 
         $body = $this->body($this->record($area, $station));
 
-        self::assertStringContainsString('Nobody is stationed here', $body);
+        self::assertStringContainsString('Nobody is posted here', $body);
         self::assertStringContainsString(
             '/areas/'.$area->getUuidString().'/configure/stations?open='.$station->getUuidString(),
             $body,
             'The empty state opens the configure page on this very station.',
         );
-        self::assertStringContainsString('Station somebody', $body);
+        self::assertStringContainsString('Post someone', $body);
     }
 
     /**
@@ -72,8 +72,8 @@ final class PostingDoorTest extends WebTestCase
 
         $body = $this->body($this->record($area, $station));
 
-        self::assertStringContainsString('Nobody is stationed here', $body, 'The page still reads.');
-        self::assertStringNotContainsString('Station somebody', $body);
+        self::assertStringContainsString('Nobody is posted here', $body, 'The page still reads.');
+        self::assertStringNotContainsString('Post someone', $body);
     }
 
     /** And the fragment states the fact rather than lecturing about it. */

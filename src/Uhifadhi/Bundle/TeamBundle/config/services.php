@@ -81,7 +81,6 @@ use Uhifadhi\Bundle\TeamBundle\People\TeamPersonFacets;
 use Uhifadhi\Bundle\TeamBundle\People\TeamRankLadder;
 use Uhifadhi\Bundle\TeamBundle\Performance\AcrossTopicsMatrix;
 use Uhifadhi\Bundle\TeamBundle\Performance\AttentionTopic;
-use Uhifadhi\Bundle\TeamBundle\Performance\DepartmentsBand;
 use Uhifadhi\Bundle\TeamBundle\Performance\GoalsTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixViewBuilder;
@@ -134,6 +133,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\DepartmentKindService;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentRecordService;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentSectionOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\FieldSignIn;
@@ -986,14 +986,6 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.performance.organization_band', OrganizationBand::class);
     $services->alias(OrganizationBand::class, 'team.performance.organization_band');
 
-    /*
-     * AND THE REGISTER'S OWN BAND — what the departments DID rather than
-     * how many of them there are, read from the same seam so a figure
-     * there and the same figure on the performance page cannot disagree.
-     */
-    $services->set('team.performance.departments_band', DepartmentsBand::class);
-    $services->alias(DepartmentsBand::class, 'team.performance.departments_band');
-
     $services->set('team.performance.across_topics', AcrossTopicsMatrix::class);
     $services->alias(AcrossTopicsMatrix::class, 'team.performance.across_topics');
 
@@ -1108,6 +1100,14 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.department_membership', DepartmentMembership::class)
         ->args([service(UserRepository::class)]);
     $services->alias(DepartmentMembership::class, 'team.department_membership');
+
+    $services->set('team.department_record', DepartmentRecordService::class)
+        ->args([
+            service(UserRepository::class),
+            service('registry.catalogue'),
+            service(DepartmentGoalRepository::class),
+        ]);
+    $services->alias(DepartmentRecordService::class, 'team.department_record');
 
     $services->set('team.staffing_figures', StaffingFigures::class)
         ->args([
@@ -1583,10 +1583,10 @@ return static function (ContainerConfigurator $container): void {
             service('team.area_authority'),
             service('registry.catalogue'),
             service('team.department_performance'),
-            service('team.performance_topics'),
-            service('team.performance.departments_band'),
             service('team.department_palette'),
             service('team.department_reach'),
+            service('team.department_record'),
+            service('shell.table_page'),
             service(CurrentPeriodInterface::class)->nullOnInvalid(),
             service('team.deletion_page'),
         ])
@@ -1928,6 +1928,9 @@ return static function (ContainerConfigurator $container): void {
             service('registry.catalogue'),
             service('team.department_palette'),
             service('team.department_reach'),
+            service('shell.table_page'),
+            service('team.department_record'),
+            service(CurrentPeriodInterface::class)->nullOnInvalid(),
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaDepartmentController::class, 'team.controller.area_department')->public();

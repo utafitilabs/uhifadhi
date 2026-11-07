@@ -19,7 +19,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneRecordController;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
+use Uhifadhi\Bundle\AreaBundle\Entity\ZoneEvent;
 use Uhifadhi\Bundle\AreaBundle\Enum\PostingSource;
+use Uhifadhi\Bundle\AreaBundle\Enum\ZoneEventKind;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\ChattyFigureProvider;
@@ -62,6 +64,46 @@ final class ZoneRecordTest extends WebTestCase
         self::assertStringNotContainsString('class="c kpi"', $body);
     }
 
+    /**
+     * THE RECORD'S SHAPE (design: areas/<area>/zones/detail.html): the facts
+     * strip as its own overview, the index one row a card, the cards in one
+     * column, every table the house table under its bar and over its foot,
+     * and no band rows — the station is a column of the postings.
+     */
+    public function testTheRecordIsTheStripTheIndexAndOneColumnOfHouseTables(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $zone] = $this->aWorkedZone();
+        $this->em->persist(new ZoneEvent()
+            ->setArea($area)
+            ->setKind(ZoneEventKind::Renamed)
+            ->setHeadline('Renamed to Western Sector')
+            ->setDetail('no record moved')
+            ->setOccurredAt(new \DateTimeImmutable('2026-09-18 07:42')));
+        $this->em->flush();
+
+        $body = $this->body($this->record($area, $zone));
+
+        self::assertStringContainsString('class="factband ov-band"', $body);
+        foreach (['Extent', 'Covered', 'Stations', 'Posted'] as $field) {
+            self::assertStringContainsString('<span class="k">'.$field.'</span>', $body);
+        }
+        self::assertStringContainsString('Zone in Northern Conservation Reserve &middot; 1 station, 1 posted', $body);
+        preg_match_all('#<a class="onpage-row" href="\#([a-z]+)"[^>]*>.*?<span class="onpage-l">([^<]+)</span>#', $body, $rows);
+        self::assertSame(['ground', 'stations', 'posted', 'log'], $rows[1]);
+        self::assertSame(['The ground', 'Its stations', 'Who works out of it', 'What happened here'], $rows[2]);
+        self::assertStringNotContainsString('recgrid', $body, 'One column: no side column.');
+        self::assertSame(3, substr_count($body, '<table class="tbl"'));
+        self::assertSame(3, substr_count($body, 'class="rdf-foot"'));
+        self::assertStringNotContainsString('sxgrp', $body);
+        self::assertMatchesRegularExpression('#<thead><tr><th>Station</th><th>Code</th><th>Point</th><th class="num">Posted</th><th>Lead</th><th></th></tr></thead>#', $body);
+        self::assertMatchesRegularExpression('#<thead><tr><th>Station</th><th>Person</th><th>Position</th><th>Department</th><th></th></tr></thead>#', $body);
+        self::assertMatchesRegularExpression('#<td><span class="chip">Eastgate Post</span></td><td><b>J\. Mollel</b> <span class="chip ok">leads</span>#', $body);
+        self::assertMatchesRegularExpression('#<thead><tr><th>What happened</th><th>When</th></tr></thead>#', $body);
+        self::assertStringContainsString('--map-plate-height:min(58vh, 560px)', $body);
+    }
+
     /** The way back is the set it belongs to. */
     public function testTheBandLeadsBackToTheWholeSet(): void
     {
@@ -70,7 +112,7 @@ final class ZoneRecordTest extends WebTestCase
         [$area, $zone] = $this->aWorkedZone();
 
         self::assertStringContainsString(
-            '/areas/'.$area->getUuidString().'/zones"',
+            '/areas/'.$area->getUuidString().'/zones/list">Every zone &rarr;</a>',
             $this->body($this->record($area, $zone)),
         );
     }
@@ -130,7 +172,7 @@ final class ZoneRecordTest extends WebTestCase
         $this->signIn();
         [$area, $zone] = $this->aZoneWithAModuleOn();
 
-        $units = $this->page($this->record($area, $zone))->filter('.factband .f .v em')
+        $units = $this->page($this->record($area, $zone))->filter('.factband .f[data-module] .v em')
             ->each(static fn (Crawler $c): string => trim($c->text()));
 
         foreach ($units as $unit) {
@@ -166,7 +208,7 @@ final class ZoneRecordTest extends WebTestCase
 
         $body = $this->body($this->record($area, $zone));
 
-        self::assertStringContainsString('No station in Eastern Sector', $body);
+        self::assertStringContainsString('No station stands in Eastern Sector', $body);
         self::assertStringContainsString('Nobody works out of Eastern Sector', $body);
     }
 
@@ -229,7 +271,7 @@ final class ZoneRecordTest extends WebTestCase
     /** @return list<string> */
     private function listed(string $url): array
     {
-        preg_match_all('#<td class="zname">.*?<b>([^<]+)</b>#s', $this->body($url), $found);
+        preg_match_all('#<tr data-station><td><b>([^<]+)</b>#', $this->body($url), $found);
 
         return array_map(trim(...), $found[1]);
     }

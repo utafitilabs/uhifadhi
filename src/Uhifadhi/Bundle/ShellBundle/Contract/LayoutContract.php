@@ -72,6 +72,8 @@ final class LayoutContract
         // embedded, not included: the index and the page's sections share one grid
         '@Shell/_onpage.html.twig',
         '@Shell/_dropdown.html.twig',
+        '@Shell/_banner.html.twig',
+        '@Shell/_foot.html.twig',
     ];
 
     /**

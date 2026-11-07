@@ -16,25 +16,19 @@ namespace Uhifadhi\Bundle\AreaBundle\Model;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * WHAT THE ZONES TABLE IS ASKED FOR — the order, whether a zone has posts on
- * it, and a name.
- *
- * ITS OWN KEYS, BECAUSE THE PAGE HOLDS THREE LISTS. The zones table, the
- * stations table and the people list are all on the zones tab, and two of
- * them searching under `q` would mean typing in one filtered the other. The
- * order and the stations answer keep the design's own names — nothing else
- * on the page claims them — and the two that would collide are spelt for
- * this list.
+ * WHAT THE ZONES REGISTER IS ASKED FOR — the order, whether a zone has a
+ * station on it, and a name, under the house keys (`sort`, `stations`, `q`,
+ * `page`): the register is the only list on its page.
  *
  * THE ADDRESS IS THE STATE, as everywhere else: every option is a link, so a
  * filtered table can be sent to somebody and a browser can go back to it.
  */
 final readonly class ZoneListQuery
 {
-    public const string ORDER = 'order';
+    public const string SORT = 'sort';
     public const string STATIONS = 'stations';
-    public const string SEARCH = 'zq';
-    public const string PAGE = 'zpage';
+    public const string SEARCH = 'q';
+    public const string PAGE = 'page';
 
     /** The four orders the design offers. Name is the resting one. */
     public const string BY_NAME = 'name';
@@ -49,7 +43,7 @@ final readonly class ZoneListQuery
     public const array ANSWERS = [self::WITH, self::WITHOUT];
 
     public function __construct(
-        public string $order = self::BY_NAME,
+        public string $sort = self::BY_NAME,
         public ?string $stations = null,
         public string $search = '',
         public int $page = 1,
@@ -58,11 +52,11 @@ final readonly class ZoneListQuery
 
     public static function from(Request $request): self
     {
-        $order = $request->query->getString(self::ORDER);
+        $sort = $request->query->getString(self::SORT);
         $stations = trim($request->query->getString(self::STATIONS));
 
         return new self(
-            \in_array($order, self::ORDERS, true) ? $order : self::BY_NAME,
+            \in_array($sort, self::ORDERS, true) ? $sort : self::BY_NAME,
             \in_array($stations, self::ANSWERS, true) ? $stations : null,
             trim($request->query->getString(self::SEARCH)),
             max(1, $request->query->getInt(self::PAGE, 1)),
@@ -72,7 +66,7 @@ final readonly class ZoneListQuery
     /** Whether anything but the resting state is asked for. */
     public function isFiltered(): bool
     {
-        return self::BY_NAME !== $this->order
+        return self::BY_NAME !== $this->sort
             || null !== $this->stations
             || '' !== $this->search;
     }
@@ -88,7 +82,7 @@ final readonly class ZoneListQuery
         $params = array_filter([
             // THE RESTING ORDER IS NOT IN THE ADDRESS, so an untouched table
             // has a clean link.
-            self::ORDER => self::BY_NAME === $this->order ? null : $this->order,
+            self::SORT => self::BY_NAME === $this->sort ? null : $this->sort,
             self::STATIONS => $this->stations,
             self::SEARCH => '' === $this->search ? null : $this->search,
             // CHANGING A FILTER GOES BACK TO PAGE ONE; a link to a page sets

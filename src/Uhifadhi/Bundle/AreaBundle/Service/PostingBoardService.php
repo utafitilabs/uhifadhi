@@ -173,9 +173,12 @@ final readonly class PostingBoardService
             return $a->leader ? -1 : 1;
         }
 
-        return PostingQuery::BY_SINCE === $sort
-            ? $a->since <=> $b->since
-            : strcasecmp($a->name, $b->name);
+        return match ($sort) {
+            PostingQuery::BY_SINCE => $a->since <=> $b->since,
+            PostingQuery::BY_NEWEST => $b->since <=> $a->since,
+            PostingQuery::BY_ROLE => strcasecmp($a->role ?? "\u{10FFFF}", $b->role ?? "\u{10FFFF}") ?: strcasecmp($a->name, $b->name),
+            default => strcasecmp($a->name, $b->name),
+        };
     }
 
     /** @param list<PostingRow> $rows */

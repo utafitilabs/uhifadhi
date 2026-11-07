@@ -71,67 +71,69 @@ final class AreaDepartmentsTest extends WebTestCaseWithSchema
     }
 
     /** The band says how many read this area, and how they divide. */
-    public function testTheBandCountsWhatReadsThisArea(): void
+    /**
+     * A LIST TAB CARRIES NO STRIP: the area's identity lives on its
+     * Overview. The list wears the house filter bar above it and the
+     * register foot under it, which says how many are listed.
+     */
+    public function testTheTabHasNoStripAndWearsTheBarAndTheFoot(): void
     {
-        $band = $this->tab()->filter('.factband')->text();
+        $crawler = $this->tab();
 
-        self::assertStringContainsString('Departments', $band);
-        self::assertStringContainsString('1 of this area, 1 org-wide', $band);
+        self::assertCount(0, $crawler->filter('.factband'));
+        self::assertCount(0, $crawler->filter('.dpfind .cnt'));
+        self::assertSame(['kind'], $crawler->filter('.lfilt details.i-dd')->each(static fn (Crawler $c): string => (string) $c->attr('data-axis')));
+        self::assertSame('all · 2', trim($crawler->filter('.lfilt details.i-dd .i-ddval')->text()));
+        self::assertCount(1, $crawler->filter('.lfilt form.lsearch input[name="q"]'));
+        self::assertStringStartsWith('2 departments', trim(preg_replace('/\s+/', ' ', $crawler->filter('.rdf-foot > span')->first()->text()) ?? ''));
     }
 
-    /**
-     * THE CELL IS TWO FACTS ABOUT THIS AREA'S OWN DEPARTMENTS: how many
-     * people, and how many positions they hold between them.
-     *
-     * IT USED TO READ "M OF N FILLED" and no longer can. A department's
-     * positions are derived from the people placed in it, so a position is
-     * on the list because somebody holds it and "filled" is true of all of
-     * them by construction — the ratio could only ever print "N of N".
-     *
-     * BOTH NUMBERS ARE COUNTED ONCE, which is the arithmetic that can still
-     * go wrong and the reason this test exists. Three people placed here
-     * hold TWO positions between them, so a cell that counted a position per
-     * holder would read 3; and the Ecologist placed across the organization
-     * belongs to Ecology, which is not this area's own, so a cell that
-     * counted every department reading the area would read 4 people.
-     */
-    public function testTheOwnPeopleCellCountsThisAreasPeopleAndTheirPositionsOnce(): void
+    /** The kind chip narrows the tab to the area's own or to the org-wide ones. */
+    public function testTheKindChipNarrowsTheTab(): void
+    {
+        $this->tab();
+        $north = $this->em->getRepository(\Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea::class)->findOneBy(['name' => 'Northern Reserve']);
+        self::assertNotNull($north);
+
+        $crawler = $this->client->request('GET', '/areas/'.$north->getUuidString().'/departments?kind=org');
+
+        self::assertSame('org-wide · 1', trim($crawler->filter('.lfilt details.i-dd .i-ddval')->text()));
+        self::assertStringContainsString('Ecology', $crawler->filter('.dcreg')->text());
+        self::assertStringNotContainsString('Wetland Management', $crawler->filter('.dcreg')->text());
+    }
+
+    /** A DEPARTMENT BEHIND ITS GOAL is the banner above the list, with its door. */
+    public function testADepartmentBehindItsGoalIsTheBanner(): void
     {
         $this->administrator();
         $north = $this->area('Northern Reserve');
-
-        $wetlands = $this->areaDepartment('Wetland Management', $north);
-        $ecology = $this->department('Ecology');
-
-        $warden = $this->position('Wetland Warden');
-        $surveyor = $this->position('Wetland Surveyor');
-        $orgWide = $this->position('Ecologist');
-
-        // A DEPARTMENT SEES THE POSITIONS ITS MEMBERS HOLD, so the two
-        // Wetland positions reach this area's own department through the
-        // three people placed in it; the Ecologist is placed org-wide and
-        // belongs to Ecology, which is not this area's own.
-        $this->place($this->person('Asha', 'Mollel')->setPosition($warden), [$north], [$wetlands]);
-        $this->place($this->person('Juma', 'Ngowi')->setPosition($warden), [$north], [$wetlands]);
-        $this->place($this->person('Neema', 'Kessy')->setPosition($surveyor), [$north], [$wetlands]);
-        $this->place($this->person('Lena', 'Sultani')->setPosition($orgWide), null, [$ecology]);
+        $south = $this->area('Southern Reserve');
+        $wetland = $this->areaDepartment('Wetland Management', $north);
+        $this->em->persist((new \Uhifadhi\Bundle\RegistryBundle\Entity\Module())->setSlug('surveys')->setName('Surveys'));
         $this->em->flush();
+        $uuid = (string) $wetland->getUuidString();
+        $token = $this->tokenFrom('/departments/'.$uuid.'/configure');
+        $this->client->request('POST', '/departments/'.$uuid.'/modules/surveys/toggle', ['_token' => $token]);
+        $this->client->request('POST', '/departments/'.$uuid.'/goals', [
+            'statement' => 'Log 100 surveys a month', 'kpiRef' => 'surveys.surveys', 'target' => '100', 'unit' => '',
+            'direction' => 'at_least', 'opensAt' => '2026-01-01', 'closesAt' => '2036-09-30', '_token' => $token,
+        ]);
 
-        $band = $this->client->request('GET', '/areas/'.$north->getUuidString().'/departments')
-            ->filter('.factband')->text();
+        $crawler = $this->client->request('GET', '/areas/'.$north->getUuidString().'/departments');
+        $banner = $crawler->filter('.banner');
 
-        self::assertStringContainsString('Own people', $band);
-        self::assertStringContainsString('3', $band);
-        self::assertStringContainsString('2 positions', $band);
-        self::assertStringNotContainsString('filled', $band, 'the ratio is gone: every derived position is held, so it could only print "N of N".');
+        self::assertCount(1, $banner);
+        self::assertSame('1 department is behind its goal', $banner->filter('.banner-t b')->text());
+        self::assertStringContainsString('Wetland Management, Log 100 surveys a month at 88 against 100', $banner->filter('.banner-c')->text());
+        self::assertSame('/departments/'.$uuid, $banner->filter('.banner-acts a')->attr('href'));
+        self::assertCount(0, $this->client->request('GET', '/areas/'.$south->getUuidString().'/departments')->filter('.banner'), 'none when nobody is behind');
     }
 
     /**
      * THE TAB WRITES NOTHING. Every control that changes a department is on
      * the configure section or the organization's register, and the tab
      * points at both: the header's way out to the whole register, and the
-     * band's way in to this area's section. (The Configure action itself is
-     * the frame's, written by the area's own configure page.).
+     * Configure door beside it to this area's section.
      */
     public function testTheTabOffersNoWriteAndPointsAtTheTwoPlacesThatDo(): void
     {
@@ -139,7 +141,7 @@ final class AreaDepartmentsTest extends WebTestCaseWithSchema
 
         self::assertCount(0, $crawler->filter('.dcard form'));
         self::assertSame('/departments', $crawler->filter('.pgact a.cta')->attr('href'));
-        self::assertStringEndsWith('/configure/departments', (string) $crawler->filter('.factband a.more')->attr('href'));
+        self::assertStringEndsWith('/configure/departments', (string) $crawler->filter('.pgact a.tgl')->attr('href'));
     }
 
     private function tab(): Crawler

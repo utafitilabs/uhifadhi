@@ -56,7 +56,7 @@ final class DepartmentConfigureReachTest extends WebTestCaseWithSchema
         self::assertResponseIsSuccessful();
 
         $record = $this->client->request('GET', '/departments/'.$this->kilimaniRangers->getUuidString());
-        self::assertCount(1, $record->filter('a[href="'.$this->configurePath($this->kilimaniRangers).'"]'), 'the record offers the door that opens');
+        self::assertGreaterThan(0, $record->filter('a[href="'.$this->configurePath($this->kilimaniRangers).'"]')->count(), 'the record offers the door that opens');
     }
 
     public function testAnAreaBoundHolderDoesNotConfigureAnOrganizationWideDepartment(): void

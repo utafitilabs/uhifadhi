@@ -121,7 +121,7 @@ final class PermissionsHubTest extends WebTestCaseWithSchema
     public function testTheBannerSaysHowManyAnswersChangedWithNoRecordedChange(): void
     {
         $this->runNow();
-        self::assertCount(0, $this->overview()->filter('.pp-drift'), 'no drift, no banner');
+        self::assertCount(0, $this->overview()->filter('.banner'), 'no drift, no banner');
 
         $this->ecology->attachModule($this->surveyModule());
         $this->em->flush();
@@ -131,11 +131,11 @@ final class PermissionsHubTest extends WebTestCaseWithSchema
         $answers = array_sum(array_map(static fn (array $l): int => \count($l['places']), $drift['lines']));
         self::assertGreaterThan(0, $answers);
 
-        $banner = $this->overview()->filter('.pp-drift');
+        $banner = $this->overview()->filter('.banner');
         self::assertCount(1, $banner);
-        self::assertSame($answers.' answers changed with no recorded change', $banner->filter('.pp-dtext b')->text());
-        self::assertSame('nothing in the history explains it', $banner->filter('.pp-dcause')->text());
-        self::assertCount(1, $banner->filter('form[method="post"][action="/team/permissions/drift/reviewed"] button.btn.sm.pp-b'));
+        self::assertSame($answers.' answers changed with no recorded change', $banner->filter('.banner-t b')->text());
+        self::assertSame('nothing in the history explains it', $banner->filter('.banner-c')->text());
+        self::assertCount(1, $banner->filter('form[method="post"][action="/team/permissions/drift/reviewed"] button.btn.sm'));
     }
 
     public function testMarkReviewedMarksTheDriftAndTheBannerSaysSo(): void
@@ -145,15 +145,15 @@ final class PermissionsHubTest extends WebTestCaseWithSchema
         $this->em->flush();
         $this->runNow();
         $page = $this->overview();
-        $token = (string) $page->filter('.pp-drift form input[name="_token"]')->attr('value');
+        $token = (string) $page->filter('.banner form input[name="_token"]')->attr('value');
 
         $this->client->request('POST', '/team/permissions/drift/reviewed', ['_token' => $token]);
         self::assertResponseRedirects('/team/permissions');
         self::assertSame(0, $this->reader(PermissionFindingsReader::class)->drift()['unreviewed']);
 
-        $banner = $this->client->followRedirect()->filter('.pp-drift');
-        self::assertStringContainsString('pp-done', (string) $banner->attr('class'));
-        self::assertStringEndsWith('unrecorded changes · marked reviewed', $banner->filter('.pp-dtext b')->text());
+        $banner = $this->client->followRedirect()->filter('.banner');
+        self::assertStringContainsString('banner-ok', (string) $banner->attr('class'));
+        self::assertStringEndsWith('unrecorded changes · marked reviewed', $banner->filter('.banner-t b')->text());
         self::assertCount(0, $banner->filter('form'), 'nothing left to mark');
     }
 
@@ -273,10 +273,10 @@ final class PermissionsHubTest extends WebTestCaseWithSchema
             self::assertCount(3, $row->filter('td'));
             self::assertSame((string) $list['count'], $row->filter('td.num')->text());
             self::assertSame($list['label'], $row->filter('td')->eq(1)->getNode(0)?->firstChild?->textContent);
-            self::assertSame($list['summary'], $row->filter('td')->eq(1)->filter('span.pp-sub')->text(), 'the items, one cut-off sub-line');
-            self::assertSame($list['summary'], $row->filter('td')->eq(1)->filter('span.pp-sub')->attr('title'));
-            self::assertSame('Analysis →', $row->filter('td.pp-door a.more')->text());
-            self::assertSame('/team/permissions/analysis#'.$list['id'], $row->filter('td.pp-door a.more')->attr('href'));
+            self::assertSame($list['summary'], $row->filter('td')->eq(1)->filter('span.sub')->text(), 'the items, one cut-off sub-line');
+            self::assertSame($list['summary'], $row->filter('td')->eq(1)->filter('span.sub')->attr('title'));
+            self::assertSame('Analysis →', $row->filter('td.door a.more')->text());
+            self::assertSame('/team/permissions/analysis#'.$list['id'], $row->filter('td.door a.more')->attr('href'));
             self::assertSame($list['alarm'] && $list['count'] > 0, 1 === $row->filter('td.num.pp-bad')->count(), $list['id']);
         }
     }
@@ -297,8 +297,8 @@ final class PermissionsHubTest extends WebTestCaseWithSchema
         self::assertCount(1, $rows);
         $change = $rows->filter('td.pp-hd');
         self::assertStringContainsString('Pendo Urio', (string) $change->getNode(0)?->firstChild?->textContent);
-        self::assertStringStartsWith('Amani Kweka · ', $change->filter('.pp-sub')->text(), 'by · when');
-        self::assertCount(1, $change->filter('.pp-sub time[datetime]'));
+        self::assertStringStartsWith('Amani Kweka · ', $change->filter('.sub')->text(), 'by · when');
+        self::assertCount(1, $change->filter('.sub time[datetime]'));
         self::assertSame(['Staff', 'Admin'], $rows->filter('td .ph-diff s, td .ph-diff i')->each(static fn (Crawler $c): string => $c->text()));
 
         $foot = $history->filter('.rdf-foot[data-pa-foot]');
@@ -355,7 +355,7 @@ final class PermissionsHubTest extends WebTestCaseWithSchema
         $page = $this->overview();
 
         self::assertStringContainsString('not computed yet', $page->filter('.factband .f')->eq(0)->text());
-        self::assertCount(0, $page->filter('.pp-drift'));
+        self::assertCount(0, $page->filter('.banner'));
         self::assertCount(7, $page->filter('table.pp-stt tbody tr'));
     }
 

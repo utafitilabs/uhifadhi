@@ -3064,6 +3064,26 @@ form.dpf > .k { flex-basis: 100%; }
    marks a real figure supports. */
 .gdots i.nofig { background: none; border: 1px solid color-mix(in srgb, rgb(var(--c-fog)) 72%, transparent); }
 
+/* ==================== THE DEPARTMENTS PAGES — the 8 Nov round ==============
+   Ported from DesignsProjects/uhifadhi-web/departments/departments-pages.css
+   and house-dropdown.css.
+   Pairs: the head trigger 12px 600 sans, 700 when set. */
+
+/* AN ADDRESS DROPDOWN'S WRAPPER carries its controller and takes no box, so
+   the dropdown sits in the row it is written in. */
+.dp-link { display: contents; }
+
+/* THE HEAD DROPDOWNS' WIDTHS. */
+.pgact .dd[data-dd="scope"] { width: 260px; }
+.pgact .dd[data-dd="period"] { width: 190px; }
+.pgact .dd[data-dd="compare"] { width: 220px; }
+.pgact .dd[data-dd="reading"] { width: 220px; }
+
+/* THE FILTER ROW — house dropdowns, the search, the count. */
+.lfilt .dp-link .dd { flex: none; width: 200px; }
+.lfilt .tm-shown { font-size: 10.5px; letter-spacing: normal; text-transform: none; }
+
+
 /* ============================================================================
    THE MEMBER RECORD'S SPLIT — a main column and a rail.
    ----------------------------------------------------------------------------
@@ -3813,42 +3833,14 @@ form.c { display: block; margin-bottom: 20px; }
 @media (prefers-reduced-motion: reduce) { .pp-busy .pp-spin { animation: none; } }
 @media (max-width: 640px) { .pp-fresh { white-space: normal; flex-wrap: wrap; } }
 
-/* THE WARN BANNER — one row above the content, only when there is something
-   to act on: an icon, the sentence (bold head, fog cause), its doors. */
-.pp-drift {
-    display: flex; align-items: center; gap: 12px; margin: 0 0 24px; padding: 8px 8px 8px 16px;
-    border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent); border-radius: 10px;
-    background: color-mix(in srgb, var(--warn) 8%, var(--p1)); font-size: 12.5px; font-weight: 400; line-height: 1.45; color: var(--tx);
-}
-.pp-drift > svg { flex: none; color: var(--warn); }
-.pp-dtext { flex: 1; min-width: 0; }
-.pp-dtext b { font-weight: 600; }
-.pp-dcause { color: var(--fog); }
-.pp-dacts { display: flex; gap: 8px; flex: none; }
-.pp-dacts form { display: contents; }
-.pp-drift.pp-done { border-color: var(--ln); background: var(--p2); color: var(--fog); }
-.pp-drift.pp-done > svg { color: var(--ok); }
-.pp-b { font-family: inherit; cursor: pointer; }
-@media (max-width: 900px) { .pp-drift { flex-wrap: wrap; } .pp-dacts { width: 100%; justify-content: flex-end; } }
-
-/* THE OVERVIEW'S PARTS — the house band, figures and plots, set in the
-   page's type pairs. */
-.factband.pp-band .f .k { font-size: 9.5px; letter-spacing: .16em; }
-.factband.pp-band .f .v { font-size: 13.5px; font-weight: 600; }
-.factband.pp-band .f .v em { font-size: 12px; font-weight: 400; margin-left: 4px; }
-.pp-kpis .kpi b { font-family: var(--font-mono); font-size: 26px; font-weight: 700; letter-spacing: normal; }
-.pp-kpis .kpi .sub { font-size: 11px; font-weight: 400; letter-spacing: normal; }
-.pp-ov .sxmore { font-size: 11px; }
-.pp-ov .sxmore a { font-size: 11px; font-weight: 700; letter-spacing: normal; }
-.pp-ov .sxmxkey { font-size: 11px; margin: 12px 0 0; }
-
 /* REPORTS — the zone head flush under the strip. */
 .atabs + h2.zone { margin-top: 0; }
 
 /* THE HOUSE TABLE — every list on these pages is the shell's table.tbl (TH
-   heads, dashed rules, no rule under the last row shown). A cell carrying two
-   facts draws the second as a muted mono sub-line under the first; the door
-   column at the right takes its natural width. */
+   heads, dashed rules, no rule under the last row shown), its sub-line .sub
+   and its door td.door the shell's. The Recent checks rows are drawn by
+   permission_check_controller.js, which still names .pp-sub and td.pp-door;
+   these two rules draw them as the shell's until it writes .sub and .door. */
 .pp-sub{display:block;margin-top:2px;font-family:var(--font-mono);font-size:11px;font-weight:400;line-height:1.4;color:var(--dim)}
 table.tbl td.pp-door{width:1%;text-align:right;white-space:nowrap}
 .pp-t{font-family:var(--font-mono);font-size:11px;font-weight:400;color:var(--dim);white-space:nowrap}
@@ -3858,7 +3850,7 @@ table.tbl:is(.pp-hist,.pq-tbl,.pq-above,.pa-grid,.pa-pow,.pa-st) tbody tr:not([h
 table.tbl.pp-stt{table-layout:fixed}
 .pp-stt th:nth-child(1){width:64px}
 .pp-stt th:nth-child(3){width:120px}
-.pp-stt .pp-sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pp-stt .sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pp-stt td.num.pp-bad{color:var(--warn)}
 
 /* THE HISTORY — the change with who and when under it, then before → after. */
@@ -4044,8 +4036,8 @@ td.pa-s.pa-dim{color:var(--dim)}
 tr.pa-done>*{opacity:.55}
 /* the position on the primary line, the permission its mono sub-line; the
    door column at its natural width, Verify live and Mark reviewed on one line */
-table.tbl.pa-st-drift td.pp-door{padding-top:6px;padding-bottom:6px}
-tr.pa-done .pp-b:disabled{cursor:default}
+table.tbl.pa-st-drift td.door{padding-top:6px;padding-bottom:6px}
+tr.pa-done .btn:disabled{cursor:default}
 
 /* ── TEAM · PERMISSIONS › CHECK ─────────────────────────────────────────
    team-module/team/permissions/check.html's rules from permissions-pages.css:
@@ -4065,10 +4057,6 @@ tr.pa-done .pp-b:disabled{cursor:default}
 .pp-ddg{display:flex;flex-direction:column;gap:1px}
 .pp-ddg[hidden],.i-ddopt[hidden],.pp-ddnone[hidden]{display:none}
 .au-why.pp-ddnone{margin:0;padding:7px 9px}
-
-/* THE HOUSE TABLE — a cell carrying two facts draws the second as a muted mono sub-line. */
-.pp-sub{display:block;margin-top:2px;font-family:var(--font-mono);font-size:11px;font-weight:400;line-height:1.4;color:var(--dim)}
-table.tbl td.pp-door{width:1%;text-align:right;white-space:nowrap}
 
 /* THE ANSWER — the verdict, the question in words, the walk. */
 .pp-ans{margin:16px -16px -14px;padding:16px;border-top:1px solid var(--ln);
@@ -4147,3 +4135,56 @@ table.tbl.pp-rec td.pp-vd{width:1%;white-space:nowrap}
 /* RECENT CHECKS — the third register, drawn by the browser; the empty line before any check. */
 .pp-empty{margin:0}
 .pp-empty[hidden]{display:none}
+
+/* ==================== A DEPARTMENT'S RECORD ===============================
+   Ported from DesignsProjects/uhifadhi-web/departments/ecology/index.html and
+   department-detail.css, departments-pages.css, settings/cascade.css.
+   Pairs: a goal 14px 600 sans over its target 10.5px 400 mono; a figure's
+   source 9px mono uppercase; a position 13px 600 sans with its count 11px
+   600 mono. */
+.dp-panel-band { margin-bottom: 24px; }
+.dp-lead { margin: 0 0 20px; }
+.dp-kgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin-bottom: 20px; }
+.dp-kgrid .dp-kfull { grid-column: 1 / -1; }
+@media (max-width: 1100px) { .dp-kgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .dp-kgrid { grid-template-columns: minmax(0, 1fr); } }
+.dp-rec .mtd { font-family: var(--font-mono); font-size: 9px; color: var(--dim); letter-spacing: .1em; text-transform: uppercase; margin-top: 7px; display: block; }
+.goalgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+@media (max-width: 1200px) { .goalgrid { grid-template-columns: 1fr; } }
+.goal { border: 1px solid var(--ln2); border-radius: 12px; padding: 15px 16px 14px; background: var(--cv); display: flex; flex-direction: column; gap: 11px; min-width: 0; }
+.goal .gt { font-size: 14px; font-weight: 600; color: var(--tx); line-height: 1.4; }
+.goal .gtarget { font-family: var(--font-mono); font-size: 10.5px; color: var(--fog); letter-spacing: .03em; }
+.goal .gfoot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
+.goal .mtd { margin-top: 0; }
+.goal.ontrack { border-color: color-mix(in srgb, var(--ok) 34%, transparent); }
+.goal.atrisk { border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+.goal.offtrack { border-color: color-mix(in srgb, var(--fail) 38%, transparent); }
+.goal.blocked { border-style: dashed; border-color: var(--ln2); }
+.gbar { position: relative; height: 9px; margin-top: 6px; background: var(--raised); border-radius: 5px; overflow: visible; }
+.gbar i { display: block; height: 100%; border-radius: 5px; background: var(--acc); }
+.gbar.ontrack i { background: var(--ok); }
+.gbar.atrisk i { background: var(--warn); }
+.gbar.offtrack i { background: var(--fail); }
+.gbar.blocked i { background: repeating-linear-gradient(135deg, var(--ln2) 0 5px, transparent 5px 10px); }
+.gbar u { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--tx); opacity: .75; border-radius: 2px; }
+.gbar u[style*="left:100%"] { margin-left: -2px; }
+.gbar u::after { content: "target"; position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font: 600 8px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--fog); }
+.gbar u[style*="left:100%"]::after { left: auto; right: 0; transform: none; }
+.owner { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--fog); border: 1px solid var(--ln2); border-radius: 999px; padding: 4px 9px 3px; line-height: 1; white-space: nowrap; }
+.owner svg { width: 11px; height: 11px; color: var(--dim); }
+.dp-chart { display: flex; flex-direction: column; align-items: center; padding: 6px 0 2px; }
+.dp-chart .ch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; width: 100%; }
+.dp-chart .ch-n { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--ln2); border-radius: 11px; padding: 9px 12px; min-width: 0; }
+.dp-chart .ch-n.sup { border-style: dashed; }
+.dp-chart .ch-n .p { display: block; font: 500 10.5px var(--font-mono); color: var(--fog); }
+.dp-chart .ch-t { display: flex; align-items: baseline; gap: 8px; justify-content: space-between; }
+.dp-chart .ch-t b { font-size: 13px; color: var(--tx); font-weight: 600; }
+.dp-chart .ch-c { font: 600 11px var(--font-mono); color: var(--fog); }
+.dp-chart .ch-faces { display: flex; align-items: center; }
+.dp-chart .ch-faces i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 600 8.5px var(--font-mono); font-style: normal; background: color-mix(in srgb, var(--acc) 16%, var(--cv)); color: var(--acc); border: 2px solid var(--cv); margin-left: -6px; }
+.dp-chart .ch-faces i:first-child { margin-left: 0; }
+.rc-foot { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--ln); padding-top: 10px; margin-top: 10px; font: 500 10.5px var(--font-mono); color: var(--dim); }
+.cmname { min-width: 0; }
+.cmname b { display: block; font-size: 13px; font-weight: 600; color: var(--tx); line-height: 1.3; }
+.cmname .cmwhat { display: block; font-size: 11px; color: var(--dim); line-height: 1.45; margin-top: 2px; }
+.dp-none { margin: 10px 0 0; }

@@ -39,6 +39,26 @@
 
 {% block shell_page %}
     <div data-dp>
+        {# WHAT NEEDS ATTENTION, ONE BANNER ABOVE THE STRIP: the departments
+           reading no module, and the positions nobody holds. #}
+        {%- set attention = [] -%}
+        {%- if unattachedTotal > 0 -%}
+            {%- set more = unattachedTotal - unattached|length -%}
+            {%- set attention = attention|merge([{
+                head: unattachedTotal ~ (unattachedTotal == 1 ? ' department reads' : ' departments read') ~ ' no module',
+                cause: unattached|map(line => line.label)|join(', ') ~ (more > 0 ? ' and ' ~ more ~ ' more' : ''),
+                door: 'Modules', url: path('team_departments_modules'),
+            }]) -%}
+        {%- endif -%}
+        {%- if vacanciesTotal > 0 -%}
+            {%- set attention = attention|merge([{
+                head: vacanciesTotal ~ (vacanciesTotal == 1 ? ' position is' : ' positions are') ~ ' held by nobody',
+                cause: 'the longest vacant is ' ~ (vacancies|first).label,
+                door: door('positions.read') ? 'Positions' : null, url: path('team_positions'),
+            }]) -%}
+        {%- endif %}
+        {{ di.attention('Needs attention', attention) }}
+
         {# THE IDENTITY BAND — the facts this section is, stated as fragments.
            The same band an area's overview opens with, in the same position. #}
         <div class="factband">

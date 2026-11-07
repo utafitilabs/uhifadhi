@@ -1,0 +1,24 @@
+{# ONE CHIP OF THE HOUSE FILTER BAR (`.lfilt`), WHERE EVERY OPTION IS AN
+   ADDRESS — the trigger reads the chosen option and its count, the menu
+   the lead row that clears it, then one row an option with the count of
+   what picking it would leave.
+
+   PARAMETERS:
+     key      the query parameter the filter writes
+     name     the chip's axis (data-axis)
+     all      the lead row's label (`All placements`)
+     total    the lead row's count
+     chosen   the chosen value, null when none
+     options  [{value, label, count}]
+     query    the page's query, which writes every address; absent, the
+              address is the request's own query with this key set #}
+{%- set _route = app.request.attributes.get('_route') -%}
+{%- set _params = app.request.attributes.get('_route_params') -%}
+{%- set _rows = [{value: '', label: all, count: total}]|merge(options) -%}
+{%- set _on = _rows|filter(r => '' ~ r.value == '' ~ (chosen ?? ''))|first ?: _rows|first -%}
+<details class="i-dd" data-axis="{{ name }}"><summary class="mchip i-ddt{{ _on.value != '' ? ' on' }}"><span class="i-ddval">{{ _on.label|lower }} &middot; {{ _on.count }}</span><span class="i-ddcaret" aria-hidden="true">&#9662;</span></summary><div class="i-ddmenu" aria-label="{{ all }}">
+    {%- for row in _rows %}
+    <a class="i-ddopt{{ row is same as(_on) ? ' on' }}" href="{{ path(_route, _params|merge((query ?? null) ? query.with(key, row.value == '' ? null : row.value) : app.request.query.all|merge({(key): row.value == '' ? null : row.value, page: null}))) }}"{% if row is same as(_on) %} aria-current="true"{% endif %}><span class="i-ddopt-l">{{ row.label }}</span><span class="i-ddopt-n">{{ row.count }}</span></a>
+    {%- if loop.first %}<span class="i-ddsep"></span>{% endif %}
+    {%- endfor %}
+</div></details>

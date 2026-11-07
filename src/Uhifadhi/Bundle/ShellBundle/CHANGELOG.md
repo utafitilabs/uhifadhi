@@ -8,6 +8,31 @@
 
 Not released yet.
 
+ * THE ATTENTION BANNER (design: uhifadhi-web/house-banner.css): `@Shell/_banner.html.twig`,
+   included with `title`, `text`, `actions` (label → href, or `{action, fields, method}` for a
+   form), `tone` (`warn`, `fail`, `info`, `ok`), `icon`, `id`, `label` and `lines` for a banner of
+   several lines; the classes `.banner`, `.banner-warn|fail|info|ok`, `.banner-lines`,
+   `.banner-i`, `.banner-t`, `.banner-c`, `.banner-acts`, `.banner-l`. Design to shell:
+   `pp-drift` → `banner`, `pp-done` → `banner-ok`, `pp-dtext` → `banner-t`, `pp-dcause` →
+   `banner-c`, `pp-dacts` → `banner-acts`; `pp-b` goes (`.btn` carries the font). Listed in
+   `LayoutContract::PARTIALS`; docs/banner.md.
+
+ * THE REGISTER FOOT AND THE PAGER: `@Shell/_foot.html.twig` (`count`, `noun`, `one`, `perPage`,
+   `page`, `pages`, and `links` for GET paging or `client` with `hooks` for a page that pages in
+   the browser; 20 · 50 · 100 · All, "all on one page" at All), `Model\TablePage` (`total`,
+   `size`, `perPage`, `page`, `pages`, `offset`, `slice()`, `SIZES`) and
+   `Service\TablePageService` (`shell.table_page`, aliased by class: `read()` off `?page` and
+   `?per`, `page()`, `links()`). Listed in `LayoutContract::PARTIALS`; docs/register-foot.md.
+
+ * THE HOUSE TABLE'S SUB-LINE AND DOOR: `table.tbl .sub` (11px 400 mono, dim) and
+   `table.tbl td.door` (1 %, right, no wrap).
+
+ * AN OVERVIEW'S PARTS: `.factband.ov-band`, `.ov-kpis` and `.ov-plots`, the strip, the figures
+   and the plots in the house type pairs, once for every overview page.
+
+ * THE COMPACT HEAD TRIGGER: the dropdown's `sm` parameter, `.dd-sm` (the design's `pp-dd-sm`),
+   a 32px trigger for a page head's action row.
+
  * A dropdown option and an index row take an optional `title`, their tooltip; the icon set gains
    `circle-help`.
 

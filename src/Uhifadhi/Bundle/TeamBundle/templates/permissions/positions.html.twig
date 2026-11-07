@@ -36,7 +36,7 @@
                     <div class="lfilt">{% for c in reg.chips %}{{ an.chip(c) }}{% endfor %}{{ an.search(reg) }}</div>
                     <table class="tbl pq-above"><thead><tr><th scope="col">Person</th><th scope="col">Tier</th><th scope="col" aria-label="Open"></th></tr></thead><tbody>
                         {%- for person in above %}
-                        <tr{{ an.row(person, loop) }}><td><a href="{{ path('team_member', {uuid: person.uuid}) }}">{{ person.name }}</a><span class="pp-sub">placed: {{ person.placed }}</span></td><td><span class="tier {{ person.tierClass }}">{{ person.tier }}</span></td><td class="pp-door"><a class="more" href="{{ path('team_member', {uuid: person.uuid}) }}">Open &rarr;</a></td></tr>
+                        <tr{{ an.row(person, loop) }}><td><a href="{{ path('team_member', {uuid: person.uuid}) }}">{{ person.name }}</a><span class="sub">placed: {{ person.placed }}</span></td><td><span class="tier {{ person.tierClass }}">{{ person.tier }}</span></td><td class="door"><a class="more" href="{{ path('team_member', {uuid: person.uuid}) }}">Open &rarr;</a></td></tr>
                         {%- endfor %}
                     </tbody></table>
                     {{ an.foot(reg) }}
@@ -80,17 +80,17 @@
                         {%- for row in listed %}
                         {%- set id = 'pq-b' ~ loop.index0 %}
                         <tr class="pq-r" data-{{ ctl }}-target="row"{{ loop.index > perPage ? ' hidden' }} data-name="{{ row.name }}" data-find="{{ row.find }}" data-holders="{{ row.holders }}" data-flags="{{ row.flags|join(' ') }}" data-concerns="{{ row.concerns|join(' ') }}">
-                            <td><span class="pq-nm"><a class="pq-name" href="{{ path('team_position_show', {uuid: row.uuid}) }}">{{ row.name }}</a>{% for mark in row.marks %}<span class="chip{{ mark.warn ? ' warn' }}">{{ mark.text }}</span>{% endfor %}</span><span class="pp-sub pq-sum">{{ row.summary }}</span></td>
+                            <td><span class="pq-nm"><a class="pq-name" href="{{ path('team_position_show', {uuid: row.uuid}) }}">{{ row.name }}</a>{% for mark in row.marks %}<span class="chip{{ mark.warn ? ' warn' }}">{{ mark.text }}</span>{% endfor %}</span><span class="sub pq-sum">{{ row.summary }}</span></td>
                             <td class="num">
                                 {%- if row.holders > 0 -%}
                                     <a href="{{ path('team_index', {position: row.uuid}) }}" aria-label="{{ row.holders }} {{ row.holders == 1 ? 'person' : 'people' }} in {{ row.name }}">{{ row.holders }}</a>
                                 {%- else -%}
                                     0
                                 {%- endif -%}
-                                {%- if row.seatCount is not null %}<span class="pp-sub">of {{ row.seatCount }} seats</span>{% endif -%}
+                                {%- if row.seatCount is not null %}<span class="sub">of {{ row.seatCount }} seats</span>{% endif -%}
                             </td>
                             <td>{{ row.where }}</td>
-                            <td class="pp-door"><button type="button" class="pq-chev" aria-expanded="false" aria-controls="{{ id }}" aria-label="Expand {{ row.name }}">{{ ux_icon('shell:chevron-right', {'aria-hidden': 'true'}) }}</button></td>
+                            <td class="door"><button type="button" class="pq-chev" aria-expanded="false" aria-controls="{{ id }}" aria-label="Expand {{ row.name }}">{{ ux_icon('shell:chevron-right', {'aria-hidden': 'true'}) }}</button></td>
                         </tr>
                         <tr class="pq-body" id="{{ id }}" hidden><td colspan="4"><div class="pq-in">
                             {%- for group in row.groups %}
@@ -119,10 +119,18 @@
 
                 {# THE REGISTER FOOT — the filtered count and the page size; an arrow only where
                    there is a page to go to. #}
-                {%- set pages = max(1, (listed|length / perPage)|round(0, 'ceil')) %}
-                <div class="rdf-foot" data-{{ ctl }}-target="foot"{{ listed is empty ? ' hidden' }}><span><span data-{{ ctl }}-target="count">{{ listed|length }} {{ listed|length == 1 ? 'position' : 'positions' }}</span> &middot; <details class="i-dd rdf-size" data-axis="size" data-{{ ctl }}-target="chip size" data-action="toggle->{{ ctl }}#toggled"><summary><span class="pg">{{ perPage }}</span> per page<span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu" aria-label="Rows per page" data-action="click->{{ ctl }}#choose">
-                    {%- for size in ['20', '50', '100', 'all'] %}<button type="button" class="i-ddopt{{ size == perPage ~ '' ? ' on' }}" data-opt="{{ size }}" aria-pressed="{{ size == perPage ~ '' ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ size == 'all' ? 'All' : size }}</span></button>{% endfor -%}
-                </div></details></span><span class="rdf-page" data-{{ ctl }}-target="pager" data-action="click->{{ ctl }}#go">page <span class="pg">1</span> of {{ pages }}{% if pages > 1 %}<button type="button" data-go="1" aria-label="Next page">&rsaquo;</button>{% endif %}</span></div>
+                {%- set target = 'data-' ~ ctl ~ '-target' %}
+                {% include '@Shell/_foot.html.twig' with {
+                    count: listed|length, noun: 'positions', one: 'position', perPage: perPage, client: true, hidden: listed is empty,
+                    hooks: {
+                        foot: {(target): 'foot'},
+                        count: {(target): 'count'},
+                        size: {'data-axis': 'size', (target): 'chip size', 'data-action': 'toggle->' ~ ctl ~ '#toggled'},
+                        menu: {'data-action': 'click->' ~ ctl ~ '#choose'},
+                        pager: {(target): 'pager', 'data-action': 'click->' ~ ctl ~ '#go'},
+                        option: 'data-opt',
+                    },
+                } only %}
 
                 <p class="pq-empty" data-{{ ctl }}-target="empty"{{ listed is not empty ? ' hidden' }}>No position matches these filters.</p>
             </div>

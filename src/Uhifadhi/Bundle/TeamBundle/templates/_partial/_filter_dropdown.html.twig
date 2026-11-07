@@ -1,0 +1,32 @@
+{# ONE FILTER OF THE HOUSE FILTER BAR ON THE HOUSE DROPDOWN — the lead row
+   that clears it, then one row an option with the count of what picking it
+   would leave. Every option is an address (`_link_dropdown.html.twig`).
+
+   PARAMETERS:
+     key      the query parameter the filter writes
+     name     the dropdown's name
+     head     the lead row's group head (`placement`)
+     group    the options' group head (`Placements`)
+     all      the lead row's label (`All placements`)
+     total    the lead row's count
+     chosen   the chosen value, null when none
+     options  [{value, label, count}]
+     query    the page's query, which writes every address #}
+{%- set _route = app.request.attributes.get('_route') -%}
+{%- set _urls = {'': path(_route, query.with(key, null))} -%}
+{%- set _rows = [] -%}
+{%- for option in options -%}
+    {%- set _urls = _urls|merge({('' ~ option.value): path(_route, query.with(key, option.value))}) -%}
+    {%- set _rows = _rows|merge([{value: option.value, label: option.label, count: option.count}]) -%}
+{%- endfor -%}
+{{- include('@Team/_partial/_link_dropdown.html.twig', {
+    name: name,
+    label: all,
+    groups: [
+        {label: head, options: [{value: '', label: all, count: total}]},
+        {label: group, options: _rows},
+    ],
+    value: chosen ?? '',
+    default: '',
+    urls: _urls,
+}, with_context = false) -}}

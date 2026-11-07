@@ -150,6 +150,17 @@ final class AreaModulesTest extends WebTestCase
         self::assertStringContainsString('Modules', $body);
     }
 
+    /** A list tab carries no summary strip: the area's facts are its Overview's. */
+    public function testTheModulesTabCarriesNoStrip(): void
+    {
+        $this->boot(self::ALL);
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aCatalogue();
+
+        self::assertStringNotContainsString('class="factband', $this->body($this->modulesPath($area)));
+    }
+
     /** The tab is absent, not greyed, for somebody who may not see modules. */
     public function testTheModulesTabIsAbsentWithoutModulesRead(): void
     {

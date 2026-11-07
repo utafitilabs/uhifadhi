@@ -31,3 +31,18 @@
    figure to compute it from: a pill reading zero on an installation that has
    recorded nothing is a claim, not a reading. #}
 {% macro delta(value, tone) %}<span class="delta {{ tone }}">{% if tone == 'good' %}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>{% elseif tone == 'bad' %}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m19 12-7 7-7-7"/><path d="M12 5v14"/></svg>{% else %}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg>{% endif %}{{ value > 0 ? '+' }}{{ value < 0 ? '−' ~ (0 - value) : value }}</span>{% endmacro %}
+
+{# THE ATTENTION BANNER WITH SEVERAL LINES — the shell's banner, one icon,
+   then one line per thing to act on: its head, its cause, its door. Drawn only
+   when there is a line. `lines` is [{head, cause?, door?, url?}]. #}
+{% macro attention(label, lines) %}
+    {%- set _lines = [] -%}
+    {%- for line in lines -%}
+        {%- set _lines = _lines|merge([{
+            title: line.head,
+            text: (line.cause ?? null) ? '— ' ~ line.cause : null,
+            actions: (line.door ?? null) and (line.url ?? null) ? {(line.door): line.url} : {},
+        }]) -%}
+    {%- endfor -%}
+    {{- include('@Shell/_banner.html.twig', {lines: _lines, label: label}, with_context = false) -}}
+{%- endmacro %}

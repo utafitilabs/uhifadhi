@@ -1,80 +1,17 @@
-{# THE DEPARTMENT LENS — one department's own page, area-aware, openable from
-   every row of the manager.
-
-   PORTED from the canonical design DesignsProjects/uhifadhi-web/departments/
-   department.html, honouring the ruled PAGE-CHROME THEME:
-     · page-level actions live in the header row (the department carries none yet
-       — its widget board is the follow-up — so the row holds identity only);
-     · the identity CARD (.factband) lives on the OVERVIEW tab ALONE; the
-       always-there name and scope live in the header and the scope strip above
-       the tabs, so they show on every tab;
-     · the KPIs sit on a single row.
-
-   THE ATTACHED MODULES ARE THE LENS, and three of the four tabs read them: they
-   lead the Overview one card each, their figures are the whole of Performance,
-   and Settings is where they are attached and detached. A department computes no
-   number of its own — every figure is a module KPI rolled up through an
-   attachment — so a department that leads with nothing shows nothing, and says
-   so rather than drawing a zero.
-
-   ATTACHING GRANTS NOTHING AND HIDES NOTHING. The Settings copy says it, because
-   a control that looks like a permission matrix has to. #}
+{# A DEPARTMENT'S RECORD — the design's departments/ecology/index.html: the
+   head (the mark, the name, its scope, the area being read, Configure), three
+   panels — Overview (the facts strip, the figures, the goals, where the
+   figures come from), People & access (the index beside who is in it, its
+   members and its history) and Settings (the modules it runs) — and what
+   needs a decision as the banner above them. The record reads; Configure
+   writes. #}
 {% extends '@Shell/page.html.twig' %}
-{% import _self as dp %}
+{% import '@Team/_partial/_table.html.twig' as tb %}
 {% import '@Team/departments/_bits.html.twig' as di %}
-{% import '@Team/positions/_bits.html.twig' as pm %}
-
-{# THE FIGURES A MODULE REPORTED, DRAWN ONCE EACH.
-
-   The contract asks a provider for ONE SET of KPIs per call — the department's
-   own figures at the scope its ref names — and the design draws one row of
-   representative tiles per module. A provider that still answers one set PER AREA
-   would therefore stack the same label with nothing to tell the copies apart, so
-   these two macros draw the totals first and then each area's sets UNDER THE AREA
-   NAME THE FIGURE ITSELF CARRIES. Nothing is dropped and nothing is summed here:
-   the page renders what it was given, labelled honestly. #}
-{# FOUR TO A ROW (ruled), so the department's own row of totals stops at four.
-   A department with five attached modules publishing a figure each drew five
-   tiles and wrapped an orphan under them on a small laptop. The rest are not
-   lost: every figure keeps its place in the per-area groups below, and the
-   full reading is the module's own page. #}
-{% macro kpi_tiles(figures) %}
-    {% set areas = figures|reduce((names, kpi) => kpi.isTotal or kpi.areaName in names ? names : names|merge([kpi.areaName]), []) %}
-    {% for kpi in figures|filter(kpi => kpi.isTotal)|slice(0, 4) %}
-        {# AN UNKNOWN FIGURE IS A DASHED SLOT, never a zero: "we did not measure"
-           and "we measured nothing" are different facts, and the value object is
-           what draws the distinction. #}
-        <div class="c kpi">
-            <span class="tab">{{ kpi.moduleName }} &middot; {{ kpi.label }}</span>
-            <b class="disp">{{ kpi.display }}{{ kpi.isShare and kpi.isKnown ? '%' : '' }}</b>
-        </div>
-    {% endfor %}
-    {% for areaName in areas %}
-        <div class="dp-arealbl">{{ areaName }}</div>
-        {% for kpi in figures|filter(kpi => kpi.areaName == areaName) %}
-            <div class="c kpi">
-                <span class="tab">{{ kpi.moduleName }} &middot; {{ kpi.label }}</span>
-                <b class="disp">{{ kpi.display }}{{ kpi.isShare and kpi.isKnown ? '%' : '' }}</b>
-            </div>
-        {% endfor %}
-    {% endfor %}
-{% endmacro %}
-
-{% macro kpi_rows(figures) %}
-    {% set areas = figures|reduce((names, kpi) => kpi.isTotal or kpi.areaName in names ? names : names|merge([kpi.areaName]), []) %}
-    {% for kpi in figures|filter(kpi => kpi.isTotal) %}
-        <div class="rln"><span class="k">{{ kpi.label }}</span><span class="v">{{ kpi.display }}{{ kpi.isShare and kpi.isKnown ? '%' : '' }}</span></div>
-    {% endfor %}
-    {% for areaName in areas %}
-        <div class="dp-arealbl">{{ areaName }}</div>
-        {% for kpi in figures|filter(kpi => kpi.areaName == areaName) %}
-            <div class="rln"><span class="k">{{ kpi.label }}</span><span class="v">{{ kpi.display }}{{ kpi.isShare and kpi.isKnown ? '%' : '' }}</span></div>
-        {% endfor %}
-    {% endfor %}
-{% endmacro %}
 
 {% set area = department.area %}
-{% set isArea = area is not null %}
+{% set ctl = 'uhifadhi--team-bundle--department' %}
+{% set configureUrl = path('team_department_configure', {uuid: department.uuidString}) %}
 
 {% block title %}{{ department.name }} — department{% endblock %}
 
@@ -90,367 +27,243 @@
     <a href="{{ path('team_departments') }}">departments</a> / {{ department.name }}
 {% endblock %}
 
-{# The header carries the mark, the name and — so name+scope read on EVERY tab —
-   the scope badge, beside the one-line description. #}
 {% block shell_page_head %}
     <div class="dpthead">
         <span class="mark">{{ mark }}</span>
         <div>
-            <h1 class="pg">{{ department.name }}
-                {% if isArea %}
-                    <span class="scope area">{{ di.icon_area() }} {{ area.name }}</span>
-                {% else %}
-                    <span class="scope org">{{ di.icon_org() }} Org-level</span>
-                {% endif %}
-            </h1>
-            <p class="pgsub">A department&rsquo;s own dashboard, where the modules it attaches lead the view. It
-                shapes emphasis &mdash; never access.</p>
+            <h1 class="pg">{{ department.name }}</h1>
+            <p class="pgsub"><span>{% if area %}area department &middot; {{ area.name }}{% else %}org-wide department{% endif %}</span></p>
         </div>
     </div>
-    {# THE ONE PAGE ACTION — where the department is changed, per the rule
-       that a record wears its Configure door in the header row. It asks what
-       the Configure page asks, so it is drawn only where that page opens. #}
-    {% if door('departments.configure') and mayManage %}
     <div class="pgact w-pgact">
-        <a class="tgl w-act" href="{{ path('team_department_configure', {uuid: department.uuidString}) }}">{{ ux_icon('shell:settings', {width: 15, height: 15}) }} Configure</a>
+        {% if area is null %}
+            {% set here = path('team_department_show', {uuid: department.uuidString}) %}
+            {% set urls = {'': here} %}
+            {% set options = [] %}
+            {% for each in areas %}
+                {% set urls = urls|merge({(each.uuidString): here ~ '?area=' ~ each.uuidString}) %}
+                {% set options = options|merge([{value: each.uuidString, label: each.name, count: null}]) %}
+            {% endfor %}
+            {{ include('@Team/_partial/_link_dropdown.html.twig', {
+                sm: true,
+                name: 'reading',
+                label: 'All areas',
+                icon: 'shell:map',
+                end: true,
+                groups: [
+                    {label: 'reading', options: [{value: '', label: 'All areas', count: null}]},
+                    {label: 'Areas', options: options},
+                ],
+                value: reading ? reading.uuidString : '',
+                default: '',
+                urls: urls,
+            }) }}
+        {% endif %}
+        {% if door('departments.configure') and mayManage %}
+            <a class="tgl w-act" href="{{ configureUrl }}">{{ ux_icon('shell:settings', {width: 15, height: 15}) }} Configure</a>
+        {% endif %}
     </div>
-    {% endif %}
 {% endblock %}
 
 {% block shell_page %}
     {{ include('@Team/team/_scope_banner.html.twig') }}
-    <div data-dept="{{ department.uuidString }}" data-controller="uhifadhi--team-bundle--department">
-
-        {# AREA-AWARE READING — set by scope. Above the tabs, so scope reads on
-           every tab. Area-level is fixed to its one area; org-level reads across
-           every area. #}
-        <div class="scoperule">
-            {{ di.icon_org() }}
-            {% if isArea %}
-                <div><b>Area-level lens &mdash; confined to {{ area.name }}.</b> Everything on this page is already
-                    scoped to this one area. Managed at the organization; inside {{ area.name }} it appears inherited.</div>
-            {% else %}
-                <div><b>Org-level lens &mdash; reads across every area.</b> This department has no single area, so its
-                    view aggregates the whole organization. Its scope can be confined to one area from
-                    <a href="{{ path('team_departments') }}">the manager</a> &mdash; the change is audited.</div>
-            {% endif %}
-        </div>
-
+    <div class="dp-rec" data-dept="{{ department.uuidString }}" data-controller="{{ ctl }}">
         <div class="atabs">
-            <button type="button" class="on" data-tab="overview"
-                    data-uhifadhi--team-bundle--department-target="tab"
-                    data-action="uhifadhi--team-bundle--department#tab">Overview</button>
-            <button type="button" data-tab="performance"
-                    data-uhifadhi--team-bundle--department-target="tab"
-                    data-action="uhifadhi--team-bundle--department#tab">Performance</button>
-            <button type="button" data-tab="people"
-                    data-uhifadhi--team-bundle--department-target="tab"
-                    data-action="uhifadhi--team-bundle--department#tab">People &amp; Positions</button>
-            <button type="button" data-tab="settings"
-                    data-uhifadhi--team-bundle--department-target="tab"
-                    data-action="uhifadhi--team-bundle--department#tab">Settings</button>
+            {% for key, label in {overview: 'Overview', people: 'People & access', settings: 'Settings'} %}
+                <button type="button"{% if loop.first %} class="on"{% endif %} data-tab="{{ key }}"
+                        data-{{ ctl }}-target="tab" data-action="{{ ctl }}#tab">{{ label }}</button>
+            {% endfor %}
         </div>
 
-        {# ── OVERVIEW ── the identity card lives here and ONLY here. ── #}
-        <section data-tab-panel="overview" data-uhifadhi--team-bundle--department-target="tabpanel">
-            <div class="factband">
-                <span class="f"><span class="k">Scope</span><span class="v">{{ isArea ? 'Area-level' : 'Org-level' }}</span></span>
-                {% if isArea %}
-                    <span class="f"><span class="k">Area</span><span class="v">{{ area.name }}</span></span>
-                {% endif %}
-                <span class="f"><span class="k">Code</span><span class="v uuid">{{ department.uuidString }}</span></span>
-                <span class="f"><span class="k">Positions</span><span class="v">{{ positions|length }}</span></span>
-                <span class="f"><span class="k">People</span><span class="v">{{ headcount }}</span></span>
-                <span class="sp"></span>
-                <button type="button" class="more" data-tab="settings"
-                        data-action="uhifadhi--team-bundle--department#tab">Department settings &rarr;</button>
+        {{ di.attention('Needs a decision', attention) }}
+
+        {# ── OVERVIEW ── #}
+        <section data-tab-panel="overview" data-{{ ctl }}-target="tabpanel">
+            <div class="factband dp-panel-band">
+                <span class="f"><span class="k">Belong</span><span class="v">{{ facts.belong }}</span></span>
+                <span class="f"><span class="k">Support</span><span class="v">{{ facts.support }}</span></span>
+                <span class="f"><span class="k">Modules</span><span class="v">{{ facts.modules }}<em>of {{ facts.installed }}</em></span></span>
             </div>
 
-            <p class="pgsub" style="margin:0 0 16px">The record, composed &mdash; <b>the modules this department
-                attaches lead</b>. A lens, not a fence: every card is the same shared data, listed first here.</p>
-
-            <div class="grid" data-dept-modules>
-                {% for module in attached %}
-                    {# ONE CARD PER ATTACHED MODULE — the modules leading the view. The
-                       figures under it are that module's own KPIs; a module that ships
-                       none says so rather than showing a zero. #}
+            <div class="dp-kgrid" data-dept-kpis>
+                {% for kpi in figures %}
                     <div class="c">
-                        <span class="tab">{{ module.name }}<span class="src">&middot; leads this lens</span></span>
-                        {# SHARED OR ITS OWN — the same rows either way. A module two
-                           departments attach is one module, listed first for both, and
-                           neither can hide a row from the other. #}
-                        <div class="chiprow">
-                            {% set shared = sharing[module.slug]|default(0) %}
-                            {% if shared > 1 %}
-                                <span class="dp-chip shared" title="shared — the same rows, read through another lens">shared &middot; {{ shared }} departments</span>
-                            {% else %}
-                                <span class="dp-chip">this department</span>
-                            {% endif %}
+                        <span class="tab">{{ kpi.label }}{% if kpi.caption %}<span class="src">&middot; {{ kpi.caption }}</span>{% endif %}</span>
+                        <div class="kpi">
+                            <b>{{ kpi.display }}{% if kpi.isKnown and (kpi.isShare or kpi.unit) %}<em>{{ kpi.isShare ? '%' : kpi.unit }}</em>{% endif %}</b>
+                            {% if kpi.deltaLabel %}<span class="sub"><span class="delta {{ kpi.direction }}">{{ kpi.deltaLabel }}</span></span>{% endif %}
                         </div>
-                        {% set figures = kpis|filter(kpi => kpi.moduleSlug == module.slug) %}
-                        {% if figures is not empty %}
-                            <div style="margin-top:8px">
-                                {{ dp.kpi_rows(figures) }}
-                            </div>
-                        {% else %}
-                            <p class="use">Leads for this department. It reports no figure of its own.</p>
-                        {% endif %}
+                        {% if sparks[loop.index0] %}{{ atlas_sparkline(sparks[loop.index0]) }}{% endif %}
+                        <span class="mtd">{{ kpi.moduleName }} module &middot; {{ kpi.areaName ?? (area ? area.name : 'every area') }}</span>
                     </div>
                 {% else %}
-                    <div class="c">
-                        <span class="tab">Modules<span class="src">&middot; the lens</span></span>
+                    <div class="c dp-kfull">
                         <div class="dp-empty">
-                            <b>No modules attached yet</b>
-                            <span>This department leads with nothing until a module is attached. Attach one from
-                                <button type="button" class="more" data-tab="settings"
-                                        data-action="uhifadhi--team-bundle--department#tab">Settings &rarr; Modules
-                                    attached</button> &mdash; it grants nothing and hides nothing.</span>
+                            <b>No module figures this period</b>
+                            <span>They arrive with the first module this department runs that reports one &mdash; a department computes no figure of its own.</span>
                         </div>
                     </div>
                 {% endfor %}
             </div>
-        </section>
 
-        {# ── PERFORMANCE ── KPIs on a single row when the follow-up wires them. ── #}
-        <section data-tab-panel="performance" data-uhifadhi--team-bundle--department-target="tabpanel">
             <div class="grid">
-                <div class="c">
-                    <span class="tab">This month<span class="src">&middot; the attached modules&rsquo; KPIs</span></span>
-                    <p class="use">A department owns no numbers of its own &mdash; every figure is a module KPI rolled
-                        up through this department&rsquo;s attachment. Detaching a module takes its figures off this
-                        page; it never sets them to zero.</p>
-                    {# ONE TILE PER FIGURE, laid on a single row — the label the module
-                       gave it under the module's own name, and the value. #}
-                    <div class="grid kstrip" style="margin-top:12px" data-dept-kpis>
-                        {% if kpis is not empty %}
-                            {{ dp.kpi_tiles(kpis) }}
-                        {% else %}
-                            <div class="dp-empty" style="grid-column:1/-1">
-                                <b>No module KPIs this period</b>
-                                <span>They arrive with the first attached module that reports one &mdash; a department
-                                    computes no figure of its own.</span>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            {# ── WHAT THIS DEPARTMENT SAID IT WOULD DO ──────────────────────
-               A GOAL IS DECLARED WHERE THE FIGURES ARE READ, because a
-               target means nothing beside nothing: it is judged by whatever
-               the modules publish, and a screen of its own would be a
-               second place to look for one.
-
-               FIVE STATES, AND TWO OF THEM ARE EMPTINESSES. "No goal
-               declared" and "no figure yet" look alike and mean opposite
-               things — nobody set a target, versus nobody has reported one
-               — so the rail says which. #}
-            <div class="grid">
-                <div class="c">
-                    <span class="tab">Goals<span class="src">&middot; {{ goals|length }} declared</span></span>
-                    <p class="use">What this department said it would do, and the published figure that answers it.
-                        A goal grants nobody anything &mdash; it is a commitment and a measurement.</p>
-
+                <div class="c" id="dp-goals">
+                    {% set met = goals|filter(g => g.tone == 'ontrack')|length %}
+                    <span class="tab">Goals<span class="src">&middot; {{ goals|length }} declared &middot; {{ met }} met</span></span>
                     {% if goals is empty %}
                         <div class="dp-empty">
                             <b>No goal declared</b>
-                            <span>which is not a miss &mdash; declare one below and the modules&rsquo; own figures judge it.</span>
+                            <span>which is not a miss &mdash; a goal is declared on Configure, and the modules&rsquo; own figures judge it.</span>
                         </div>
                     {% else %}
-                        <div class="ovx-tbl">
-                            <table class="tbl">
-                                <thead>
-                                    <tr><th>Goal</th><th>Target</th><th>Answers for it</th><th>Closes</th><th>State</th><th></th></tr>
-                                </thead>
-                                <tbody>
-                                {% for goal in goals %}
-                                    <tr>
-                                        <td><b>{{ goal.statement }}</b>{% if goal.kpiRef %}<span class="mono d" style="margin-left:7px">{{ goal.kpiRef }}</span>{% endif %}</td>
-                                        <td class="mono">{{ goal.direction.label }} {{ goal.target }}{{ goal.unit ? ' ' ~ goal.unit : '' }}</td>
-                                        <td>{% if goal.owner %}{{ goal.owner.name }}{% else %}<em class="pnone">nobody yet</em>{% endif %}</td>
-                                        <td><time datetime="{{ goal.closesAt|date('c') }}" data-localtime-format="day">{{ goal.closesAt|date('j M Y') }}</time></td>
-                                        <td><span class="gdots"><i class="{{ goalStates[goal.uuidString].mark }}"></i></span>{{ goalStates[goal.uuidString].label }}</td>
-                                        <td class="num">
-                                            <form method="post" action="{{ path('team_department_goal_withdraw', {uuid: department.uuidString, goal: goal.uuidString}) }}">
-                                                <input type="hidden" name="_token" value="{{ csrfToken }}">
-                                                <button class="softbtn danger" type="submit"
-                                                        {{ stimulus_controller('confirm-modal') }}
-                                                        data-action="click->confirm-modal#ask"
-                                                        data-confirm-modal-title-value="Withdraw “{{ goal.statement }}”?"
-                                                        data-confirm-modal-message-value="The commitment is taken away entirely — a withdrawn goal left on the page greyed out would be read as a miss. Nothing else changes."
-                                                        data-confirm-modal-confirm-label-value="Withdraw it"
-                                                        data-confirm-modal-danger-value="true">Withdraw</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% endif %}
-
-                    {# DECLARING ONE IS ONE ROW OF FIELDS, the house create card. #}
-                    <form class="crcard" method="post" action="{{ path('team_department_goal_declare', {uuid: department.uuidString}) }}">
-                        <input type="hidden" name="_token" value="{{ csrfToken }}">
-                        <div class="crgrid">
-                            <div class="crfield grow">
-                                <span class="crlab">The goal</span>
-                                <input class="fld" type="text" name="statement" maxlength="200" required
-                                       placeholder="Cover 60 % of the ground every month" aria-label="What the goal says">
-                            </div>
-                            <div class="crfield">
-                                <span class="crlab">Direction</span>
-                                <span class="fsel">
-                                    <select class="fld" name="direction" aria-label="Which way the goal is met">
-                                        <option value="at_least">at least</option>
-                                        <option value="at_most">at most</option>
-                                    </select>
-                                </span>
-                            </div>
-                            <div class="crfield">
-                                <span class="crlab">Target</span>
-                                <input class="fld zfld-sm" type="text" name="target" inputmode="decimal" required
-                                       placeholder="60" aria-label="The target">
-                            </div>
-                            <div class="crfield">
-                                <span class="crlab">Unit</span>
-                                <input class="fld zfld-sm" type="text" name="unit" maxlength="16" placeholder="%" aria-label="The target’s unit">
-                            </div>
-                        </div>
-                        <div class="crgrid">
-                            <div class="crfield">
-                                <span class="crlab">Answers for it</span>
-                                <span class="fsel">
-                                    <select class="fld" name="owner" aria-label="The position that answers for it">
-                                        <option value="">nobody yet</option>
-                                        {% for position in positions %}<option value="{{ position.uuidString }}">{{ position.name }}</option>{% endfor %}
-                                    </select>
-                                </span>
-                            </div>
-                            <div class="crfield">
-                                <span class="crlab">Opens</span>
-                                <input class="fld zfld-sm" type="date" name="opensAt" value="{{ goalWindow.opens }}" aria-label="The day the window opens">
-                            </div>
-                            <div class="crfield">
-                                <span class="crlab">Closes</span>
-                                <input class="fld zfld-sm" type="date" name="closesAt" value="{{ goalWindow.closes }}" aria-label="The day the window closes">
-                            </div>
-                            <div class="crfield grow">
-                                <span class="crlab">Judged by</span>
-                                <input class="fld" type="text" name="kpiRef" maxlength="80" placeholder="patrols.covered"
-                                       aria-label="The published figure that answers it">
-                            </div>
-                            <button class="cta" type="submit">{{ pm.icon_plus() }} Declare it</button>
-                        </div>
-                        <div class="crhint">
-                            {{ pm.icon_info() }}
-                            <span>The figure is <b>whatever the modules publish</b>. A goal nobody can measure yet reads
-                                <b>no figure yet</b> &mdash; never a miss.</span>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </section>
-
-        {# ── PEOPLE & POSITIONS ── the real positions filed under this department. ── #}
-        <section data-tab-panel="people" data-uhifadhi--team-bundle--department-target="tabpanel">
-            <div class="scoperule">
-                {{ pm.icon_info() }}
-                <div>People are in this department only through the <b>position</b> they hold &mdash; there is no
-                    &ldquo;add person to department&rdquo;, by design. Manage positions on the matrix.</div>
-            </div>
-            <div class="grid">
-                <div class="c">
-                    <span class="tab">Positions &amp; members<span class="src">&middot; via position</span></span>
-                    {% if positions|length %}
-                        <div style="margin-top:6px">
-                            {% for position in positions %}
-                                <div class="posrow">
-                                    <span class="pn"><a href="{{ path('team_positions', {position: position.uuidString}) }}">{{ position.name }}</a></span>
-                                    <div class="pp">
-                                        {% for value in position.grantValues %}
-                                            <span class="perm">{{ value }}</span>
-                                        {% else %}
-                                            <span class="pl-mem">nothing granted</span>
-                                        {% endfor %}
+                        <p class="use">Each goal is owned by a <b>position</b> and read from one module figure. The tick on every bar is the target.</p>
+                        <div class="goalgrid">
+                            {% for goal in goals %}
+                                <div class="goal {{ goal.tone }}">
+                                    <div class="gt">{{ goal.statement }}</div>
+                                    <div class="gbar {{ goal.tone }}"><i style="width:{{ goal.fill }}%"></i>{% if goal.tick is not null %}<u style="left:{{ goal.tick }}%"></u>{% endif %}</div>
+                                    <span class="gtarget">{{ goal.target }}</span>
+                                    <div class="gfoot">
+                                        <span class="owner">{{ ux_icon('shell:user-round', {width: 11, height: 11, 'aria-hidden': 'true'}) }}{{ goal.owner ?? 'nobody yet' }}</span>
+                                        <span class="chip {{ goal.chip }}">{{ goal.state.label }}</span>
                                     </div>
-                                    <div class="hb">
-                                        {% set held = holders[position.uuidString]|default(0) %}
-                                        {{ held }} {{ held == 1 ? 'holder' : 'holders' }}
-                                    </div>
+                                    <span class="mtd">{{ goal.reads }}</span>
                                 </div>
                             {% endfor %}
                         </div>
-                    {% else %}
-                        <div class="dp-empty"><b>No positions in this department yet</b>
-                            <span>A position is born in a department on the matrix. Until one is filed here, this
-                                department leads nobody.</span></div>
                     {% endif %}
-                    <a class="softbtn" href="{{ path('team_positions') }}" style="margin-top:12px">{{ pm.icon_people() }} Manage positions</a>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="c" id="dp-sources" {{ tb.wrap('modules', 'module') }}>
+                    <span class="tab">What produced these numbers<span class="src">&middot; where each figure comes from</span></span>
+                    <div class="lfilt">{{ tb.search('Find a module') }}</div>
+                    <table class="tbl">
+                        <thead><tr><th>Module</th><th class="num">Figures it feeds</th><th class="num">Areas</th></tr></thead>
+                        <tbody>
+                        {% for row in sources %}
+                            <tr {{ tb.row({}, row.name) }}><td><b>{{ row.name }}</b></td><td class="num">{{ row.figures }}</td><td class="num">{{ row.areas ?: '—' }}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    {{ tb.none(sources is empty ? 'This department runs no module, so nothing on this page has a source yet.' : 'No module matches this search.') }}
+                    {{ tb.foot(sources|length, 'modules', 'module') }}
+                    <p class="use"><b>Every number on this page has one owner.</b> Switch a module on for this department and this page grows its figures; switch it off and they go &mdash; nothing invented to fill a gap.</p>
                 </div>
             </div>
         </section>
 
-        {# ── SETTINGS ── the scope facts (real), and the attachment surface (follow-up). ── #}
-        <section data-tab-panel="settings" data-uhifadhi--team-bundle--department-target="tabpanel">
-            <div class="grid g2">
-                <div class="c">
-                    <span class="tab">Scope</span>
-                    <div style="margin-top:8px">
-                        <div class="rln"><span class="k">Scope</span><span class="v">{{ isArea ? 'Area-level · ' ~ area.name : 'Org-level' }}</span></div>
-                        <div class="rln"><span class="k">Reads</span><span class="v">{{ isArea ? area.name ~ ' only' : 'every area' }}</span></div>
-                        <div class="rln"><span class="k">Effect on data</span><span class="v acc">none &mdash; emphasis only</span></div>
-                    </div>
-                    <p class="use">Change a department&rsquo;s scope from <a href="{{ path('team_departments') }}">the
-                        manager</a> &mdash; it is audited, and confining an org-wide one ripples to its positions.</p>
-                </div>
-                <div class="c">
-                    <span class="tab">Modules attached<span class="src">&middot; the lens</span></span>
-
-                    {# THE ATTACHED SET — one row each, with the detach control on it.
-                       Nothing attached is a line, not an absent card: a department that
-                       leads with nothing should say so. #}
-                    <div data-dept-attached>
-                        {% for module in attached %}
-                            <div class="setrow">
-                                <span class="sn"><b>{{ module.name }}</b></span>
-                                {% set shared = sharing[module.slug]|default(0) %}
-                                {% if shared > 1 %}
-                                    <span class="dp-chip shared">shared &middot; {{ shared }} departments</span>
-                                {% else %}
-                                    <span class="fog mono">&mdash; this department only</span>
-                                {% endif %}
-                                <span class="sx">
-                                    <form method="post" action="{{ path('team_department_module_toggle', {uuid: department.uuidString, slug: module.slug}) }}">
-                                        <input type="hidden" name="_token" value="{{ csrfToken }}">
-                                        <button class="softbtn danger" type="submit">{{ di.icon_detach() }} Detach</button>
-                                    </form>
-                                </span>
+        {# ── PEOPLE & ACCESS ── #}
+        <section data-tab-panel="people" data-{{ ctl }}-target="tabpanel">
+            <p class="pgsub dp-lead">Who is in {{ department.name }} and what has happened to it. Read-only: each person&rsquo;s department is set on their record.</p>
+            {% embed '@Shell/_onpage.html.twig' with {rows: [
+                {id: 'dp-who', label: 'Who is in it', count: positions|length},
+                {id: 'dp-members', label: 'Members', count: people|length},
+                {id: 'dp-history', label: 'History', count: history|length},
+            ], department: department, positions: positions, people: people, history: history} only %}
+                {% import '@Team/_partial/_table.html.twig' as tb %}
+                {% block shell_onpage_main %}
+                    <div class="c" id="dp-who">
+                        <span class="tab">Who is in it<span class="src">&middot; the positions its people hold</span></span>
+                        {% if positions is empty %}
+                            <div class="dp-empty"><b>Nobody is placed in {{ department.name }} yet</b>
+                                <span>A person comes into a department through the placement on their record.</span></div>
+                        {% else %}
+                            <div class="dp-chart">
+                                <div class="ch-grid">
+                                    {% for position in positions %}
+                                        <div class="ch-n{{ position.supports ? ' sup' }}">
+                                            <div class="ch-t"><b>{{ position.name }}</b><span class="ch-c">{{ position.count }}</span></div>
+                                            {% if position.supports %}<span class="p">supports</span>{% else %}<span class="ch-faces">{% for face in position.faces|slice(0, 4) %}<i>{{ face }}</i>{% endfor %}</span>{% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
                             </div>
-                        {% else %}
-                            <p class="use">Nothing attached.</p>
-                        {% endfor %}
+                        {% endif %}
+                        {% set supporting = people|filter(p => p.supports)|length %}
+                        <div class="rc-foot"><span>{{ people|length - supporting }} belong &middot; {{ supporting }} support</span></div>
                     </div>
 
-                    {# WHAT IS LEFT TO ATTACH — the installation's catalogue minus what
-                       this department already leads with. A module nobody installed is
-                       not offered, because attaching it would point at code this
-                       deployment does not have. #}
-                    <div class="chiprow" data-dept-attach>
-                        <span class="lbl">Attach</span>
-                        {% for module in detached %}
-                            <form method="post" action="{{ path('team_department_module_toggle', {uuid: department.uuidString, slug: module.slug}) }}">
-                                <input type="hidden" name="_token" value="{{ csrfToken }}">
-                                <button class="dchip" type="submit">{{ module.name }}</button>
-                            </form>
-                        {% else %}
-                            <span class="fog mono">&mdash; every installed module is attached</span>
-                        {% endfor %}
+                    <div class="c" id="dp-members" {{ tb.wrap('people', 'person') }}>
+                        <span class="tab">Members<span class="src">&middot; {{ people|length - supporting }} belong &middot; {{ supporting }} support</span></span>
+                        <div class="lfilt">
+                            {{ tb.chip('kind', [
+                                {value: '', label: 'All', count: people|length},
+                                {value: 'belongs', label: 'Belong', count: people|length - supporting},
+                                {value: 'supports', label: 'Support', count: supporting},
+                            ]) }}
+                            {{ tb.search('Find a person') }}
+                        </div>
+                        <table class="tbl">
+                            <thead><tr><th>Person</th><th>Position</th><th class="door"></th></tr></thead>
+                            <tbody>
+                            {% for person in people %}
+                                {% set user = person.user %}
+                                <tr {{ tb.row({kind: person.supports ? 'supports' : 'belongs'}, user.fullName ~ ' ' ~ user.position.name|default('')) }}>
+                                    <td><b>{{ user.fullName }}</b><span class="sub">{{ person.supports ? 'supports' : 'belongs' }}</span></td>
+                                    <td>{{ user.position.name|default('—') }}</td>
+                                    <td class="door"><a class="ov-open" href="{{ path('team_member', {uuid: user.uuidString}) }}">Record &rarr;</a></td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {{ tb.none(people is empty ? 'Nobody belongs to or supports ' ~ department.name ~ ' yet.' : 'No person matches these filters.') }}
+                        {{ tb.foot(people|length, 'people', 'person') }}
                     </div>
 
-                    <p class="use">Attaching a module makes it <b>lead</b> for this department&rsquo;s people &mdash;
-                        it grants nothing and hides nothing. A module claimed by two departments is one module,
-                        listed first for both.</p>
+                    <div class="c" id="dp-history" {{ tb.wrap('changes', 'change') }}>
+                        <span class="tab">History<span class="src">&middot; {{ history|length }} {{ history|length == 1 ? 'change' : 'changes' }}</span></span>
+                        <div class="lfilt">{{ tb.search('Find a change') }}</div>
+                        <table class="tbl">
+                            <thead><tr><th>When</th><th>What</th><th>By</th></tr></thead>
+                            <tbody>
+                            {% for line in history %}
+                                <tr {{ tb.row({}, line.text ~ ' ' ~ (line.by ?? '')) }}>
+                                    <td class="mono"><time datetime="{{ line.at|date('c') }}">{{ line.at|date('j M Y · H:i') }}</time></td>
+                                    <td>{{ line.text }}</td>
+                                    <td>{{ line.by ?? '—' }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {{ tb.none('No change matches this search.') }}
+                        {{ tb.foot(history|length, 'changes', 'change') }}
+                    </div>
+                {% endblock %}
+            {% endembed %}
+        </section>
+
+        {# ── SETTINGS ── #}
+        <section data-tab-panel="settings" data-{{ ctl }}-target="tabpanel">
+            <p class="pgsub dp-lead">The modules {{ department.name }} runs, read-only. They are switched, and its name, scope and goals changed, on Configure.</p>
+            {% set on = modules|filter(m => m.on)|length %}
+            <div class="grid">
+                <div class="c" {{ tb.wrap('modules', 'module') }}>
+                    <span class="tab">Modules<span class="src">&middot; read-only &middot; switched on Configure</span></span>
+                    <div class="lfilt">
+                        {{ tb.chip('state', [
+                            {value: '', label: 'All', count: modules|length},
+                            {value: 'on', label: 'On', count: on},
+                            {value: 'off', label: 'Off', count: modules|length - on},
+                        ]) }}
+                        {{ tb.search('Find a module') }}
+                    </div>
+                    <table class="tbl">
+                        <thead><tr><th>Module</th><th>Organization</th><th>Department</th></tr></thead>
+                        <tbody>
+                        {% for module in modules %}
+                            <tr {{ tb.row({state: module.on ? 'on' : 'off'}, module.name) }}>
+                                <td><div class="cmname"><b>{{ module.name }}</b>{% if module.description %}<span class="cmwhat">{{ module.description }}</span>{% endif %}</div></td>
+                                <td><span class="chip ok">running</span></td>
+                                <td><span class="chip{{ module.on ? ' ok' }}">{{ module.on ? 'on' : 'off' }}</span></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    {{ tb.none(modules is empty ? 'No module is installed.' : 'No module matches these filters.') }}
+                    {{ tb.foot(modules|length, 'modules', 'module') }}
+                    <p class="use">{{ on }} on &middot; {{ modules|length - on }} off.{% if door('departments.configure') and mayManage %} To change what {{ department.name }} runs, <a href="{{ configureUrl }}">Configure</a>.{% endif %}</p>
                 </div>
             </div>
         </section>

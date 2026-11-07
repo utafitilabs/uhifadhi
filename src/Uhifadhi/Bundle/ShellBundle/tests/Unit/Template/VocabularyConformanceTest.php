@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\ShellBundle\Tests\Unit\Template;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Uhifadhi\Bundle\ShellBundle\Test\VocabularyConformanceTestCase;
 
 /**
@@ -102,7 +103,7 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
         preg_match_all('/class="([^"]*)"/', $twig, $literal);
         preg_match_all("/class: '([^']+)'/", $twig, $icons);
 
-        $classes = ['dd-set', 'dd-end', 'dd-lift'];
+        $classes = ['dd-set', 'dd-end', 'dd-sm', 'dd-lift'];
         foreach ([...$literal[1], ...$icons[1]] as $attribute) {
             $attribute = (string) preg_replace('/\{[{%].*?[}%]\}/s', ' ', $attribute);
             foreach (preg_split('/\s+/', trim($attribute)) ?: [] as $class) {
@@ -120,6 +121,105 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
 
         self::assertContains('dd-i', $classes, 'the leading icon is read');
         self::assertSame([], $missing, \sprintf('The dropdown writes [%s] and shell.css defines no rule for it.', implode(', ', $missing)));
+    }
+
+    /**
+     * THE BANNER'S AND THE FOOT'S CLASSES ARE THE SHEET'S, asked the same way
+     * as the dropdown's: each class the partial writes literally, through
+     * `ux_icon` or by a tone or a state it composes, is defined by a rule in
+     * shell.css.
+     *
+     * @return iterable<string, array{string, list<string>}>
+     */
+    public static function partials(): iterable
+    {
+        yield 'the banner' => ['_banner.html.twig', ['banner-warn', 'banner-fail', 'banner-info', 'banner-ok', 'banner-lines']];
+        yield 'the foot' => ['_foot.html.twig', ['on']];
+    }
+
+    /**
+     * @param list<string> $composed
+     */
+    #[DataProvider('partials')]
+    public function testEveryClassOfAPartialIsDefinedByTheSheet(string $partial, array $composed): void
+    {
+        $written = self::classesOfThePartial($partial);
+        $classes = [...$written, ...$composed];
+
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', (string) file_get_contents(self::bundlePath().'/public/shell.css'));
+        $missing = array_values(array_filter(
+            array_unique($classes),
+            static fn (string $class): bool => 1 !== preg_match('/\.'.preg_quote($class, '/').'(?![\w-])[^{}]*\{/', $css),
+        ));
+
+        self::assertNotSame([], $written, \sprintf('templates/%s writes classes', $partial));
+        self::assertSame([], $missing, \sprintf('%s writes [%s] and shell.css defines no rule for it.', $partial, implode(', ', $missing)));
+    }
+
+    /**
+     * THE HOUSE TABLE'S SUB-LINE AND DOOR CELL are the shell's: a cell's
+     * second fact in dim mono under its first, and the last column's door,
+     * as narrow as it can be and never wrapped. Scoped to the house table,
+     * because `.sub` is already the KPI card's line.
+     */
+    public function testTheHouseTablesSubLineAndDoorAreTheSheets(): void
+    {
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', (string) file_get_contents(self::bundlePath().'/public/shell.css'));
+
+        self::assertMatchesRegularExpression('/(^|\})\s*table\.tbl \.sub\s*\{[^}]*font-family:\s*var\(--font-mono\)[^}]*font-size:\s*11px[^}]*font-weight:\s*400[^}]*color:\s*var\(--dim\)/', $css);
+        self::assertMatchesRegularExpression('/(^|\})\s*table\.tbl td\.door\s*\{[^}]*width:\s*1%[^}]*white-space:\s*nowrap/', $css);
+        self::assertDoesNotMatchRegularExpression('/(^|[,}])\s*\.sub\s*[,{]/m', $css, 'a bare .sub would re-style every KPI card\'s line');
+    }
+
+    /**
+     * AN OVERVIEW'S PARTS IN THE HOUSE TYPE PAIRS are the shell's, so every
+     * overview page draws them alike whichever sheets it links: the summary
+     * strip (`.factband.ov-band`: labels 9.5px .16em, values 13.5/600, their
+     * words 12/400), the four figures (`.ov-kpis`: 26/700 mono, the line
+     * 11/400) and the plots (`.ov-plots`: footer 11px, its door 11/700, the
+     * key 11px).
+     *
+     * @return iterable<string, array{string, string}>
+     */
+    public static function overviewPairs(): iterable
+    {
+        yield 'strip label' => ['.factband.ov-band .f .k', 'font-size:\\s*9\\.5px;\\s*letter-spacing:\\s*\\.16em'];
+        yield 'strip value' => ['.factband.ov-band .f .v', 'font-size:\\s*13\\.5px;\\s*font-weight:\\s*600'];
+        yield 'strip words' => ['.factband.ov-band .f .v em', 'font-size:\\s*12px;\\s*font-weight:\\s*400;\\s*margin-left:\\s*4px'];
+        yield 'figure' => ['.ov-kpis .kpi b', 'font-family:\\s*var\\(--font-mono\\);\\s*font-size:\\s*26px;\\s*font-weight:\\s*700'];
+        yield 'figure line' => ['.ov-kpis .kpi .sub', 'font-size:\\s*11px;\\s*font-weight:\\s*400'];
+        yield 'plot footer' => ['.ov-plots .sxmore', 'font-size:\\s*11px'];
+        yield 'plot door' => ['.ov-plots .sxmore a', 'font-size:\\s*11px;\\s*font-weight:\\s*700'];
+        yield 'plot key' => ['.ov-plots .sxmxkey', 'font-size:\\s*11px;\\s*margin:\\s*12px 0 0'];
+    }
+
+    #[DataProvider('overviewPairs')]
+    public function testAnOverviewsPartsAreTheSheets(string $selector, string $values): void
+    {
+        $css = (string) preg_replace('#/\\*.*?\\*/#s', '', (string) file_get_contents(self::bundlePath().'/public/shell.css'));
+
+        self::assertMatchesRegularExpression('/(^|\\})\\s*'.preg_quote($selector, '/').'\\s*\\{[^}]*'.$values.'/', $css, $selector);
+    }
+
+    /** @return list<string> */
+    private static function classesOfThePartial(string $partial): array
+    {
+        $path = self::bundlePath().'/templates/'.$partial;
+        $twig = (string) preg_replace('/\{#.*?#\}/s', '', is_file($path) ? (string) file_get_contents($path) : '');
+        preg_match_all('/class="([^"]*)"/', $twig, $literal);
+        preg_match_all("/class: '([^']+)'/", $twig, $icons);
+
+        $classes = [];
+        foreach ([...$literal[1], ...$icons[1]] as $attribute) {
+            $attribute = (string) preg_replace('/\{[{%].*?[}%]\}/s', ' ', $attribute);
+            foreach (preg_split('/\s+/', trim($attribute)) ?: [] as $class) {
+                if ('' !== $class && !str_ends_with($class, '-')) {
+                    $classes[] = $class;
+                }
+            }
+        }
+
+        return $classes;
     }
 
     /**

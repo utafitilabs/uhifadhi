@@ -23,17 +23,11 @@ use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleStatus;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 
 /**
- * THE AREA'S ZONES, LISTED — owner-ruled: the zones tab lists every zone the
- * way it lists every station.
+ * THE ZONES HUB · ZONES — every zone of the area, the house table under the
+ * house bar (stations or not, the order, the search) and the house foot.
  *
- * THE STATIONS TABLE'S TWIN, which is the whole point: the same card, the
- * same grouped dropdowns, the same search and the same pager, so a reader
- * who has learnt one has learnt the other. Two tables of the same shape
- * written twice are two tables that drift.
- *
- * THE PICKER IS STILL THE SIDEBAR. This lists; picking one zone is the zone
- * record, and the record does not list them again — a page that both lists
- * and is one of the things listed reads as two pages.
+ * Design: areas/<area>/zones/zones.html. The record does not list the zones
+ * again: picking one is the zone record.
  */
 #[CoversClass(ZoneListService::class)]
 final class ZonesTableTest extends WebTestCase
@@ -57,8 +51,8 @@ final class ZonesTableTest extends WebTestCase
 
         $row = $this->rowHtml($this->tab($area), 'Crater');
 
-        self::assertMatchesRegularExpression('#<td class="num"><b>[\d,]+</b></td>#', $row, 'the extent is a number');
-        self::assertStringContainsString('<b>1</b>', $row, 'the station standing on it is counted');
+        self::assertMatchesRegularExpression('#^<td><b>Crater</b></td><td class="num">[\d,]+</td>#', $row, 'the extent is a number');
+        self::assertMatchesRegularExpression('#<td class="num">1</td><td class="num">0</td>#', $row, 'the station standing on it is counted, and nobody posted');
     }
 
     /**
@@ -73,11 +67,11 @@ final class ZonesTableTest extends WebTestCase
 
         $row = $this->rowHtml($this->tab($this->threeZones()), 'Crater');
 
-        self::assertStringContainsString('no KPI yet', $row);
-        self::assertStringNotContainsString('<b>0</b>%', $row);
+        self::assertStringContainsString('<td class="num"><span class="mono d" title="no module publishes it">&mdash;</span></td>', $row);
+        self::assertStringNotContainsString('0 %', $row);
     }
 
-    /** A zone nobody is posted to says "none" rather than nought. */
+    /** A zone with no station counts nought stations, as the design writes it. */
     public function testAZoneWithNoPostSaysNone(): void
     {
         $this->boot();
@@ -85,7 +79,7 @@ final class ZonesTableTest extends WebTestCase
 
         $row = $this->rowHtml($this->tab($this->threeZones()), 'Highlands');
 
-        self::assertStringContainsString('<em class="pnone">none</em>', $row);
+        self::assertMatchesRegularExpression('#<td class="num">0</td><td class="num">0</td>#', $row);
     }
 
     public function testTheOrderIsTheAddress(): void
@@ -97,11 +91,11 @@ final class ZonesTableTest extends WebTestCase
         // BY EXTENT, widest first — Crater is the western half of the area.
         self::assertSame(
             ['Crater', 'Highlands', 'Salt Flats'],
-            $this->rowsOf($this->tab($area).'?order=extent'),
+            $this->rowsOf($this->tab($area).'?sort=extent'),
         );
         // AND BY POSTS, most first.
         $this->stations()->add($area, 'Highlands Station', -29.2, -3.5);
-        self::assertSame('Highlands', $this->rowsOf($this->tab($area).'?order=stations')[0]);
+        self::assertSame('Highlands', $this->rowsOf($this->tab($area).'?sort=stations')[0]);
     }
 
     public function testTheHasStationsFilterNarrowsTheTable(): void
@@ -115,16 +109,16 @@ final class ZonesTableTest extends WebTestCase
         self::assertSame(['Highlands', 'Salt Flats'], $this->rowsOf($this->tab($area).'?stations=none'));
     }
 
-    /** Its own search key: three lists on one page, and only one may own `q`. */
-    public function testTheSearchIsByNameAndOnItsOwnKey(): void
+    /** The search is by name, under the house key. */
+    public function testTheSearchIsByName(): void
     {
         $this->boot();
         $this->signIn();
         $area = $this->threeZones();
 
-        self::assertSame(['Highlands'], $this->rowsOf($this->tab($area).'?zq=high'));
-        // The stations card's own search is untouched by it.
-        self::assertStringContainsString('name="zq"', $this->body($this->tab($area)));
+        self::assertSame(['Highlands'], $this->rowsOf($this->tab($area).'?q=high'));
+        self::assertStringContainsString('name="q"', $this->body($this->tab($area)));
+        self::assertStringContainsString('placeholder="Find a zone by name&hellip;"', $this->body($this->tab($area)));
     }
 
     public function testNothingMatchingSaysSoAndOffersTheWayBack(): void
@@ -132,10 +126,10 @@ final class ZonesTableTest extends WebTestCase
         $this->boot();
         $this->signIn();
 
-        $body = $this->body($this->tab($this->threeZones()).'?zq=nowhere');
+        $body = $this->body($this->tab($this->threeZones()).'?q=nowhere');
 
         self::assertStringContainsString('No zone matches', $body);
-        self::assertStringContainsString('clear the search, or widen a filter', $body);
+        self::assertStringContainsString('Clear the filters', $body);
     }
 
     /** An area with no zone says what a zone is, and where one comes from. */
@@ -146,25 +140,45 @@ final class ZonesTableTest extends WebTestCase
 
         $body = $this->body($this->tab($this->anArea()));
 
-        self::assertStringContainsString('No zone imported yet', $body);
+        self::assertStringContainsString('No zone in this area yet', $body);
     }
 
-    /** Ten to a page, and the pager says what out of. */
-    public function testTheTablePagesTenAtATime(): void
+    /** Twenty to a page under the house foot, or all of them. */
+    public function testTheTablePagesUnderTheHouseFoot(): void
     {
         $this->boot();
         $this->signIn();
         $area = $this->anArea();
-        for ($n = 1; $n <= 11; ++$n) {
+        for ($n = 1; $n <= 21; ++$n) {
             $this->aZone($area, \sprintf('Zone %02d', $n), self::A_WEST_HALF);
         }
 
-        $first = $this->rowsOf($this->tab($area));
-        $second = $this->rowsOf($this->tab($area).'?zpage=2');
+        self::assertCount(20, $this->rowsOf($this->tab($area)));
+        self::assertSame(['Zone 21'], $this->rowsOf($this->tab($area).'?page=2'));
+        self::assertCount(21, $this->rowsOf($this->tab($area).'?per=all'));
+        $body = $this->body($this->tab($area).'?page=2');
+        self::assertStringContainsString('class="rdf-foot"', $body);
+        self::assertStringContainsString('21 zones', $body);
+        self::assertStringContainsString('page <span class="pg">2</span> of 2', $body);
+    }
 
-        self::assertCount(10, $first);
-        self::assertSame(['Zone 11'], $second);
-        self::assertStringContainsString('1&ndash;10 of 11 zones', $this->body($this->tab($area)));
+    /** The bar: two house dropdowns and the search; no strip and no figures. */
+    public function testTheRegisterIsTheHouseTableUnderTheHouseBar(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $body = $this->body($this->tab($this->threeZones()));
+
+        self::assertStringContainsString('Every zone', $body);
+        foreach (['stations', 'sort'] as $axis) {
+            self::assertStringContainsString('data-dd="'.$axis.'"', $body);
+        }
+        foreach (['Zone', 'km&sup2;', 'Covered', 'Stations', 'Posted'] as $head) {
+            self::assertMatchesRegularExpression('#<th[^>]*>'.$head.'</th>#', $body);
+        }
+        self::assertMatchesRegularExpression('#<td class="door"><a class="open-btn" href="/areas/[^"]+/zones/[^"]+">Open</a></td>#', $body);
+        self::assertStringNotContainsString('class="factband', $body, 'A table page carries no strip.');
+        self::assertStringNotContainsString('class="c kpi"', $body);
     }
 
     /** The record does not list the zones again; the tab is where they are listed. */
@@ -202,9 +216,9 @@ final class ZonesTableTest extends WebTestCase
         $modules->install($area, 'patrols');
         $modules->install($area, 'incidents');
 
-        preg_match_all('#<th class="num">([A-Z][a-z]+) [a-z]{3}</th>#', $this->body($this->tab($area)), $found);
+        preg_match_all('#<th class="num">([A-Z][a-z]+)</th>#', $this->body($this->tab($area)), $found);
 
-        self::assertSame(['Patrols', 'Incidents'], $found[1]);
+        self::assertSame(['Patrols', 'Incidents'], array_values(array_diff($found[1], ['Covered', 'Stations', 'Posted'])));
     }
 
     private function aModule(string $slug, string $name, int $position): void
@@ -231,7 +245,7 @@ final class ZonesTableTest extends WebTestCase
 
     private function tab(AreaOfInterest $area): string
     {
-        return '/areas/'.$area->getUuidString().'/zones';
+        return '/areas/'.$area->getUuidString().'/zones/list';
     }
 
     private function body(string $url): string
@@ -248,7 +262,7 @@ final class ZonesTableTest extends WebTestCase
      */
     private function rowsOf(string $url): array
     {
-        preg_match_all('#<td class="zname">.*?<b>([^<]+)</b>#s', self::zoneTable($this->body($url)), $found);
+        preg_match_all('#<tr data-zone><td><b>([^<]+)</b>#', self::zoneTable($this->body($url)), $found);
 
         return array_map(trim(...), $found[1]);
     }
@@ -256,7 +270,7 @@ final class ZonesTableTest extends WebTestCase
     /** One row's markup, so a cell can be read of the zone it belongs to. */
     private function rowHtml(string $url, string $zone): string
     {
-        foreach (explode('<tr>', self::zoneTable($this->body($url))) as $row) {
+        foreach (explode('<tr data-zone>', self::zoneTable($this->body($url))) as $row) {
             if (str_contains($row, '<b>'.$zone.'</b>')) {
                 return $row;
             }
@@ -267,7 +281,7 @@ final class ZonesTableTest extends WebTestCase
 
     private static function zoneTable(string $body): string
     {
-        preg_match('#<table class="tbl zdtbl zltbl">(.*?)</table>#s', $body, $found);
+        preg_match('#<table class="tbl" data-zones>(.*?)</table>#s', $body, $found);
 
         return $found[1] ?? '';
     }

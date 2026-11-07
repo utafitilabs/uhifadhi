@@ -1,0 +1,20 @@
+{# THE HOUSE REGISTER FOOT, drawn by the server: "n things · [20 per page]"
+   on the left, "page k of n" on the right with ‹ › only where there is a
+   page to go to. The size chooser is the foot's own (20 · 50 · 100 · All);
+   every size and every page is a link, so where a reader is in a list is in
+   the address. `params` is the list's question without its page or size.
+
+   Takes: total, one, many (the noun), size, page, pages, params. #}
+{%- set route = app.request.attributes.get('_route') -%}
+{%- set base = app.request.attributes.get('_route_params')|merge(params) -%}
+{%- set sized = size == '20' ? base : base|merge({size: size}) -%}
+<div class="rdf-foot">
+    <span>{{ total }} {{ total == 1 ? one : many }} &middot; <details class="i-dd rdf-size"><summary><span class="pg">{{ size == 'all' ? 'All' : size }}</span> per page<span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu" aria-label="Rows per page">
+        {%- for option in ['20', '50', '100', 'all'] %}<a class="i-ddopt{{ option == size ? ' on' }}" href="{{ path(route, option == '20' ? base : base|merge({size: option})) }}" aria-current="{{ option == size ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ option == 'all' ? 'All' : option }}</span></a>{% endfor -%}
+    </div></details></span>
+    <span class="rdf-page">
+        {%- if page > 1 %}<a href="{{ path(route, sized|merge({page: page - 1})) }}" aria-label="Previous page">&lsaquo;</a>{% endif -%}
+        page <span class="pg">{{ page }}</span> of {{ pages }}
+        {%- if page < pages %}<a href="{{ path(route, sized|merge({page: page + 1})) }}" aria-label="Next page">&rsaquo;</a>{% endif -%}
+    </span>
+</div>

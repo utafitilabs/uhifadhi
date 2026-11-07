@@ -24,6 +24,7 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
+use Uhifadhi\Bundle\ShellBundle\Service\TablePageService;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentMark;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
@@ -34,7 +35,9 @@ use Uhifadhi\Bundle\TeamBundle\Security\DepartmentReach;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentRecordService;
 use Uhifadhi\Contracts\Entity\AreaInterface;
+use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
 
 /**
  * ONE AREA'S DEPARTMENTS — the tab that reads them, and the section that
@@ -76,6 +79,9 @@ final readonly class AreaDepartmentController
         private ModuleCatalogue $catalogue,
         private DepartmentPalette $palette,
         private DepartmentReach $reach,
+        private TablePageService $tablePages,
+        private DepartmentRecordService $record,
+        private ?CurrentPeriodInterface $periods = null,
     ) {
     }
 
@@ -86,13 +92,30 @@ final readonly class AreaDepartmentController
         $area = $this->areaByUuid($uuid);
         $query = DepartmentQuery::from($request);
 
-        $own = $query->matching($this->reach->readable($this->departments->findForArea($area)));
-        $inherited = $query->matching($this->reach->readable($this->departments->findOrgLevelOrdered()));
-        $reading = $this->reading([...$own, ...$inherited]);
+        $kind = $request->query->getString('kind');
+        $kind = \in_array($kind, ['own', 'org'], true) ? $kind : null;
+        $allOwn = $query->matching($this->reach->readable($this->departments->findForArea($area)));
+        $allInherited = $query->matching($this->reach->readable($this->departments->findOrgLevelOrdered()));
+        $listed = [...('org' === $kind ? [] : $allOwn), ...('own' === $kind ? [] : $allInherited)];
+        $table = $this->tablePages->read($request, \count($listed));
+        $page = $table->slice($listed);
+        $own = array_values(array_filter($page, static fn (Department $d): bool => \in_array($d, $allOwn, true)));
+        $inherited = array_values(array_filter($page, static fn (Department $d): bool => \in_array($d, $allInherited, true)));
+        $reading = $this->reading([...$allOwn, ...$allInherited]);
+        $behind = null === $this->periods ? [] : $this->record->behind([...$allOwn, ...$allInherited], $reading['figures'], $this->periods->now());
 
         return new Response($this->twig->render('@Team/departments/area_tab.html.twig', [
             'area' => $area,
             'query' => $query,
+            'kind' => $kind,
+            'kindOptions' => [
+                ['value' => 'own', 'label' => 'This area', 'count' => \count($allOwn)],
+                ['value' => 'org', 'label' => 'Org-wide', 'count' => \count($allInherited)],
+            ],
+            'listedTotal' => \count($allOwn) + \count($allInherited),
+            'table' => $table,
+            'links' => $this->tablePages->links($request, $table),
+            'behind' => $behind,
             'groups' => [
                 [
                     'key' => 'own',
@@ -111,14 +134,7 @@ final readonly class AreaDepartmentController
             'areaHref' => $this->tolerant('area_show', ['uuid' => $area->getUuidString()]),
             /* Which card is open is a place, so it is a query a link carries. */
             'openDepartment' => '' === trim($request->query->getString('open')) ? null : trim($request->query->getString('open')),
-            'ownCount' => \count($this->reach->readable($this->departments->findForArea($area))),
-            'orgCount' => \count($this->reach->readable($this->departments->findOrgLevelOrdered())),
             ...$reading,
-            // THE BAND'S SECOND FACT IS ABOUT THIS AREA'S OWN DEPARTMENTS.
-            // An org-wide department's positions belong to the
-            // organization, and counting them here would make every area
-            // report the same number as its own.
-            ...$this->staffing($own),
         ]));
     }
 
@@ -198,52 +214,6 @@ final readonly class AreaDepartmentController
             // same category on every surface that marks one.
             'cats' => $this->palette->indexes(),
         ];
-    }
-
-    /**
-     * HOW MANY PEOPLE WORK IN THESE DEPARTMENTS, AND HOW MANY POSITIONS THEY
-     * HOLD BETWEEN THEM.
-     *
-     * IT NO LONGER READS "M OF N FILLED", and that is the ruling rather than
-     * a simplification. A department's positions are DERIVED from the people
-     * placed in it — a position is on the list because somebody there holds
-     * it — so every derived position is held by construction and "M of N"
-     * could only ever print "N of N". A figure that cannot vary is a figure
-     * that says nothing, and a reader who has learnt it means something
-     * elsewhere would read it as meaning something here.
-     *
-     * SO THE TWO NUMBERS ARE TWO FACTS: how many people, and how many
-     * distinct positions. They are deliberately not a ratio — a person holds
-     * one position and a position is held by many, so neither divides into
-     * the other.
-     *
-     * EACH IS COUNTED ONCE ACROSS THE WHOLE SET. Somebody placed in two of
-     * these departments is one person, and a position held in two of them is
-     * one position; summing per department and adding the totals would count
-     * both twice, which is the bug the previous reckoning of this cell
-     * existed to avoid.
-     *
-     * @param list<Department> $departments
-     *
-     * @return array{people: int, positionCount: int}
-     */
-    private function staffing(array $departments): array
-    {
-        $people = [];
-        $positions = [];
-
-        foreach ($departments as $department) {
-            foreach ($this->membership->membersOf($department) as $member) {
-                $people[(int) $member->getId()] = true;
-
-                $position = $member->getPosition();
-                if (null !== $position) {
-                    $positions[(int) $position->getId()] = true;
-                }
-            }
-        }
-
-        return ['people' => \count($people), 'positionCount' => \count($positions)];
     }
 
     /**

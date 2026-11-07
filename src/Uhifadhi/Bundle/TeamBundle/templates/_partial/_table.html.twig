@@ -1,0 +1,58 @@
+{# THE HOUSE TABLE'S BAR AND FOOT OVER ROWS THE SERVER WROTE — the `.lfilt`
+   bar (a chip an axis, its options with their counts, the search at the
+   right) and the shell's register foot, both moved by the `table-filter`
+   controller. A page opens the controller on the wrapper and gives every
+   row `data-…-target="row"`, `data-<axis>` and `data-find`:
+
+     <div {{ tb.wrap('people', 'person') }}>
+         <div class="lfilt">{{ tb.chip('kind', options) }}{{ tb.search('Find a person') }}</div>
+         <table class="tbl">… <tr {{ tb.row({kind: 'belongs'}, 'tumaini njau') }}> …</table>
+         {{ tb.none('No person matches these filters.') }}
+         {{ tb.foot(rows|length, 'people', 'person') }}
+     </div>
+
+   `options` is [{value, label, count, chip?}], the lead "all" row first with
+   the value ''; `chip` is what the trigger reads once the option is chosen. #}
+{% macro name() %}uhifadhi--team-bundle--table-filter{% endmacro %}
+
+{% macro wrap(noun, one) -%}
+    {%- set c = _self.name() -%}
+    data-controller="{{ c }}" data-{{ c }}-noun-value="{{ noun }}" data-{{ c }}-one-value="{{ one }}"
+{%- endmacro %}
+
+{% macro row(axes, find) -%}
+    {%- set c = _self.name() -%}
+    data-{{ c }}-target="row"{% for axis, value in axes %} data-{{ axis }}="{{ value }}"{% endfor %} data-find="{{ find|lower }}"
+{%- endmacro %}
+
+{% macro chip(axis, options) -%}
+    {%- set c = _self.name() -%}
+    {%- set lead = options|first -%}
+    <details class="i-dd" data-axis="{{ axis }}" data-{{ c }}-target="chip"><summary class="mchip i-ddt"><span class="i-ddval">{{ lead.chip ?? (lead.label|lower ~ ' · ' ~ lead.count) }}</span><span class="i-ddcaret" aria-hidden="true">&#9662;</span></summary><div class="i-ddmenu" aria-label="{{ axis }}" data-action="click->{{ c }}#choose">
+        {%- for option in options %}
+        <button type="button" class="i-ddopt{{ loop.first ? ' on' }}" data-opt="{{ option.value }}" data-chip="{{ option.chip ?? (option.label|lower ~ ' · ' ~ option.count) }}" aria-pressed="{{ loop.first ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ option.label }}</span><span class="i-ddopt-n">{{ option.count }}</span></button>
+        {%- if loop.first and options|length > 1 %}<span class="i-ddsep"></span>{% endif %}
+        {%- endfor %}
+    </div></details>
+{%- endmacro %}
+
+{% macro search(placeholder) -%}
+    {%- set c = _self.name() -%}
+    <div class="lsearch">{{ ux_icon('shell:search', {width: 14, height: 14, 'aria-hidden': 'true'}) }}<input class="fld" type="search" placeholder="{{ placeholder }}" aria-label="{{ placeholder }}" data-{{ c }}-target="search" data-action="input->{{ c }}#search"></div>
+{%- endmacro %}
+
+{% macro none(text) -%}
+    <p class="use dp-none" data-{{ _self.name() }}-target="none" hidden>{{ text }}</p>
+{%- endmacro %}
+
+{% macro foot(count, noun, one) -%}
+    {%- set c = _self.name() -%}
+    {{- include('@Shell/_foot.html.twig', {
+        count: count, noun: noun, one: one, perPage: 20, client: true,
+        hooks: {
+            count: {('data-' ~ c ~ '-target'): 'count'},
+            menu: {'data-action': 'click->' ~ c ~ '#size'},
+            pager: {('data-' ~ c ~ '-target'): 'pager', 'data-action': 'click->' ~ c ~ '#step'},
+        },
+    }, with_context = false) -}}
+{%- endmacro %}

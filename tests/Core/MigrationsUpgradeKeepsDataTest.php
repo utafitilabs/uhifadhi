@@ -48,18 +48,18 @@ final class MigrationsUpgradeKeepsDataTest extends MigrationsTestCase
 
         $this->seedTheTeam();
 
-        self::assertSame(6 + TeamContentProvider::FIELD_STAFF, $this->countPeople());
+        self::assertSame(6 + TeamContentProvider::FIELD_STAFF + 4, $this->countPeople());
         self::assertSame(3, $this->countIn('team_department'));
-        self::assertSame(5, $this->countIn('team_position'));
+        self::assertSame(7, $this->countIn('team_position'));
 
         // What an installation taking a new core does. Nothing is outstanding,
         // so nothing runs — and nothing may be lost by asking.
         $this->asAFreshProcess();
         $this->console('doctrine:migrations:migrate', ['--no-interaction' => true, 'version' => 'latest']);
 
-        self::assertSame(6 + TeamContentProvider::FIELD_STAFF, $this->countPeople());
+        self::assertSame(6 + TeamContentProvider::FIELD_STAFF + 4, $this->countPeople());
         self::assertSame(3, $this->countIn('team_department'));
-        self::assertSame(5, $this->countIn('team_position'));
+        self::assertSame(7, $this->countIn('team_position'));
     }
 
     public function testTheWholeHistoryUnwindsToNothingAndComesBack(): void

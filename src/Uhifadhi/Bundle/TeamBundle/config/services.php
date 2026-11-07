@@ -562,6 +562,8 @@ return static function (ContainerConfigurator $container): void {
             service('team.access.catalogue'),
             service(PositionRepository::class),
             service(DepartmentRepository::class),
+            service('team.permissions.runs'),
+            service('doctrine.orm.entity_manager'),
         ])
         ->tag('uhifadhi.devkit.content_provider');
 

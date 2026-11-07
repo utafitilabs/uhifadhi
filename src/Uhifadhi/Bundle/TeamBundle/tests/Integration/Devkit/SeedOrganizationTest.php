@@ -56,16 +56,18 @@ final class SeedOrganizationTest extends IntegrationTestCase
         $this->em->clear();
 
         self::assertCount(3, $this->service(DepartmentRepository::class)->findAllOrdered());
-        // FIVE POSITIONS, AND THE FIFTH IS HELD BY NOBODY on purpose:
-        // retiring is refused while anybody holds a position, so a ground
-        // where every position is held never draws the offer at all.
-        self::assertCount(5, $this->service(PositionRepository::class)->findAllOrdered());
+        // SEVEN POSITIONS, AND ONE IS HELD BY NOBODY on purpose: retiring
+        // is refused while anybody holds a position, so a ground where every
+        // position is held never draws the offer at all. Two of the seven
+        // are the permissions review's: the records clerk and the control room.
+        self::assertCount(7, $this->service(PositionRepository::class)->findAllOrdered());
         // THE SIX NAMED ROLES AND THE FIELD STAFF BEHIND THEM. The six are
         // the roles a reader has to see; the rest are the body of the
         // organization, and without them the seed GROUND seeds with three
         // posts staffed and thirteen empty — see TeamContentProvider's own
         // note on why the number is what it is.
-        self::assertCount(6 + TeamContentProvider::FIELD_STAFF, $this->service(UserRepository::class)->findAllByName());
+        // AND THE FOUR THE PERMISSIONS REVIEW NEEDS.
+        self::assertCount(6 + TeamContentProvider::FIELD_STAFF + 4, $this->service(UserRepository::class)->findAllByName());
     }
 
     /**
@@ -82,8 +84,8 @@ final class SeedOrganizationTest extends IntegrationTestCase
         $this->em->clear();
 
         self::assertCount(3, $this->service(DepartmentRepository::class)->findAllOrdered());
-        self::assertCount(5, $this->service(PositionRepository::class)->findAllOrdered());
-        self::assertCount(6 + TeamContentProvider::FIELD_STAFF, $this->service(UserRepository::class)->findAllByName());
+        self::assertCount(7, $this->service(PositionRepository::class)->findAllOrdered());
+        self::assertCount(6 + TeamContentProvider::FIELD_STAFF + 4, $this->service(UserRepository::class)->findAllByName());
     }
 
     /**
@@ -97,14 +99,14 @@ final class SeedOrganizationTest extends IntegrationTestCase
 
         $positions = $this->em->getRepository(Position::class);
         $ranger = $positions->findOneBy(['name' => 'Ranger']);
-        $analyst = $positions->findOneBy(['name' => 'Analyst']);
+        $coordinator = $positions->findOneBy(['name' => 'Coordinator']);
         self::assertInstanceOf(Position::class, $ranger);
-        self::assertInstanceOf(Position::class, $analyst);
+        self::assertInstanceOf(Position::class, $coordinator);
 
         // The old seed: nothing granted. And a hand-composed one beside it.
         $writes = $this->service(PositionService::class);
         $writes->setGrants($ranger, []);
-        $writes->setGrants($analyst, [TeamConcerns::DIRECTORY.'.read']);
+        $writes->setGrants($coordinator, [TeamConcerns::DIRECTORY.'.read']);
         $this->em->flush();
         $this->em->clear();
 
@@ -112,9 +114,9 @@ final class SeedOrganizationTest extends IntegrationTestCase
         $this->em->clear();
 
         $ranger = $positions->findOneBy(['name' => 'Ranger']);
-        $analyst = $positions->findOneBy(['name' => 'Analyst']);
+        $coordinator = $positions->findOneBy(['name' => 'Coordinator']);
         self::assertNotSame([], $ranger?->getGrantValues(), 'The empty seed position was granted.');
-        self::assertSame([TeamConcerns::DIRECTORY.'.read'], $analyst?->getGrantValues(), 'And the hand-composed one was left alone.');
+        self::assertSame([TeamConcerns::DIRECTORY.'.read'], $coordinator?->getGrantValues(), 'And the hand-composed one was left alone.');
     }
 
     /**
@@ -141,12 +143,16 @@ final class SeedOrganizationTest extends IntegrationTestCase
 
         $granted = [];
         foreach ($this->service(PositionRepository::class)->findAllOrdered() as $position) {
-            $granted = [...$granted, ...$position->getGrantValues()];
+            // The records clerk's card is the old register's, imported as it
+            // stood; it is the seat the not-honoured list is there to name.
+            if ('Records Clerk' !== $position->getName()) {
+                $granted = [...$granted, ...$position->getGrantValues()];
+            }
         }
 
         // THE TEAM IS ADMINISTERED BY THE TIERS (ruled 30 Sep, #67): the seed
-        // makes a Super Admin and an Admin, and no seeded seat carries a pair
-        // only they hold. A position still configures departments.
+        // makes a Super Admin and an Admin, and no seat the screens wrote
+        // carries a pair only they hold. A position still configures departments.
         foreach (['directory.manage', 'personal-details.manage', 'positions.configure', 'ranks.configure'] as $tierOnly) {
             self::assertNotContains($tierOnly, $granted);
         }

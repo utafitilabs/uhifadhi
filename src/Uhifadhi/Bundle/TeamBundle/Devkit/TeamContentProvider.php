@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Devkit;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
+use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\PermissionRunTriggerEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionRunService;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
@@ -27,6 +31,8 @@ use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
+use Uhifadhi\Contracts\Access\Grant;
+use Uhifadhi\Contracts\Access\Verb;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 
 /**
@@ -103,7 +109,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
      * THE PAIRS OUTSIDE THIS BUNDLE ARE WRITTEN AS STRINGS ON PURPOSE. Only
      * the team's own concerns are this bundle's to name in code: the area and
      * registry bundles depend on team, not the other way round, so importing
-     * their catalogues here would invert the graph. {@see grant()} asks the
+     * their catalogues here would invert the graph. {@see self::grant()} asks the
      * running catalogue what this installation actually declares and seeds the
      * intersection, which is exactly the set the configure screen would offer
      * — so an installation without one of those bundles seeds a smaller
@@ -142,6 +148,33 @@ final readonly class TeamContentProvider implements ContentProviderInterface
             TeamConcerns::DIRECTORY.'.read',
             'areas.read', 'stations.read', 'assignments.manage', 'duty.record',
         ],
+    ];
+
+    /**
+     * THE FOUR PEOPLE THE PERMISSIONS STORY NEEDS, and the detector of that
+     * slice the way {@see ACCOUNTS} is of the organization: an installation
+     * that answers to one of them has had it told already.
+     *
+     * @var array<string, string>
+     */
+    private const array REVIEW_ACCOUNTS = [
+        'clerk' => 'zawadi.mrema@example.test',
+        'control_room' => 'jabari.otieno@example.test',
+        'stepped_down_admin' => 'neema.chacha@example.test',
+        'stepped_down_super_admin' => 'tendai.moyo@example.test',
+    ];
+
+    /**
+     * WHAT THE OLD REGISTER LET A RECORDS CLERK DO WITH PEOPLE: keep the
+     * directory, their details and the seats. Only the tiers hold these now,
+     * so a seat that still stores them is stored and not honoured.
+     *
+     * @var list<string>
+     */
+    private const array IMPORTED_TIER_PAIRS = [
+        TeamConcerns::DIRECTORY.'.manage',
+        TeamConcerns::PERSONAL_DETAILS.'.manage',
+        TeamConcerns::POSITIONS.'.configure',
     ];
 
     /**
@@ -188,6 +221,8 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         private ConcernCatalogue $catalogue,
         private PositionRepository $positionRows,
         private DepartmentRepository $departmentRows,
+        private PermissionRunService $runs,
+        private EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -224,6 +259,8 @@ final readonly class TeamContentProvider implements ContentProviderInterface
                     $this->grant($position, $pairs);
                 }
             }
+
+            $this->permissionsWorthReviewing();
 
             return;
         }
@@ -271,6 +308,8 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         $this->fieldStaff($ranger, $protection);
 
         $this->twelveMonthsOfHistory([$protection, $ecology, $operations]);
+
+        $this->permissionsWorthReviewing();
     }
 
     /**
@@ -390,6 +429,122 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         return $this->positionRows->findOneByName($name) ?? $this->positions->create($name);
     }
 
+    /**
+     * A PERMISSIONS REVIEW WITH SOMETHING ON EVERY LIST: two runs, and
+     * between them what an organization actually does to its seats.
+     *
+     * BEFORE THE FIRST RUN, through the screens' own services: a control room
+     * seat and a records clerk's seat, the people in them, and the live
+     * locations exception given to two seats with a written reason — once by
+     * the Super Admin, once by the Admin.
+     *
+     * BETWEEN THE RUNS, two kinds of change. Two people change their own
+     * standing — an Admin steps back to Staff, a Super Admin to Admin — which
+     * the history records as theirs. And an import from the old register
+     * rewrites three seats' cards without leaving a history line: the clerk is
+     * given read on every register and every export, the three people pairs
+     * only the tiers hold, and live locations; the analyst and the sergeant
+     * are given live locations too. That is the state the standing lists
+     * exist to catch, written the one way it ever reaches a seat.
+     *
+     * THE SECOND RUN IS THE WORKER'S. The self-changes' history lines ask for
+     * it, and it is answered when the seed command ends, after every slice
+     * that hangs on this one has written its own lines — so it compares the
+     * import against the first run whatever the ground seeds after it, and
+     * finds the clerk's moved answers with nothing in the history to say why.
+     */
+    private function permissionsWorthReviewing(): void
+    {
+        foreach (self::REVIEW_ACCOUNTS as $email) {
+            if (null !== $this->roster->findOneByEmail($email)) {
+                return;
+            }
+        }
+
+        $superAdmin = $this->roster->findOneByEmail(self::ACCOUNTS['coordinator']);
+        $admin = $this->roster->findOneByEmail(self::ACCOUNTS['head_ranger']);
+        if (null === $superAdmin || null === $admin) {
+            return;
+        }
+
+        $operations = $this->departmentNamed('Operations');
+        $clerk = $this->positionNamed('Records Clerk');
+        $this->grant($clerk, [TeamConcerns::DIRECTORY.'.read', 'files.read']);
+        $controlRoom = $this->positionNamed('Control Room Officer');
+        $this->grant($controlRoom, [TeamConcerns::DIRECTORY.'.read', 'areas.read', 'stations.read', 'duty.record']);
+
+        $this->person(self::REVIEW_ACCOUNTS['clerk'], 'Zawadi', 'Mrema', TeamRoleEnum::Staff, $clerk, [$operations]);
+        $this->person(self::REVIEW_ACCOUNTS['control_room'], 'Jabari', 'Otieno', TeamRoleEnum::Staff, $controlRoom, [$operations]);
+        $steppedDownAdmin = $this->person(self::REVIEW_ACCOUNTS['stepped_down_admin'], 'Neema', 'Chacha', TeamRoleEnum::Admin, $controlRoom, [$operations]);
+        $steppedDownSuperAdmin = $this->person(self::REVIEW_ACCOUNTS['stepped_down_super_admin'], 'Tendai', 'Moyo', TeamRoleEnum::SuperAdmin, $this->positionNamed('Coordinator'), [$operations]);
+
+        $this->except($controlRoom, 'Coordinates rescues and radio calls from the control room, so has to see every team on the ground whatever their rank.', $admin);
+        $this->except($this->positionNamed('Head Ranger'), 'Leads the response to an incident on either reserve and has to see where every ranger is while it runs.', $superAdmin);
+
+        $this->answerTheWaitingRequest();
+
+        $this->accounts->changeTier($steppedDownAdmin, TeamRoleEnum::Staff, $steppedDownAdmin);
+        $this->accounts->changeTier($steppedDownSuperAdmin, TeamRoleEnum::Admin, $steppedDownSuperAdmin);
+
+        $this->importedFromTheOldRegister($clerk, [
+            $this->positionRows->findOneByName('Analyst'),
+            $this->positionRows->findOneByName('Sergeant'),
+        ]);
+    }
+
+    /** Every exception the installation declares, given to the seat with the reason, unless it holds it already. */
+    private function except(Position $position, string $reason, User $by): void
+    {
+        foreach ($this->catalogue->exceptionPairs() as $pair) {
+            if (!\in_array($pair, $position->getGrantValues(), true)) {
+                $this->positions->grantException($position, $pair, $reason, $by);
+            }
+        }
+    }
+
+    /**
+     * THE FIRST RUN, answering the request the seed's history lines have
+     * left waiting.
+     *
+     * IT STARTS ON A FRESH SECOND. History lines and runs are kept to the
+     * second, and the stretch between two runs includes the first run's own
+     * second: a seed line written in the second the run starts would read as
+     * explaining every answer that moves after it.
+     */
+    private function answerTheWaitingRequest(): void
+    {
+        usleep(1_001_000 - (int) (fmod(microtime(true), 1.0) * 1_000_000));
+
+        $run = $this->runs->requestRun(PermissionRunTriggerEnum::Deploy, null);
+        $this->runs->handle($run->getId());
+    }
+
+    /**
+     * THE IMPORT, AS AN IMPORT WRITES: straight onto the stored cards,
+     * validated against the catalogue as every stored card is, and with no
+     * history line — the service that would have written one refuses half of
+     * what an old register holds.
+     *
+     * @param list<Position|null> $alsoLocations
+     */
+    private function importedFromTheOldRegister(Position $clerk, array $alsoLocations): void
+    {
+        $declared = $this->catalogue->pairs();
+        $exceptions = $this->catalogue->exceptionPairs();
+        $everyRegister = array_values(array_filter(
+            $this->catalogue->positionPairs(),
+            static fn (string $pair): bool => \in_array(Grant::parse($pair)->verb, [Verb::Read, Verb::Export], true),
+        ));
+        $tierPairs = array_values(array_intersect(self::IMPORTED_TIER_PAIRS, $declared));
+
+        $clerk->setGrantValues(array_values(array_unique([...$clerk->getGrantValues(), ...$everyRegister, ...$tierPairs, ...$exceptions])), $declared);
+        foreach ($alsoLocations as $position) {
+            $position?->setGrantValues(array_values(array_unique([...$position->getGrantValues(), ...$exceptions])), $declared);
+        }
+
+        $this->entityManager->flush();
+    }
+
     private function alreadySeeded(): bool
     {
         foreach (self::ACCOUNTS as $email) {
@@ -409,15 +564,17 @@ final readonly class TeamContentProvider implements ContentProviderInterface
      *
      * @param list<Department> $departments
      */
-    private function person(string $email, string $firstName, string $lastName, TeamRoleEnum $tier, ?Position $position, array $departments): void
+    private function person(string $email, string $firstName, string $lastName, TeamRoleEnum $tier, ?Position $position, array $departments): User
     {
         $person = $this->accounts->create($email, $firstName, $lastName, bin2hex(random_bytes(24)), $tier, $position);
 
         if ([] === $departments) {
-            return;
+            return $person;
         }
 
         // The first is the one they belong to; any after it, ones they support.
         $this->accounts->place($person, new Placement()->acrossTheOrganization()->inDepartment($departments[0])->supporting(\array_slice($departments, 1)));
+
+        return $person;
     }
 }

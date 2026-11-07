@@ -17,6 +17,8 @@ use PHPUnit\Framework\Attributes\CoversNothing;
 use Uhifadhi\Bundle\AreaBundle\Devkit\SeedArea;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionFindingsReader;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionRunService;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 
 /**
@@ -222,6 +224,32 @@ final class SeedContentSeedsUnderTheRulesTest extends MigrationsTestCase
     }
 
     /** One count, as an int — the driver answers a string and phpstan is right to say so. */
+    /**
+     * THE PERMISSIONS REVIEW SURVIVES THE GROUND SEEDED AFTER IT. The posts
+     * place people after the team slice has run its first permissions run,
+     * and their history lines join the request the self-changes left
+     * waiting; the worker's run answers both, and every register the team
+     * slice filled is still filled — drift included, because nobody the
+     * ground posts holds the records clerk's seat.
+     */
+    public function testEveryPermissionsRegisterTheSeedFillsIsStillFilledOnceTheGroundIsSeeded(): void
+    {
+        $this->seedTheSeedOrganization();
+
+        $runs = static::getContainer()->get('test_public.team.permissions.runs');
+        self::assertInstanceOf(PermissionRunService::class, $runs);
+        self::assertNotNull($runs->handle(null), 'the seed leaves a request for the worker');
+
+        $findings = static::getContainer()->get('test_public.team.permissions.findings_reader');
+        self::assertInstanceOf(PermissionFindingsReader::class, $findings);
+
+        $counts = array_column($findings->standing()['lists'], 'count', 'id');
+        foreach (['reach-nothing', 'not-in-force', 'not-honoured', 'vacant', 'exceptions', 'self-changes'] as $list) {
+            self::assertGreaterThan(0, $counts[$list], \sprintf('the "%s" register has rows', $list));
+        }
+        self::assertNotSame([], $findings->drift()['lines'], 'and the drift register has rows');
+    }
+
     private function rowCount(string $sql): int
     {
         $count = $this->connection->fetchOne($sql);

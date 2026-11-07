@@ -1,0 +1,55 @@
+{# ON THIS PAGE — the index a page carries left of its sections, and the grid
+   that holds both. The design's (DesignsProjects/team-module/vendor/
+   house-index.css + house-index.js, used on variants-permissions-pages/
+   analysis.html); behaviour in assets/controllers/onpage_controller.js.
+
+   A PAGE WRITES NONE OF ITS MARKUP. It embeds this partial with its rows and
+   puts its sections in the one block; each section carries the id its row
+   names:
+
+     {% embed '@Shell/_onpage.html.twig' with {rows: [
+         {id: 'drift', label: 'Drift', count: 3},
+         {head: 'Lists'},
+         {id: 'vacant', label: 'Vacant positions'},
+     ]} only %}
+         {% block shell_onpage_main %}
+             <div class="c" id="drift">…</div>
+             <div class="c" id="vacant">…</div>
+         {% endblock %}
+     {% endembed %}
+
+   PARAMETERS:
+     rows   in page order: {id, label, count?, title?} one row per section —
+            a count of null draws none, and zero is a count; a title is the
+            row's tooltip — or {head} for a head between rows
+     label  the index's own name; "On this page" unless a page has a better one
+
+   AN EMBED, NOT AN INCLUDE, because the index and the sections share one
+   grid and an include cannot wrap a page's content: "The embed tag combines
+   the behaviour of include and extends. It allows you to include another
+   template's contents, just like include does. But it also allows you to
+   override any block defined inside the included template".
+   https://twig.symfony.com/doc/3.x/tags/embed.html —
+   vendor/twig/twig/src/TokenParser/EmbedTokenParser.php.
+
+   THE SNIPPET COMES FIRST. It stamps html.onpage-closed before the grid is
+   parsed, from the remembered choice or a viewport of 900px or narrower, so
+   the index is never painted open and then collapsed. It is written here
+   rather than in the document, so a page without an index carries none of
+   it. The key and the width are the controller's. #}
+{%- set _label = label|default('On this page') -%}
+{%- set _name = 'uhifadhi--shell-bundle--onpage' -%}
+<script>(function(){var c=false;try{c=localStorage.getItem('uhifadhi-pp-nav')==='closed'}catch(e){}if(c||window.matchMedia('(max-width:900px)').matches){document.documentElement.classList.add('onpage-closed')}})()</script>
+<div class="onpage">
+    <nav class="onpage-nav" aria-label="{{ _label }}" data-controller="{{ _name }}" data-action="click->{{ _name }}#go">
+        <div class="onpage-top"><p class="onpage-h">{{ _label }}</p><button type="button" class="onpage-tg" aria-expanded="true" aria-label="Collapse index" title="Collapse index" data-{{ _name }}-target="toggle" data-action="click->{{ _name }}#toggle">{{ ux_icon('shell:chevrons-left', {'aria-hidden': 'true'}) }}</button></div>
+        {%- for row in rows %}
+            {%- if row.head is defined %}
+        <p class="onpage-h">{{ row.head }}</p>
+            {%- else %}
+        <a class="onpage-row" href="#{{ row.id|url_encode }}"{% if row.title ?? null %} title="{{ row.title }}"{% endif %}><i class="onpage-dot" aria-hidden="true" title="{{ row.label }}"></i><span class="onpage-l">{{ row.label }}</span>{% if row.count is defined and row.count is not null %}<b class="onpage-n">{{ row.count }}</b>{% endif %}</a>
+            {%- endif %}
+        {%- endfor %}
+    </nav>
+    <div class="onpage-main">{% block shell_onpage_main %}{% endblock %}</div>
+</div>

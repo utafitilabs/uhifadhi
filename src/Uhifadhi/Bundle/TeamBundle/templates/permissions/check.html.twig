@@ -1,0 +1,221 @@
+{# TEAM › PERMISSIONS › CHECK — one person, one question, one place, asked
+   live of the voters (team-module/team/permissions/check.html).
+
+   The check is the address: the form is a GET of it, and every door on the
+   page — a row of Everything here, a row of Worth running, a recent check —
+   is one. What the browser does without asking the server again (the bar's
+   three chips and their find boxes; the target menu a power swaps in; the
+   registers' axes, search, sort and pages; this session's recent checks;
+   the index rows of the cards that wait for a check) is the page controller's,
+   assets/controllers/permission_check_controller.js. #}
+{% extends '@Team/permissions/_frame.html.twig' %}
+{% import '@Team/permissions/_bits.html.twig' as pp %}
+
+{% block title %}Permissions — Check{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_index') }}">uhifadhi</a> / team / <a href="{{ path('team_permissions_overview') }}">permissions</a> / check
+{% endblock %}
+
+{% block shell_page_title %}Permissions &mdash; Check{% endblock %}
+
+{% block shell_page_subtitle %}Can this person do this, here &mdash; and why? Asked live, of the real rules, for one person.{% endblock %}
+
+{% macro size(table, page, sizes) %}<details class="i-dd rdf-size" data-pc-size="{{ table }}"><summary><span class="pg">{{ page }}</span> per page<span class="i-ddcaret" aria-hidden="true">&#9662;</span></summary><div class="i-ddmenu" aria-label="Rows per page">{% for n in sizes %}<button type="button" class="i-ddopt{{ n == page ~ '' ? ' on' }}" data-pc-per="{{ n }}" aria-pressed="{{ n == page ~ '' ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ n == 'all' ? 'All' : n }}</span></button>{% endfor %}</div></details>{% endmacro %}
+{% macro pager(count, page) %}page <span class="pg">1</span> of {{ max(1, (count / page)|round(0, 'ceil')) }}{% if count > page %}<button type="button" data-pc-go="1" aria-label="Next page">&rsaquo;</button>{% endif %}{% endmacro %}
+{% macro opt(o, find, current) %}<button type="button" class="i-ddopt{{ current is not null and o.value ~ '' == current ~ '' ? ' on' }}" data-pc-opt="{{ o.value }}" data-pc-label="{{ o.label }}" aria-pressed="{{ current is not null and o.value ~ '' == current ~ '' ? 'true' : 'false' }}" data-pc-find="{{ find }}"><span class="i-ddopt-l">{{ o.label }}</span>{% if o.count is not null %}<span class="i-ddopt-n">{{ o.count }}</span>{% endif %}</button>{% endmacro %}
+{% macro find(placeholder, label) %}<div class="lsearch pp-ddfind">{{ ux_icon('shell:search', {'aria-hidden': 'true'}) }}<input class="fld" type="search" placeholder="{{ placeholder }}" aria-label="{{ label }}" data-pc-find-box></div>{% endmacro %}
+{% macro places(f, current) %}{% import _self as m %}<div class="pp-ddg">{% for o in f.options %}{{ m.opt(o, o.label|lower, current) }}{% endfor %}</div>{% endmacro %}
+
+{% block shell_page %}
+    {% import _self as m %}
+    {% set ctl = 'uhifadhi--team-bundle--permission-check' %}
+    {% set a = answer %}
+    <div data-controller="{{ ctl }}" data-{{ ctl }}-page-value="{{ page }}"{% if a %} data-{{ ctl }}-asked-value="{{ a.asked|json_encode }}"{% endif %}>
+    {% embed '@Shell/_onpage.html.twig' with {rows: nav} %}
+        {% block shell_onpage_main %}
+            {% import '@Team/permissions/_bits.html.twig' as pp %}
+            {% import '@Team/permissions/check.html.twig' as m %}
+            {% set ctl = 'uhifadhi--team-bundle--permission-check' %}
+            {% set a = answer %}
+
+            {# CHECK LIVE — the house bar: the person, the question and the place as
+               chips, the Check button at its right end; then the verdict and the walk. #}
+            {% set v = form.values %}
+            {% set chosen = form.chosen %}
+            <div class="c" id="check"><span class="tab">Check live<span class="src">&middot; asked of the real rules, now</span></span>
+                <form class="lfilt" method="get" action="{{ path('team_permissions_check') }}" data-{{ ctl }}-target="form" data-action="submit->{{ ctl }}#submit">
+                    <input type="hidden" name="person" value="{{ v.person }}" data-{{ ctl }}-target="person">
+                    <input type="hidden" name="q" value="{{ v.q }}" data-{{ ctl }}-target="question">
+                    <input type="hidden" name="target" value="{{ v.target }}" data-{{ ctl }}-target="where">
+                    <details class="i-dd" data-pc-axis="person"><summary class="mchip i-ddt"><span class="i-ddval" data-pc-empty="choose a person">{{ chosen.person ? chosen.person|lower : 'choose a person' }}</span><span class="i-ddcaret" aria-hidden="true">&#9662;</span></summary><div class="i-ddmenu pp-ddscroll pp-ddwide" aria-label="Person">{{ m.find('Find a person or position', 'Find a person by name or position') }}<div class="pp-ddlist">
+                        {%- for g in form.people %}<div class="pp-ddg"><span class="i-ddsep"></span><span class="i-ddhead">{{ g.label }} &middot; {{ g.options|length }}</span>{% for o in g.options %}{{ m.opt(o, o.find, v.person) }}{% endfor %}</div>{% endfor -%}
+                        <p class="au-why pp-ddnone" hidden>Nobody by that name or position.</p></div></div></details>
+                    <details class="i-dd" data-pc-axis="q"><summary class="mchip i-ddt"><span class="i-ddval" data-pc-empty="choose a question">{{ chosen.q ? chosen.q|lower : 'choose a question' }}</span><span class="i-ddcaret" aria-hidden="true">&#9662;</span></summary><div class="i-ddmenu pp-ddscroll pp-ddwide" aria-label="Question">{{ m.find('Find a question', 'Find a question') }}<div class="pp-ddlist">
+                        {%- for g in form.questions %}<div class="pp-ddg"><span class="i-ddsep"></span><span class="i-ddhead">{{ g.label }}</span>{% for o in g.options %}{{ m.opt(o, (o.label ~ ' ' ~ o.value ~ ' ' ~ g.label)|lower, v.q) }}{% endfor %}</div>{% endfor -%}
+                        <p class="au-why pp-ddnone" hidden>No question by that name.</p></div></div></details>
+                    <details class="i-dd" data-pc-axis="target"><summary class="mchip i-ddt"><span class="i-ddval">{{ (chosen.target ?? '')|lower }}</span><span class="i-ddcaret" aria-hidden="true">&#9662;</span></summary><div class="i-ddmenu pp-ddscroll" aria-label="Where"><div class="pp-ddlist" data-pc-key="{{ v.q is not null and v.q in form.targets|keys ? v.q : '' }}">{{ m.places(form.target, v.target) }}</div></div></details>
+                    <button type="submit" class="cta pp-gosm">{{ ux_icon('shell:check', {width: 14, height: 14, 'aria-hidden': 'true'}) }}Check</button>
+                </form>
+                {% for key, f in form.targets %}<template data-pc-targets="{{ key }}" data-pc-default="{{ f.default }}">{{ m.places(f, null) }}</template>{% endfor %}
+
+                {% if a %}
+                <div class="pp-ans" aria-live="polite">
+                    <div class="pp-ahead"><span class="au-v pp-v {{ a.allowed ? 'ok' : 'no' }}">{{ a.allowed ? 'allowed' : 'refused' }}</span><p class="pp-qline">Can <b>{{ a.person }}</b> {{ a.words }}?</p></div>
+                    <ol class="pp-walk">
+                        {%- for l in a.walk %}
+                        <li class="{{ l.status }}">{{ ux_icon(l.status == 'ok' ? 'shell:check' : (l.status == 'no' ? 'shell:x' : 'shell:minus'), {class: 'pp-mk ' ~ l.status, role: 'img', 'aria-label': l.status == 'ok' ? 'yes' : (l.status == 'no' ? 'no' : 'not asked')}) }}<span class="pp-wq">{{ l.label }}</span><span class="pp-wt">{{ l.text }}</span>{% if l.door %}<a class="more" href="{{ l.door.url }}">{{ l.door.text }} &rarr;</a>{% endif %}</li>
+                        {%- endfor %}
+                        {%- if a.further %}
+                        <li class="pp-wend"><span class="au-why">nothing further was asked</span></li>
+                        {%- endif %}
+                    </ol>
+                    {% set c = a.coverage %}
+                    <p class="pp-cov">
+                        {%- if c is null -%}{{ shell_as_of(null) }}
+                        {%- elseif c.kind == 'power' -%}<b>{{ c.held }}</b> of <b>{{ c.actors }}</b> actors hold this over {{ c.target }}.
+                        {%- else -%}In <b>{{ c.place }}</b>, {% if c.count %}<b>{{ c.count }}</b> can: {% for r in c.top %}{{ r.position }} <b>{{ r.count }}</b>{{ not loop.last ? ' · ' }}{% endfor %}{% else %}nobody below the tiers can{% endif %}; by tier: {{ c.tiers }}. As of {% if c.asOf %}{{ pp.stamp(c.asOf) }}{% else %}{{ shell_as_of(null) }}{% endif %}.
+                        {%- endif -%}
+                    </p>
+                    <div class="pp-facts">
+                    {# THE PERSON — what the voter reads of them: tier, position, placement, exception. #}
+                    {% set p = a.aboutPerson %}
+                    <section class="pp-fcol" id="person"><h2 class="zone">The person<span class="src">&middot; {{ a.person }} &middot; read live</span></h2>
+                        {%- if p %}
+                        {%- set e = p.exception %}
+                        <div class="pp-kv"><span class="pp-kk">Tier</span><span class="pp-kvv">{{ p.tier }}{% if p.above %} <span class="pp-mono">&middot; answers every permission by tier</span>{% endif %}</span></div>
+                        <div class="pp-kv"><span class="pp-kk">Position</span><span class="pp-kvv">{% if p.position %}<a href="{{ path('team_position_show', {uuid: p.position.uuid}) }}"><b>{{ p.position.name }}</b></a>{% else %}none{% endif %}</span></div>
+                        <div class="pp-kv"><span class="pp-kk">Placed at</span><span class="pp-kvv">{{ p.placedAt }}<a class="more" href="{{ a.placementUrl }}">open the placement &rarr;</a></span></div>
+                        <div class="pp-kv"><span class="pp-kk">Department</span><span class="pp-kvv">{% if p.department %}<b>{{ p.department }}</b>{% else %}none{% endif %}</span></div>
+                        <div class="pp-kv"><span class="pp-kk">Supports</span><span class="pp-kvv">{{ p.supports is empty ? 'none' : p.supports|join(', ') }}</span></div>
+                        <div class="pp-kv"><span class="pp-kk">Exception</span><span class="pp-kvv">
+                    {%- if e.state == 'none' %}none held
+                    {%- elseif e.state == 'in-force' %}{{ a.pairWords[e.pair] }} &mdash; in force <span class="pp-mono">&middot; {{ e.by }}, <time datetime="{{ e.at|date('c') }}" data-localtime-format="date">{{ e.at|date('j M Y') }}</time></span> &ldquo;{{ e.reason }}&rdquo;
+                    {%- else %}{{ a.pairWords[e.pair] }} &mdash; written, not in force{% endif -%}
+                        </span></div>
+                        {%- endif %}
+                    </section>
+
+                    {# THE QUESTION — the resource behind the permission, or the power. #}
+                    {% set qn = a.aboutQuestion %}
+                    <section class="pp-fcol" id="question"><h2 class="zone">The question<span class="src">&middot; {{ a.questionTitle }}</span></h2>
+                        {%- if qn and qn.kind == 'power' %}
+                        <p class="pp-lead">{{ qn.group }} &mdash; {{ qn.question }}{{ qn.question matches '/[?.!]$/' ? '' : '.' }}</p>
+                        <div class="pp-kv"><span class="pp-kk">Power</span><span class="pp-kvv"><b>{{ qn.label }}</b></span></div>
+                        <div class="pp-kv"><span class="pp-kk">Asks first</span><span class="pp-kvv">{{ qn.asksFirst is empty ? 'no permission — its own rule alone' : qn.asksFirst|map(x => a.pairWords[x] ?? x)|join(', ') }}</span></div>
+                        <div class="pp-kv"><span class="pp-kk">About</span><span class="pp-kvv">{{ qn.target }} <span class="pp-mono">&middot; one of {{ qn.targets }}</span></span></div>
+                        {%- elseif qn %}
+                        {%- set scope = {organization: 'the whole organization', area: 'named areas', department: 'the ground of a department that runs it', own: 'their own records'} %}
+                        <p class="pp-lead">{{ qn.description }}</p>
+                        <div class="pp-kv"><span class="pp-kk">Verbs</span><span class="pp-kvv">{% for v in qn.verbs %}{% if v.asked %}<b>{{ v.verb }}</b>{% else %}{{ v.verb }}{% endif %}{{ not loop.last ? ' · ' }}{% endfor %}</span></div>
+                        <div class="pp-kv"><span class="pp-kk">Granted over</span><span class="pp-kvv">{{ qn.scopes|map(s => scope[s] ?? s)|join(', ') }}</span></div>
+                        <div class="pp-kv"><span class="pp-kk">Module</span><span class="pp-kvv">{{ qn.module ?? 'none — no department is asked' }}</span></div>
+                        <div class="pp-kv"><span class="pp-kk">Sensitive</span><span class="pp-kvv">{{ qn.lifts ? 'yes — it lifts ' ~ qn.lifts ~ ', so it needs a written reason' : 'no' }}</span></div>
+                        <div class="pp-kv"><span class="pp-kk">Kept for the tiers</span><span class="pp-kvv">{{ qn.tierOnly ? 'yes — only Admins and Super Admins hold it' : 'no — a position can hold it' }}</span></div>
+                        <div class="pp-kv"><span class="pp-kk">Held by</span><span class="pp-kvv"><b>{{ qn.positions }}</b> positions <span class="pp-mono">&middot; {{ qn.people }} people</span><a class="more" href="{{ path('team_permissions_positions') }}">open the positions &rarr;</a></span></div>
+                        {%- endif %}
+                    </section>
+
+                    {# HERE — the person at the place: only the facts the voter reads there. #}
+                    {% set L = a.lens %}
+                    <section class="pp-fcol" id="here"><h2 class="zone">Here<span class="src">&middot; {{ L.person ~ ' at ' ~ L.place.name }} &middot; asked live</span></h2>
+                        {%- if L and not L.tierHoldsAll %}
+                        {%- if L.placeIsOwn %}<p class="pp-lead">A power is asked of their own placement, so the place here is where they are placed &mdash; <b>{{ L.place.name }}</b>.</p>{% endif %}
+                        {%- set cv = L.cover %}
+                        {%- set n = cv.areas|length ~ ' area' ~ (cv.areas|length == 1 ? '' : 's') %}
+                        <div class="pp-kv"><span class="pp-kk">Placement covers it</span><span class="pp-kvv">
+                    {%- if cv.how == 'organization' %}yes &mdash; placed across the whole organization
+                    {%- elseif cv.how == 'areas' %}yes &mdash; their placement names {{ cv.areas|join(', ') }} <span class="pp-mono">&middot; {{ n }}</span>
+                    {%- elseif cv.how == 'nothing' %}no &mdash; their placement reaches nothing
+                    {%- else %}no &mdash; their placement names {{ cv.areas|join(', ') }} only <span class="pp-mono">&middot; {{ n }}</span>{% endif -%}
+                        </span></div>
+                        {%- if L.department %}
+                        {%- set dp = L.department %}
+                        <div class="pp-kv"><span class="pp-kk">Department runs {{ dp.module ?? 'the module' }}</span><span class="pp-kvv">
+                    {%- if dp.module is null %}not asked &mdash; the question belongs to no module
+                    {%- elseif dp.running is empty %}not asked &mdash; no department runs {{ dp.module }}
+                    {%- else %}
+                        {%- if dp.hit %}yes &mdash; <b>{{ dp.hit }}</b> runs {{ dp.module }}{% else %}none &mdash; {{ dp.module }} is run by {{ dp.running|join(', ') }}{% endif %} <span class="pp-mono">&middot; they serve {{ dp.served is empty ? 'no department' : dp.served|join(', ') }}</span>
+                        {%- if not cv.covers %}<span class="au-why pp-after">not reached here &mdash; the placement refuses first</span>{% endif %}
+                    {%- endif -%}
+                        </span></div>
+                        {%- endif %}
+                        {%- set ex = L.exception %}
+                        <div class="pp-kv"><span class="pp-kk">Exception</span><span class="pp-kvv">
+                    {%- if ex.state == 'none' %}none held
+                    {%- elseif ex.state == 'not-in-force' %}held, not in force &mdash; {{ a.pairWords[ex.pair] }} is not lifted, here or anywhere
+                    {%- else %}{{ ex.appliesHere ? 'in force here — ' : 'in force, but their placement does not reach here — ' }}{{ a.pairWords[ex.pair] }} <span class="pp-mono">&middot; {{ ex.by }}, <time datetime="{{ ex.at|date('c') }}" data-localtime-format="date">{{ ex.at|date('j M Y') }}</time></span>{% endif -%}
+                        </span></div>
+                        {%- endif %}
+                        <p class="au-why pp-none"{{ L and L.tierHoldsAll ? '' : ' hidden' }}>{% if L and L.tierHoldsAll %}{{ L.tierLabel }} &mdash; above the matrix: the tier holds every permission here, and nothing else is asked.{% endif %}</p>
+                    </section>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            {# EVERYTHING HERE — every permission of the catalogue, asked live at the place. #}
+            {% set ev = everything %}
+            <div class="c" id="everything"{{ ev ? '' : ' hidden' }} data-{{ ctl }}-target="every"><span class="tab">Everything here<span class="src">{% if ev %}&middot; {{ ev.total }} permissions &middot; asked live{% endif %}</span></span>
+                {%- if ev %}
+                <div class="lfilt">
+                    <details class="i-dd" data-pc-axis="here-only"><summary class="mchip i-ddt"><span class="i-ddval">all &middot; {{ ev.total }}</span><span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu" aria-label="Show">
+                        {%- for o in ev.pills %}<button type="button" class="i-ddopt{{ loop.first ? ' on' }}{{ o.count == 0 ? ' pq-zero' }}" data-pc-opt="{{ o.key }}" data-pc-label="{{ o.label }}" aria-pressed="{{ loop.first ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ o.label }}</span><span class="i-ddopt-n">{{ o.count }}</span></button>{% if loop.first %}<span class="i-ddsep"></span>{% endif %}{% endfor -%}
+                    </div></details>
+                    <details class="i-dd" data-pc-axis="here-concern"><summary class="mchip i-ddt"><span class="i-ddval">resource</span><span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu pp-ddscroll" aria-label="Filter by resource">
+                        <button type="button" class="i-ddopt on" data-pc-opt="" data-pc-label="resource" aria-pressed="true"><span class="i-ddopt-l">Any resource</span><span class="i-ddopt-n">{{ ev.total }}</span></button>
+                        {%- for g in ev.concerns %}<span class="i-ddsep"></span><span class="i-ddhead">{{ g.head }}</span>{% for o in g.options %}<button type="button" class="i-ddopt{{ o.count == 0 ? ' pq-zero' }}" data-pc-opt="{{ o.key }}" data-pc-label="{{ o.label|lower }}" aria-pressed="false"><span class="i-ddopt-l">{{ o.label }}</span><span class="i-ddopt-n">{{ o.count }}</span></button>{% endfor %}{% endfor -%}
+                    </div></details>
+                    <div class="lsearch">{{ ux_icon('shell:search', {'aria-hidden': 'true'}) }}<input class="fld" type="search" placeholder="Find a question" aria-label="Find a question or the step that decided it" data-pc-search></div>
+                </div>
+                <table class="tbl pp-here"><thead><tr><th scope="col">Question</th><th scope="col">Verdict</th><th scope="col">Decided by</th><th scope="col" aria-label="Check"></th></tr></thead><tbody>
+                    {%- for r in ev.rows %}
+                    <tr class="{{ r.allowed ? 'ok' : 'no' }}" data-group="{{ r.group }}" data-concern="{{ r.concern }}" data-find="{{ r.find }}"{% if r.asked %} aria-current="true"{% endif %}{% if loop.index > page %} hidden{% endif %}><td><span class="pp-q">{{ r.words }}</span></td><td class="pp-vd"><span class="au-v pp-v {{ r.allowed ? 'ok' : 'no' }}">{{ r.allowed ? 'allowed' : 'refused' }}</span></td><td class="pp-db"><span class="chip {{ r.allowed ? 'ok' : 'warn' }}">{{ r.step }}</span><span class="pp-dl">{{ r.line }}</span></td><td class="pp-exd"><a class="more" href="{{ r.href }}">Check &rarr;</a></td></tr>
+                    {%- endfor %}
+                </tbody></table>
+                <div class="rdf-foot"><span><span data-pc-count>{{ ev.total }} permission{{ ev.total == 1 ? '' : 's' }} &middot;</span> {{ m.size('everything', page, sizes) }}</span><span class="rdf-page" data-pc-page>{{ m.pager(ev.total, page) }}</span></div>
+                <p class="pq-empty" hidden>No permission matches these filters.</p>
+                <p class="pp-cov"><span data-pc-shown></span><b>{{ ev.allowed }}</b> of <b>{{ ev.total }}</b> permissions allowed here &middot; asked live.</p>
+                {%- endif %}
+            </div>
+
+            {# WORTH RUNNING — every Staff person, the flagged first by the last run's findings. #}
+            {% set w = worth %}
+            <div class="c" id="worth"{{ w ? '' : ' hidden' }} data-{{ ctl }}-target="worth"><span class="tab">Worth running<span class="src">{% if w %}&middot; {{ w.count }} people &middot; {{ w.flagged }} flagged &middot; from the run of {% if w.asOf %}{{ pp.stamp(w.asOf) }}{% endif %}{% endif %}</span></span>
+                {%- if w %}
+                <div class="lfilt">
+                    <details class="i-dd" data-pc-axis="worth-only"><summary class="mchip i-ddt"><span class="i-ddval">all &middot; {{ w.count }}</span><span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu" aria-label="Show">
+                        {%- for o in w.pills %}<button type="button" class="i-ddopt{{ loop.first ? ' on' }}{{ o.count == 0 ? ' pq-zero' }}" data-pc-opt="{{ o.key }}" data-pc-label="{{ o.label }}" aria-pressed="{{ loop.first ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ o.label }}</span><span class="i-ddopt-n">{{ o.count }}</span></button>{% if loop.first %}<span class="i-ddsep"></span>{% endif %}{% endfor -%}
+                    </div></details>
+                    <details class="i-dd" data-pc-axis="worth-sort"><summary class="mchip i-ddt"><span class="i-ddval">flagged first</span><span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu" aria-label="Sort">
+                        {%- for o in w.sorts %}<button type="button" class="i-ddopt{{ loop.first ? ' on' }}" data-pc-opt="{{ o.key }}" data-pc-label="{{ o.label|lower }}" aria-pressed="{{ loop.first ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ o.label }}</span></button>{% endfor -%}
+                    </div></details>
+                    <div class="lsearch">{{ ux_icon('shell:search', {'aria-hidden': 'true'}) }}<input class="fld" type="search" placeholder="Find a person, question or place" aria-label="Find a person, a question or a place" data-pc-search></div>
+                </div>
+                <table class="tbl pp-ex"><thead><tr><th scope="col">Person</th><th scope="col">Question</th><th scope="col">Why</th><th scope="col" aria-label="Run"></th></tr></thead><tbody data-action="click->{{ ctl }}#run">
+                    {%- for r in w.rows %}
+                    <tr data-kind="{{ r.kind }}" data-order="{{ loop.index0 }}" data-person="{{ r.person }}" data-place="{{ r.place }}" data-find="{{ r.find }}"{% if loop.index > page %} hidden{% endif %}><td>{{ r.person }}<span class="pp-sub">{{ r.position }}</span></td><td>{{ r.question }}<span class="pp-sub">{{ r.place }}</span></td><td><span class="chip {{ r.chip }}">{{ r.why }}</span></td><td class="pp-exd"><a class="more" href="{{ r.href }}">Run &rarr;</a></td></tr>
+                    {%- endfor %}
+                </tbody></table>
+                <div class="rdf-foot"><span><span data-pc-count>{{ w.count }} {{ w.count == 1 ? 'person' : 'people' }} &middot;</span> {{ m.size('worth', page, sizes) }}</span><span class="rdf-page" data-pc-page>{{ m.pager(w.count, page) }}</span></div>
+                <p class="pq-empty" hidden>Nobody matches these filters.</p>
+                {%- endif %}
+            </div>
+
+            {# RECENT CHECKS — this session's, newest first, kept by the browser and drawn by the controller. #}
+            <div class="c" id="recent" data-{{ ctl }}-target="recentCard"><span class="tab">Recent checks<span class="src">&middot; this session, newest first</span></span>
+                <div class="lfilt">
+                    <details class="i-dd" data-pc-axis="recent-only"><summary class="mchip i-ddt"><span class="i-ddval">all &middot; 0</span><span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu" aria-label="Filter by verdict">
+                        {%- for key, label in {all: 'All', allowed: 'Allowed', refused: 'Refused'} %}<button type="button" class="i-ddopt{{ loop.first ? ' on' }}" data-pc-opt="{{ key }}" data-pc-label="{{ label }}" aria-pressed="{{ loop.first ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ label }}</span><span class="i-ddopt-n">0</span></button>{% if loop.first %}<span class="i-ddsep"></span>{% endif %}{% endfor -%}
+                    </div></details>
+                    <div class="lsearch">{{ ux_icon('shell:search', {'aria-hidden': 'true'}) }}<input class="fld" type="search" placeholder="Find a person, question or place" aria-label="Find a person, a question or a place" data-pc-search></div>
+                </div>
+                <table class="tbl pp-rec" hidden><thead><tr><th scope="col">Person</th><th scope="col">Question</th><th scope="col">Verdict</th><th scope="col" aria-label="Run again"></th></tr></thead><tbody data-{{ ctl }}-target="recent" data-action="click->{{ ctl }}#run"></tbody></table>
+                <div class="rdf-foot" hidden><span><span data-pc-count>0 checks &middot;</span> {{ m.size('recent', page, sizes) }}</span><span class="rdf-page" data-pc-page></span></div>
+                <p class="pq-empty" hidden>No check matches these filters.</p>
+                <p class="au-why pp-empty" data-{{ ctl }}-target="none">No check asked yet this session.</p>
+            </div>
+        {% endblock %}
+    {% endembed %}
+    </div>
+{% endblock %}

@@ -18,7 +18,11 @@ use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\GrantQuestionEnum;
+use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Bundle\TeamBundle\Permissions\GrantDecision;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\GrantJustificationRepository;
 use Uhifadhi\Contracts\Access\Grant;
@@ -108,6 +112,36 @@ final class GrantVoter extends Voter
             return false;
         }
 
+        $decision = $this->decide($user, $grant, $subject);
+        foreach ($decision->getReasons() as $reason) {
+            $vote?->addReason($reason);
+        }
+
+        return $decision->isAllowed();
+    }
+
+    /**
+     * THE CHECK ITSELF, written down step by step as it is taken. The vote
+     * above is read from it, and so is the Check page's walk: one account of
+     * the rules, never two. A subject that is neither an area nor the whole
+     * organization is "no area in context", as it always was; an
+     * {@see OwnStandingRaised} is that too, once it has been refused or not.
+     */
+    public function decide(User $user, Grant $grant, mixed $subject): GrantDecision
+    {
+        $raisesTheirOwn = $subject instanceof OwnStandingRaised;
+        $subject = $subject instanceof AreaInterface || $subject instanceof WholeOrganization ? $subject : null;
+        $decision = new GrantDecision($user, (string) $grant, $subject);
+
+        /*
+         * BEFORE THE TIERS: below a Super Admin, nobody raises their own
+         * standing (ruled 8 Nov 2026), so an Admin's tier is not asked to
+         * answer for a write that would lift the Admin themselves.
+         */
+        if ($raisesTheirOwn && TeamRoleEnum::SuperAdmin !== $user->getTeamRole()) {
+            return $decision->refuse(GrantQuestionEnum::Tier, MemberVoter::OWN_STANDING);
+        }
+
         /*
          * ABOVE THE MATRIX. Super admin and Admin are tiers rather than
          * grants, and they are asked first so that the person who WRITES the
@@ -116,8 +150,9 @@ final class GrantVoter extends Voter
          * them back in.
          */
         if ($user->getTeamRole()->canManageContent()) {
-            return true;
+            return $decision->pass(GrantQuestionEnum::Tier)->allow();
         }
+        $decision->skip(GrantQuestionEnum::Tier);
 
         // 1. Does the position grant it?
         // WHAT ONLY THE TIERS HOLD, NO POSITION DOES (ruled 30 Sep, #67): who
@@ -125,23 +160,31 @@ final class GrantVoter extends Voter
         // A seat written before the ruling may still store one; it is not
         // honoured, so no seat can raise itself or hand on more than it holds.
         if ($this->catalogue->isTierOnly((string) $grant)) {
-            $vote?->addReason(\sprintf('only Admins and Super Admins hold "%s"; no position does.', (string) $grant));
-
-            return false;
+            return $decision->refuse(GrantQuestionEnum::TierOnly, \sprintf('only Admins and Super Admins hold "%s"; no position does.', (string) $grant));
         }
+        $decision->pass(GrantQuestionEnum::TierOnly);
 
         $position = $user->getPosition();
+        $decision->readPosition($position);
         if (null === $position || !$position->hasGrant($grant)) {
-            return false;
+            return $decision->refuse(GrantQuestionEnum::Position);
         }
+        $decision->pass(GrantQuestionEnum::Position);
 
         // 1a. AN EXCEPTION TO A RULE is held only while a Super Admin's
         //     written reason for it is in force. A pair that lifts a rule and
         //     reached the seat any other way - an import, a seed, a hand-made
         //     row - is refused, because nobody said why.
-        if (null !== $this->catalogue->lifts($grant->concern)
-            && null === $this->justifications->findOneCurrent($position, (string) $grant)) {
-            return false;
+        $lifts = $this->catalogue->lifts($grant->concern);
+        if (null === $lifts) {
+            $decision->skip(GrantQuestionEnum::Exception);
+        } else {
+            $justification = $this->justifications->findOneCurrent($position, (string) $grant);
+            $decision->readException($lifts, $justification);
+            if (null === $justification) {
+                return $decision->refuse(GrantQuestionEnum::Exception);
+            }
+            $decision->pass(GrantQuestionEnum::Exception);
         }
 
         // 2. Does the placement reach anything, and this area? No placement,
@@ -151,26 +194,24 @@ final class GrantVoter extends Voter
         //    same predicate {@see AreaAuthority} asks, so the two never drift.
         $placement = $user->getPlacement();
         if (null === $placement || $placement->reachesNothing()) {
-            $vote?->addReason('their placement reaches nothing: no ground, or no department yet.');
-
-            return false;
+            return $decision->refuse(GrantQuestionEnum::Placement, 'their placement reaches nothing: no ground, or no department yet.');
         }
+        $decision->pass(GrantQuestionEnum::Placement);
 
         // 2a. THE WHOLE ORGANIZATION is reached only from a placement across
         //     it: a pair held at one area does not reach beyond that area.
         if ($subject instanceof WholeOrganization) {
             if (!$placement->isWholeOrganization()) {
-                $vote?->addReason('this reaches the whole organization, and their placement covers only part of it.');
-
-                return false;
+                return $decision->refuse(GrantQuestionEnum::Place, 'this reaches the whole organization, and their placement covers only part of it.');
             }
-        } elseif (!$placement->coversArea($subject instanceof AreaInterface ? $subject : null)) {
-            return false;
+        } elseif (!$placement->coversArea($subject)) {
+            return $decision->refuse(GrantQuestionEnum::Place);
         }
+        $decision->pass(GrantQuestionEnum::Place);
 
         // 3. Does the placement cover the department, where the concern
         //    belongs to one at all?
-        return $this->coversTheDepartment($user, $grant->concern);
+        return $this->coversTheDepartment($decision, $placement, $grant->concern);
     }
 
     /**
@@ -179,26 +220,25 @@ final class GrantVoter extends Voter
      * refusal. A concern whose module NO department runs is the same case:
      * there is no department for the placement to have to cover.
      */
-    private function coversTheDepartment(User $user, string $concern): bool
+    private function coversTheDepartment(GrantDecision $decision, Placement $placement, string $concern): GrantDecision
     {
         $module = $this->catalogue->moduleOf($concern);
         if (null === $module) {
-            return true;
+            return $decision->skip(GrantQuestionEnum::Department)->allow();
         }
 
         $running = $this->departmentsRunning($module);
         if ([] === $running) {
-            return true;
+            return $decision->readDepartments($module, [], null)->skip(GrantQuestionEnum::Department)->allow();
         }
 
-        $placement = $user->getPlacement();
         foreach ($running as $department) {
-            if ($placement?->serves($department) ?? false) {
-                return true;
+            if ($placement->serves($department)) {
+                return $decision->readDepartments($module, $running, $department)->pass(GrantQuestionEnum::Department)->allow();
             }
         }
 
-        return false;
+        return $decision->readDepartments($module, $running, null)->refuse(GrantQuestionEnum::Department);
     }
 
     /**

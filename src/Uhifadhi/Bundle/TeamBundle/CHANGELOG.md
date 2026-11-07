@@ -8,6 +8,115 @@
 
 Not released yet.
 
+ * TEAM › PERMISSIONS › CHECK (#66, the 8 Nov design): `Controller\PermissionsCheckController`
+   (`team.controller.permissions_check`) serves `GET /team/permissions/check?person=&q=&target=`,
+   Super Admin by tier, drawn by `Permissions\CheckListing`: three shell dropdowns and Check; the
+   verdict, the voter's walk with its doors (the person and the placement on the person's record,
+   the position and the exception on the position's record, the department on its record) and the
+   coverage line from the latest run; The person, The question and Here (only the facts the voter
+   reads: placement cover, the department running the module, the exception); Everything here
+   (every permission of the catalogue, one `GrantVoter::decide()` walk each, allowed first, then the
+   refusals in the voter's step order, a verdict axis, a resource axis, search and the house foot
+   with its page-size chooser); Worth running; Recent checks (this session, in sessionStorage). The
+   `permission-check` controller. `PermissionCheckService` gains `atPlace()`, `aboutPerson()`,
+   `aboutQuestion()`, `people()`, `places()` and `ownPlace()`; its walk says "permission" and
+   "resource" where it said "pair" and "concern". `PermissionFindingsReader::worthRunning()` lists
+   every active Staff person once (`kind`, `flagged`; nothing flagged last, by name, at their first
+   held permission, a sensitive one first). The hub's Check tile, the lookups' Check tab and
+   Analysis' Check doors are live. The shell's dropdown takes an option's `find`; the shell's icons
+   gain `user-round`, `target` and `minus`.
+ * TEAM › PERMISSIONS › ANALYSIS (#66, the 7 Nov design): `Controller\PermissionsAnalysisController`
+   (`team.controller.permissions_analysis`) serves `GET /team/permissions/analysis`
+   (`team_permissions_analysis`), a Super Admin's by tier: the question named by `?q=` answered
+   from the latest run, the seven lists for review and the drift, drawn by
+   `Permissions\AnalysisListing`, with the drift banner, the run in the head and one index row per
+   card. The question card's one house filter bar (`.lfilt`) opens on the question chip (grouped by
+   declaring package, the powers last; choosing one loads the page for it), then rows (all, with
+   people, empty, changed since the last run), department (every cell and the people panel recounted
+   to the people who serve it) and sort (most people first, by name); every position holding the permission
+   is a row, so an empty row shows; a cell the drift names carries the warn tint and the grid says how
+   many changed, with a link to Drift. Every table on the page — the grid, the power table, the seven
+   lists and the drift — is a register: its own bar with a search, the house foot at every size with a
+   page size of 20, 50, 100 or all remembered for the session, and "No … matches these filters." A
+   drift line is one row with *Verify live* and *Mark reviewed* at its right. The new
+   `permission-analysis` Stimulus controller narrows, orders and pages the rows the server wrote and
+   opens a cell's people. `PermissionAnalysisReader` gains `peopleByCell()` (each person with the
+   departments they serve), `firstHolders()`, in `forPair()` each row's distinct `people` and the
+   `departments`, and, in `questions()`, the positions holding each permission and the actors allowed over
+   each power's first target kind. The words a person reads say resource and permission. *Mark reviewed*
+   takes `ids[]` for one drift line. The hub's and Positions' Analysis links are live. The shell's
+   icon set gains `circle-help`; its dropdown option and index row take an optional `title`.
+
+ * TEAM › PERMISSIONS › POSITIONS (#66, the 7 Nov design): `Controller\PermissionsPositionsController`
+   (`team.controller.permissions_positions`) serves `GET /team/permissions/positions`
+   (`team_permissions_positions`), a Super Admin's by tier: the tiers above the matrix and one row
+   per position from `PositionsReportReader::report()`, drawn by `Permissions\PositionsListing`.
+   The search, the resource and sort dropdowns (`@Shell/_dropdown`), the seven pills and the folds are
+   the new `permission-positions` Stimulus controller's, over the rendered rows; the index is
+   `@Shell/_onpage`. The hub's Positions links are live. The shell's icon set gains `arrow-up-down`.
+
+ * The gaining-power list reads as the design: "Gaining power — answers below Super Admin", and,
+   when empty, "nobody below Super Admin can raise themselves".
+
+ * TEAM › PERMISSIONS, THE HUB (#66, the 7 Nov design): `Controller\PermissionsHubController`
+   (`team.controller.permissions_hub`) serves Overview (`GET /team/permissions`,
+   `team_permissions_overview`) and Reports (`GET /team/permissions/reports`), *Recompute now*
+   (`POST /team/permissions/recompute`) and *Mark reviewed* (`POST /team/permissions/drift/reviewed`),
+   a Super Admin's by tier. The hub and the lookups carry their own strips in place of the
+   Team strip (`TeamSectionTabs` answers by route), and the sidebar's Permissions row opens into
+   Positions · Analysis · Check. The plots are the atlas's (`Permissions\PermissionsOverviewCharts`).
+   The ledger page it replaces is gone, with `PermissionsController`, `PermissionsPage`,
+   `LedgerQuery`, `Mark`, `team/permissions.html.twig`, `team/_permissions_bits.html.twig` and
+   their `.perm-*`/`.au-*` rules; the route `team_permissions` is gone.
+
+ * NOBODY BELOW A SUPER ADMIN RAISES THEIR OWN STANDING (ruled 8 Nov 2026): `MemberVoter`
+   refuses `team.member.configure` on oneself and `team.member.tier` for a higher tier than
+   one's own to an Admin and to Staff, before the account rule; `GrantVoter::decide()` refuses
+   a permission asked about the new `Security\OwnStandingRaised` subject to anybody but a Super Admin,
+   before the tier step, so an Admin's tier no longer answers yes to it. `TeamPowers::subject()`
+   asks the gaining-power permissions (`ranks.configure`, `directory.manage` for a new account,
+   `positions.configure` for their own position) about `OwnStandingRaised`. The reason reads
+   "nobody raises their own standing." (`MemberVoter::OWN_STANDING`). A Super Admin keeps every
+   answer; acting on somebody else is unchanged.
+
+ * A RANK CHANGE IS A HISTORY LINE: `PermissionChangeEnum::RankChanged` (`rank-changed`, kind
+   `position`, "changed the rank of {on}"), written by `RankService::assign()` through the
+   optional `PermissionChangeLog` (wired in `team.ranks`) whenever the rank held changes, with
+   the rank names or "no rank" before and after. A line whose author is its subject reads in
+   its own words, `PermissionChangeEnum::selfPhrase()` ("changed their own tier to Admin",
+   "seated themselves as …", "changed their own rank to …"), and `ChangeLine::$on` is then empty.
+
+ * THE PERMISSIONS RUN (#66): who can do each permission in each place, computed in the worker
+   and stored, so the Permissions pages read answers rather than asking the voters.
+   `Permissions\PermissionRunService` (`team.permissions.runs`) asks every active Staff
+   member every permission the catalogue offers in the whole organization and each area,
+   through `isGrantedForUser()`, once per shape (position + placement); the powers
+   through `PermissionEvaluator::ledger()`. It files the six standing lists and the
+   drift since the previous run: an answer that changed with no history line touching
+   it (a department line explains every answer, a position line its cells, a person
+   line the cells they were in). Tables `team_permission_run`, `team_permission_answer`,
+   `team_permission_finding`, `team_permission_drift` (migration `Version20261107120000`);
+   the latest two finished runs keep their answers. A run is asked for by every history
+   line (in the same transaction, the worker woken after the response), nightly at
+   `team.permissions.schedule` (default `0 2 * * *`), by `team:permissions:recompute`
+   after a deploy, and by `requestRun()`; a request already waiting is the same request.
+   `GrantVoter::decide()` now records each question as it asks it in a
+   `Permissions\GrantDecision`, which the vote is read from.
+
+ * THE PERMISSIONS READERS (#66): `Permissions\PermissionOverviewReader` (`team.permissions.overview`),
+   `PositionsReportReader` (`team.permissions.positions_report`), `PermissionAnalysisReader`
+   (`team.permissions.analysis`), `PermissionFindingsReader` (`team.permissions.findings_reader`,
+   with `markReviewed()`), `PermissionCheckService` (`team.permissions.check`) and `PlaceKey`;
+   shapes in `docs/permissions-readers.md`. `PermissionEvaluator::targetFor()` finds a power's
+   target as the ledger does. A seventh, informational standing list, `FindingListEnum::SelfChanges`:
+   the history lines since the previous run (or the last 30 days) in which a person changed their own
+   tier, rank or position (`PermissionChangeRepository::findSelfChangesBetween()`), each entry in its own
+   columns of `team_permission_finding` — `change_kind`, `what`, `before_value`, `after_value`,
+   `changed_at` — read back as they are stored (`PermissionFinding::getChangeKind()`, `getWhat()`,
+   `getBeforeValue()`, `getAfterValue()`, `getChangedAt()`). The gaining-power
+   list no longer files a Super Admin's yes (ruled 7 Nov: nobody except a Super Admin).
+   New finders: `PermissionAnswerRepository::countByRunAndKind()`, `PermissionRunRepository::findOneLatestFailed()`.
+
  * WHO OUTSIDE A DEPARTMENT SEES IT (ruled 11 Oct, #74, design B): `Department::$visibility`,
    `DepartmentVisibilityEnum` — Private (a new department, and every existing one), Listed,
    Open. Open: everybody who reads departments reads its record and figures. Listed: its name
@@ -77,7 +186,7 @@ Not released yet.
    cell for them, and the seed gives none. Migration `Version20260930120000` removes
    them from every stored position and cannot be undone. The Add somebody page and
    buttons follow `directory.manage`.
- * SIGN-IN HELP: a new concern, `sign-in-help.manage`, a position may carry - the
+ * SIGN-IN HELP: a new permission, `sign-in-help.manage`, a position may carry - the
    reset link asks for it. A person's record carries a Sign-in card for whoever holds
    it and reaches the person: the account's state, the last sign-in (web, or the
    handset's last token use), the address a link goes to (masked unless the viewer

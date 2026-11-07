@@ -8,6 +8,49 @@
 
 Not released yet.
 
+ * A dropdown option and an index row take an optional `title`, their tooltip; the icon set gains
+   `circle-help`.
+
+ * A dropdown group whose `label` is null draws no head and is named by the control's label: the
+   lead *Any …* row stands alone above the first head, as the design draws it.
+
+ * THE DROPDOWN (design: uhifadhi-web/house-dropdown.css + .js): `@Shell/_dropdown.html.twig`,
+   included with `name`, `label`, `icon`, `groups` (`{label, options: [{value, label, count}]}`),
+   `value`, `searchable`, `default`, `end`, `placeholder`, `search` and `none`; the
+   `dropdown` Stimulus controller (`uhifadhi--shell-bundle--dropdown`, eager), the design's
+   script with its behaviour unchanged; a choice bubbles as
+   `uhifadhi--shell-bundle--dropdown:choose` with `detail.value`; the API is
+   `window.shellDropdown.set/value/close`. Listed in `LayoutContract::PARTIALS`.
+   Class names, design to shell: `pp-dd` → `dd`, `pp-dd-end` → `dd-end`, `pp-set` → `dd-set`,
+   `.page.pp-dd-lift` → `.page.dd-lift`, `pp-ddt` → `dd-t`, `pp-ddi` → `dd-i`, `pp-ddv` → `dd-v`,
+   `pp-ddc` → `dd-c`, `pp-ddp` → `dd-p`, `pp-ddq` → `dd-q`, `pp-ddl` → `dd-l`, `pp-ddh` → `dd-h`,
+   `pp-ddo` → `dd-o`, `pp-ddol` → `dd-ol`, `pp-ddm` → `dd-m`, `pp-ddnone` → `dd-none`;
+   `[data-pp-dd]` → `[data-dd]`, `[data-pp-dd-value]` → `[data-dd-value]`, `[data-pp-dd-n]` →
+   `[data-dd-n]`, `pp-dd:choose` → `uhifadhi--shell-bundle--dropdown:choose`, `window.ppDD` →
+   `window.shellDropdown`. Documented in docs/dropdown.md and docs/theming.md, "The dropdown"
+
+ * ON THIS PAGE, THE IN-PAGE INDEX (design: team-module/vendor/house-index.css + .js):
+   `@Shell/_onpage.html.twig`, embedded with `rows` (`{id, label, count}` or `{head}`)
+   and the page's sections in block `shell_onpage_main`; the `onpage` Stimulus
+   controller (`uhifadhi--shell-bundle--onpage`, eager), the design's script with its
+   behaviour unchanged; the API is `window.shellOnpage.count/hide/row/current`; the
+   collapse is remembered under `uhifadhi-pp-nav`. Listed in `LayoutContract::PARTIALS`.
+   Class names, design to shell: `pp-body` → `onpage`, `pp-main` → `onpage-main`,
+   `pp-nav` → `onpage-nav`, `pp-nav-top` → `onpage-top`, `pp-nav-h` → `onpage-h`,
+   `pp-nav-tg` → `onpage-tg`, `pp-nav-row` → `onpage-row`, `pp-nav-dot` → `onpage-dot`,
+   `pp-nav-l` → `onpage-l`, `pp-nav-n` → `onpage-n`, `pp-flash` → `onpage-flash`,
+   `html.pp-nav-closed` → `html.onpage-closed`, `--pp-flash-rest` → `--_onpage-flash-rest`,
+   keyframes `pp-flash`/`pp-flash-still` → `onpage-flash`/`onpage-flash-still`;
+   `[data-pp-nav]` → the controller on the nav, `[data-pp-nav-toggle]` → its `toggle`
+   target. Documented in docs/theming.md, "On this page: the in-page index"
+
+ * THE PAGE COLUMN IS FLUID, CAPPED AT 1600px (ruled 7 Nov): `.page` fills the main
+   column less a 24px gutter each side (`padding: 26px 24px 90px`) and stops at
+   `max-width: 1600px`, centred beyond it; the top bar's cluster (`.topbar > .tb-right`,
+   `padding: 0 24px`) and the shell foot (`.shell-foot`, `padding: 0 24px 26px`) take
+   the same measure. It was 1280px with a 22px gutter. Pinned by
+   `tests/Unit/Assets/PageColumnTest`.
+
  * THE REFUSAL PAGE (ruled 30 Sep, #33, design D): a signed-in person who opens a page
    their position does not reach gets, with a 403, the shell's page "There is nothing
    here you can open" (crumb "uhifadhi / not allowed", Back and Your dashboard) instead
@@ -28,8 +71,8 @@ Not released yet.
    section draws the Deletions tab only for somebody who may delete, and leaves its
    screen to whoever keeps the deletes.
 
- * THE SETTINGS SECTION ASKS FOR ITS OWN PAIR: `settings.read` (the new "Settings"
-   concern, organization-wide, declared by `Access\ShellConcerns`). Without it the
+ * THE SETTINGS SECTION ASKS FOR ITS OWN PERMISSION: `settings.read` (the new "Settings"
+   resource, organization-wide, declared by `Access\ShellConcerns`). Without it the
    section's address is refused and its sidebar row is absent. A kernel with no
    security keeps the old behaviour — behind whatever its firewall puts it. Nothing
    is granted it by upgrading: Admins and Super Admins hold it by tier, and a Staff

@@ -65,7 +65,7 @@ final class PositionRecordTest extends WebTestCaseWithSchema
 
         self::assertCount(4, $band, 'A figure row is four to a row, and never five.');
         self::assertSame(
-            ['Seats filled', 'Seats free', 'Holders', 'Concerns granted'],
+            ['Seats filled', 'Seats free', 'Holders', 'Resources granted'],
             $band->filter('.k')->each(static fn (Crawler $c): string => $c->text()),
         );
         self::assertStringContainsString('1of 8', $band->eq(0)->filter('.v')->text());

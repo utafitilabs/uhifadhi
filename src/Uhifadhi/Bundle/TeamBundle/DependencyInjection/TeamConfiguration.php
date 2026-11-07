@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\DependencyInjection;
 
+use Cron\CronExpression;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 
@@ -25,6 +26,9 @@ use Symfony\Component\Config\Definition\Builder\NodeDefinition;
  *     sign_in_lede: 'Analytical observatory for protected areas.'
  *     mail_from: 'uhifadhi@example.org'
  *     installation_name: 'Northern Reserve Authority'
+ *     permissions:
+ *       schedule: '0 2 * * *'   # when the nightly permissions run is asked for
+ *       timezone: ~             # the zone that hour is in; ~ is PHP's default
  *
  * FOUR KEYS, AND NONE OF THEM IS SECURITY. What a deployment usually wants to
  * change about signing in — who may reach what, how long a session lives,
@@ -57,6 +61,9 @@ final class TeamConfiguration
     /** What an email calls this installation when a deployment has not said. */
     public const string DEFAULT_INSTALLATION_NAME = 'Uhifadhi';
 
+    /** When the nightly permissions run is asked for, when a deployment has not said. */
+    public const string DEFAULT_PERMISSIONS_SCHEDULE = '0 2 * * *';
+
     public const string DEFAULT_SIGN_IN_LEDE = 'Analytical observatory for protected areas. Sign in to reach this installation and its modules.';
 
     public static function define(NodeDefinition|ArrayNodeDefinition $root): void
@@ -82,6 +89,23 @@ final class TeamConfiguration
                 ->scalarNode('installation_name')
                     ->info('What to call this installation in an email subject line. Never a default naming somebody\'s authority — the fallback is the product.')
                     ->defaultValue(self::DEFAULT_INSTALLATION_NAME)->cannotBeEmpty()
+                ->end()
+                ->arrayNode('permissions')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->scalarNode('schedule')
+                            ->info('A cron expression: when the nightly permissions run is asked for. The Permissions pages say when the next one is.')
+                            ->defaultValue(self::DEFAULT_PERMISSIONS_SCHEDULE)
+                            ->validate()
+                                ->ifTrue(static fn (mixed $expression): bool => !\is_string($expression) || !CronExpression::isValidExpression($expression))
+                                ->thenInvalid('%s is not a cron expression.')
+                            ->end()
+                        ->end()
+                        ->scalarNode('timezone')
+                            ->info('The zone the schedule’s hours are in. Null: PHP’s default zone.')
+                            ->defaultNull()
+                        ->end()
+                    ->end()
                 ->end()
             ->end()
         ;

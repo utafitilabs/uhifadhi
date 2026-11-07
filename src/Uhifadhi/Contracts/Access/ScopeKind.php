@@ -53,7 +53,7 @@ enum ScopeKind: string
         return match ($this) {
             self::Organization => 'Everything.',
             self::Area => 'One or more named areas — every record resolves to an area.',
-            self::Department => 'The concern belongs to a module the department runs, and the record lies in ground the department works in.',
+            self::Department => 'The resource belongs to a module the department runs, and the record lies in ground the department works in.',
             self::Own => 'What the module itself calls mine, in its own words.',
         };
     }

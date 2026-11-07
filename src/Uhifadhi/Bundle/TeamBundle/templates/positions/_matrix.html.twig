@@ -39,7 +39,7 @@
    the controller is attached to. #}
 {% macro bar(card) %}
     <div class="pmbar">
-        <span class="pmbar-n"><b>{{ card.concernsGranted }} of {{ card.concernsDeclared }} concerns</b> &middot; {{ card.groups|length }} group{{ card.groups|length == 1 ? '' : 's' }} &middot; the six verbs, fixed</span>
+        <span class="pmbar-n"><b>{{ card.concernsGranted }} of {{ card.concernsDeclared }} resources</b> &middot; {{ card.groups|length }} group{{ card.groups|length == 1 ? '' : 's' }} &middot; the six verbs, fixed</span>
         <span class="pmbar-acts">
             <button type="button" class="tgl w-act" data-action="uhifadhi--team-bundle--folds#foldAll">Fold all</button>
             <button type="button" class="tgl w-act" data-action="uhifadhi--team-bundle--folds#openAll">Open all</button>

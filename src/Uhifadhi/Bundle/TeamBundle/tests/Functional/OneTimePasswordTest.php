@@ -149,9 +149,7 @@ final class OneTimePasswordTest extends WebTestCaseWithSchema
         $this->client->request('GET', '/team/'.$superAdmin->getUuidString().'/configure');
         self::assertResponseStatusCodeSame(403);
 
-        $admin = $this->em->getRepository(User::class)->findOneBy(['email' => 'a.mollel@example.test']);
-        self::assertInstanceOf(User::class, $admin);
-        $token = $this->tokenFrom('/team/'.$admin->getUuidString().'/configure');
+        $token = $this->tokenFrom('/team/'.$this->ranger()->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$superAdmin->getUuidString().'/one-time-password', ['_token' => $token]);
         self::assertResponseStatusCodeSame(403);
     }

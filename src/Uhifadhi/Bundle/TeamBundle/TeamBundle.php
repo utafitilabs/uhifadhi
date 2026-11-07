@@ -21,7 +21,10 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Uhifadhi\Bundle\TeamBundle\DependencyInjection\TeamConfiguration;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Scheduler\RecomputePermissionsTask;
 use Uhifadhi\Contracts\Entity\UserInterface as ContractUserInterface;
+
+use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
 /**
  * TEAM — who an installation's people are, and how they sign in.
@@ -294,6 +297,28 @@ final class TeamBundle extends AbstractBundle
             'team.mail_from',
             \is_string($config['mail_from'] ?? null) ? $config['mail_from'] : '',
         );
+
+        // THE NIGHTLY PERMISSIONS RUN. One `scheduler.task` tag on the task
+        // that asks for the run — the tag `#[AsCronTask]` writes, written by
+        // hand because a reusable bundle is not autoconfigured; the framework
+        // puts it on the `default` schedule. The expression is also a
+        // parameter, so the pages can say when the next run is.
+        // https://symfony.com/doc/current/scheduler.html#attaching-recurring-messages-to-a-schedule
+        // @see Scheduler/RecomputePermissionsTask.php
+        $permissions = \is_array($config['permissions'] ?? null) ? $config['permissions'] : [];
+        $schedule = \is_string($permissions['schedule'] ?? null) ? $permissions['schedule'] : TeamConfiguration::DEFAULT_PERMISSIONS_SCHEDULE;
+        $timezone = \is_string($permissions['timezone'] ?? null) ? $permissions['timezone'] : null;
+        $builder->setParameter('team.permissions.schedule', $schedule);
+        $builder->setParameter('team.permissions.timezone', $timezone);
+        $container->services()
+            ->set('team.permissions.schedule_task', RecomputePermissionsTask::class)
+            ->args([service('team.permissions.runs')])
+            ->tag('scheduler.task', array_filter([
+                'trigger' => 'cron',
+                'expression' => $schedule,
+                'timezone' => $timezone,
+                'schedule' => 'default',
+            ], static fn (mixed $value): bool => null !== $value));
 
         $builder->setParameter(
             'team.installation_name',

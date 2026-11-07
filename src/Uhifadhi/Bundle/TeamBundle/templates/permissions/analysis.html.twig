@@ -1,0 +1,167 @@
+{# TEAM › PERMISSIONS › ANALYSIS — one question answered from the worker's
+   latest run (team-module/team/permissions/analysis.html), then the lists
+   that run filed and its drift, each a card and a row of the index.
+
+   The question card is the only one the question reaches. Its answer is
+   written here, every row of it; narrowing, ordering and paging the rows,
+   and opening a cell's people, are the page controller's
+   (assets/controllers/permission_analysis_controller.js). Choosing another
+   question loads the page for it.
+
+   EVERY TABLE IS A REGISTER: the house filter bar above it, the house foot
+   under it at every size. Each row carries its values on the bar's axes as
+   JSON (data-pa-f) and the words a search matches (data-pa-q). #}
+{% extends '@Team/permissions/_frame.html.twig' %}
+{% import '@Team/permissions/_bits.html.twig' as pp %}
+
+{% block title %}Permissions — Analysis{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_index') }}">uhifadhi</a> / team / <a href="{{ path('team_permissions_overview') }}">permissions</a> / analysis
+{% endblock %}
+
+{% block shell_page_title %}Permissions &mdash; Analysis{% endblock %}
+
+{% block shell_page_subtitle %}Who can do this, and where? Answered by the worker for the real people, stored, and read with the time it was true.{% endblock %}
+
+{% block permissions_run %}{{ pp.recompute(freshness, token, 'team_permissions_analysis', true) }}{% endblock %}
+
+{% block shell_page %}
+    {% set ctl = 'uhifadhi--team-bundle--permission-analysis' %}
+    {% set run %}{% if freshness.asOf %}{{ pp.stamp(freshness.asOf) }}{% else %}{{ shell_as_of(null) }}{% endif %}{% endset %}
+
+    {{ pp.drift(driftLines, drift.done ? 0 : 1, token, 'team_permissions_analysis', '#drift') }}
+
+    {% embed '@Shell/_onpage.html.twig' with {rows: nav} %}
+        {% block shell_onpage_main %}
+            {% import '@Team/permissions/_bits.html.twig' as pp %}
+            {% import '@Team/permissions/_analysis_bits.html.twig' as an %}
+            {% set ctl = 'uhifadhi--team-bundle--permission-analysis' %}
+            {% set act = 'click->' ~ ctl ~ '#click input->' ~ ctl ~ '#search click@document->' ~ ctl ~ '#outside keydown@document->' ~ ctl ~ '#escape' %}
+            {# THE QUESTION — the bar, its first chip the question, then the answer. #}
+            <div class="c" id="question" data-controller="{{ ctl }}" data-action="{{ act }}"><span class="tab"><span>{{ question.title }}</span><span class="src">&middot; stored &middot; as of {{ run }}</span></span>
+
+                {% if pair %}
+                {% set reg = pair.register %}
+                <div data-pa-pair data-pa-reg="question" data-pa-grid>
+                    <div class="lfilt">{{ an.question(question, menu) }}{% for c in reg.chips %}{{ an.chip(c) }}{% endfor %}</div>
+                    <p class="pa-lead">By tier: {% for tier in pair.tiers %}<b>{{ tier.label }} <span>{{ tier.count }}</span></b>{{ not loop.last ? ' and ' }}{% endfor %} can, everywhere.</p>
+                    {% if pair.rows is not empty %}
+                    <table class="tbl pa-grid">
+                        <colgroup><col>{% for head in pair.heads %}<col class="pa-pc">{% endfor %}</colgroup>
+                        <thead><tr><th scope="col">Position</th>{% for head in pair.heads %}<th class="num pa-plh" scope="col"{% if head.organization %} title="people whose placement is the whole organization"{% endif %}>{{ head.head }}</th>{% endfor %}</tr></thead>
+                        <tbody>
+                            {%- for row in pair.rows %}
+                            <tr data-pa-r data-pa-name="{{ row.position }}" data-pa-people="{{ row.people }}" data-pa-changed="{{ row.changed ? 1 : 0 }}"{% if loop.index > 20 %} hidden{% endif %}><th scope="row" class="pa-rh">{{ row.position }}</th>{% for cell in row.cells %}<td class="num pa-c{{ cell.changed ? ' pa-chg' }}" data-pa-at="{{ cell.cell }}"{% if cell.changed %} title="changed since the last run"{% endif %}>{% if cell.count %}<button type="button" class="pa-cell" aria-expanded="false" aria-label="{{ cell.label }}" data-pa-cell="{{ cell.cell }}" data-pa-n="{{ cell.count }}">{{ cell.count }}</button>{% endif %}</td>{% endfor %}</tr>
+                            {%- endfor %}
+                        </tbody>
+                        <tfoot><tr><th scope="row" data-pa-total>{{ pair.total }}</th>{% for total in pair.totals %}<td class="num" data-pa-sum>{{ total }}</td>{% endfor %}</tr></tfoot>
+                    </table>
+                    {{ an.foot(reg) }}
+                    <p class="au-why pa-none" data-pa-nomatch hidden>No position matches these filters.</p>
+                    {% else %}
+                    <p class="au-why pa-none">{% if pair.none %}{{ pair.none }}{% else %}{{ shell_as_of(null) }}{% endif %}</p>
+                    {% endif %}
+                    {% if pair.changed %}<p class="au-why pa-note" data-pa-chg>{{ pair.changed }} {{ pair.changed == 1 ? 'cell' : 'cells' }} changed since the last run &middot; <a class="pa-dlink" href="#drift">see Drift</a></p>{% endif %}
+                    {%- for cell, people in pair.people %}
+                    <template data-pa-people="{{ cell }}" data-pa-where="{{ people.where }}">{% for person in people.names %}<li data-pa-id="{{ person.id }}" data-pa-deps="{{ person.departments }}">{% if person.url %}<a href="{{ person.url }}">{{ person.name }}</a>{% else %}{{ person.name }}{% endif %}</li>{% endfor %}</template>
+                    {%- endfor %}
+                    <div class="pa-people" aria-live="polite" data-{{ ctl }}-target="people" hidden>
+                        <p class="pa-ph" data-{{ ctl }}-target="head"></p>
+                        <ul class="pa-names" data-{{ ctl }}-target="names"></ul>
+                    </div>
+                    <p class="au-why pa-note">A person counts in every column their placement covers: somebody placed across the organization appears in every cell of their row.</p>
+                </div>
+                {% endif %}
+
+                {% if power %}
+                {% set reg = power.register %}
+                <div data-pa-power data-pa-reg="power">
+                    <div class="lfilt">{{ an.question(question, menu) }}{% for c in reg.chips %}{{ an.chip(c) }}{% endfor %}{{ an.search(reg) }}</div>
+                    <p class="pa-lead"><b>{{ power.lead.group }}</b> &mdash; {{ power.lead.question }}</p>
+                    {% if power.expect %}<p class="pa-lead pa-expect{{ power.alarm ? ' pa-bad' }}">The expected answer is nobody but a Super Admin; any other yes here is an alarm.</p>{% endif %}
+                    <table class="tbl pa-pow">
+                        <thead><tr><th scope="col">Who</th>{% for target in power.targets %}<th scope="col" class="pa-tc">{{ target }}</th>{% endfor %}<th scope="col" aria-label="Check"></th></tr></thead>
+                        <tbody>
+                            {%- for row in power.rows %}
+                            <tr data-pa-r data-pa-f="{{ row.f }}" data-pa-q="{{ row.q }}"{% if loop.index > 20 %} hidden{% endif %}><th scope="row" class="pa-rh">{% if row.url %}<a href="{{ row.url }}">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}<span class="pp-sub">{{ row.kind }}</span></th>{% for ok in row.cells %}<td class="pa-tc"><span class="au-v pp-v {{ ok ? 'ok' : 'no' }}">{{ ok ? 'allowed' : 'refused' }}</span></td>{% endfor %}<td class="pp-door">{% if row.url %}<a class="more" href="{{ row.url }}">Check &rarr;</a>{% endif %}</td></tr>
+                            {%- endfor %}
+                        </tbody>
+                    </table>
+                    {{ an.foot(reg) }}
+                    {{ an.nomatch(reg) }}
+                </div>
+                {% endif %}
+            </div>
+
+            {# THE LISTS FOR REVIEW — the same run's, whatever is asked above. #}
+            {% for list in lists %}
+            {% set reg = list.register %}
+            <div class="c" id="{{ list.id }}" data-controller="{{ ctl }}" data-action="{{ act }}"><span class="tab"><span>{{ list.title }} &middot; <span class="pa-cnt{{ list.bad ? ' pa-bad' }}">{{ list.count }}</span></span><span class="src">&middot; filed in the run of {{ run }}</span></span>
+                {%- set e = list.entries %}
+                {%- if e is not empty %}
+                <div data-pa-reg="{{ list.id }}">
+                <div class="lfilt">{% for c in reg.chips %}{{ an.chip(c) }}{% endfor %}{{ an.search(reg) }}</div>
+                {%- if list.id == 'reach-nothing' %}
+                    <table class="tbl pa-st"><thead><tr><th scope="col">Person</th><th scope="col">Why</th><th scope="col"></th></tr></thead><tbody>
+                        {%- for x in e %}<tr{{ an.row(x, loop) }}><th scope="row" class="pa-rh pa-b">{{ x.name }}<span class="pp-sub">{{ x.position }}</span></th><td class="pa-s">{{ x.why|slice(0, 1)|upper }}{{ x.why|slice(1) }}</td><td class="pp-door">{% if x.url %}<a class="more" href="{{ x.url }}">Check &rarr;</a>{% endif %}</td></tr>{% endfor %}
+                    </tbody></table>
+                {%- elseif list.id == 'not-in-force' or list.id == 'not-honoured' %}
+                    <table class="tbl pa-st"><thead><tr><th scope="col">Position &middot; permission</th><th scope="col">Reason</th><th scope="col"></th></tr></thead><tbody>
+                        {%- for x in e %}<tr{{ an.row(x, loop) }}>{{ an.position(x) }}<td class="pa-s pa-dim">{{ list.id == 'not-in-force' ? 'no written reason, so the voter refuses it' : 'only the tiers hold it' }}</td>{{ an.open(x.door) }}</tr>{% endfor %}
+                    </tbody></table>
+                {%- elseif list.id == 'gaining' %}
+                    <table class="tbl pa-st"><thead><tr><th scope="col">Who</th><th scope="col">Power</th><th scope="col"></th></tr></thead><tbody>
+                        {%- for x in e %}<tr{{ an.row(x, loop) }}><th scope="row" class="pa-rh pa-b">{{ x.who }}<span class="pp-sub">{{ x.kind }}</span></th><td class="pa-s">{{ x.power }}</td>{{ an.open(x.door) }}</tr>{% endfor %}
+                    </tbody></table>
+                {%- elseif list.id == 'vacant' %}
+                    <table class="tbl pa-st"><thead><tr><th scope="col">Position</th><th scope="col">Vacant since</th><th scope="col"></th></tr></thead><tbody>
+                        {%- for x in e %}<tr{{ an.row(x, loop) }}><th scope="row" class="pa-rh pa-b">{{ x.position }}</th><td><span class="pp-t">{% if x.since %}{{ pp.stamp(x.since) }}{% endif %}</span></td>{{ an.open(x.door) }}</tr>{% endfor %}
+                    </tbody></table>
+                {%- elseif list.id == 'exceptions' %}
+                    <table class="tbl pa-st pa-st-exc"><thead><tr><th scope="col">Position &middot; permission</th><th scope="col">By</th><th scope="col">Reason</th><th scope="col"></th></tr></thead><tbody>
+                        {%- for x in e %}<tr{{ an.row(x, loop) }}>{{ an.position(x) }}<td class="pa-s">{{ x.by }}{% if x.at %}<span class="pp-sub">{{ pp.stamp(x.at) }}</span>{% endif %}</td><td class="pa-s pa-dim">{{ x.reason }}</td>{{ an.open(x.door) }}</tr>{% endfor %}
+                    </tbody></table>
+                {%- elseif list.id == 'self-changes' %}
+                    <table class="tbl pa-st"><thead><tr><th scope="col">Who</th><th scope="col">What</th><th scope="col"></th></tr></thead><tbody>
+                        {%- for x in e %}<tr{{ an.row(x, loop) }}><th scope="row" class="pa-rh pa-b">{{ x.who }}{% if x.at %}<span class="pp-sub">{{ pp.stamp(x.at) }}</span>{% endif %}</th><td class="pa-s">their own {{ x.what }} <span class="ph-diff"><s>{{ x.before }}</s> &rarr; <i>{{ x.after }}</i></span></td>{{ an.open(x.door) }}</tr>{% endfor %}
+                    </tbody></table>
+                {%- endif %}
+                {{ an.foot(reg) }}
+                {{ an.nomatch(reg) }}
+                </div>
+                {%- elseif list.id == 'reach-nothing' %}<p class="au-why pa-none">Nobody — every placement reaches somewhere.</p>
+                {%- elseif list.id == 'gaining' %}<p class="pa-s pa-one">nobody below Super Admin can raise themselves</p>
+                {%- elseif list.id == 'vacant' %}<p class="au-why pa-none">None — every position has a holder.</p>
+                {%- elseif list.id == 'self-changes' %}<p class="au-why pa-none">Nobody changed their own standing.</p>
+                {%- else %}<p class="au-why pa-none">None.</p>
+                {%- endif %}
+            </div>
+            {% endfor %}
+
+            {# DRIFT — a stored answer that changed between two runs with no history line between them. #}
+            {% set reg = drift.register %}
+            <div class="c pa-alarm" id="drift" data-controller="{{ ctl }}" data-action="{{ act }}"><span class="tab"><span>Drift &middot; answers that changed with no recorded change &middot; <span class="pa-cnt{{ drift.lines > 0 ? ' pa-bad' }}">{{ drift.lines }}</span></span><span class="src">{% if drift.between %}&middot; between the runs of {{ pp.stamp(drift.between[0]) }} and {{ pp.stamp(drift.between[1]) }}{% endif %}</span></span>
+                {% if drift.rows is not empty %}
+                <p class="pa-lead">nothing in the history explains it</p>
+                <div data-pa-reg="drift">
+                <div class="lfilt">{% for c in reg.chips %}{{ an.chip(c) }}{% endfor %}{{ an.search(reg) }}</div>
+                <table class="tbl pa-st pa-st-drift"><thead><tr><th scope="col">Position &middot; permission</th>{% for head in drift.heads %}<th scope="col" class="num pa-plh">{{ head }}</th>{% endfor %}<th scope="col"></th></tr></thead><tbody>
+                    {%- for row in drift.rows %}
+                    <tr{{ an.row(row, loop) }}{% if row.reviewed %} class="pa-done"{% endif %}><th scope="row" class="pa-rh pa-b">{{ row.subject }}<span class="pp-sub">{{ row.label }}</span>
+                        {%- for o in row.other %}<span class="pp-sub">{{ o.place }} <span class="ph-diff pa-diff"><s>{{ o.was }}</s>&rarr;<i>{{ o.now }}</i></span></span>{% endfor -%}
+                        </th>
+                        {%- for cell in row.cells %}<td class="num">{% if cell %}<span class="ph-diff pa-diff"><s>{{ cell.was }}</s>&rarr;<i>{{ cell.now }}</i></span>{% endif %}</td>{% endfor -%}
+                        <td class="pp-door"><span class="pa-acts">{% if row.door %}<a class="more" href="{{ row.door }}">Verify live &rarr;</a>{% endif %}<form method="post" action="{{ path('team_permissions_drift_reviewed') }}"><input type="hidden" name="_token" value="{{ token }}"><input type="hidden" name="back" value="team_permissions_analysis">{% for id in row.ids %}<input type="hidden" name="ids[]" value="{{ id }}">{% endfor %}<button type="submit" class="btn sm pp-b"{{ row.reviewed ? ' disabled' }}>{{ row.reviewed ? 'Reviewed' : 'Mark reviewed' }}</button></form></span></td></tr>
+                    {%- endfor %}
+                </tbody></table>
+                {{ an.foot(reg) }}
+                {{ an.nomatch(reg) }}
+                </div>
+                {% else %}
+                <p class="au-why pa-none">No answer changed without a history line.</p>
+                {% endif %}
+            </div>
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

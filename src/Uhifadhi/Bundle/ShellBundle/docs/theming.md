@@ -12,6 +12,8 @@ the browser tab draws.
 - [The frame on a phone](#the-frame-on-a-phone)
 - [One question before something is destroyed](#one-question-before-something-is-destroyed)
 - [Moving a row within a list](#moving-a-row-within-a-list)
+- [On this page: the in-page index](#on-this-page-the-in-page-index)
+- [The dropdown](#the-dropdown)
 - [A time reads in the reader's zone](#a-time-reads-in-the-readers-zone)
 - [The tab icon](#the-tab-icon)
 
@@ -139,6 +141,7 @@ an application.
 | a tree caret | `sidebar-tree` | folds one branch; never navigates, never persisted |
 | a destructive submit | `confirm-modal` | asks the question, then submits the form it interrupted |
 | a row's grip and carets in an ordered list | `reorder` | drags the row with a slot where it will land, or steps it; renumbers and announces |
+| a pill dropdown's trigger, rows and search | `dropdown` | opens one panel at a time, filters, moves by the keyboard, and fires the choice |
 
 Three consequences worth naming:
 
@@ -295,6 +298,95 @@ drops the opening, the closing and the settle, not the slot.
 
 `tests/Unit/Assets/ReorderControllerTest` reads the controller and the sheet as
 text; the drag itself is render-verified.
+
+## On this page: the in-page index
+
+**A long page carries an index left of its sections, and the shell draws it.**
+A page embeds `@Shell/_onpage.html.twig` with its rows and writes its sections
+in the one block; it writes none of the index's markup.
+
+```twig
+{% embed '@Shell/_onpage.html.twig' with {rows: [
+    {id: 'question', label: 'The question'},
+    {id: 'drift', label: 'Drift', count: 3},
+    {head: 'Lists'},
+    {id: 'vacant', label: 'Vacant positions', count: 0},
+]} only %}
+    {% block shell_onpage_main %}
+        <div class="c" id="question">…</div>
+        <div class="c" id="drift">…</div>
+        <div class="c" id="vacant">…</div>
+    {% endblock %}
+{% endembed %}
+```
+
+| Parameter | What it is |
+|---|---|
+| `rows` | in page order: `{id, label, count}` per section (a `count` of null draws none; zero is a count), or `{head}` for a head between rows |
+| `label` | the index's name, `On this page` by default |
+
+The grid is 220px of index and the rest for the sections, 24px apart; the
+cards under `.onpage-main` keep the page's 20px gap. The index is sticky at
+80px — the top bar and 24px — and the row of the section under that line is
+current: tinted, with a glowing 3×18px accent bar. A click scrolls the
+section to the same line and lights it with a 2s glow that fades to the card's
+own shadow. The toggle collapses the index to a 48px rail of dots, remembered in
+`localStorage` under `uhifadhi-pp-nav`; at 900px and below the rail is forced
+and not remembered. The partial writes a one-line script immediately before
+its grid that applies the rail before the index is painted, so a page without an
+index carries none of it.
+
+A page's own script may change the index through `window.shellOnpage`:
+`count(id, n)` (null removes the count), `hide(id, hidden)`, `row(id)` and
+`current(id)`. Every call answers null on a page with no index.
+
+`tests/Unit/Assets/OnpageControllerTest` reads the controller and the sheet as
+text, and `tests/Integration/Onpage/` renders the partial and a page without it;
+the scroll-spy and the rail are render-verified.
+
+## The dropdown
+
+**A choice from a list is the shell's pill dropdown, and the shell draws it.**
+A page includes `@Shell/_dropdown.html.twig` with its groups of options and
+listens for the choice; it writes none of the dropdown's markup.
+
+```twig
+<div data-controller="host"
+     data-action="uhifadhi--shell-bundle--dropdown:choose->host#chosen">
+    {% include '@Shell/_dropdown.html.twig' with {
+        name: 'rank', label: 'Any rank', icon: 'shell:users', default: '', value: '',
+        groups: [
+            {label: 'rank', options: [{value: '', label: 'Any rank', count: 31}]},
+            {label: 'Ranks', options: [
+                {value: 'ranger', label: 'Ranger', count: 19},
+                {value: 'sergeant', label: 'Sergeant', count: 6},
+            ]},
+        ],
+    } only %}
+</div>
+```
+
+The parameters, the markup and the names are in [the dropdown](dropdown.md).
+The trigger is a 45px pill: the leading 16px icon, the label and a chevron
+that turns while the panel is open; while a value other than `default` is
+chosen it is "set", tinted with the accent at 700. The panel floats 8px below
+it, 340–440px wide, and while it is open its `.page` is lifted
+(`.page.dd-lift`) above the page foot. Its rows are 40px in groups under a
+mono head and count; the chosen row is tinted and carries the glowing 3×18px
+accent bar, and the default row, chosen, reads plain with a grey bar. The list
+is one `minmax(0, 1fr)` column with `overflow-x: hidden`, so a long row
+ellipsises and the panel never scrolls sideways.
+
+The choice bubbles from the wrapper as
+`uhifadhi--shell-bundle--dropdown:choose` with `detail.value`. A page's own
+script may set a value with `window.shellDropdown.set(wrapper, value)` (no
+event; null clears), read it with `window.shellDropdown.value(wrapper)` and
+close any open panel with `window.shellDropdown.close()`.
+
+`tests/Unit/Assets/DropdownControllerTest` reads the controller, the sheet and
+both manifests as text, and `tests/Integration/Dropdown/` renders the partial
+and a page without it; opening, the search and the keyboard are
+render-verified.
 
 ## A time reads in the reader's zone
 

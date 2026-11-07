@@ -26,7 +26,8 @@ use Uhifadhi\Contracts\Access\PersonAccess;
  * WHO MAY CONFIGURE A PERSON — ruled 28 Sep 2026: only a Super Admin
  * configures a Super Admin, only an Admin or a Super Admin an Admin, and
  * Staff whom their grants allow configure Staff. Anybody else may read the
- * record and nothing more.
+ * record and nothing more. Ruled 8 Nov 2026: below a Super Admin, nobody
+ * configures their own record or raises their own tier.
  *
  * A voter because it is a permission on one object, and "voters are Symfony's
  * most powerful way of managing permissions. They allow you to centralize all
@@ -49,6 +50,9 @@ final class MemberVoter extends Voter
 
     /** Whether the viewer may give this person this tier — the subject is a {@see TierChange}. */
     public const string TIER = 'team.member.tier';
+
+    /** The reason a refusal of one's own standing gives, wherever it is refused. */
+    public const string OWN_STANDING = 'nobody raises their own standing.';
 
     /** Whether the viewer may issue this person a one-time password. */
     public const string ONE_TIME_PASSWORD = 'team.member.one_time_password';
@@ -79,6 +83,16 @@ final class MemberVoter extends Voter
         $viewer = $token->getUser();
         if (!$viewer instanceof User) {
             $vote?->addReason('nobody is signed in.');
+
+            return false;
+        }
+
+        // BELOW A SUPER ADMIN, NOBODY RAISES THEIR OWN STANDING (ruled 8 Nov
+        // 2026): not their tier, and not their record, which holds their seat
+        // and their rank. A Super Admin manages the installation, themselves
+        // included.
+        if (TeamRoleEnum::SuperAdmin !== $viewer->getTeamRole() && self::raisesThemselves($viewer, $attribute, $subject)) {
+            $vote?->addReason(self::OWN_STANDING);
 
             return false;
         }
@@ -114,5 +128,29 @@ final class MemberVoter extends Voter
             : 'only an Admin or a Super Admin acts on an Admin\'s account.');
 
         return $granted;
+    }
+
+    private static function raisesThemselves(User $viewer, string $attribute, mixed $subject): bool
+    {
+        return match (true) {
+            $subject instanceof TierChange => self::isThemselves($viewer, $subject->person) && self::seniority($subject->tier) > self::seniority($viewer->getTeamRole()),
+            self::CONFIGURE === $attribute && $subject instanceof User => self::isThemselves($viewer, $subject),
+            default => false,
+        };
+    }
+
+    /** The same account, whether or not it is the same object: a route loads the person afresh. */
+    private static function isThemselves(User $viewer, User $person): bool
+    {
+        return $viewer === $person || (null !== $viewer->getId() && $viewer->getId() === $person->getId());
+    }
+
+    private static function seniority(TeamRoleEnum $tier): int
+    {
+        return match ($tier) {
+            TeamRoleEnum::Staff => 0,
+            TeamRoleEnum::Admin => 1,
+            TeamRoleEnum::SuperAdmin => 2,
+        };
     }
 }

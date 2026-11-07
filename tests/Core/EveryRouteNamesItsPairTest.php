@@ -161,7 +161,13 @@ final class EveryRouteNamesItsPairTest extends KernelTestCase
         'area_station_delete' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
         'area_delete' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
         'team_settings_deletions' => 'TeamBundle\\Deletion\\DeletionService — a Super Admin by tier, never a pair (ruled 28 Sep, #48)',
-        'team_permissions' => 'TeamBundle\\Controller\\PermissionsController — a Super Admin by tier (ROLE_SUPER_ADMIN), never a pair (#66)',
+        'team_permissions_overview' => 'TeamBundle\\Controller\\PermissionsHubController — a Super Admin by tier (ROLE_SUPER_ADMIN), never a pair (#66)',
+        'team_permissions_reports' => 'TeamBundle\\Controller\\PermissionsHubController — a Super Admin by tier (ROLE_SUPER_ADMIN), never a pair (#66)',
+        'team_permissions_positions' => 'TeamBundle\\Controller\\PermissionsPositionsController — a Super Admin by tier (ROLE_SUPER_ADMIN), never a pair (#66)',
+        'team_permissions_analysis' => 'TeamBundle\\Controller\\PermissionsAnalysisController — a Super Admin by tier (ROLE_SUPER_ADMIN), never a pair (#66)',
+        'team_permissions_check' => 'TeamBundle\\Controller\\PermissionsCheckController — a Super Admin by tier (ROLE_SUPER_ADMIN), never a pair (#66)',
+        'team_permissions_recompute' => 'TeamBundle\\Controller\\PermissionsHubController — a Super Admin by tier (ROLE_SUPER_ADMIN), never a pair (#66)',
+        'team_permissions_drift_reviewed' => 'TeamBundle\\Controller\\PermissionsHubController — a Super Admin by tier (ROLE_SUPER_ADMIN), never a pair (#66)',
         'settings' => 'ShellBundle\\Controller\\SettingsController — settings.read, asked by the controller for every screen of the section',
     ];
 

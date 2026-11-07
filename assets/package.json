@@ -159,6 +159,36 @@
                 "name": "uhifadhi--team-bundle--delete-confirm",
                 "fetch": "lazy",
                 "enabled": true
+            },
+            "onpage": {
+                "main": "../src/Uhifadhi/Bundle/ShellBundle/assets/controllers/onpage_controller.js",
+                "name": "uhifadhi--shell-bundle--onpage",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "dropdown": {
+                "main": "../src/Uhifadhi/Bundle/ShellBundle/assets/controllers/dropdown_controller.js",
+                "name": "uhifadhi--shell-bundle--dropdown",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "permission-positions": {
+                "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/permission_positions_controller.js",
+                "name": "uhifadhi--team-bundle--permission-positions",
+                "fetch": "lazy",
+                "enabled": true
+            },
+            "permission-analysis": {
+                "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/permission_analysis_controller.js",
+                "name": "uhifadhi--team-bundle--permission-analysis",
+                "fetch": "lazy",
+                "enabled": true
+            },
+            "permission-check": {
+                "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/permission_check_controller.js",
+                "name": "uhifadhi--team-bundle--permission-check",
+                "fetch": "lazy",
+                "enabled": true
             }
         },
         "importmap": {

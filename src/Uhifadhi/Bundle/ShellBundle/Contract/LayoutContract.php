@@ -69,6 +69,9 @@ final class LayoutContract
         '@Shell/_area_tabs.html.twig',
         '@Shell/_nav.html.twig',
         '@Shell/_flashes.html.twig',
+        // embedded, not included: the index and the page's sections share one grid
+        '@Shell/_onpage.html.twig',
+        '@Shell/_dropdown.html.twig',
     ];
 
     /**

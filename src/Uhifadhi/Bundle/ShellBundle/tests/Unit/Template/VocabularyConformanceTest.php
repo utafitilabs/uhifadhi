@@ -89,6 +89,40 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
     }
 
     /**
+     * THE DROPDOWN'S CLASSES ARE THE SHEET'S. The chain's own check counts a
+     * class a script names as shipped, and the controller's header names
+     * every class of the markup it reads, so that check passes on the
+     * controller alone. This one asks the sheet: each class the partial
+     * writes, literally or through `ux_icon`, and each the controller
+     * toggles, is defined by a rule in shell.css.
+     */
+    public function testEveryClassOfTheDropdownIsDefinedByTheSheet(): void
+    {
+        $twig = (string) preg_replace('/\{#.*?#\}/s', '', (string) file_get_contents(self::bundlePath().'/templates/_dropdown.html.twig'));
+        preg_match_all('/class="([^"]*)"/', $twig, $literal);
+        preg_match_all("/class: '([^']+)'/", $twig, $icons);
+
+        $classes = ['dd-set', 'dd-end', 'dd-lift'];
+        foreach ([...$literal[1], ...$icons[1]] as $attribute) {
+            $attribute = (string) preg_replace('/\{[{%].*?[}%]\}/s', ' ', $attribute);
+            foreach (preg_split('/\s+/', trim($attribute)) ?: [] as $class) {
+                if ('' !== $class) {
+                    $classes[] = $class;
+                }
+            }
+        }
+
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', (string) file_get_contents(self::bundlePath().'/public/shell.css'));
+        $missing = array_values(array_filter(
+            array_unique($classes),
+            static fn (string $class): bool => 1 !== preg_match('/\.'.preg_quote($class, '/').'(?![\w-])[^{}]*\{/', $css),
+        ));
+
+        self::assertContains('dd-i', $classes, 'the leading icon is read');
+        self::assertSame([], $missing, \sprintf('The dropdown writes [%s] and shell.css defines no rule for it.', implode(', ', $missing)));
+    }
+
+    /**
      * Every selector in the library's sheet that carries a class and none of
      * them is the library's own.
      *

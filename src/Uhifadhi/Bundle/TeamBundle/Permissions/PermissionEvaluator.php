@@ -125,6 +125,19 @@ final readonly class PermissionEvaluator
     }
 
     /**
+     * A REAL TARGET OF THIS KIND for this actor, found as the ledger finds
+     * one, for the Check page to ask about.
+     *
+     * @return array{bool, User|Position|null} whether one exists, and which
+     */
+    public function targetFor(User $actor, PowerTarget $kind): array
+    {
+        $people = array_values(array_filter($this->users->findAllByName(), static fn (User $u): bool => $u->isActive()));
+
+        return $this->target($actor, $kind, $people, $this->positions->findAllOrdered());
+    }
+
+    /**
      * @param list<User>     $people
      * @param list<Position> $positions
      */

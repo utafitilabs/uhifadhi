@@ -31,7 +31,11 @@ department confined to Kilimani.
 | team_index | GET /team | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_overview | GET /team/overview | `directory.read`, `positions.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_assignments | GET /team/assignments | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
-| team_permissions | GET /team/permissions | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
+| team_permissions_overview | GET /team/permissions | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
+| team_permissions_reports | GET /team/permissions/reports | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
+| team_permissions_positions | GET /team/permissions/positions | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
+| team_permissions_analysis | GET /team/permissions/analysis | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
+| team_permissions_check | GET /team/permissions/check | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
 | team_people_export | GET /team/people.csv | `directory.export` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_invite | GET /team/invite | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
 | team_member · own record | GET /team/{own} | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
@@ -39,7 +43,7 @@ department confined to Kilimani.
 | team_member · out of reach | GET /team/{out-of-reach} | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_member · an Admin's | GET /team/{admin} | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_member · a Super Admin's | GET /team/{super-admin} | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
-| team_member_configure · own record | GET /team/{own}/configure | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
+| team_member_configure · own record | GET /team/{own}/configure | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
 | team_member_configure · a colleague in reach | GET /team/{member}/configure | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
 | team_member_configure · out of reach | GET /team/{out-of-reach}/configure | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
 | team_member_configure · an Admin's | GET /team/{admin}/configure | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
@@ -108,7 +112,9 @@ department confined to Kilimani.
 | team_profile_handset_sign_out | POST /me/profile/handsets/1/sign-out | — | sign-in | sign-in | not found | not found | not found | not found | not found | not found |
 | team_member_create | POST /team | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{new} | → /team/{new} |
 | team_invite_send | POST /team/invite | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/invite · error | → /team/invite · error |
-| team_member_update · own record | POST /team/{own} | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{own} | → /team/{own} |
+| team_permissions_recompute | POST /team/permissions/recompute | — | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/permissions |
+| team_permissions_drift_reviewed | POST /team/permissions/drift/reviewed | — | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/permissions |
+| team_member_update · own record | POST /team/{own} | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{own} |
 | team_member_update · a colleague in reach | POST /team/{member} | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
 | team_member_update · out of reach | POST /team/{out-of-reach} | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{out-of-reach} | → /team/{out-of-reach} |
 | team_member_update · an Admin's | POST /team/{admin} | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{admin} | → /team/{admin} |
@@ -120,12 +126,12 @@ department confined to Kilimani.
 | team_member_tier · a Super Admin's | POST /team/{super-admin}/tier | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{super-admin} |
 | team_member_tier · own record, to Super Admin | POST /team/{own}/tier | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{own} |
 | team_member_tier · a colleague, to Super Admin | POST /team/{member}/tier | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{member} |
-| team_member_position · own record | POST /team/{own}/position | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{own} | → /team/{own} |
+| team_member_position · own record | POST /team/{own}/position | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{own} |
 | team_member_position · a colleague in reach | POST /team/{member}/position | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
 | team_member_position · out of reach | POST /team/{out-of-reach}/position | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{out-of-reach} | → /team/{out-of-reach} |
 | team_member_position · an Admin's | POST /team/{admin}/position | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{admin} | → /team/{admin} |
 | team_member_position · a Super Admin's | POST /team/{super-admin}/position | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{super-admin} |
-| team_member_reset_link · own record | POST /team/{own}/reset-link | `sign-in-help.manage` | sign-in | sign-in | refused | → /team/{own} · error | refused | → /team/{own} · error | → /team/{own} · error | → /team/{own} · error |
+| team_member_reset_link · own record | POST /team/{own}/reset-link | `sign-in-help.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{own} · error |
 | team_member_reset_link · a colleague in reach | POST /team/{member}/reset-link | `sign-in-help.manage` | sign-in | sign-in | refused | → /team/{member} · error | refused | refused | → /team/{member} · error | → /team/{member} · error |
 | team_member_reset_link · out of reach | POST /team/{out-of-reach}/reset-link | `sign-in-help.manage` | sign-in | sign-in | refused | refused | refused | → /team/{out-of-reach} · error | → /team/{out-of-reach} · error | → /team/{out-of-reach} · error |
 | team_member_reset_link · an Admin's | POST /team/{admin}/reset-link | `sign-in-help.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{admin} · error | → /team/{admin} · error |
@@ -136,12 +142,12 @@ department confined to Kilimani.
 | team_member_one_time_password · an Admin's | POST /team/{admin}/one-time-password | `personal-details.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{admin} | → /team/{admin} |
 | team_member_one_time_password · a Super Admin's | POST /team/{super-admin}/one-time-password | `personal-details.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{super-admin} |
 | team_member_invite_again | POST /team/{invited}/invite-again | `personal-details.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{invited} · error | → /team/{invited} · error |
-| team_member_deactivate · own record | POST /team/{own}/deactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{own} | → /team/{own} |
+| team_member_deactivate · own record | POST /team/{own}/deactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{own} |
 | team_member_deactivate · a colleague in reach | POST /team/{member}/deactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
 | team_member_deactivate · out of reach | POST /team/{out-of-reach}/deactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{out-of-reach} | → /team/{out-of-reach} |
 | team_member_deactivate · an Admin's | POST /team/{admin}/deactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{admin} | → /team/{admin} |
 | team_member_deactivate · a Super Admin's | POST /team/{super-admin}/deactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{super-admin} |
-| team_member_reactivate · own record | POST /team/{own}/reactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{own} | → /team/{own} |
+| team_member_reactivate · own record | POST /team/{own}/reactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | refused | → /team/{own} |
 | team_member_reactivate · a colleague in reach | POST /team/{member}/reactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{member} | → /team/{member} |
 | team_member_reactivate · out of reach | POST /team/{out-of-reach}/reactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{out-of-reach} | → /team/{out-of-reach} |
 | team_member_reactivate · an Admin's | POST /team/{admin}/reactivate | `directory.manage` | sign-in | sign-in | refused | refused | refused | refused | → /team/{admin} | → /team/{admin} |

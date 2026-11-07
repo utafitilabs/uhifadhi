@@ -24,7 +24,7 @@ use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
-use Uhifadhi\Bundle\TeamBundle\Controller\PermissionsController;
+use Uhifadhi\Bundle\TeamBundle\Controller\PermissionsHubController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\RankConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\RankController;
@@ -315,8 +315,8 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             // RANKS ONLY WHERE THE STRIP HAS IT: while the organization uses
             // ranks and the viewer may read them.
             $this->ranksScreen(),
-            // PERMISSIONS, LAST, FOR A SUPER ADMIN: the page is the tier's.
-            $this->authorization->isGranted(PermissionsController::TIER) ? $this->screen('Permissions', PermissionsController::ROUTE) : null,
+            // PERMISSIONS, LAST, FOR A SUPER ADMIN: the pages are the tier's.
+            $this->authorization->isGranted(PermissionsHubController::TIER) ? $this->permissionsScreen() : null,
         ]));
 
         if ([] === $screens) {
@@ -355,6 +355,27 @@ final readonly class TeamNavigation implements NavigationSourceInterface
         }
 
         return $this->screen('Ranks', RankController::REGISTER, [RankConfigureController::SECTION]);
+    }
+
+    /**
+     * PERMISSIONS, WITH ITS THREE LOOKUPS UNDER IT — Positions · Analysis ·
+     * Check, as the lookups' own strip carries them. The row is lit on the
+     * hub's two pages, and a lookup's row on its own page.
+     */
+    private function permissionsScreen(): ?NavItem
+    {
+        $hub = $this->screen('Permissions', PermissionsHubController::OVERVIEW, [PermissionsHubController::REPORTS]);
+        if (null === $hub) {
+            return null;
+        }
+
+        $lookups = array_values(array_filter([
+            $this->screen('Positions', TeamSectionTabs::POSITIONS),
+            $this->screen('Analysis', TeamSectionTabs::ANALYSIS),
+            $this->screen('Check', TeamSectionTabs::CHECK),
+        ]));
+
+        return new NavItem(label: $hub->label, url: $hub->url, hint: 'Super Admin only', current: $hub->current, children: $lookups);
     }
 
     private function viewerIsInTeam(): bool

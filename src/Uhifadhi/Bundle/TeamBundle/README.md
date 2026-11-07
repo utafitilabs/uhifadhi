@@ -19,6 +19,9 @@ installed on its own as `uhifadhi/team-bundle`.
 - [Signing a field client in](#signing-a-field-client-in)
 - [Asking again: `GET /api/me`](#asking-again-get-apime)
 - [The screens](#the-screens)
+- [The scheduled tasks](#the-scheduled-tasks)
+- [The permissions run](#the-permissions-run)
+- [The Permissions pages](#the-permissions-pages)
 - [Configuration](#configuration)
 - [License](#license)
 
@@ -201,6 +204,15 @@ is derived from the position's department every time it is asked.
 
 An installation always keeps one active Super Admin. Every write that would
 lower the last one is refused before anything is stored.
+
+Below a Super Admin, nobody gains power over their own standing: an Admin or a
+Staff member is refused their own record (seat and rank), a higher tier for
+themselves, moving their own rank up the scale and an account stronger than
+their own, with the reason "nobody raises their own standing."; a Super Admin
+manages the installation, themselves included. Every change to a person's
+tier, seat, placement or rank, a Super Admin's own included, writes a line to
+the permission history naming who changed what from what to what, and a line
+somebody wrote about themselves says so ("changed their own rank to …").
 
 ## A department is a lens: the modules it attaches
 
@@ -458,7 +470,7 @@ The board's own vocabulary ships as a second sheet, `bundles/team/performance.cs
 the headers runs inside each band and never across one, and the matrix is whole
 without it.
 
-## The one scheduled task
+## The scheduled tasks
 
 A closed period cannot be recomputed. "Positions filled in July" is not a query
 anybody can write in September — posts are filled and emptied, people move,
@@ -480,6 +492,84 @@ An installation that has never run it has no history, and the surfaces say so
 in words. They do not read the absence as nought: a department nobody measured
 last July and a department that measured nought are not the same thing.
 
+## The permissions run
+
+Team › Permissions reads its answers from a store rather than asking the
+voters on every page: who can do each permission in each place, the six standing
+lists (people who reach nothing, sensitive permissions held but not in force,
+tier-only permissions not honoured, gaining-power answers that are not a Super
+Admin's, vacant positions, exceptions in force) and a seventh, informational
+one (people who changed their own tier, rank or position since the previous
+run), and the answers that changed with no history line to
+explain them. A run computes all of it in the worker and files it in
+`team_permission_run`, `team_permission_answer`, `team_permission_finding` and
+`team_permission_drift`; the latest two finished runs keep their answers, older
+ones are pruned, and drift is kept until somebody marks it reviewed.
+
+Four things ask for a run, and a request already waiting is the same request:
+
+- every line written to the permission history, in the same transaction;
+- the nightly schedule, `team.permissions.schedule` below, a task on the
+  `default` schedule the worker consumes (`messenger:consume async scheduler_default`);
+- **the deploy**, which runs, once the new code is migrated and warmed:
+
+  ```bash
+  php bin/console team:permissions:recompute         # ask; the worker answers it
+  php bin/console team:permissions:recompute --now   # or run it in the deploy's own process
+  ```
+- a Super Admin's *Recompute now*.
+
+`RecomputePermissions` carries the core's queue marker, so the recipe's routing
+sends it to `async`. An installation that handles it synchronously still gets
+correct answers, computed after the response is sent.
+
+The pages read the store through five services, each returning plain arrays
+whose shapes [docs/permissions-readers.md](docs/permissions-readers.md) fixes:
+`team.permissions.overview` (the hub), `team.permissions.positions_report`
+(Positions, read live from the positions), `team.permissions.analysis` and
+`team.permissions.findings_reader` (Analysis: one question's cells, the
+standing lists, freshness, drift and *mark reviewed*), and
+`team.permissions.check` (Check, asked live: the GrantVoter's own walk, one
+line per question, with the door to each fact). At 363 people, 40 positions,
+four areas and eight departments a run asks 35,860 questions in about two and
+a half seconds (`tests/Integration/Permission/PermissionRunTimingTest`).
+
+## The Permissions pages
+
+Team › Permissions is a Super Admin's, by tier (`ROLE_SUPER_ADMIN`), never by a
+permission. It is two sets of pages, each with its own strip in place of the Team
+strip (`Shell\TeamSectionTabs` answers by the route the request matched):
+
+| Route | Address | What it is |
+|---|---|---|
+| `team_permissions_overview` | `GET /team/permissions` | the hub's Overview: the drift banner, the band, four figures, four plots, the lists for review, the last six history lines |
+| `team_permissions_reports` | `GET /team/permissions/reports` | the hub's Reports: the three lookups |
+| `team_permissions_positions` | `GET /team/permissions/positions` | Positions: the tiers above the matrix, then one row per position — its marks, holders, placement and permissions under their packages, with the exception and tier-only notes; read as written from the positions (`team.permissions.positions_report`) |
+| `team_permissions_analysis` | `GET /team/permissions/analysis?q=` | Analysis: one question (`q`, a permission or a power key; a resource opens on its first verb) answered from the latest run — positions down and places across with the people who pass in each cell, or the actors by target kind for a power — then the seven lists for review and the drift, each a card and a row of the index (`team.permissions.analysis`, `team.permissions.findings_reader`) |
+| `team_permissions_check` | `GET /team/permissions/check?person=&q=&target=` | Check: one person (`person`, an id), one question (`q`, a permission or a power key) and one place (`target`: `placed`, `organization`, `area-<id>`; for a power a target kind), asked live of the voters on arrival — the verdict, the walk with its doors and the coverage line; then the person, the question, what the voter reads of them at the place, every permission of the catalogue answered there (Everything here), every active Staff person worth a check from the latest run's findings (Worth running) and this session's recent checks, each a card and a row of the index (`team.permissions.check`, `team.permissions.findings_reader`) |
+| `team_permissions_recompute` | `POST /team/permissions/recompute` | *Recompute now*: a manual run asked of the worker; the page says *Queued for the worker* while one waits or runs |
+| `team_permissions_drift_reviewed` | `POST /team/permissions/drift/reviewed` | *Mark reviewed*: the latest run's unreviewed drift, all of it or the `ids[]` sent (one drift line on Analysis), by the viewer |
+
+The two writes carry a CSRF token (`team_permissions`) and send the reader back
+to the page the form names. The sidebar's Permissions row opens into the
+lookups (Positions · Analysis · Check), each drawn once its route is mounted.
+Positions' search, resource, sort, pills and folds work in the browser over the
+rows the server wrote (the `permission-positions` controller), as the design's
+script does; the counts the server writes are the same predicates over the
+same rows (`Permissions\PositionsListing`). Analysis is drawn by
+`Permissions\AnalysisListing`; choosing another question loads the page for it;
+every table on it is a register — the house filter bar, the house foot — narrowed,
+ordered and paged in the browser over the rows the server wrote, and a cell opens
+its people in the page (the `permission-analysis` controller).
+Check is drawn by `Permissions\CheckListing`; the form is a GET of the page, so
+every door that names a person and a question lands on its answer. Everything
+here, Worth running and Recent checks are registers filtered, sorted and paged in
+the browser, Recent checks kept in the session's storage (the `permission-check`
+controller).
+Every figure comes from the readers in
+[docs/permissions-readers.md](docs/permissions-readers.md); the plots are the
+atlas's ranked bars and column charts (`Permissions\PermissionsOverviewCharts`).
+
 ## Configuration
 
 ```yaml
@@ -489,6 +579,9 @@ team:
     sign_in_lede: '…'                # the line under the mark on the sign-in card
     installation_name: '…'           # what the two letters sign themselves
     mail_from: ''                    # empty means this installation cannot send
+    permissions:
+        schedule: '0 2 * * *'        # when the nightly permissions run is asked for
+        timezone: ~                  # the zone that hour is in; ~ is PHP's default
 ```
 
 `mail_from` is empty by default, and that is the honest default: it is what

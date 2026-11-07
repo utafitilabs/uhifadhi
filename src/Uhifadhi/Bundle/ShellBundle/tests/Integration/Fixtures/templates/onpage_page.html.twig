@@ -1,0 +1,17 @@
+{# A MODULE PAGE WITH AN IN-PAGE INDEX: three sections, and the index drawn
+   from their rows by the shell. The page writes the sections and nothing of
+   the index. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}an indexed page{% endblock %}
+{% block shell_page_title %}an indexed page{% endblock %}
+
+{% block shell_page %}
+    {% embed '@Shell/_onpage.html.twig' with {rows: rows} only %}
+        {% block shell_onpage_main %}
+            <div class="c" id="first">first</div>
+            <div class="c" id="second">second</div>
+            <div class="c" id="third">third</div>
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

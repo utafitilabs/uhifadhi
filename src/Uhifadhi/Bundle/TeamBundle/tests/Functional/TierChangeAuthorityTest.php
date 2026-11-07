@@ -67,10 +67,13 @@ final class TierChangeAuthorityTest extends WebTestCaseWithSchema
     {
         $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
         $admin = $this->person('Asha', 'Mollel', TeamRoleEnum::Admin);
+        $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
         $this->client->loginUser($admin);
 
-        $this->changeTier($admin, TeamRoleEnum::SuperAdmin);
+        // Their own configure page is closed to them (ruled 8 Nov 2026), so
+        // the token comes from a page they may open.
+        $this->changeTier($admin, TeamRoleEnum::SuperAdmin, tokenFrom: $grace);
         self::assertResponseStatusCodeSame(403);
         self::assertSame(TeamRoleEnum::Admin, $this->tierOf('a.mollel@example.test'));
     }
@@ -106,10 +109,11 @@ final class TierChangeAuthorityTest extends WebTestCaseWithSchema
         $naomi = $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
         $this->person('Baraka', 'Laizer', TeamRoleEnum::SuperAdmin);
         $admin = $this->person('Asha', 'Mollel', TeamRoleEnum::Admin);
+        $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
         $this->client->loginUser($admin);
 
-        $this->changeTier($naomi, TeamRoleEnum::Admin, tokenFrom: $admin);
+        $this->changeTier($naomi, TeamRoleEnum::Admin, tokenFrom: $grace);
         self::assertResponseStatusCodeSame(403);
         self::assertSame(TeamRoleEnum::SuperAdmin, $this->tierOf('n.kileo@example.test'));
     }

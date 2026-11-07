@@ -1,0 +1,90 @@
+{# THE DROPDOWN — a pill trigger and its floating panel of grouped rows. The
+   design's (DesignsProjects/uhifadhi-web/house-dropdown.css + .js, used on
+   team-module/team/postings.html and team/permissions/check.html); behaviour
+   in assets/controllers/dropdown_controller.js. The contract is
+   docs/dropdown.md.
+
+   A PAGE WRITES NONE OF ITS MARKUP. It includes this partial with its data:
+
+     {% include '@Shell/_dropdown.html.twig' with {
+         name: 'rank', label: 'Any rank', icon: 'shell:users',
+         default: '', value: '',
+         groups: [
+             {label: 'rank', options: [{value: '', label: 'Any rank', count: 31}]},
+             {label: 'Ranks', options: [
+                 {value: 'ranger', label: 'Ranger', count: 19},
+                 {value: 'sergeant', label: 'Sergeant', count: 6},
+             ]},
+         ],
+     } only %}
+
+   and listens for the choice on the wrapper or above it:
+   data-action="uhifadhi--shell-bundle--dropdown:choose->host#chosen", the
+   value in event.detail.value.
+
+   PARAMETERS:
+     name         data-dd="<name>", and the panel's id dd-p-<name>
+     label        the listbox's and the search's aria-label, and the
+                  trigger's text while nothing is chosen unless placeholder
+     icon         the leading mark, a namespaced ux-icons name; none, none drawn
+     groups       [{label, options: [{value, label, count, title?, find?}]}];
+                  a head shows its group's option count; a count of null draws
+                  no muted part; a title is the row's tooltip; a find is what
+                  the search matches, the label and value when absent;
+                  a group whose label is null draws no head (the lead "Any …"
+                  row) and is named by the control's label
+     value        the chosen value; null chooses nothing
+     searchable   true draws the search pill
+     default      the value that does not count as set
+     end          true aligns the panel to the trigger's right edge
+     placeholder  the trigger's text while nothing is chosen
+     search       the search field's placeholder
+     none         the line shown when a search finds nothing
+
+   `none` IS A TWIG LITERAL (null), so it is read off _context:
+   vendor/twig/twig/src/ExpressionParser/Prefix/LiteralExpressionParser.php. #}
+{%- set _name = 'uhifadhi--shell-bundle--dropdown' -%}
+{%- set _value = value ?? null -%}
+{%- set _value = _value is null ? null : _value ~ '' -%}
+{%- set _default = _context['default'] ?? null -%}
+{%- set _default = _default is null ? null : _default ~ '' -%}
+{%- set _none = _context['none'] ?? null -%}
+{%- set _search = search ?? null -%}
+{%- set _placeholder = placeholder ?? label -%}
+{%- set _chosen = null -%}
+{%- if _value is not null -%}
+    {%- for group in groups -%}
+        {%- for option in group.options -%}
+            {%- if _chosen is null and (option.value ~ '') is same as(_value) -%}
+                {%- set _chosen = option -%}
+            {%- endif -%}
+        {%- endfor -%}
+    {%- endfor -%}
+{%- endif -%}
+{%- set _set = _chosen is not null and (_default is null or not ((_chosen.value ~ '') is same as(_default))) -%}
+<div class="dd{% if _set %} dd-set{% endif %}{% if _context['end'] ?? false %} dd-end{% endif %}" data-controller="{{ _name }}" data-dd="{{ name }}"{% if _default is not null %} data-default="{{ _default }}"{% endif %} data-dd-value="{{ _chosen is not null ? _chosen.value : '' }}">
+    <button type="button" class="dd-t" aria-haspopup="listbox" aria-expanded="false" aria-controls="dd-p-{{ name }}">
+        {%- if icon ?? null %}{{ ux_icon(icon, {class: 'dd-i', width: 16, height: 16, 'aria-hidden': 'true'}) }}{% endif -%}
+        <span class="dd-v" data-placeholder="{{ _placeholder }}">{{ _chosen is not null ? _chosen.label : _placeholder }}</span>
+        {{- ux_icon('shell:chevron-down', {class: 'dd-c', width: 16, height: 16, 'aria-hidden': 'true'}) -}}
+    </button>
+    <div class="dd-p" id="dd-p-{{ name }}" hidden>
+        {%- if searchable ?? false %}
+        <label class="dd-q">{{ ux_icon('shell:search', {width: 16, height: 16, 'aria-hidden': 'true'}) }}<input type="search"{% if _search is not null %} placeholder="{{ _search }}"{% endif %} aria-label="{{ label }}" autocomplete="off"></label>
+        {%- endif %}
+        <div class="dd-l" role="listbox" aria-label="{{ label }}">
+            {%- for group in groups %}
+            {%- set _head = group.label ?? null %}
+            <div role="group" aria-label="{{ _head ?? label }}">{% if _head is not null %}<div class="dd-h" aria-hidden="true"><span>{{ _head }}</span><span data-dd-n>{{ group.options|length }}</span></div>{% endif %}
+                {%- for option in group.options %}
+                {%- set _v = option.value ~ '' %}
+                <button type="button" class="dd-o" role="option" tabindex="-1" aria-selected="{{ _chosen is not null and _v is same as(_chosen.value ~ '') ? 'true' : 'false' }}" data-value="{{ _v }}" data-label="{{ option.label }}" data-find="{{ (option.find ?? (option.label ~ ' ' ~ _v))|lower }}"{% if _default is not null and _v is same as(_default) %} data-default{% endif %}{% if option.title ?? null %} title="{{ option.title }}"{% endif %}><span class="dd-ol">{{ option.label }}</span>{% if option.count is defined and option.count is not null %}<span class="dd-m">{{ option.count }}</span>{% endif %}</button>
+                {%- endfor %}
+            </div>
+            {%- endfor %}
+            {%- if _none is not null %}
+            <p class="dd-none" hidden>{{ _none }}</p>
+            {%- endif %}
+        </div>
+    </div>
+</div>

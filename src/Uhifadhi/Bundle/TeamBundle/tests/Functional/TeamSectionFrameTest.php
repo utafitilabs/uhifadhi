@@ -46,7 +46,6 @@ final class TeamSectionFrameTest extends WebTestCaseWithSchema
         yield 'positions' => ['/team/positions', 'Positions'];
         yield 'assignments' => ['/team/assignments', 'Assignments'];
         yield 'ranks' => ['/team/ranks', 'Ranks'];
-        yield 'permissions' => ['/team/permissions', 'Permissions'];
     }
 
     #[DataProvider('tabs')]

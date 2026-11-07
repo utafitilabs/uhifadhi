@@ -13,7 +13,11 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Doctrine\ORM\Events;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\ConsoleEvents;
+use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Messenger\Event\WorkerMessageHandledEvent;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 use Uhifadhi\Bundle\RegistryBundle\Event\ModuleInstalledEvent;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
@@ -30,6 +34,7 @@ use Uhifadhi\Bundle\TeamBundle\Api\State\MeProvider;
 use Uhifadhi\Bundle\TeamBundle\ArgumentResolver\AreaValueResolver;
 use Uhifadhi\Bundle\TeamBundle\Command\CreateUserCommand;
 use Uhifadhi\Bundle\TeamBundle\Command\PerformanceSnapshotCommand;
+use Uhifadhi\Bundle\TeamBundle\Command\RecomputePermissionsCommand;
 use Uhifadhi\Bundle\TeamBundle\Controller\ApiAuthController;
 use Uhifadhi\Bundle\TeamBundle\Controller\AreaDepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentConfigureController;
@@ -41,7 +46,10 @@ use Uhifadhi\Bundle\TeamBundle\Controller\MemberController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PasswordResetController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceController;
-use Uhifadhi\Bundle\TeamBundle\Controller\PermissionsController;
+use Uhifadhi\Bundle\TeamBundle\Controller\PermissionsAnalysisController;
+use Uhifadhi\Bundle\TeamBundle\Controller\PermissionsCheckController;
+use Uhifadhi\Bundle\TeamBundle\Controller\PermissionsHubController;
+use Uhifadhi\Bundle\TeamBundle\Controller\PermissionsPositionsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\RankConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\RankController;
@@ -60,11 +68,14 @@ use Uhifadhi\Bundle\TeamBundle\Deletion\PositionDeletion;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ModuleHistoryListener;
+use Uhifadhi\Bundle\TeamBundle\EventListener\PermissionRunListener;
 use Uhifadhi\Bundle\TeamBundle\EventListener\SignedInListener;
 use Uhifadhi\Bundle\TeamBundle\Facts\TeamFactProvider;
 use Uhifadhi\Bundle\TeamBundle\Me\TeamMyCards;
 use Uhifadhi\Bundle\TeamBundle\Message\BackfillModuleHistory;
+use Uhifadhi\Bundle\TeamBundle\Message\RecomputePermissions;
 use Uhifadhi\Bundle\TeamBundle\MessageHandler\BackfillModuleHistoryHandler;
+use Uhifadhi\Bundle\TeamBundle\MessageHandler\RecomputePermissionsHandler;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonDirectory;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonFacets;
 use Uhifadhi\Bundle\TeamBundle\People\TeamRankLadder;
@@ -77,8 +88,16 @@ use Uhifadhi\Bundle\TeamBundle\Performance\MatrixViewBuilder;
 use Uhifadhi\Bundle\TeamBundle\Performance\OrganizationBand;
 use Uhifadhi\Bundle\TeamBundle\Performance\StaffingTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCards;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionAnalysisReader;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionAnswerService;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionCheckService;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionDriftService;
 use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionEvaluator;
-use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionsPage;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionFindingService;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionFindingsReader;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionOverviewReader;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionRunService;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PositionsReportReader;
 use Uhifadhi\Bundle\TeamBundle\Permissions\PowerCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DeletionRecordRepository;
@@ -90,7 +109,11 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\GrantJustificationRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\InstallationPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\OneTimePasswordRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\PermissionAnswerRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PermissionChangeRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\PermissionDriftRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\PermissionFindingRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\PermissionRunRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\RankHoldingRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\RankRepository;
@@ -348,6 +371,14 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
 
+    // THE PERMISSIONS WORKER'S FILE: its runs, the answers and standing lists
+    // each run files, and the drift between two runs.
+    foreach ([PermissionRunRepository::class, PermissionAnswerRepository::class, PermissionFindingRepository::class, PermissionDriftRepository::class] as $repository) {
+        $services->set($repository)
+            ->args([service('doctrine')])
+            ->tag('doctrine.repository_service');
+    }
+
     $services->set(DeletionRecordRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
@@ -434,6 +465,8 @@ return static function (ContainerConfigurator $container): void {
             service(RankRepository::class),
             service(RankHoldingRepository::class),
             service('doctrine.orm.entity_manager'),
+            // A RANK GIVEN, CHANGED OR TAKEN AWAY IS A HISTORY LINE.
+            service('team.permission_changes'),
         ]);
     $services->alias(RankService::class, 'team.ranks');
 
@@ -492,6 +525,14 @@ return static function (ContainerConfigurator $container): void {
          * AND THE ONE THAT MAKES HISTORY. Scheduled on the first of each
          * period; it writes the period that has just closed.
          */
+        /*
+         * AND THE DEPLOY'S RUN: the deploy asks for a permissions run once
+         * the new code is in; `--now` runs it in the deploy's own process.
+         */
+        $services->set('team.command.permissions_recompute', RecomputePermissionsCommand::class)
+            ->args([service('team.permissions.runs')])
+            ->tag('console.command');
+
         $services->set('team.command.performance_snapshot', PerformanceSnapshotCommand::class)
             ->args([
                 service(DepartmentRepository::class),
@@ -668,6 +709,143 @@ return static function (ContainerConfigurator $container): void {
             service(PositionRepository::class),
             service('security.authorization_checker'),
         ]);
+
+    /*
+     * THE PERMISSIONS RUN (#66): the answers the Analysis page reads, the six
+     * standing lists and the drift between two runs, computed in the worker
+     * and stored. A request is a pending run row; the worker is woken by
+     * RecomputePermissions, which carries the core's queue marker.
+     */
+    $services->set('team.permissions.answers', PermissionAnswerService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(UserRepository::class),
+            service('team.access.catalogue'),
+            service('security.authorization_checker'),
+            service('team.permissions.evaluator'),
+        ]);
+
+    $services->set('team.permissions.findings', PermissionFindingService::class)
+        ->args([
+            service(UserRepository::class),
+            service(PositionRepository::class),
+            service(GrantJustificationRepository::class),
+            service('team.access.catalogue'),
+            service('team.permissions.powers'),
+            service(PermissionRunRepository::class),
+            service(PermissionChangeRepository::class),
+        ]);
+
+    $services->set('team.permissions.drift', PermissionDriftService::class)
+        ->args([
+            service(PermissionAnswerRepository::class),
+            service(PermissionChangeRepository::class),
+            service(PositionRepository::class),
+        ]);
+
+    $services->set('team.permissions.runs', PermissionRunService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(PermissionRunRepository::class),
+            service(PermissionAnswerRepository::class),
+            service(PermissionFindingRepository::class),
+            service('team.permissions.answers'),
+            service('team.permissions.findings'),
+            service('team.permissions.drift'),
+            service('messenger.default_bus'),
+            service('clock')->nullOnInvalid(),
+        ]);
+
+    // Tagged by hand with the message it handles: a reusable bundle is not autoconfigured.
+    // @see https://symfony.com/doc/current/messenger.html#manually-configuring-handlers
+    $services->set('team.permissions.recompute_handler', RecomputePermissionsHandler::class)
+        ->args([service('team.permissions.runs')])
+        ->tag('messenger.message_handler', ['handles' => RecomputePermissions::class]);
+
+    /*
+     * THE PERMISSIONS READERS: what the hub, Positions, Analysis and Check
+     * pages read. Each returns plain arrays; docs/permissions-readers.md
+     * fixes their shapes.
+     */
+    $services->set('team.permissions.analysis', PermissionAnalysisReader::class)
+        ->args([
+            service(PermissionRunRepository::class),
+            service(PermissionAnswerRepository::class),
+            service(PositionRepository::class),
+            service(UserRepository::class),
+            service('team.access.catalogue'),
+            service('team.permissions.powers'),
+            service(DepartmentRepository::class),
+        ]);
+
+    $services->set('team.permissions.findings_reader', PermissionFindingsReader::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(PermissionRunRepository::class),
+            service(PermissionFindingRepository::class),
+            service(PermissionDriftRepository::class),
+            service('team.access.catalogue'),
+            service('team.permissions.powers'),
+            service(UserRepository::class),
+            service(PositionRepository::class),
+            param('team.permissions.schedule'),
+            param('team.permissions.timezone'),
+            service('clock')->nullOnInvalid(),
+        ]);
+
+    $services->set('team.permissions.positions_report', PositionsReportReader::class)
+        ->args([
+            service(PositionRepository::class),
+            service(UserRepository::class),
+            service(GrantJustificationRepository::class),
+            service('team.access.catalogue'),
+        ]);
+
+    $services->set('team.permissions.check', PermissionCheckService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service('security.authorization_checker'),
+            service('team.access.voter'),
+            service('team.access.catalogue'),
+            service('team.permissions.powers'),
+            service('team.permissions.evaluator'),
+            service(PermissionRunRepository::class),
+            service(PermissionAnswerRepository::class),
+            service(PositionRepository::class),
+            service(UserRepository::class),
+            service(DepartmentRepository::class),
+            service(GrantJustificationRepository::class),
+        ]);
+
+    $services->set('team.permissions.overview', PermissionOverviewReader::class)
+        ->args([
+            service(PositionRepository::class),
+            service(UserRepository::class),
+            service(PermissionRunRepository::class),
+            service(PermissionChangeRepository::class),
+            service('team.access.catalogue'),
+            service('team.permissions.answers'),
+            service('team.permissions.findings_reader'),
+            service('clock')->nullOnInvalid(),
+        ]);
+
+    /*
+     * EVERY HISTORY LINE ASKS FOR A RUN: the pending row is added to the
+     * flush that writes the line, and the worker is woken once the request,
+     * the command or the worker's message is over — never from inside the
+     * flush. Tagged by hand, the Doctrine listener and the three kernel
+     * listeners, and reset between a worker's messages.
+     * @see https://symfony.com/doc/current/doctrine/events.html#doctrine-lifecycle-listeners
+     * @see https://symfony.com/doc/current/event_dispatcher.html
+     * @see EventListener/PermissionRunListener.php
+     */
+    $services->set('team.permissions.run_listener', PermissionRunListener::class)
+        ->args([service('messenger.default_bus'), service('clock')->nullOnInvalid()])
+        ->tag('doctrine.event_listener', ['event' => Events::onFlush])
+        ->tag('kernel.event_listener', ['event' => KernelEvents::TERMINATE, 'method' => 'wake'])
+        ->tag('kernel.event_listener', ['event' => ConsoleEvents::TERMINATE, 'method' => 'wake'])
+        ->tag('kernel.event_listener', ['event' => WorkerMessageHandledEvent::class, 'method' => 'wake'])
+        ->tag('kernel.reset', ['method' => 'reset']);
 
     /*
      * EVERYTHING THERE IS TO HAVE A PERMISSION ABOUT, folded together from
@@ -1524,16 +1702,66 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(TeamPostingsController::class, 'team.controller.postings')->public();
 
     /*
-     * TEAM › PERMISSIONS — every power asked as each kind of person, through
-     * the evaluator, for a Super Admin to read.
+     * TEAM › PERMISSIONS, THE HUB — Overview and Reports read the worker's
+     * latest run through the readers; Recompute now and Mark reviewed are its
+     * two writes. A Super Admin's, by tier.
      */
-    $services->set('team.permissions.page', PermissionsPage::class)
-        ->args([service('team.permissions.evaluator'), service('team.permissions.powers'), service(UserRepository::class), service(PermissionChangeRepository::class), service('clock')->nullOnInvalid()]);
-
-    $services->set('team.controller.permissions', PermissionsController::class)
-        ->args([service('twig'), service('team.permissions.page')])
+    $services->set('team.controller.permissions_hub', PermissionsHubController::class)
+        ->args([
+            service('twig'),
+            service('team.permissions.overview'),
+            service('team.permissions.findings_reader'),
+            service('team.permissions.runs'),
+            service('security.csrf.token_manager'),
+            service('router'),
+            service('security.token_storage'),
+        ])
         ->tag('controller.service_arguments');
-    $services->alias(PermissionsController::class, 'team.controller.permissions')->public();
+    $services->alias(PermissionsHubController::class, 'team.controller.permissions_hub')->public();
+
+    /*
+     * TEAM › PERMISSIONS › POSITIONS — what each position grants, read as
+     * written from the positions table; the filters are the page's own.
+     */
+    $services->set('team.controller.permissions_positions', PermissionsPositionsController::class)
+        ->args([
+            service('twig'),
+            service('team.permissions.positions_report'),
+            service('team.access.catalogue'),
+            service('router'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(PermissionsPositionsController::class, 'team.controller.permissions_positions')->public();
+
+    /*
+     * TEAM › PERMISSIONS › ANALYSIS — one question answered from the latest
+     * run, the lists it filed and its drift.
+     */
+    $services->set('team.controller.permissions_analysis', PermissionsAnalysisController::class)
+        ->args([
+            service('twig'),
+            service('team.permissions.analysis'),
+            service('team.permissions.findings_reader'),
+            service(PermissionRunRepository::class),
+            service('security.csrf.token_manager'),
+            service('router'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(PermissionsAnalysisController::class, 'team.controller.permissions_analysis')->public();
+
+    $services->set('team.controller.permissions_check', PermissionsCheckController::class)
+        ->args([
+            service('twig'),
+            service('team.permissions.check'),
+            service('team.permissions.analysis'),
+            service('team.permissions.findings_reader'),
+            service('team.permissions.powers'),
+            service(PermissionRunRepository::class),
+            service(UserRepository::class),
+            service('router'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(PermissionsCheckController::class, 'team.controller.permissions_check')->public();
 
     /*
      * WHAT THE SECTION'S OVERVIEW READS. It owns no figure on that page: every
@@ -1620,7 +1848,7 @@ return static function (ContainerConfigurator $container): void {
      * here is a second implementation of a strip.
      */
     $services->set('team.section_tabs', TeamSectionTabs::class)
-        ->args([service('team.access.door'), service('team.settings')])
+        ->args([service('team.access.door'), service('team.settings'), service('request_stack')])
         ->tag(ModuleTabsInterface::TAG);
     $services->set('team.section_configuration', TeamSectionConfiguration::class)
         ->args([service('team.access.door')])

@@ -1,0 +1,43 @@
+{# TEAM › PERMISSIONS — the small pieces more than one Permissions page draws. #}
+
+{# RECOMPUTE NOW — a run asked of the worker. While one is waiting or under
+   way the button says so and asks nothing more. With `line`, the clock and
+   "As of … · next run …" stand before it. #}
+{% macro recompute(freshness, token, back, line = false) %}
+    {%- set busy = freshness.pending or freshness.running -%}
+    <span class="pp-fresh{{ busy ? ' pp-busy' }}">
+        {%- if line %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>As of <b class="pp-time">{% if freshness.asOf %}{{ _self.stamp(freshness.asOf) }}{% else %}{{ shell_as_of(null) }}{% endif %}</b> &middot; next run <b class="pp-time">{{ _self.stamp(freshness.nextRun) }}</b></span>{% endif %}
+        <form method="post" action="{{ path('team_permissions_recompute') }}">
+            <input type="hidden" name="_token" value="{{ token }}">
+            <input type="hidden" name="back" value="{{ back }}">
+            <button type="submit" class="tgl"{{ busy ? ' disabled' }}><svg class="pp-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg><span>{{ busy ? 'Queued for the worker' : 'Recompute now' }}</span></button>
+        </form>
+    </span>
+{%- endmacro %}
+
+{# A STORED INSTANT, as the cell stamp the house prints. #}
+{% macro stamp(instant) %}<time datetime="{{ instant|date('c') }}" data-localtime-format="stamp">{{ instant|date('j M')|lower }} &middot; {{ instant|date('H:i') }}</time>{% endmacro %}
+
+{# THE DRIFT BANNER — answers that changed since the run before with no
+   history line touching them; absent while there is none. `open` is where
+   the drift card is. #}
+{% macro drift(lines, unreviewed, token, back, open) %}
+    {%- set changed = lines|reduce((n, line) => n + line.places|length, 0) -%}
+    {%- if changed > 0 %}
+        {%- set done = unreviewed == 0 %}
+        <div class="pp-drift{{ done ? ' pp-done' }}"{% if open != '#drift' %} id="drift"{% endif %}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            <span class="pp-dtext"><b>{{ done ? changed ~ ' unrecorded changes · marked reviewed' : changed ~ (changed == 1 ? ' answer changed' : ' answers changed') ~ ' with no recorded change' }}</b> <span class="pp-dcause">nothing in the history explains it</span></span>
+            <span class="pp-dacts">
+                {% if open %}<a class="btn sm" href="{{ open }}">Open</a>{% endif %}
+                {% if not done %}
+                    <form method="post" action="{{ path('team_permissions_drift_reviewed') }}">
+                        <input type="hidden" name="_token" value="{{ token }}">
+                        <input type="hidden" name="back" value="{{ back }}">
+                        <button type="submit" class="btn sm pp-b">Mark reviewed</button>
+                    </form>
+                {% endif %}
+            </span>
+        </div>
+    {%- endif %}
+{%- endmacro %}

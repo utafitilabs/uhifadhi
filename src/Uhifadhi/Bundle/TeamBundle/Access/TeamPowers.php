@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Access;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Security\MemberVoter;
+use Uhifadhi\Bundle\TeamBundle\Security\OwnStandingRaised;
 use Uhifadhi\Bundle\TeamBundle\Security\SignInHelpVoter;
 use Uhifadhi\Bundle\TeamBundle\Security\TierChange;
 use Uhifadhi\Contracts\Access\Power;
@@ -53,7 +54,7 @@ final readonly class TeamPowers implements PowerSourceInterface
 
         yield new Power('raise-their-own-tier', $gaining, 'raise their own tier', [MemberVoter::TIER], [PowerTarget::Themselves]);
         yield new Power('seat-themselves-in-a-stronger-position', $gaining, 'seat themselves in a stronger position', [self::DIRECTORY, MemberVoter::CONFIGURE], [PowerTarget::Themselves]);
-        yield new Power('add-a-pair-to-their-own-position', $gaining, 'add a pair to their own position', [self::POSITIONS], [PowerTarget::TheirOwnPosition]);
+        yield new Power('add-a-pair-to-their-own-position', $gaining, 'add a permission to their own position', [self::POSITIONS], [PowerTarget::TheirOwnPosition]);
         yield new Power('raise-their-own-rank', $gaining, 'raise their own rank', [self::DIRECTORY, MemberVoter::CONFIGURE], [PowerTarget::Themselves]);
         yield new Power('move-their-own-rank-up-the-scale', $gaining, 'move their own rank up the scale', [self::RANKS], [PowerTarget::TheRankScale]);
         yield new Power('create-an-account-in-a-stronger-position', $gaining, 'create an account in a stronger position', [self::DIRECTORY], [PowerTarget::ANewAccount]);
@@ -62,8 +63,8 @@ final readonly class TeamPowers implements PowerSourceInterface
         yield new Power('demote-to-staff', $giving, 'demote to Staff', [MemberVoter::TIER], [PowerTarget::AnAdmin, PowerTarget::ASuperAdmin]);
         yield new Power('make-super-admin', $giving, 'make Super Admin', [MemberVoter::TIER], [PowerTarget::AColleague, PowerTarget::AnAdmin]);
         yield new Power('seat-in-a-stronger-position', $giving, 'seat in a stronger position', [self::DIRECTORY, MemberVoter::CONFIGURE], [PowerTarget::AColleague, PowerTarget::SomebodyBeyondTheirArea, PowerTarget::AnAdmin]);
-        yield new Power('add-a-pair-to-a-position', $giving, 'add a pair they do not hold to a position', [self::POSITIONS], [PowerTarget::AStrongerPosition]);
-        yield new Power('take-pairs-from-a-position-held-elsewhere', $giving, 'take pairs away from a position held elsewhere', [self::POSITIONS], [PowerTarget::APositionHeldElsewhere]);
+        yield new Power('add-a-pair-to-a-position', $giving, 'add a permission they do not hold to a position', [self::POSITIONS], [PowerTarget::AStrongerPosition]);
+        yield new Power('take-pairs-from-a-position-held-elsewhere', $giving, 'take permissions away from a position held elsewhere', [self::POSITIONS], [PowerTarget::APositionHeldElsewhere]);
         yield new Power('retire-a-position-held-elsewhere', $giving, 'retire a position held elsewhere', [self::POSITIONS], [PowerTarget::APositionHeldElsewhere]);
         yield new Power('give-live-locations', $giving, 'give Live locations', [self::POSITIONS], [PowerTarget::AStrongerPosition]);
         yield new Power('take-live-locations-away', $giving, 'take Live locations away', [self::POSITIONS], [PowerTarget::AStrongerPosition]);
@@ -89,8 +90,14 @@ final readonly class TeamPowers implements PowerSourceInterface
         }
 
         // A QUESTION ABOUT A PERSON is asked of the person; a pair is asked of
-        // no particular ground, as the routes that hold it ask it.
-        return \in_array($question, [MemberVoter::CONFIGURE, MemberVoter::ONE_TIME_PASSWORD, SignInHelpVoter::HELP, self::SWITCH], true) ? $target : null;
+        // no particular ground, as the routes that hold it ask it — except
+        // when the power would raise the asker's own standing, which is the
+        // question the voters refuse below a Super Admin.
+        if (\in_array($question, [MemberVoter::CONFIGURE, MemberVoter::ONE_TIME_PASSWORD, SignInHelpVoter::HELP, self::SWITCH], true)) {
+            return $target;
+        }
+
+        return PowerGroup::GainingPower === $power->group ? new OwnStandingRaised() : null;
     }
 
     private static function tierAbove(TeamRoleEnum $tier): ?TeamRoleEnum

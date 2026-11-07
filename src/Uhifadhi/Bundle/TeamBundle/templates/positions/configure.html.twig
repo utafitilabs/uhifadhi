@@ -124,7 +124,7 @@
             </div>
 
             <div class="c" data-controller="uhifadhi--team-bundle--folds">
-                <span class="tab">What it grants<span class="src">&middot; a box per declared verb &middot; {{ card.concernsGranted }} of {{ card.concernsDeclared }} concerns</span></span>
+                <span class="tab">What it grants<span class="src">&middot; a box per declared verb &middot; {{ card.concernsGranted }} of {{ card.concernsDeclared }} resources</span></span>
                 <form method="post" action="{{ path('team_position_permissions', {uuid: card.uuid}) }}">
                     <input type="hidden" name="_token" value="{{ csrfToken }}">
                     {{ mx.bar(card) }}

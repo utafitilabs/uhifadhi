@@ -1,0 +1,26 @@
+{# TEAM › PERMISSIONS — the frame every Permissions page wears.
+
+   THE HEAD IS THE PAGE'S OWN: the title, the one sentence under it, the
+   "Super Admin only" chip and what the page says about the run (Recompute
+   now on the hub). The section's Configure is not in it: the design's head
+   carries none, so this frame writes the head rather than the shell's
+   default, which appends it.
+
+   THE STRIP IS THE SHELL'S, from TeamSectionTabs, which answers the hub's
+   two tabs on the hub and the lookups' three on a lookup. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_page_subtitle %}What every kind of person may do to every other, asked of the rules the app enforces &mdash; for real accounts, changing nothing.{% endblock %}
+
+{% block shell_page_head %}
+    <div>
+        <h1 class="pg">{{ _title }}</h1>
+        <p class="pgsub">{{ _subtitle }}</p>
+    </div>
+    <div class="pgact w-pgact"><span class="chip acc">Super Admin only</span>{% block permissions_run %}{% endblock %}</div>
+{% endblock %}

@@ -143,14 +143,14 @@
            something in; a card of its own, absent for a person who holds nothing. #}
         {% if byTier %}
             <div class="c">
-                <span class="tab">What that actually grants, right now<span class="src">&middot; every concern</span></span>
+                <span class="tab">What that actually grants, right now<span class="src">&middot; every resource</span></span>
                 <div class="pmx-zero"><span><b>Above the matrix.</b> {{ member.teamRole.label }} grants every permission, by tier &middot; the position changes nothing they may do</span></div>
             </div>
         {% elseif card %}
             {% set granted = card.grantedGroups %}
             <div class="c" data-controller="uhifadhi--team-bundle--folds">
-                <span class="tab">What that actually grants, right now<span class="src">&middot; {{ card.concernsGranted }} concern{{ card.concernsGranted == 1 ? '' : 's' }}</span></span>
-                <p class="use">Concern &middot; verbs &middot; where &middot; through which position</p>
+                <span class="tab">What that actually grants, right now<span class="src">&middot; {{ card.concernsGranted }} resource{{ card.concernsGranted == 1 ? '' : 's' }}</span></span>
+                <p class="use">Resource &middot; verbs &middot; where &middot; through which position</p>
                 {% for group in granted %}
                     <details class="pmf pmfg"{{ loop.first ? ' open' : '' }} data-uhifadhi--team-bundle--folds-target="fold">
                         <summary><b>{{ group.declarer }}</b><span class="pmx-n">{{ group.granted }} of {{ group.granted }}</span></summary>
@@ -172,7 +172,7 @@
                 {% else %}
                     <div class="pmx-zero"><span><b>{{ card.name }} grants nothing yet.</b> Somebody holding it can sign in and reach no page behind it</span></div>
                 {% endfor %}
-                <div class="pcard-foot"><span>{{ card.concernsGranted }} concern{{ card.concernsGranted == 1 ? '' : 's' }} &middot; {{ granted|length }} group{{ granted|length == 1 ? '' : 's' }}</span><span class="sp"></span><a class="ov-open" href="{{ path('team_position_show', {uuid: card.uuid}) }}">See it on the position {{ ux_icon('shell:chevron-right') }}</a></div>
+                <div class="pcard-foot"><span>{{ card.concernsGranted }} resource{{ card.concernsGranted == 1 ? '' : 's' }} &middot; {{ granted|length }} group{{ granted|length == 1 ? '' : 's' }}</span><span class="sp"></span><a class="ov-open" href="{{ path('team_position_show', {uuid: card.uuid}) }}">See it on the position {{ ux_icon('shell:chevron-right') }}</a></div>
             </div>
         {% endif %}
 

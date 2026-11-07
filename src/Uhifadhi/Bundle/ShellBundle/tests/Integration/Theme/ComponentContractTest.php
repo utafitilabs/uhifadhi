@@ -1451,20 +1451,16 @@ final class ComponentContractTest extends ContractTestCase
     }
 
     /**
-     * A REGISTER TABLE IS THE THIRD IDIOM, and its last row is a cell rather
-     * than the element beside the foot — so the rule reaches through the
-     * table, and through the scroller a wide table is wrapped in.
+     * A REGISTER TABLE IS THE THIRD IDIOM, and its last row never draws a
+     * rule: whatever follows the table — a foot, the card's edge — draws its
+     * own line, so one rule on the table's own last row covers every case.
      */
-    public function testATablesLastRowBeforeAFootDrawsNoRuleEither(): void
+    public function testATablesLastRowDrawsNoRule(): void
     {
-        $sheet = $this->stylesheet();
-
-        foreach (['table.tbl:has(+ .sxfoot) tr:last-child td', '.tm-scroll:has(+ .sxfoot) table.tbl tr:last-child td'] as $selector) {
-            self::assertStringContainsString(
-                $selector,
-                $sheet,
-                'A register table against a card foot draws its last rule and then the foot draws one under it.',
-            );
-        }
+        self::assertStringContainsString(
+            'table.tbl tbody tr:last-child td { border-bottom: 0; }',
+            $this->stylesheet(),
+            'A register table draws no rule under its last row; what follows the table draws its own.',
+        );
     }
 }

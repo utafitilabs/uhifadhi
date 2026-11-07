@@ -113,11 +113,12 @@ final class CreateUserCommandTest extends KernelTestCase
     }
 
     /**
-     * AND THESE ARE THE ONLY TWO COMMANDS THIS BUNDLE CONTRIBUTES.
+     * AND THESE ARE THE ONLY THREE COMMANDS THIS BUNDLE CONTRIBUTES.
      *
      * A bundle's commands are its console surface and the list is short on
-     * purpose: one an installation is bootstrapped with, and one it
-     * schedules because a closed period cannot be recomputed. Anything
+     * purpose: one an installation is bootstrapped with, one it schedules
+     * because a closed period cannot be recomputed, and one its deploy runs
+     * so the permissions pages read answers the new code gave. Anything
      * that could be a screen is a screen.
      */
     public function testTheseAreTheOnlyCommandsTheBundleContributes(): void
@@ -131,7 +132,7 @@ final class CreateUserCommandTest extends KernelTestCase
         ));
 
         sort($mine);
-        self::assertSame(['team:performance:snapshot', 'team:user:create'], $mine);
+        self::assertSame(['team:performance:snapshot', 'team:permissions:recompute', 'team:user:create'], $mine);
     }
 
     /**

@@ -18,12 +18,12 @@ use Symfony\Component\Console\CommandLoader\CommandLoaderInterface;
 use Uhifadhi\Core\Tests\Application\Kernel;
 
 /**
- * THE CORE'S CONSOLE SURFACE IS FIVE COMMANDS, AND THIS IS WHERE THAT IS TRUE
+ * THE CORE'S CONSOLE SURFACE IS SIX COMMANDS, AND THIS IS WHERE THAT IS TRUE
  * OR NOT.
  *
  * The rule and its exceptions, stated once for all five bundles at once.
  * Everything the platform can be told to do is a screen, because a command is
- * a door with no page and nobody to explain itself to; the five that are not
+ * a door with no page and nobody to explain itself to; the six that are not
  * screens are all things a PRODUCTION installation must be able to run
  * without development packages, which is the whole of the exception:
  *
@@ -47,6 +47,9 @@ use Uhifadhi\Core\Tests\Application\Kernel;
  *                               module's facts, and after a rule they depend
  *                               on changes; the schedule never recomputes a
  *                               closed period, so this is what does.
+ *   `team:permissions:recompute` the permissions run asked for after a
+ *                               deploy, so the Permissions pages read answers
+ *                               the new code and the new catalogue gave.
  *
  * Every other command the platform has belongs to devkit, which installs
  * through `require-dev` and is absent from a production build.
@@ -90,7 +93,7 @@ final class OneConsoleCommandTest extends KernelTestCase
         }
     }
 
-    public function testTheOnlyCommandsTheCoreShipsAreTheFiveAProductionInstallationRuns(): void
+    public function testTheOnlyCommandsTheCoreShipsAreTheSixAProductionInstallationRuns(): void
     {
         self::bootKernel();
 
@@ -112,8 +115,8 @@ final class OneConsoleCommandTest extends KernelTestCase
 
         sort($ours);
 
-        self::assertSame(['area:presence:rebuild', 'registry:sync', 'team:performance:snapshot', 'team:user:create', 'uhifadhi:facts:rebuild'], $ours, \sprintf(
-            'The core ships five commands, all of them things a production installation must run; this one carries [%s]. Everything else belongs to devkit.',
+        self::assertSame(['area:presence:rebuild', 'registry:sync', 'team:performance:snapshot', 'team:permissions:recompute', 'team:user:create', 'uhifadhi:facts:rebuild'], $ours, \sprintf(
+            'The core ships six commands, all of them things a production installation must run; this one carries [%s]. Everything else belongs to devkit.',
             implode(', ', $ours),
         ));
     }

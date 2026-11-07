@@ -79,7 +79,7 @@
         <span class="f"><span class="k">Seats filled</span><span class="v">{{ card.seatsFilled }}<em>{{ card.seats is null ? 'of unlimited' : 'of ' ~ card.seats }}</em></span></span>
         <span class="f"><span class="k">Seats free</span><span class="v">{{ card.seatsFree is null ? '—' : card.seatsFree }}<em>{{ card.seats is null ? 'unlimited seats' : 'a full one refuses' }}</em></span></span>
         <span class="f"><span class="k">Holders</span><span class="v">{{ card.seatsFilled }}<em>{{ card.seatsFilled == 1 ? 'person' : 'people' }}</em></span></span>
-        <span class="f"><span class="k">Concerns granted</span><span class="v">{{ card.concernsGranted }}<em>of {{ card.concernsDeclared }}{% if card.sensitiveGranted %} &middot; {{ card.sensitiveGranted }} sensitive{% endif %}</em></span></span>
+        <span class="f"><span class="k">Resources granted</span><span class="v">{{ card.concernsGranted }}<em>of {{ card.concernsDeclared }}{% if card.sensitiveGranted %} &middot; {{ card.sensitiveGranted }} sensitive{% endif %}</em></span></span>
         <span class="sp"></span>
         {% if door('positions.configure') %}<a class="more" href="{{ path('team_position_configure', {uuid: card.uuid}) }}">Edit the grants &rarr;</a>{% endif %}
     </div>
@@ -87,7 +87,7 @@
     <div class="recgrid">
         <div class="col">
             <div class="c" data-controller="uhifadhi--team-bundle--folds">
-                <span class="tab">What it grants<span class="src">&middot; {{ card.concernsGranted }} of {{ card.concernsDeclared }} concerns &middot; read-only</span></span>
+                <span class="tab">What it grants<span class="src">&middot; {{ card.concernsGranted }} of {{ card.concernsDeclared }} resources &middot; read-only</span></span>
                 {{ mx.bar(card) }}
                 {{ mx.read(card) }}
                 {{ mx.orphans(orphans) }}

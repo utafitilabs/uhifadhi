@@ -31,7 +31,7 @@ final class UnknownGrantException extends \InvalidArgumentException
     public function __construct(public readonly array $values)
     {
         parent::__construct(\sprintf(
-            'Refusing to grant %s: %s declared by anything installed here, and not already held by this position. A concern exists because the bundle or module that enforces it declared it - check the pair, and check the module is installed.',
+            'Refusing to grant %s: %s declared by anything installed here, and not already held by this position. A resource exists because the bundle or module that enforces it declared it - check the permission, and check the module is installed.',
             implode(', ', array_map(static fn (string $v): string => '"'.$v.'"', $values)),
             1 === \count($values) ? 'it is not' : 'they are not',
         ));

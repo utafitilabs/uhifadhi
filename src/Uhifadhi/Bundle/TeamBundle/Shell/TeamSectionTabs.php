@@ -13,8 +13,9 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Shell;
 
+use Symfony\Component\HttpFoundation\RequestStack;
 use Uhifadhi\Bundle\TeamBundle\Access\Door;
-use Uhifadhi\Bundle\TeamBundle\Controller\PermissionsController;
+use Uhifadhi\Bundle\TeamBundle\Controller\PermissionsHubController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\RankController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
@@ -43,6 +44,11 @@ use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
  * header on every one of these tabs, written by the frame; a section that put
  * it in the strip would be the only place in the product where it moved.
  *
+ * PERMISSIONS HAS STRIPS OF ITS OWN. The hub (Overview · Reports) and the
+ * three lookups (Positions · Analysis · Check) are Team pages, but each set
+ * shows its own strip and never the section's: the frame asks one declaration
+ * per surface, so this one answers by the route the request matched.
+ *
  * A PERSON'S OWN PAGE IS NOT IN THE STRIP AND GETS NONE. It is headed by their
  * name rather than the section's, so it is inside the section rather than one
  * of its screens — and the same goes for the screen that adds somebody. The
@@ -57,9 +63,23 @@ final readonly class TeamSectionTabs implements ModuleTabsInterface
      */
     public const string SURFACE = 'team';
 
+    /** The three lookups' routes. A tab whose route is not mounted is not drawn. */
+    public const string POSITIONS = 'team_permissions_positions';
+
+    public const string ANALYSIS = 'team_permissions_analysis';
+
+    public const string CHECK = 'team_permissions_check';
+
+    /** The hub's two pages. */
+    public const array HUB = [PermissionsHubController::OVERVIEW, PermissionsHubController::REPORTS];
+
+    /** The lookups' pages. */
+    public const array LOOKUPS = [self::POSITIONS, self::ANALYSIS, self::CHECK];
+
     public function __construct(
         private Door $door,
         private TeamSettingsService $settings,
+        private RequestStack $requests,
     ) {
     }
 
@@ -70,6 +90,11 @@ final readonly class TeamSectionTabs implements ModuleTabsInterface
 
     public function tabs(): array
     {
+        $route = $this->requests->getCurrentRequest()?->attributes->get('_route');
+        if (\in_array($route, [...self::HUB, ...self::LOOKUPS], true)) {
+            return $this->permissionsTabs(\in_array($route, self::HUB, true));
+        }
+
         $tabs = [];
 
         // EVERY TAB ASKS THE PAIRS ITS ROUTE ENFORCES: the directory for
@@ -94,10 +119,26 @@ final readonly class TeamSectionTabs implements ModuleTabsInterface
         }
 
         // PERMISSIONS IS A SUPER ADMIN'S, by tier, and last.
-        if ($this->door->opens(PermissionsController::TIER)) {
-            $tabs[] = new ModuleTab('Permissions', PermissionsController::ROUTE);
+        if ($this->door->opens(PermissionsHubController::TIER)) {
+            $tabs[] = new ModuleTab('Permissions', PermissionsHubController::OVERVIEW);
         }
 
         return $tabs;
+    }
+
+    /**
+     * The hub's strip, or the lookups', for a Super Admin.
+     *
+     * @return list<ModuleTab>
+     */
+    private function permissionsTabs(bool $hub): array
+    {
+        if (!$this->door->opens(PermissionsHubController::TIER)) {
+            return [];
+        }
+
+        return $hub
+            ? [new ModuleTab('Overview', PermissionsHubController::OVERVIEW), new ModuleTab('Reports', PermissionsHubController::REPORTS)]
+            : [new ModuleTab('Positions', self::POSITIONS), new ModuleTab('Analysis', self::ANALYSIS), new ModuleTab('Check', self::CHECK)];
     }
 }

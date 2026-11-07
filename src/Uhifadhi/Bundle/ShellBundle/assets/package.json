@@ -46,6 +46,18 @@
                 "name": "uhifadhi--shell-bundle--reorder",
                 "fetch": "eager",
                 "enabled": true
+            },
+            "onpage": {
+                "main": "controllers/onpage_controller.js",
+                "name": "uhifadhi--shell-bundle--onpage",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "dropdown": {
+                "main": "controllers/dropdown_controller.js",
+                "name": "uhifadhi--shell-bundle--dropdown",
+                "fetch": "eager",
+                "enabled": true
             }
         },
         "importmap": {

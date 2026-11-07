@@ -18,7 +18,9 @@ use Uhifadhi\Bundle\TeamBundle\Enum\PermissionChangeEnum;
 
 /**
  * ONE CHANGE AS A LINE READS IT — "Naomi Kileo made Thabo Ndlovu Admin",
- * with what it was before and after.
+ * with what it was before and after. A change somebody made to themselves
+ * says so — "Naomi Kileo changed their own rank to Chief Park Warden" — and
+ * names nobody after it.
  *
  * A GRANT LIST READS AS WHAT MOVED. A position may hold twenty pairs; the
  * line names the ones added and the ones taken away, not two lists of twenty.
@@ -48,20 +50,29 @@ final readonly class ChangeLine
     public static function of(PermissionChange $change): self
     {
         $action = $change->getAction();
-        [$lead, $tail] = explode('{on}', $action->phrase(), 2) + [1 => ''];
+        $own = self::isTheirOwn($change) ? $action->selfPhrase() : null;
+        [$lead, $tail] = null === $own ? explode('{on}', $action->phrase(), 2) + [1 => ''] : [$own, ''];
 
         return new self(
             when: $change->getRecordedAt(),
             kind: $action->kind(),
             by: $change->getByName(),
-            lead: trim($lead),
-            on: $change->getSubjectName(),
+            lead: trim(str_replace('{after}', (string) $change->getAfter(), $lead)),
+            on: null === $own ? $change->getSubjectName() : '',
             tail: trim(str_replace('{after}', (string) $change->getAfter(), $tail)),
             subjectKind: $change->getSubjectKind(),
             subjectUuid: $change->getSubjectUuid(),
             diff: self::diff($action, $change->getBefore(), $change->getAfter()),
             reason: $change->getReason(),
         );
+    }
+
+    /** A change a person made to themselves, which the line says in its own words. */
+    private static function isTheirOwn(PermissionChange $change): bool
+    {
+        return PermissionChange::PERSON === $change->getSubjectKind()
+            && null !== $change->getById()
+            && $change->getById() === $change->getSubjectId();
     }
 
     /** @return list<array{0: 'was'|'now'|'added'|'removed', 1: string}> */

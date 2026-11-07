@@ -1,0 +1,33 @@
+{# TEAM › PERMISSIONS — THE HUB, REPORTS: the three lookups, as the Area ›
+   Modules tile — what each reads, and how fresh. #}
+{% extends '@Team/permissions/_frame.html.twig' %}
+{% import '@Team/permissions/_bits.html.twig' as pp %}
+
+{% block title %}Permissions — Reports{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_index') }}">uhifadhi</a> / team / <a href="{{ path('team_permissions_overview') }}">permissions</a> / reports
+{% endblock %}
+
+{% block shell_page_title %}Permissions &mdash; Reports{% endblock %}
+
+{% block permissions_run %}{{ pp.recompute(freshness, token, 'team_permissions_reports') }}{% endblock %}
+
+{% macro tile(url, title, chip, tone, source) %}
+    {%- if url -%}
+        <a class="c mtile" href="{{ url }}"><div class="mtile-head"><span class="mtile-title">{{ title }}</span><span class="chip{{ tone ? ' ' ~ tone }}">{{ chip }}</span></div><div class="mtile-source"><span class="mono">{{ source }}</span></div></a>
+    {%- else -%}
+        <div class="c mtile mtile-inert"><div class="mtile-head"><span class="mtile-title">{{ title }}</span><span class="chip{{ tone ? ' ' ~ tone }}">{{ chip }}</span></div><div class="mtile-source"><span class="mono">{{ source }}</span></div></div>
+    {%- endif -%}
+{% endmacro %}
+
+{% block shell_page %}
+    {% import _self as r %}
+    <h2 class="zone">Lookups</h2>
+    <div class="grid g4">
+        {{ r.tile(tools.positions, 'Positions', 'as written', null, 'grants, read from the positions') }}
+        {% set asOf %}the worker&#039;s answers &middot; {% if freshness.asOf %}as of {{ pp.stamp(freshness.asOf) }}{% else %}not computed yet{% endif %}{% endset %}
+        {{ r.tile(tools.analysis, 'Analysis', 'stored', null, asOf) }}
+        {{ r.tile(tools.check, 'Check', 'live', 'ok', 'the real voters, now') }}
+    </div>
+{% endblock %}

@@ -18,6 +18,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Rank;
 use Uhifadhi\Bundle\TeamBundle\Entity\RankHolding;
 use Uhifadhi\Bundle\TeamBundle\Entity\RankScale;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\PermissionChangeEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\RankHoldingRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\RankRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\RankScaleRepository;
@@ -40,6 +41,7 @@ final readonly class RankService
         private RankRepository $ranks,
         private RankHoldingRepository $holdings,
         private EntityManagerInterface $entityManager,
+        private ?PermissionChangeLog $changes = null,
     ) {
     }
 
@@ -247,6 +249,10 @@ final readonly class RankService
             throw new \InvalidArgumentException(\sprintf('The new rank starts before %s, the day the one held now started.', $current->getSince()->format('j M Y')));
         }
 
+        if (null !== $current || null !== $rank) {
+            $this->changes?->record(PermissionChangeEnum::RankChanged, $person, self::nameOf($current?->getRank()), self::nameOf($rank), by: $recordedBy);
+        }
+
         $current?->setUntil($since);
 
         if (null !== $rank) {
@@ -255,6 +261,12 @@ final readonly class RankService
         }
 
         $this->entityManager->flush();
+    }
+
+    /** A rank as the history line reads it. */
+    private static function nameOf(?Rank $rank): string
+    {
+        return null === $rank ? 'no rank' : (string) $rank->getName();
     }
 
     /** @return array{string, string} */

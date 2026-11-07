@@ -24,7 +24,7 @@
 
  * `Concern` takes `tierOnly: list<Verb>` - the verbs only the tiers above the matrix
    hold; a position never does. `ConcernInterface::isTierOnly(Verb)` answers it. A
-   tier-only verb must be one the concern supports, and an exception has none.
+   tier-only verb must be one the resource supports, and an exception has none.
 
 Not released yet.
 

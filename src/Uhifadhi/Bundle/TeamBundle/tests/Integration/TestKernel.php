@@ -23,6 +23,7 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+use Symfony\Component\Security\Core\Authorization\UserAuthorizationCheckerInterface;
 use Symfony\UX\Chartjs\ChartjsBundle;
 use Symfony\UX\Icons\UXIconsBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
@@ -30,7 +31,24 @@ use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\EventListener\PermissionRunListener;
+use Uhifadhi\Bundle\TeamBundle\Message\RecomputePermissions;
+use Uhifadhi\Bundle\TeamBundle\MessageHandler\RecomputePermissionsHandler;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionAnalysisReader;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionAnswerService;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionCheckService;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionFindingsReader;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionOverviewReader;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionRunService;
+use Uhifadhi\Bundle\TeamBundle\Permissions\PositionsReportReader;
+use Uhifadhi\Bundle\TeamBundle\Repository\PermissionAnswerRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\PermissionChangeRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\PermissionDriftRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\PermissionFindingRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\PermissionRunRepository;
+use Uhifadhi\Bundle\TeamBundle\Scheduler\RecomputePermissionsTask;
 use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
+use Uhifadhi\Bundle\TeamBundle\Service\PermissionChangeLog;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DeclaringConcernSource;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DeclaringModuleProvider;
@@ -115,6 +133,13 @@ final class TestKernel extends Kernel
             'assets' => true,
             'asset_mapper' => [
                 'paths' => [__DIR__.'/Fixtures/app/assets' => ''],
+            ],
+            // THE PERMISSIONS RUN WAITS IN A QUEUE, as the recipe routes it to
+            // `async`: a suite that writes a history line must not run the
+            // whole computation behind it. Its own suite runs it by hand.
+            'messenger' => [
+                'transports' => ['permissions' => 'in-memory://'],
+                'routing' => [RecomputePermissions::class => 'permissions'],
             ],
         ]);
 
@@ -389,6 +414,24 @@ final class TestKernel extends Kernel
             \Uhifadhi\Bundle\TeamBundle\Repository\UserRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\UserRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\GrantJustificationRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\GrantJustificationRepository::class,
+            UserAuthorizationCheckerInterface::class => 'security.authorization_checker',
+            PermissionRunRepository::class => PermissionRunRepository::class,
+            PermissionRunService::class => 'team.permissions.runs',
+            PermissionAnswerService::class => 'team.permissions.answers',
+            PermissionAnalysisReader::class => 'team.permissions.analysis',
+            PermissionFindingsReader::class => 'team.permissions.findings_reader',
+            PositionsReportReader::class => 'team.permissions.positions_report',
+            PermissionCheckService::class => 'team.permissions.check',
+            PermissionOverviewReader::class => 'team.permissions.overview',
+            RecomputePermissionsHandler::class => 'team.permissions.recompute_handler',
+            PermissionRunListener::class => 'team.permissions.run_listener',
+            RecomputePermissionsTask::class => 'team.permissions.schedule_task',
+            PermissionChangeLog::class => 'team.permission_changes',
+            'permissions_transport' => 'messenger.transport.permissions',
+            PermissionAnswerRepository::class => PermissionAnswerRepository::class,
+            PermissionFindingRepository::class => PermissionFindingRepository::class,
+            PermissionDriftRepository::class => PermissionDriftRepository::class,
+            PermissionChangeRepository::class => PermissionChangeRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager::class => 'team.api_token.manager',

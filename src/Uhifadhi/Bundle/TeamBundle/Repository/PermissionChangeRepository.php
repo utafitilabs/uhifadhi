@@ -109,6 +109,88 @@ class PermissionChangeRepository extends ServiceEntityRepository
         return null === $query ? 0 : $this->total($query);
     }
 
+    /**
+     * EVERY LINE RECORDED IN A WINDOW, both ends included, oldest first —
+     * what stands between two permission runs, and so what can explain an
+     * answer that changed. Both ends, because the instants are kept to the
+     * second: a line written in the second a run started may or may not be
+     * in it, and is counted as an explanation rather than missed.
+     *
+     * @return list<PermissionChange>
+     */
+    public function findRecordedBetween(\DateTimeImmutable $from, \DateTimeImmutable $to): array
+    {
+        /** @var list<PermissionChange> $lines */
+        $lines = $this->createQueryBuilder('c')
+            ->andWhere('c.recordedAt >= :from')
+            ->andWhere('c.recordedAt <= :to')
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->orderBy('c.recordedAt', 'ASC')
+            ->addOrderBy('c.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $lines;
+    }
+
+    /**
+     * HOW MANY LINES EACH MONTH HOLDS since an instant, keyed "2026-11"; a
+     * month with none is absent. Counted from the instants rather than in
+     * SQL because DQL has no month function and a half-year is a few hundred
+     * lines at most.
+     *
+     * @return array<string, int>
+     */
+    public function countByMonthSince(\DateTimeImmutable $since): array
+    {
+        /** @var list<array{recordedAt: \DateTimeImmutable}> $rows */
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.recordedAt')
+            ->andWhere('c.recordedAt >= :since')
+            ->setParameter('since', $since)
+            ->orderBy('c.recordedAt', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        $months = [];
+        foreach ($rows as $row) {
+            $month = $row['recordedAt']->format('Y-m');
+            $months[$month] = ($months[$month] ?? 0) + 1;
+        }
+
+        return $months;
+    }
+
+    /**
+     * THE LINES IN WHICH A PERSON CHANGED THEMSELVES — the actor is the
+     * subject — of the kinds given, recorded in a window, oldest first.
+     *
+     * @param list<string> $actions PermissionChangeEnum values; a value no case carries yet matches nothing
+     *
+     * @return list<PermissionChange>
+     */
+    public function findSelfChangesBetween(\DateTimeImmutable $from, \DateTimeImmutable $to, array $actions): array
+    {
+        /** @var list<PermissionChange> $lines */
+        $lines = $this->createQueryBuilder('c')
+            ->andWhere('c.subjectKind = :person')
+            ->andWhere('c.byId = c.subjectId')
+            ->andWhere('c.action IN (:actions)')
+            ->andWhere('c.recordedAt >= :from')
+            ->andWhere('c.recordedAt <= :to')
+            ->setParameter('person', PermissionChange::PERSON)
+            ->setParameter('actions', $actions)
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->orderBy('c.recordedAt', 'ASC')
+            ->addOrderBy('c.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $lines;
+    }
+
     private function newest(): QueryBuilder
     {
         return $this->createQueryBuilder('c')->orderBy('c.recordedAt', 'DESC')->addOrderBy('c.id', 'DESC');

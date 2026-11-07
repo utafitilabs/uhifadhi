@@ -87,7 +87,6 @@ final class TeamConfigureTest extends WebTestCaseWithSchema
         yield 'people' => ['/team'];
         yield 'positions' => ['/team/positions'];
         yield 'assignments' => ['/team/assignments'];
-        yield 'permissions' => ['/team/permissions'];
     }
 
     /** Configure on every Team tab opens the first section, People. */

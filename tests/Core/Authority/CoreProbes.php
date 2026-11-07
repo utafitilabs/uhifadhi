@@ -27,6 +27,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\InviteController;
 use Uhifadhi\Bundle\TeamBundle\Controller\MemberController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PasswordResetController;
+use Uhifadhi\Bundle\TeamBundle\Controller\PermissionsHubController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\RankConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamConfigureController;
@@ -130,7 +131,11 @@ final class CoreProbes
             Probe::get('team_index'),
             Probe::get('team_overview'),
             Probe::get('team_assignments'),
-            Probe::get('team_permissions'),
+            Probe::get('team_permissions_overview'),
+            Probe::get('team_permissions_reports'),
+            Probe::get('team_permissions_positions'),
+            Probe::get('team_permissions_analysis'),
+            Probe::get('team_permissions_check'),
             Probe::get('team_people_export'),
             Probe::get('team_invite'),
             ...Probe::aboutEachPerson(Probe::get('team_member', $member), 'uuid', $world),
@@ -222,6 +227,8 @@ final class CoreProbes
 
             Probe::post('team_member_create', [], InviteController::CSRF_CREATE, ['email' => 'zawadi.mushi@unr.example', 'password' => 'a long new passphrase', 'firstName' => 'Zawadi', 'lastName' => 'Mushi', 'position' => '', 'rangerCode' => '']),
             Probe::post('team_invite_send', [], InviteController::CSRF_INVITE, ['email' => 'juma.ally@unr.example', 'position' => '']),
+            Probe::post('team_permissions_recompute', [], PermissionsHubController::CSRF_ID),
+            Probe::post('team_permissions_drift_reviewed', [], PermissionsHubController::CSRF_ID),
             ...Probe::aboutEachPerson(Probe::post('team_member_update', $member, $person, ['firstName' => 'Naserian', 'lastName' => 'Lekishon', 'email' => 'naserian.l@unr.example', 'rangerCode' => '']), 'uuid', $world),
             ...Probe::aboutEachPerson(Probe::post('team_member_tier', $member, $person, ['tier' => TeamRoleEnum::Admin->value]), 'uuid', $world),
             // NOBODY RAISES THEMSELVES OR ANYBODY ELSE ABOVE WHAT THEY MAY GIVE:

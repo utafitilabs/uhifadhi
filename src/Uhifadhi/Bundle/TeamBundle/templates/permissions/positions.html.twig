@@ -1,0 +1,131 @@
+{# TEAM › PERMISSIONS › POSITIONS — what holding each position grants, read
+   as written (team-module/team/permissions/positions.html).
+
+   The people above the matrix, then one row per position, each a house
+   table under the house bar and foot. Every row is written here; the bars'
+   chips and search, the pages and the folds are the browser's, over these
+   rows (assets/controllers/permission_positions_controller.js, and the
+   analysis page's register controller for Above the matrix). #}
+{% extends '@Team/permissions/_frame.html.twig' %}
+
+{% block title %}Permissions — Positions{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_index') }}">uhifadhi</a> / team / <a href="{{ path('team_permissions_overview') }}">permissions</a> / positions
+{% endblock %}
+
+{% block shell_page_title %}Permissions &mdash; Positions{% endblock %}
+
+{% block shell_page_subtitle %}What does holding each position grant? Read as written &mdash; nothing here is asked of a voter.{% endblock %}
+
+{% block shell_page %}
+    {% set ctl = 'uhifadhi--team-bundle--permission-positions' %}
+    {% embed '@Shell/_onpage.html.twig' with {rows: [
+        {id: 'tiers', label: 'Above the matrix', count: null},
+        {id: 'positions', label: 'Positions', count: shown},
+    ]} %}
+        {% block shell_onpage_main %}
+            {# ABOVE THE MATRIX — the people above it, one row a person, under the house
+               bar and foot (the analysis page's register controller), then what only
+               the tiers hold. #}
+            {% import '@Team/permissions/_analysis_bits.html.twig' as an %}
+            {% set reg = aboveRegister %}
+            {% set rctl = 'uhifadhi--team-bundle--permission-analysis' %}
+            <div class="c" id="tiers" data-controller="{{ rctl }}" data-action="click->{{ rctl }}#click input->{{ rctl }}#search click@document->{{ rctl }}#outside keydown@document->{{ rctl }}#escape"><span class="tab">Above the matrix<span class="src">{{ tierSource }}</span></span>
+                <div data-pa-reg="above">
+                    <div class="lfilt">{% for c in reg.chips %}{{ an.chip(c) }}{% endfor %}{{ an.search(reg) }}</div>
+                    <table class="tbl pq-above"><thead><tr><th scope="col">Person</th><th scope="col">Tier</th><th scope="col" aria-label="Open"></th></tr></thead><tbody>
+                        {%- for person in above %}
+                        <tr{{ an.row(person, loop) }}><td><a href="{{ path('team_member', {uuid: person.uuid}) }}">{{ person.name }}</a><span class="pp-sub">placed: {{ person.placed }}</span></td><td><span class="tier {{ person.tierClass }}">{{ person.tier }}</span></td><td class="pp-door"><a class="more" href="{{ path('team_member', {uuid: person.uuid}) }}">Open &rarr;</a></td></tr>
+                        {%- endfor %}
+                    </tbody></table>
+                    {{ an.foot(reg) }}
+                    <p class="pq-empty" data-pa-nomatch hidden>No person matches these filters.</p>
+                </div>
+                <p class="pq-tline">Every permission is theirs without being granted; alone they hold {% for pair in tierPairs %}<span class="pq-code">{{ pair }}</span>{{ not loop.last ? ', ' }}{% endfor %}, and the powers.</p>
+            </div>
+
+            {# THE POSITIONS — the filter bar, one row per position, the register foot. #}
+            <div class="c" id="positions" data-controller="{{ ctl }}" data-{{ ctl }}-per-page-value="{{ perPage }}" data-{{ ctl }}-size-key-value="uhifadhi-pp-pagesize:positions" data-action="click@document->{{ ctl }}#outside keydown.esc@document->{{ ctl }}#closeAll"><span class="tab">Positions<span class="src">{{ source }}</span></span>
+                {# THE FILTER BAR — the house .lfilt: what to show, the resource, the sort, each a
+                   chip naming the chosen option and its count; the search at the right end. #}
+                <div class="lfilt">
+                    <details class="i-dd" data-axis="only" data-{{ ctl }}-target="chip" data-action="toggle->{{ ctl }}#toggled"><summary class="mchip i-ddt"><span class="i-ddval">all &middot; {{ (pills|first).count }}</span><span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu" aria-label="Show" data-action="click->{{ ctl }}#choose">
+                        {%- for pill in pills %}
+                        <button type="button" class="i-ddopt{{ loop.first ? ' on' }}{{ pill.count == 0 ? ' pq-zero' }}" data-opt="{{ pill.key }}" aria-pressed="{{ loop.first ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ pill.label }}</span><span class="i-ddopt-n">{{ pill.count }}</span></button>
+                        {%- if loop.first %}<span class="i-ddsep"></span>{% endif %}
+                        {%- endfor %}
+                    </div></details>
+                    <details class="i-dd" data-axis="concern" data-{{ ctl }}-target="chip" data-action="toggle->{{ ctl }}#toggled"><summary class="mchip i-ddt"><span class="i-ddval">resource</span><span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu pp-ddscroll" aria-label="Filter by resource" data-action="click->{{ ctl }}#choose">
+                        {%- for group in concernMenu %}
+                        {%- if group.label is not null %}<span class="i-ddsep"></span><span class="i-ddhead">{{ group.label }}</span>{% endif %}
+                        {%- for option in group.options %}
+                        <button type="button" class="i-ddopt{{ option.value == '' ? ' on' }}{{ option.count == 0 ? ' pq-zero' }}" data-opt="{{ option.value }}" aria-pressed="{{ option.value == '' ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ option.label }}</span><span class="i-ddopt-n">{{ option.count }}</span></button>
+                        {%- endfor %}
+                        {%- endfor %}
+                    </div></details>
+                    <details class="i-dd" data-axis="sort" data-{{ ctl }}-target="chip" data-action="toggle->{{ ctl }}#toggled"><summary class="mchip i-ddt"><span class="i-ddval">{{ (sortMenu|first).options|first.label|lower }}</span><span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu" aria-label="Sort" data-action="click->{{ ctl }}#choose">
+                        {%- for option in (sortMenu|first).options %}
+                        <button type="button" class="i-ddopt{{ loop.first ? ' on' }}" data-opt="{{ option.value }}" aria-pressed="{{ loop.first ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ option.label }}</span></button>
+                        {%- endfor %}
+                    </div></details>
+                    <div class="lsearch">{{ ux_icon('shell:search', {width: 14, height: 14, 'aria-hidden': 'true'}) }}<input class="fld" type="search" placeholder="Find a position" aria-label="Find a position by name" data-{{ ctl }}-target="search" data-action="input->{{ ctl }}#search"></div>
+                </div>
+
+                {# THE POSITIONS — the house table: one row a position, its open body the
+                   row after it, spanning every column. #}
+                <div class="pq-view" data-{{ ctl }}-target="view"{{ listed is empty ? ' hidden' }}>
+                    <table class="tbl pq-tbl"><thead><tr><th scope="col">Position</th><th scope="col" class="num">People</th><th scope="col">Where</th><th scope="col" class="pq-dh"><button type="button" class="pq-more" data-{{ ctl }}-target="all" data-action="{{ ctl }}#all">Expand all</button></th></tr></thead>
+                    <tbody data-{{ ctl }}-target="list" data-action="click->{{ ctl }}#fold">
+                        {%- for row in listed %}
+                        {%- set id = 'pq-b' ~ loop.index0 %}
+                        <tr class="pq-r" data-{{ ctl }}-target="row"{{ loop.index > perPage ? ' hidden' }} data-name="{{ row.name }}" data-find="{{ row.find }}" data-holders="{{ row.holders }}" data-flags="{{ row.flags|join(' ') }}" data-concerns="{{ row.concerns|join(' ') }}">
+                            <td><span class="pq-nm"><a class="pq-name" href="{{ path('team_position_show', {uuid: row.uuid}) }}">{{ row.name }}</a>{% for mark in row.marks %}<span class="chip{{ mark.warn ? ' warn' }}">{{ mark.text }}</span>{% endfor %}</span><span class="pp-sub pq-sum">{{ row.summary }}</span></td>
+                            <td class="num">
+                                {%- if row.holders > 0 -%}
+                                    <a href="{{ path('team_index', {position: row.uuid}) }}" aria-label="{{ row.holders }} {{ row.holders == 1 ? 'person' : 'people' }} in {{ row.name }}">{{ row.holders }}</a>
+                                {%- else -%}
+                                    0
+                                {%- endif -%}
+                                {%- if row.seatCount is not null %}<span class="pp-sub">of {{ row.seatCount }} seats</span>{% endif -%}
+                            </td>
+                            <td>{{ row.where }}</td>
+                            <td class="pp-door"><button type="button" class="pq-chev" aria-expanded="false" aria-controls="{{ id }}" aria-label="Expand {{ row.name }}">{{ ux_icon('shell:chevron-right', {'aria-hidden': 'true'}) }}</button></td>
+                        </tr>
+                        <tr class="pq-body" id="{{ id }}" hidden><td colspan="4"><div class="pq-in">
+                            {%- for group in row.groups %}
+                            <div class="pq-grp"><span class="pq-gh">{{ group.group }}</span><span class="pq-pairs">
+                                {%- for c in group.concerns -%}
+                                    <span class="pq-cv">{% if analysis %}<a class="pq-cl" href="{{ analysis }}?q={{ c.pair|url_encode }}">{{ c.label }}</a>{% else %}<span class="pq-cl">{{ c.label }}</span>{% endif %}{% if c.sensitive %}<span class="chip" title="{{ c.sensitive }}">sensitive</span>{% endif %} &mdash; {{ c.verbs }}</span>
+                                    {%- if not loop.last %}<span class="pq-sep"> &middot; </span>{% endif -%}
+                                {%- endfor -%}
+                            </span></div>
+                            {%- endfor %}
+                            {%- if row.notes is not empty %}
+                            <div class="pq-notes">
+                                {%- for note in row.notes %}
+                                {%- if note.alarm %}
+                                <div class="pq-note pq-alarm">{{ ux_icon('shell:triangle-alert', {'aria-label': 'refused', role: 'img'}) }}<span><b>{{ note.label }} &middot; {{ note.verb }}</b> &mdash; {{ note.text }}</span></div>
+                                {%- else %}
+                                <div class="pq-note">{{ ux_icon('shell:check', {'aria-label': 'in force', role: 'img'}) }}<span><b>{{ note.label }}</b> &mdash; {{ note.text }} &middot; <b>{{ note.by }}</b>, <span class="pq-t">{% if note.at %}<time datetime="{{ note.at|date('c') }}" data-localtime-format="stamp">{{ note.at|date('j M') }} &middot; {{ note.at|date('H:i') }}</time>{% endif %}</span>: &ldquo;{{ note.reason }}&rdquo;</span></div>
+                                {%- endif %}
+                                {%- endfor %}
+                            </div>
+                            {%- endif %}
+                        </div></td></tr>
+                        {%- endfor %}
+                    </tbody></table>
+                </div>
+
+                {# THE REGISTER FOOT — the filtered count and the page size; an arrow only where
+                   there is a page to go to. #}
+                {%- set pages = max(1, (listed|length / perPage)|round(0, 'ceil')) %}
+                <div class="rdf-foot" data-{{ ctl }}-target="foot"{{ listed is empty ? ' hidden' }}><span><span data-{{ ctl }}-target="count">{{ listed|length }} {{ listed|length == 1 ? 'position' : 'positions' }}</span> &middot; <details class="i-dd rdf-size" data-axis="size" data-{{ ctl }}-target="chip size" data-action="toggle->{{ ctl }}#toggled"><summary><span class="pg">{{ perPage }}</span> per page<span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu" aria-label="Rows per page" data-action="click->{{ ctl }}#choose">
+                    {%- for size in ['20', '50', '100', 'all'] %}<button type="button" class="i-ddopt{{ size == perPage ~ '' ? ' on' }}" data-opt="{{ size }}" aria-pressed="{{ size == perPage ~ '' ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ size == 'all' ? 'All' : size }}</span></button>{% endfor -%}
+                </div></details></span><span class="rdf-page" data-{{ ctl }}-target="pager" data-action="click->{{ ctl }}#go">page <span class="pg">1</span> of {{ pages }}{% if pages > 1 %}<button type="button" data-go="1" aria-label="Next page">&rsaquo;</button>{% endif %}</span></div>
+
+                <p class="pq-empty" data-{{ ctl }}-target="empty"{{ listed is not empty ? ' hidden' }}>No position matches these filters.</p>
+            </div>
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

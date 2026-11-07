@@ -93,6 +93,90 @@ final class MemberVoterTest extends TestCase
         }
     }
 
+    /** @return iterable<string, array{string}> */
+    public static function belowSuperAdmin(): iterable
+    {
+        yield 'staff' => ['staff'];
+        yield 'admin' => ['admin'];
+    }
+
+    /** RULED 8 NOV 2026: below a Super Admin, nobody gains power over their own standing. */
+    #[DataProvider('belowSuperAdmin')]
+    public function testNobodyBelowASuperAdminConfiguresTheirOwnRecord(string $tier): void
+    {
+        $actor = self::person($tier, 1);
+
+        $vote = new Vote();
+        $answer = new MemberVoter()->vote(self::token($actor), $actor, [MemberVoter::CONFIGURE], $vote);
+
+        self::assertSame(VoterInterface::ACCESS_DENIED, $answer);
+        self::assertSame(['nobody raises their own standing.'], $vote->reasons);
+    }
+
+    #[DataProvider('belowSuperAdmin')]
+    public function testTheSameAccountLoadedTwiceIsStillThemselves(string $tier): void
+    {
+        $answer = new MemberVoter()->vote(self::token(self::person($tier, 1)), self::person($tier, 1), [MemberVoter::CONFIGURE]);
+
+        self::assertSame(VoterInterface::ACCESS_DENIED, $answer);
+    }
+
+    /** The Super Admin manages the installation, their own record included. */
+    public function testASuperAdminStillConfiguresTheirOwnRecord(): void
+    {
+        $actor = self::person('super', 1);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, new MemberVoter()->vote(self::token($actor), $actor, [MemberVoter::CONFIGURE]));
+    }
+
+    /** @return iterable<string, array{string, string}> */
+    public static function raises(): iterable
+    {
+        yield 'staff to admin' => ['staff', 'admin'];
+        yield 'staff to super' => ['staff', 'super'];
+        yield 'admin to super' => ['admin', 'super'];
+    }
+
+    #[DataProvider('raises')]
+    public function testNobodyRaisesTheirOwnTier(string $tier, string $to): void
+    {
+        $actor = self::person($tier, 1);
+
+        $vote = new Vote();
+        $answer = new MemberVoter()->vote(self::token($actor), new TierChange($actor, self::TIERS[$to]), [MemberVoter::TIER], $vote);
+
+        self::assertSame(VoterInterface::ACCESS_DENIED, $answer);
+        self::assertSame(['nobody raises their own standing.'], $vote->reasons);
+    }
+
+    public function testAnAdminMayStillStepDownToStaff(): void
+    {
+        $actor = self::person('admin', 1);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, new MemberVoter()->vote(self::token($actor), new TierChange($actor, TeamRoleEnum::Staff), [MemberVoter::TIER]));
+    }
+
+    /** @return iterable<string, array{string, string}> */
+    public static function others(): iterable
+    {
+        foreach (array_keys(self::TIERS) as $by) {
+            foreach (array_keys(self::TIERS) as $on) {
+                yield "$by configures $on" => [$by, $on];
+            }
+        }
+    }
+
+    #[DataProvider('others')]
+    public function testConfiguringSomebodyElseIsAnsweredAsTheAccountRuleAnswersIt(string $by, string $on): void
+    {
+        $actor = self::person($by, 1);
+        $person = self::person($on, 2);
+
+        $answer = new MemberVoter()->vote(self::token($actor), $person, [MemberVoter::CONFIGURE]);
+
+        self::assertSame(UserService::mayTouchAccount($actor, $person) ? VoterInterface::ACCESS_GRANTED : VoterInterface::ACCESS_DENIED, $answer);
+    }
+
     public function testItSaysWhichQuestionsItAnswers(): void
     {
         $voter = new MemberVoter();

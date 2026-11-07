@@ -394,8 +394,9 @@ body::before {
 
 /* THE TOP BAR IS FULL-BLEED, ITS CONTENT IS NOT. The rule and the blur reach
    both edges of the main column, but the account cluster obeys the SAME measure
-   as `.page` — max-width 1280, centred, a 22px gutter — so the top bar's content
-   edge lands flush with the content grid below it rather than 26px out from it.
+   as `.page` — fluid, a 24px gutter each side, capped at 1600px and centred
+   beyond it — so the top bar's content edge lands flush with the content grid
+   below it at every width.
    Without this the cluster sits at the window edge while the grid is centred,
    and that contract reads as a "cut grid". Written as `.topbar > .tb-right` so it
    out-ranks the margin-left:auto it replaces. */
@@ -426,7 +427,7 @@ body::before {
     position: sticky; top: 0; z-index: 25;
 }
 .topbar > .tb-right {
-    width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 22px; box-sizing: border-box;
+    width: 100%; max-width: 1600px; margin: 0 auto; padding: 0 24px; box-sizing: border-box;
     display: flex; align-items: center; justify-content: flex-end; gap: 14px;
 }
 /* WHOSE INSTALLATION THIS IS, in the bar's left half (design: org-name.css
@@ -654,7 +655,7 @@ body::before {
 
 /* The footer row. NOT `.page`: the frame owns that class and owns exactly one
    of them per screen, so this carries its own and borrows the measure. */
-.shell-foot { position: relative; z-index: 1; max-width: 1280px; width: 100%; margin: auto auto 0; padding: 0 22px 26px; box-sizing: border-box; }
+.shell-foot { position: relative; z-index: 1; max-width: 1600px; width: 100%; margin: auto auto 0; padding: 0 24px 26px; box-sizing: border-box; }
 .footer { margin-top: 44px; border-top: 1px solid var(--c-ln); padding-top: 18px; color: rgb(var(--c-dim)); font-size: 11.5px; max-width: 96ch; line-height: 1.6; }
 
 /* ==================== THE NAV: SECTIONS + LOCATION TREE ====================
@@ -844,7 +845,7 @@ body::before {
 }
 
 /* ==================== THE PAGE FRAME ==================== */
-.page { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 26px 22px 90px; width: 100%; box-sizing: border-box; }
+.page { position: relative; z-index: 1; max-width: 1600px; margin: 0 auto; padding: 26px 24px 90px; width: 100%; box-sizing: border-box; }
 .crumb {
     font-family: var(--font-mono);
     font-size: 11px;
@@ -1887,6 +1888,13 @@ table.tbl td.num { font-size: 12px; }
 .rdf-page a:hover, .rdf-page button:hover { border-color: rgb(var(--c-fog)); color: rgb(var(--c-tx)); }
 /* The page you are on, which is a fact and not a control. */
 .rdf-page .pg { color: rgb(var(--c-tx)); font-weight: 700; }
+/* THE PAGE SIZE, chosen in the foot's own type: a grouped dropdown whose
+   summary is the words, not a chip, with the chosen size in the .pg pair. */
+.rdf-page a, .rdf-page button { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; }
+.rdf-size > summary { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 10.5px; font-weight: 400; color: rgb(var(--c-fog)); }
+.rdf-size > summary .i-ddcaret { font-weight: 600; letter-spacing: 1.1px; text-transform: uppercase; }
+.rdf-size .pg { color: rgb(var(--c-tx)); font-weight: 700; }
+.rdf-size .i-ddmenu { top: auto; bottom: calc(100% + 6px); min-width: 132px; }
 
 /* ---- THE PERSON'S MARK, and the two quiet buttons ----------------------- */
 .avatar {
@@ -2472,10 +2480,12 @@ table.tbl tr:hover .open-btn {
     font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 8.5px;
     letter-spacing: .14em; text-transform: uppercase; color: rgb(var(--c-dim)); padding: 6px 9px 4px;
 }
+/* An option is a link where the address is the state and a button where the
+   page filters in the browser; both wear the same row. */
 .i-ddopt {
-    display: flex; align-items: center; gap: 9px; width: 100%; text-align: left;
-    padding: 7px 9px; border-radius: 7px;
-    font-size: 12px; line-height: 1.2; color: rgb(var(--c-tx)); text-decoration: none;
+    display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; cursor: pointer;
+    padding: 7px 9px; border: 0; border-radius: 7px; background: none;
+    font-family: inherit; font-size: 12px; line-height: 1.2; color: rgb(var(--c-tx)); text-decoration: none;
 }
 .i-ddopt:hover { background: rgb(var(--c-raised)); }
 /* THE CHOSEN OPTION IS A TINTED ROW, not coloured text: a panel of twelve is
@@ -2765,10 +2775,7 @@ table.tbl tr:hover .open-btn {
 .ao-att:has(+ .sxfoot),
 .ao-att:has(+ .pvfoot) { border-bottom: 0; }
 
-table.tbl:has(+ .sxfoot) tr:last-child td,
-table.tbl:has(+ .pvfoot) tr:last-child td,
-.tm-scroll:has(+ .sxfoot) table.tbl tr:last-child td,
-.tm-scroll:has(+ .pvfoot) table.tbl tr:last-child td { border-bottom: 0; }
+table.tbl tbody tr:last-child td { border-bottom: 0; }
 
 /* A GROUP ROW inside a register table — the band a grouped list breaks on. The
    departments register groups with .deptgroup above its cards; a TABLE groups
@@ -2917,3 +2924,179 @@ tr.reorder-slot > td { padding: 0; border: 0; }
 .rf h2 { font-size: 22px; margin: 4px 0 8px; }
 .rf p { margin: 0 0 12px; line-height: 1.55; }
 .rf .acts { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* ==================== ON THIS PAGE — the in-page index ====================
+   The design's house-index.css (DesignsProjects/team-module/vendor/), under the
+   shell's names; drawn by @Shell/_onpage.html.twig, moved by the `onpage`
+   controller. A sticky index left of the content, one row per section: a dot,
+   the label, a muted count. The current row (aria-current) follows the
+   scroll, tinted, with a glowing bar flush left. Collapsed (html.onpage-closed:
+   remembered per viewer, forced at 900px and below) it is a 48px rail of dots,
+   one per row; the current dot sits in a 36px square pill carrying the same
+   tint and bar.
+   Font pairs: 9.5px 600 mono upper .16em `.onpage-h`; 13.5px 400 sans
+   `.onpage-row` (600 when current); 11px 400 mono `.onpage-n`. */
+.onpage { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; align-items: start; }
+.onpage-main { min-width: 0; }
+/* the house .page > .c gap between cards, for the cards one level down */
+.onpage-main > .c { margin-bottom: 20px; }
+.onpage [id] { scroll-margin-top: 80px; }
+.onpage-nav { position: sticky; top: 80px; display: grid; gap: 2px; max-height: calc(100vh - 96px); overflow-y: auto; scrollbar-width: none; }
+.onpage-nav::-webkit-scrollbar { display: none; }
+.onpage-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; }
+.onpage-h {
+    margin: 0; padding: 0 0 8px 16px; font-family: var(--font-mono); font-size: 9.5px; font-weight: 600;
+    letter-spacing: .16em; text-transform: uppercase; color: var(--dim); line-height: 1.4;
+}
+.onpage-top > .onpage-h { padding: 0 0 0 16px; }
+.onpage-row + .onpage-h { margin-top: 16px; }
+/* the toggle: the house sidebar's double chevron, a 44px target */
+.onpage-tg {
+    display: grid; place-items: center; flex: none; width: 44px; height: 44px; margin: 0; padding: 0; border: 0; border-radius: 8px;
+    background: none; color: var(--fog); cursor: pointer; transition: background .15s, color .15s;
+}
+.onpage-tg:hover { background: var(--raised); color: var(--tx); }
+.onpage-tg:focus-visible { outline: 2px solid var(--acc); outline-offset: -2px; }
+.onpage-tg svg { width: 18px; height: 18px; transition: transform .18s ease; }
+a.onpage-row {
+    position: relative; display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 0 12px 0 16px; border-radius: 12px;
+    color: var(--tx); text-decoration: none; font-size: 13.5px; font-weight: 400; transition: background .15s, color .15s;
+}
+a.onpage-row[hidden] { display: none; }
+a.onpage-row:hover { background: color-mix(in srgb, var(--fog) 10%, transparent); text-decoration: none; }
+a.onpage-row:focus-visible { outline: 2px solid var(--acc); outline-offset: -2px; }
+a.onpage-row::before {
+    content: ""; position: absolute; left: 0; top: 50%; width: 3px; height: 18px; transform: translateY(-50%);
+    border-radius: 0 999px 999px 0; background: transparent;
+}
+a.onpage-row[aria-current] { background: color-mix(in srgb, var(--acc) 10%, transparent); color: var(--acc); font-weight: 600; }
+a.onpage-row[aria-current]::before {
+    background: var(--acc);
+    box-shadow: 0 0 6px 1px color-mix(in srgb, var(--acc) 55%, transparent), 0 0 14px 3px color-mix(in srgb, var(--acc) 22%, transparent);
+}
+.onpage-l { flex: 1; min-width: 0; line-height: 1.3; }
+.onpage-n {
+    flex: none; font-family: var(--font-mono); font-size: 11px; font-weight: 400; color: var(--dim);
+    font-variant-numeric: tabular-nums;
+}
+a.onpage-row[aria-current] .onpage-n { color: color-mix(in srgb, var(--acc) 70%, var(--dim)); }
+/* the dot: the same mark on every row, never a state; warnings live in the
+   page's banners. The current row's dot takes the accent. */
+.onpage-dot {
+    flex: none; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: color-mix(in srgb, var(--fog) 60%, transparent);
+}
+a.onpage-row[aria-current] .onpage-dot { background: var(--acc); }
+/* the flash on the card or banner a row opens, from the click on: the bar's
+   glow family around the element's own radius, held through the scroll, then
+   fading to its resting shadow (--_onpage-flash-rest); a glow only, never a
+   border. Under reduced motion, the same glow held steady for the same time. */
+.onpage-flash { animation: onpage-flash 2s ease-out; }
+.c { --_onpage-flash-rest: var(--shadow); }
+@keyframes onpage-flash {
+    0%, 40% { box-shadow: 0 0 14px 3px color-mix(in srgb, var(--acc) 55%, transparent), 0 0 28px 6px color-mix(in srgb, var(--acc) 22%, transparent); }
+    100% { box-shadow: var(--_onpage-flash-rest, none); }
+}
+@keyframes onpage-flash-still {
+    from, to { box-shadow: 0 0 14px 3px color-mix(in srgb, var(--acc) 55%, transparent), 0 0 28px 6px color-mix(in srgb, var(--acc) 22%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) { .onpage-flash { animation: onpage-flash-still 2s step-end; } }
+/* collapsed: the rail */
+html.onpage-closed .onpage { grid-template-columns: 48px minmax(0, 1fr); }
+html.onpage-closed .onpage-nav { justify-items: center; }
+html.onpage-closed .onpage-top { justify-content: center; }
+html.onpage-closed .onpage-tg svg { transform: rotate(180deg); }
+html.onpage-closed .onpage-h, html.onpage-closed .onpage-n { display: none; }
+html.onpage-closed .onpage-l { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+html.onpage-closed a.onpage-row { justify-content: center; gap: 0; width: 36px; height: 36px; min-height: 36px; padding: 0; border-radius: 4px; }
+
+/* ==================== THE DROPDOWN — a pill trigger and its panel ====================
+   The design's house-dropdown.css (DesignsProjects/uhifadhi-web/), under the
+   shell's names; drawn by @Shell/_dropdown.html.twig, moved by the `dropdown`
+   controller. A pill trigger with a leading icon, the label and a chevron, and
+   a floating panel of 40px rows in groups; the chosen row carries a tint and a
+   glowing bar flush left. The default row chosen reads plain, with a grey bar.
+   While a value other than the default is chosen the wrapper is .dd-set.
+   Font pairs: trigger 13.5px 600 sans, 700 when set; rows 13.5px 600 sans,
+   muted part 12px 400 sans; group heads 9.5px 600 mono upper .16em; search
+   13.5px 400 sans. */
+.dd { position: relative; min-width: 0; }
+/* while a panel is open its .page (z-index 1, as is the page foot after it)
+   rises above what follows */
+.page.dd-lift { z-index: 5; }
+.dd-t {
+    display: flex; align-items: center; gap: 8px; width: 100%; height: 45px; padding: 0 6px 0 14px; box-sizing: border-box;
+    border: 1.5px solid var(--ln); border-radius: 999px; background: transparent; color: var(--tx);
+    font-family: inherit; font-size: 13.5px; font-weight: 600; line-height: 1; text-align: left; cursor: pointer;
+    transition: border-color .15s, background .15s, color .15s;
+}
+.dd-t:hover { border-color: var(--fog); }
+.dd-t:focus-visible { outline: none; border-color: var(--acc); }
+.dd-i { width: 16px; height: 16px; flex: none; color: var(--dim); }
+.dd-i[hidden] { display: none; }
+.dd-v { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dd-c { width: 16px; height: 16px; flex: none; margin-right: 6px; color: var(--fog); transition: transform .15s; }
+.dd-t[aria-expanded="true"] { border-color: var(--acc); }
+.dd-t[aria-expanded="true"] .dd-c { transform: rotate(180deg); }
+.dd.dd-set .dd-t { background: color-mix(in srgb, var(--acc) 10%, transparent); border-color: var(--acc); color: var(--acc); font-weight: 700; }
+.dd.dd-set .dd-i, .dd.dd-set .dd-c { color: var(--acc); }
+.dd-p {
+    position: absolute; top: calc(100% + 8px); left: 0; z-index: 60; width: max(100%, 340px); max-width: min(440px, calc(100vw - 32px));
+    display: flex; flex-direction: column; gap: 8px; padding: 8px; box-sizing: border-box;
+    background: var(--raised); border: 1px solid var(--ln); border-radius: 12px; box-shadow: var(--shadow);
+}
+.dd-p[hidden] { display: none; }
+.dd-end .dd-p { left: auto; right: 0; }
+/* the one column is minmax(0, 1fr) and the list hides its x overflow, so a
+   long row ellipsises and the panel never scrolls sideways */
+.dd-l {
+    max-height: 320px; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
+    display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; scrollbar-width: thin;
+}
+.dd-l > [role="group"] { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+.dd-l > [role="group"][hidden] { display: none; }
+.dd-l > [role="group"] + [role="group"] { margin-top: 8px; }
+.dd-h {
+    display: flex; align-items: center; gap: 8px; justify-content: space-between; padding: 8px 12px 4px 16px;
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--dim);
+}
+.dd-o {
+    position: relative; display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; box-sizing: border-box;
+    min-height: 40px; padding: 4px 12px 4px 16px; border: 0; border-radius: 8px; background: transparent; color: var(--tx); text-align: left;
+    font-family: inherit; font-size: 13.5px; font-weight: 600; line-height: 1.3; cursor: pointer; transition: background .15s, color .15s;
+}
+.dd-o[hidden] { display: none; }
+.dd-o::before {
+    content: ""; position: absolute; left: 0; top: 50%; width: 3px; height: 18px; transform: translateY(-50%);
+    border-radius: 0 999px 999px 0; background: transparent; transition: background .15s, box-shadow .15s;
+}
+.dd-o:hover, .dd-o:focus-visible { background: color-mix(in srgb, var(--fog) 10%, transparent); outline: none; }
+.dd-o[aria-selected="true"] { background: color-mix(in srgb, var(--acc) 10%, transparent); color: var(--acc); }
+.dd-o[aria-selected="true"]::before {
+    background: var(--acc);
+    box-shadow: 0 0 6px 1px color-mix(in srgb, var(--acc) 55%, transparent), 0 0 14px 3px color-mix(in srgb, var(--acc) 22%, transparent);
+}
+.dd-o[aria-selected="true"]:hover, .dd-o[aria-selected="true"]:focus-visible { background: color-mix(in srgb, var(--acc) 16%, transparent); }
+.dd-o[aria-selected="true"][data-default] { background: transparent; color: var(--tx); }
+.dd-o[aria-selected="true"][data-default]::before { background: var(--fog); box-shadow: none; }
+.dd-o[aria-selected="true"][data-default]:hover { background: color-mix(in srgb, var(--fog) 10%, transparent); }
+.dd-ol { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dd-m {
+    flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 12px; font-weight: 400; color: var(--dim);
+}
+.dd-o[aria-selected="true"] .dd-m { color: color-mix(in srgb, var(--acc) 70%, var(--dim)); }
+.dd-none { margin: 0; padding: 8px 16px; }
+.dd-none[hidden] { display: none; }
+.dd-q {
+    display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 16px; box-sizing: border-box; flex: none;
+    border: 1.5px solid var(--ln); border-radius: 999px; background: var(--p1); color: var(--dim);
+}
+.dd-q:focus-within { border-color: var(--acc); }
+.dd-q > svg { flex: none; }
+.dd-q input {
+    flex: 1; min-width: 0; height: 40px; border: 0; background: transparent; outline: 0; color: var(--tx);
+    font-family: inherit; font-size: 13.5px; font-weight: 400;
+}
+.dd-q input::placeholder { color: var(--dim); }

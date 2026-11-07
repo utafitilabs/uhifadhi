@@ -1,0 +1,27 @@
+{# THE ANALYSIS PAGE'S REGISTER PIECES — the house filter chip (a grouped
+   dropdown whose options are buttons, since the page narrows in the
+   browser), the question chip (whose options are links, since the question
+   is the address), the search, the register foot with its page size, the
+   line a register says when nothing matches, and the cells two lists share:
+   a position with its permission under it, and the door to a record. #}
+{% macro chip(c) %}<details class="i-dd" data-pa-axis="{{ c.axis }}"><summary class="mchip i-ddt{{ c.on ? ' on' }}"><span class="i-ddval">{{ c.value }}</span><span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu" aria-label="{{ c.aria }}">
+    {%- for o in c.options %}<button type="button" class="i-ddopt{{ o.on ? ' on' }}{{ o.count is same as(0) ? ' pa-zero' }}" data-pa-opt="{{ o.value }}" aria-pressed="{{ o.on ? 'true' : 'false' }}"><span class="i-ddopt-l">{{ o.label }}</span>{% if o.count is not null %}<span class="i-ddopt-n">{{ o.count }}</span>{% endif %}</button>{% if loop.index == c.sep %}<span class="i-ddsep"></span>{% endif %}{% endfor -%}
+</div></details>{% endmacro %}
+
+{% macro question(question, menu) %}<details class="i-dd" data-pa-axis="q" data-default="{{ question.default }}"><summary class="mchip i-ddt"><span class="i-ddval">{{ question.label|lower }}</span><span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu pa-ddscroll" aria-label="Question">
+    {%- for group in menu %}{% if not loop.first %}<span class="i-ddsep"></span>{% endif %}<span class="i-ddhead">{{ group.label }}</span>{% for o in group.options %}<a class="i-ddopt{{ o.value == question.key ? ' on' }}{{ o.count is same as(0) ? ' pa-zero' }}" href="?q={{ o.value|url_encode }}" data-pa-q="{{ o.value }}" title="{{ o.title }}"><span class="i-ddopt-l">{{ o.label }}</span><span class="i-ddopt-n">{{ o.count }}</span></a>{% endfor %}{% endfor -%}
+</div></details>{% endmacro %}
+
+{% macro search(reg) %}<label class="lsearch">{{ ux_icon('shell:search') }}<input class="fld" type="search" placeholder="{{ reg.search }}" aria-label="{{ reg.search }}" autocomplete="off" data-pa-search></label>{% endmacro %}
+
+{% macro foot(reg) %}<div class="rdf-foot" data-pa-foot data-pa-noun="{{ reg.noun }}" data-pa-one="{{ reg.one }}"><span><span data-pa-count>{{ reg.count }} {{ reg.count == 1 ? reg.one : reg.noun }}</span> &middot; <details class="i-dd rdf-size"><summary><span class="pg">20</span> per page<span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu" aria-label="Rows per page">
+    {%- for n in [20, 50, 100, 0] %}<button type="button" class="i-ddopt{{ n == 20 ? ' on' }}" data-pa-size="{{ n }}"><span class="i-ddopt-l">{{ n ?: 'All' }}</span></button>{% endfor -%}
+</div></details></span><span class="rdf-page" data-pa-page>page <span class="pg">1</span> of {{ reg.pages }}{% if reg.pages > 1 %}<button type="button" data-pa-go="1" aria-label="Next page">&rsaquo;</button>{% endif %}</span></div>{% endmacro %}
+
+{% macro nomatch(reg) %}<p class="au-why pa-none" data-pa-nomatch hidden>No {{ reg.noun }} matches these filters.</p>{% endmacro %}
+
+{% macro position(x) %}<th scope="row" class="pa-rh pa-b">{{ x.position }}<span class="pp-sub">{{ x.pair }}</span></th>{% endmacro %}
+
+{% macro open(door) %}<td class="pp-door">{% if door %}<a class="more" href="{{ door }}">Open &rarr;</a>{% endif %}</td>{% endmacro %}
+
+{% macro row(x, loop) %} data-pa-r data-pa-f="{{ x.f }}" data-pa-q="{{ x.q }}"{% if loop.index > 20 %} hidden{% endif %}{% endmacro %}

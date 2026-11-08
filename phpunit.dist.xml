@@ -11,10 +11,11 @@
         <!--
             One process holds every bundle's kernels at once — several compiled
             containers, each with its own cache — and 128M is not enough for
-            that. The limit is raised here rather than on a command line so a
-            local run and CI are the same run.
+            that; a run that compiles them from a cold cache, as CI always does,
+            passes 512M. The limit is raised here rather than on a command line
+            so a local run and CI are the same run.
         -->
-        <ini name="memory_limit" value="512M"/>
+        <ini name="memory_limit" value="1G"/>
         <!--
             No KERNEL_CLASS. The core is one repository with one phpunit config
             and several bundles, so an env var can only ever name one of their

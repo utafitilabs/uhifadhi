@@ -1,0 +1,92 @@
+{# A SETTINGS CASCADE — one owner's settings over the default and the places
+   below it (uhifadhi-web/settings/core.html, settings/configure/core.html).
+
+   Columns Setting · Default · Area · Department. Each setting row is a
+   summary — the default as text, "n of m areas set their own" — and its name
+   is the button that opens its places: the default for every area, holding
+   the one control for the default, then one row per area that follows it or
+   holds its own value.
+
+   READ-ONLY unless `configure` is given: {saved, refusal}. Then each default
+   is a field `org[<key>]` and each area's own value `area[<key>][<uuid>]`
+   (an area with no field follows the default), and the save bar follows the
+   card. The shell draws and never writes: the including page wraps this in
+   its own form, with its token, on the element that carries the cascade
+   controller (`uhifadhi--shell-bundle--cascade`, `-saved-value` after a
+   save), and the controller makes Set this area’s own / Use the default, the
+   changed marks and the save bar live.
+
+   Takes: table (Model\CascadeTable), heading and src (the card's tab), configure. #}
+{%- set _cols = 4 -%}
+    <div class="c">
+        <span class="tab">{{ heading }}<span class="src">{{ src }}</span></span>
+        <div class="dw-scroll">
+        <table class="tbl dw">
+            <thead>
+                <tr>
+                    <th>Setting</th>
+                    <th class="lvc org"><span class="lvh">{{ ux_icon('shell:landmark', {class: 'lvi', width: 14, height: 14}) }}Default</span></th>
+                    <th class="lvc area"><span class="lvh">{{ ux_icon('shell:map', {class: 'lvi', width: 14, height: 14}) }}Area</span></th>
+                    <th class="lvc dept"><span class="lvh">{{ ux_icon('shell:building', {class: 'lvi', width: 14, height: 14}) }}Department</span></th>
+                </tr>
+            </thead>
+            <tbody>
+            {%- for group, settings in table.groups %}
+                <tr class="fam"><td colspan="{{ _cols }}"><span class="slab">{{ group }}</span></td></tr>
+                {%- for setting in settings %}
+                    {%- set _unit = setting.unit ? '<span class="u">' ~ setting.unit|e ~ '</span>' : '' -%}
+                    <tr data-setting="{{ setting.key }}">
+                        <td>
+                            <button type="button" class="mrow" aria-expanded="false"><span class="car" aria-hidden="true">▸</span><span class="cmname"><b>{{ setting.label }}</b><span class="cmwhat">{{ setting.description }}</span></span></button>
+                        </td>
+                        <td class="lvc org"><span class="valf">{{ setting.defaultText }}</span></td>
+                        <td class="lvc area">{% if setting.places is not empty %}<span class="sumc">{{ setting.ownCount }} of {{ setting.places|length }} areas set their own</span>{% else %}<span class="cx-why">—</span>{% endif %}</td>
+                        <td class="lvc dept"><span class="cx-why">—</span></td>
+                    </tr>
+                    <tr class="dk dk-node dk-on{% if setting.places is empty %} dk-end{% endif %}" data-setting="{{ setting.key }}" data-default hidden>
+                        <td><span class="cn l1"><span class="ncar">▾</span>{{ ux_icon('shell:landmark', {class: 'lvi', width: 14, height: 14}) }}<span class="cnw">{{ table.organization }}<em>the default for every area</em></span></span></td>
+                        <td class="lvc org">
+                            {%- if configure -%}
+                                <span class="ed-line"><span class="ed-in"><input type="number" name="org[{{ setting.key }}]" value="{{ setting.defaultInput }}"{% if setting.min is not null %} min="{{ setting.min }}"{% endif %}{% if setting.max is not null %} max="{{ setting.max }}"{% endif %} step="{{ setting.step }}"{% if setting.unsetMeans %} placeholder="{{ setting.unsetMeans }}"{% else %} required{% endif %} aria-label="{{ setting.label }} — the default">{{ _unit|raw }}</span></span>
+                            {%- else -%}
+                                <span class="valf">{{ setting.defaultText }}</span>
+                            {%- endif -%}
+                        </td>
+                        <td class="lvc area"></td>
+                        <td class="lvc dept"></td>
+                    </tr>
+                    {%- for place in setting.places %}
+                    <tr class="dk dk-node{% if loop.last %} dk-end{% endif %}" data-setting="{{ setting.key }}" data-place="{{ place.uuid }}" hidden>
+                        <td><span class="cn l2"><span class="ncar"></span>{{ ux_icon('shell:map', {class: 'lvi', width: 14, height: 14}) }}{{ place.name }}<em>{{ place.kind }}</em></span></td>
+                        <td class="lvc org"></td>
+                        <td class="lvc area">
+                            <span class="ed-line">
+                            {%- if place.own -%}
+                                {%- if configure -%}
+                                    <span class="ed-in"><input type="number" name="area[{{ setting.key }}][{{ place.uuid }}]" value="{{ place.input }}"{% if setting.min is not null %} min="{{ setting.min }}"{% endif %}{% if setting.max is not null %} max="{{ setting.max }}"{% endif %} step="{{ setting.step }}" required aria-label="{{ setting.label }} — {{ place.name }}">{{ _unit|raw }}</span><button type="button" class="btn sm ed-reset" title="Go back to {{ setting.defaultText }}, the default">Use the default</button>
+                                {%- else -%}
+                                    <span class="valf">{{ place.text }}</span> <span class="ed-fa">· this {{ place.kind }}’s own</span>
+                                {%- endif -%}
+                            {%- else -%}
+                                <span class="ed-follow"><span class="valf">{{ setting.defaultText }}</span> <span class="ed-fa">· the default</span></span>
+                                {%- if configure %}<button type="button" class="btn sm ed-custom">Set this {{ place.kind }}’s own</button>{% endif -%}
+                            {%- endif -%}
+                            </span>
+                        </td>
+                        <td class="lvc dept"></td>
+                    </tr>
+                    {%- endfor %}
+                {%- endfor %}
+            {%- endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+{%- if configure %}
+    <div class="ed-bar{% if configure.refusal %} refused{% endif %}" role="status">
+        <b>{{ configure.refusal ?: (configure.saved ? 'Saved' : 'No unsaved changes') }}</b><span class="sp"></span>
+        <button type="button" class="ed-btn ghost" disabled>Discard</button>
+        <button type="button" class="ed-btn" disabled>Review ▴</button>
+        <button type="submit" class="ed-btn pri" disabled>Save</button>
+    </div>
+{%- endif -%}

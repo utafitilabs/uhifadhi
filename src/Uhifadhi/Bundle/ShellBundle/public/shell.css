@@ -3167,3 +3167,79 @@ html.onpage-closed a.onpage-row { justify-content: center; gap: 0; width: 36px; 
     .banner:not(.banner-lines), .banner-l > li { flex-wrap: wrap; }
     .banner:not(.banner-lines) > .banner-acts { width: 100%; justify-content: flex-end; }
 }
+
+/* ============================================================================
+   THE SETTINGS CASCADE — a settings page's table of the default and the places
+   below it, read and configured (uhifadhi-web/settings/cascade.css). Drawn by
+   `settings/_cascade.html.twig`, made live by the cascade controller.
+   ========================================================================== */
+.cx-why { font: 600 10.5px 'JetBrains Mono', monospace; color: var(--dim); }
+.cx-why a { color: var(--acc); }
+.cmname { min-width: 0; }
+.cmname b { display: block; font-size: 13px; font-weight: 600; color: var(--tx); line-height: 1.3; }
+.cmname .cmwhat { display: block; font-size: 11px; color: var(--dim); line-height: 1.45; margin-top: 2px; }
+.dw .mrow { display: flex; align-items: flex-start; gap: 8px; }
+.dw .car { flex: none; width: 12px; margin-top: 2px; font: 600 11px 'JetBrains Mono', monospace; color: var(--fog); cursor: pointer; }
+.dw tr.open .car { color: var(--acc); }
+/* a setting with places: its name is the one open/shut control; the caret turns a quarter when open */
+.dw button.mrow { width: 100%; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.dw button.mrow:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; border-radius: 4px; }
+.dw button.mrow .car { text-align: center; transition: transform .2s ease; }
+.dw tr.open button.mrow .car { transform: rotate(90deg); }
+.dw th.lvc, .dw td.lvc { text-align: center; width: 140px; }
+.dw th.lvc { font-size: 9px; }
+.dw th.lvc.org, .dw td.lvc.org { border-left: 1px solid var(--ln); }
+.dw th.lvc.area, .dw td.lvc.area, .dw th.lvc.dept, .dw td.lvc.dept { border-left: 1px dashed var(--ln); }
+.dw th.lvc .lvh { display: inline-flex; align-items: center; gap: 5px; }
+.dw .sumc { font: 600 11px 'JetBrains Mono', monospace; color: var(--fog); white-space: nowrap; }
+.dw tr.open > td { border-bottom: 0; }
+.dw tr.dk > td { border-bottom: 0; padding-top: 6px; padding-bottom: 6px; background: color-mix(in srgb, var(--fog) 6%, transparent); }
+.dw tr.dk.dk-end > td { border-bottom: 1px dashed var(--ln); padding-bottom: 12px; }
+.dw .cn { display: flex; align-items: center; gap: 8px; font-size: 12.5px; white-space: nowrap; }
+.dw .cn .lvi { color: var(--fog); flex: none; }
+.dw .cn em { font: 500 10px 'JetBrains Mono', monospace; color: var(--dim); font-style: normal; }
+/* the default row's name and its "the default for every area" share a line while the table has room, and stack when it has not */
+.dw .cn .cnw { display: inline-flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }
+.dw tr.dk-node .cn { font-weight: 600; font-size: 13px; }
+.dw .l1 { padding-left: 30px; }
+.dw .l2 { padding-left: 54px; }
+.dw .l3 { padding-left: 78px; }
+.dw .ncar { width: 12px; flex: none; font: 600 10px 'JetBrains Mono', monospace; color: var(--fog); }
+.dw tr.dk.dk-node .ncar { color: var(--fog); }
+.dw tr.dk.dk-node.dk-on .ncar { color: var(--acc); }
+.dw .slab { font: 600 10px 'JetBrains Mono', monospace; letter-spacing: .09em; text-transform: uppercase; color: var(--dim); }
+.dw tr.fam > td { padding-top: 14px; padding-bottom: 4px; border-bottom: 0; }
+/* read pages are calm: values are text, not field-like boxes */
+.dw .valf { display: inline-block; min-width: 0; padding: 0; border: 0; border-radius: 6px; font: 600 12px 'JetBrains Mono', monospace; }
+.dw .valf.cust { color: var(--acc); }
+.dw th.lvc.dept, .dw td.lvc.dept { display: table-cell; gap: 0; min-width: 0; }
+/* A cascade table wider than its card scrolls inside the card, never the page; the Setting
+   column stays put, and only while scrolled it takes the row's background and a right edge. */
+.dw-scroll { overflow-x: auto; }
+.dw-scroll .tbl.dw tr:not(.fam) > :first-child { position: sticky; left: 0; z-index: 1; }
+.dw-scroll .tbl.dw tr.fam .slab { position: sticky; left: 10px; display: inline-block; }
+.dw-scroll.scrolled .tbl.dw tr:not(.fam) > :first-child { background-color: color-mix(in srgb, var(--p1) 50%, var(--p2)); box-shadow: inset -1px 0 0 var(--ln); }
+.dw-scroll.scrolled .tbl.dw tr.dk > :first-child { background-image: linear-gradient(color-mix(in srgb, var(--fog) 6%, transparent), color-mix(in srgb, var(--fog) 6%, transparent)); }
+/* configure pages: a figure's field with its unit, the changed mark, the save bar and its review */
+.ed-in { display: inline-flex; align-items: center; gap: 0; border: 1px solid var(--acc); border-radius: 6px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 18%, transparent); }
+.ed-in input { width: 46px; border: 0; background: none; color: var(--tx); font: 600 11.5px 'JetBrains Mono', monospace; padding: 4px 0 4px 8px; outline: 0; appearance: textfield; -moz-appearance: textfield; }
+/* a number field draws no spinner: the design's field is the figure and its unit */
+.ed-in input::-webkit-inner-spin-button, .ed-in input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.ed-in .u { font: 500 10.5px 'JetBrains Mono', monospace; color: var(--dim); padding: 0 8px 0 2px; }
+.ed-in.chg { border-color: var(--warn); box-shadow: none; }
+/* An override cell is one line: the value (its control, or the follows text) and its door. It never wraps; the column widens instead. */
+.dw .ed-line { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; vertical-align: middle; }
+.dw .ed-fa { font: 500 11.5px 'JetBrains Mono', monospace; color: var(--fog); }
+.ed-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--warn); margin-left: 6px; vertical-align: middle; }
+.ed-bar { position: sticky; bottom: 14px; z-index: 5; margin: 14px 0 0; display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--ln2); border-radius: 10px; background: var(--raised); box-shadow: 0 8px 24px rgba(0, 0, 0, .35); }
+.ed-bar b { font: 600 12px 'JetBrains Mono', monospace; }
+.ed-bar.refused b { color: var(--fail); }
+.ed-bar .sp { flex: 1; }
+.ed-btn { font: 600 11px 'JetBrains Mono', monospace; letter-spacing: .04em; padding: 6px 12px; border-radius: 7px; border: 1px solid var(--ln2); background: none; color: var(--tx); cursor: pointer; }
+.ed-btn[disabled] { opacity: .4; cursor: default; }
+.ed-btn.pri { background: var(--acc); border-color: var(--acc); color: var(--accT); }
+.ed-btn.ghost { border-color: transparent; color: var(--fog); }
+.ed-review { margin-top: 10px; border-top: 1px solid var(--ln); padding-top: 10px; font-size: 12.5px; }
+.ed-review li { margin: 4px 0; list-style: none; }
+.ed-review li em { font-style: normal; font: 500 11px 'JetBrains Mono', monospace; color: var(--dim); }
+.ed-reviewcard { margin-top: 10px; }

@@ -170,9 +170,9 @@ final class AreaEditTest extends WebTestCase
 
         $settings = $this->body('/areas/'.$area->getUuidString().'/configure/settings');
 
-        self::assertMatchesRegularExpression('#<th>Ping every</th>\s*<td class="num">2 hours <span class="chip">set in Settings &rsaquo; Core</span></td>#', $settings);
+        self::assertMatchesRegularExpression('#<th>Ping every</th>\s*<td class="num">2 hours <(a|span) class="chip"[^>]*>set in Settings &rsaquo; Core</\1></td>#', $settings);
         self::assertMatchesRegularExpression('#<th>Stale after</th>\s*<td class="num">4 hours <span class="chip">two pings</span>#', $settings, 'Unset, it keeps the two-ping rule.');
-        self::assertMatchesRegularExpression('#<th>Zone overlap tolerance</th>\s*<td class="num">1 % <span class="chip">set in Settings &rsaquo; Core</span>#', $settings, 'Unset, the default.');
+        self::assertMatchesRegularExpression('#<th>Zone overlap tolerance</th>\s*<td class="num">1 % <(a|span) class="chip"[^>]*>set in Settings &rsaquo; Core</\1>#', $settings, 'Unset, the default.');
     }
 
     /** Clearing the gazetted facts is allowed — they are optional and a blank means unrecorded. */

@@ -19,6 +19,10 @@
    link in the body is applied exactly as one in the head is; what it costs is
    that this section's own rules land a beat after the frame's. #}
 {{ include('@Area/_stylesheets.html.twig') }}
+{#- Where these values are set: a link for whoever may read Settings. -#}
+{%- set _setIn = door('settings.read')
+    ? '<a class="chip" href="' ~ path('settings_core')|e('html_attr') ~ '">set in Settings &rsaquo; Core</a>'
+    : '<span class="chip">set in Settings &rsaquo; Core</span>' -%}
 <div class="grid">
         <div class="c">
             <span class="tab">The record<span class="src">&middot; area_of_interest</span></span>
@@ -51,7 +55,7 @@
                 </tr>
                 <tr>
                     <th>Zone overlap tolerance</th>
-                    <td class="num">{{ zoneTolerance }} % <span class="chip">set in Settings &rsaquo; Core</span></td>
+                    <td class="num">{{ zoneTolerance }} % {{ _setIn|raw }}</td>
                 </tr>
                 {# HOW OFTEN THIS AREA'S HANDSETS REPORT, AND WHEN A SILENT ONE
                    GOES STALE — the values in force here, read-only. Super
@@ -59,11 +63,11 @@
                    organization or customised for this area. #}
                 <tr>
                     <th>Ping every</th>
-                    <td class="num">{{ pingEvery }} <span class="chip">set in Settings &rsaquo; Core</span></td>
+                    <td class="num">{{ pingEvery }} {{ _setIn|raw }}</td>
                 </tr>
                 <tr>
                     <th>Stale after</th>
-                    <td class="num">{{ staleAfter }}{% if staleIsTwoPings %} <span class="chip">two pings</span>{% endif %} <span class="chip">set in Settings &rsaquo; Core</span></td>
+                    <td class="num">{{ staleAfter }}{% if staleIsTwoPings %} <span class="chip">two pings</span>{% endif %} {{ _setIn|raw }}</td>
                 </tr>
                 <tr><th>Identifier</th><td class="mono">{{ area.uuidString }}</td></tr>
             </table>

@@ -15,10 +15,12 @@ namespace Uhifadhi\Core\Tests\Core\Authority;
 
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaCreateController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaEditController;
+use Uhifadhi\Bundle\AreaBundle\Controller\SettingsCoreController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneImportController;
 use Uhifadhi\Bundle\AreaBundle\Service\OrgOverviewCatalogue;
+use Uhifadhi\Bundle\AreaBundle\Settings\CoreSettings;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
 use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetDom;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
@@ -127,6 +129,8 @@ final class CoreProbes
 
             Probe::get('settings', [], ['settings.read']),
             Probe::get('team_settings_deletions'),
+            Probe::get('settings_core', [], ['settings.read']),
+            Probe::get('settings_configure_core'),
 
             Probe::get('team_index'),
             Probe::get('team_overview'),
@@ -218,6 +222,7 @@ final class CoreProbes
         $boundary = __DIR__.'/kilimani.geojson';
 
         return [
+            Probe::post('settings_configure_core', [], SettingsCoreController::CSRF_ID, ['org' => [CoreSettings::PING_INTERVAL => '10']]),
             Probe::post('team_login', [], 'authenticate', ['_username' => 'nobody@unr.example', '_password' => 'not a password'], tokenField: '_csrf_token'),
             Probe::post('team_reset_send', [], PasswordResetController::CSRF_REQUEST, ['email' => 'rehema.kimaro@unr.example']),
             Probe::post('team_reset_submit', ['token' => $world->reset], PasswordResetController::CSRF_RESET, ['password' => 'a long new passphrase', 'password_confirm' => 'a long new passphrase']),

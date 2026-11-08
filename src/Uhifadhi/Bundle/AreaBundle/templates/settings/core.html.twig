@@ -1,0 +1,27 @@
+{# SETTINGS › CORE — the core's settings as a cascade, read
+   (uhifadhi-web/settings/core.html). The one action is the door to Configure,
+   drawn for those who may change a setting. #}
+{% extends '@Shell/settings/_section.html.twig' %}
+
+{% block shell_breadcrumbs %}
+    {%- set brand = shell_brand() -%}
+    <a href="{{ brand.url }}">{{ brand.name }}</a> / settings / core
+{% endblock %}
+
+{% block shell_page_actions %}
+    {%- if configureUrl -%}
+        <a class="tgl w-act" href="{{ configureUrl }}">{{ ux_icon('shell:settings', {width: 15, height: 15}) }} Configure</a>
+    {%- endif -%}
+{% endblock %}
+
+{% block shell_page %}
+    {%- set own = table.placesWithTheirOwn -%}
+    <div data-controller="uhifadhi--shell-bundle--cascade">
+    {{ include('@Shell/settings/_cascade.html.twig', {
+        table: table,
+        heading: 'Core settings',
+        src: '· ' ~ own ~ (own == 1 ? ' area sets its own' : ' areas set their own') ~ ' · only Super Admins and Admins change this',
+        configure: null,
+    }, with_context: false) }}
+    </div>
+{% endblock %}

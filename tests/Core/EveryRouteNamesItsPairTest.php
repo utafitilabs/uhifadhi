@@ -168,6 +168,7 @@ final class EveryRouteNamesItsPairTest extends KernelTestCase
         'team_permissions_check' => 'TeamBundle\\Controller\\PermissionsCheckController — a Super Admin by tier (ROLE_SUPER_ADMIN), never a pair (#66)',
         'team_permissions_recompute' => 'TeamBundle\\Controller\\PermissionsHubController — a Super Admin by tier (ROLE_SUPER_ADMIN), never a pair (#66)',
         'team_permissions_drift_reviewed' => 'TeamBundle\\Controller\\PermissionsHubController — a Super Admin by tier (ROLE_SUPER_ADMIN), never a pair (#66)',
+        'settings_configure_core' => 'AreaBundle\\Controller\\SettingsCoreController::configure — a Super Admin or an Admin by tier (ROLE_ADMIN, ROLE_SUPER_ADMIN), never a pair',
         'settings' => 'ShellBundle\\Controller\\SettingsController — settings.read, asked by the controller for every screen of the section',
     ];
 

@@ -1,6 +1,6 @@
 {
     "name": "@uhifadhi/uhifadhi",
-    "description": "Front-end behaviour of the core — every Stimulus controller the registry, the shell, the team screens and the area screens ship, mapped into an installation through AssetMapper.",
+    "description": "Front-end behaviour of the core \u2014 every Stimulus controller the registry, the shell, the team screens and the area screens ship, mapped into an installation through AssetMapper.",
     "license": "AGPL-3.0-or-later",
     "symfony": {
         "controllers": {
@@ -200,6 +200,12 @@
                 "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/table_filter_controller.js",
                 "name": "uhifadhi--team-bundle--table-filter",
                 "fetch": "lazy",
+                "enabled": true
+            },
+            "cascade": {
+                "main": "../src/Uhifadhi/Bundle/ShellBundle/assets/controllers/cascade_controller.js",
+                "name": "uhifadhi--shell-bundle--cascade",
+                "fetch": "eager",
                 "enabled": true
             }
         },

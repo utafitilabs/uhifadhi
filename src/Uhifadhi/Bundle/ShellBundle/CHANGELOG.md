@@ -8,6 +8,18 @@
 
 Not released yet.
 
+ * THE FOLD (design: uhifadhi-web/house-fold.css, house-fold.js): every fold opens and shuts the same
+   way, height (or width) and opacity easing together over 200ms, ease-out opening and ease-in closing,
+   from one block of the shell sheet ("HOUSE — THE FOLD") and one controller, `fold`, mounted on
+   `<html>` by the document. It covers every `<details>`, the sidebar to its rail (desktop widths; the
+   drawer still slides), the page index to its rail, the sidebar tree's groups, a block fold
+   (`.fold.shut > .bd`), a station type (`.stype.shut > .stun`) and any table row whose `hidden`
+   changes (the settings cascade's places). Nothing eases before the first paint (`html.fold-ready`),
+   and nothing eases under `prefers-reduced-motion: reduce`. The sidebar's own `transition: width`
+   is gone. `Uhifadhi\Test\FoldConformanceTestCase` fails a package whose sheet gives one of those
+   folds a transition of its own. An installation that keeps its own `assets/controllers.json` adds
+   `"fold": {"enabled": true, "fetch": "eager"}` under `@uhifadhi/shell-bundle`.
+
  * THE ATTENTION BANNER (design: uhifadhi-web/house-banner.css): `@Shell/_banner.html.twig`,
    included with `title`, `text`, `actions` (label → href, or `{action, fields, method}` for a
    form), `tone` (`warn`, `fail`, `info`, `ok`), `icon`, `id`, `label` and `lines` for a banner of

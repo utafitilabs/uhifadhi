@@ -299,7 +299,6 @@ body::before {
     padding: 14px 12px;
     border-right: 1px solid var(--c-ln);
     background: rgb(var(--c-p2));
-    transition: width .18s ease;
     z-index: 30;
     box-sizing: border-box;
 }
@@ -3246,3 +3245,75 @@ html.onpage-closed a.onpage-row { justify-content: center; gap: 0; width: 36px; 
 .ed-review li { margin: 4px 0; list-style: none; }
 .ed-review li em { font-style: normal; font: 500 11px 'JetBrains Mono', monospace; color: var(--dim); }
 .ed-reviewcard { margin-top: 10px; }
+
+/* ==================== HOUSE — THE FOLD ====================
+   The design's house-fold.css (uhifadhi-web/). Every fold opens and closes
+   the same way: height (or width) and opacity ease together over 200ms,
+   ease-out opening, ease-in closing; nothing below jumps. What CSS cannot do
+   is the `fold` controller's, mounted on <html> by the document; a page opts
+   in by doing nothing — no class, no attribute, no markup change.
+   html.fold-ready (set by the controller after the first paint) gates every
+   transition that is not a <details>, so a page never animates as it loads.
+   Under prefers-reduced-motion every fold is instant. No other sheet gives
+   these folds a transition of its own (Uhifadhi\Test\FoldConformanceTestCase). */
+
+/* 1. <details> — any details, any class (dropdown chips, permission groups,
+   station and zone cards, "more" folds). The content box eases its block-size
+   from 0 to auto; it clips vertically while it moves and stops clipping once
+   open, so a popover or focus ring inside an open fold is never cut. */
+details { interpolate-size: allow-keywords; }
+details::details-content {
+    block-size: 0; opacity: 0; overflow: clip;
+    transition: block-size .2s ease-in, opacity .2s ease-in, content-visibility .2s ease-in allow-discrete, overflow 0s allow-discrete;
+}
+details[open]::details-content {
+    block-size: auto; opacity: 1; overflow: visible;
+    transition: block-size .2s ease-out, opacity .2s ease-out, content-visibility .2s ease-out allow-discrete, overflow 0s .2s allow-discrete;
+}
+
+/* 2. Width folds — the sidebar to its icon rail, the page index to its rail.
+   The width eases; the controller fades the content in over the same 200ms so
+   the swap of labels for icons is never seen as a jump. The rail is a desktop
+   state; below 901px the sidebar is the drawer, which slides. */
+@media (min-width: 901px) {
+    html.fold-ready .side { transition: width .2s ease-out; }
+    html.fold-ready .side.rail { transition: width .2s ease-in; }
+    @media (prefers-reduced-motion: reduce) {
+        html.fold-ready .side, html.fold-ready .side.rail { transition: none; }
+    }
+}
+html.fold-ready .onpage { transition: grid-template-columns .2s ease-out; }
+html.fold-ready.onpage-closed .onpage { transition: grid-template-columns .2s ease-in; }
+
+/* 3. Class folds — a group that is display:none while shut: the sidebar tree
+   (.ntree / .nta-group / .ntgroup with .closed), a block fold (.fold.shut >
+   .bd), a station type (.stype.shut > .stun). The open state eases from
+   @starting-style; the shut state keeps display for the 200ms it takes. */
+html.fold-ready .side :is(.ntree, .nta-group, .ntgroup),
+html.fold-ready .fold > .bd,
+html.fold-ready .stype > .stun {
+    interpolate-size: allow-keywords; block-size: auto; opacity: 1; overflow: clip;
+    transition: block-size .2s ease-out, opacity .2s ease-out, padding-block .2s ease-out, border-block-width .2s ease-out, display .2s allow-discrete;
+}
+html.fold-ready .side :is(.ntree, .nta-group, .ntgroup).closed,
+html.fold-ready .fold.shut > .bd,
+html.fold-ready .stype.shut > .stun {
+    block-size: 0; opacity: 0; padding-block: 0; border-block-width: 0;
+    transition: block-size .2s ease-in, opacity .2s ease-in, padding-block .2s ease-in, border-block-width .2s ease-in, display .2s allow-discrete;
+}
+@starting-style {
+    html.fold-ready .side :is(.ntree, .nta-group, .ntgroup):not(.closed),
+    html.fold-ready .fold:not(.shut) > .bd,
+    html.fold-ready .stype:not(.shut) > .stun { block-size: 0; opacity: 0; padding-block: 0; border-block-width: 0; }
+}
+
+/* 4. Table rows (a tr's hidden attribute: the settings cascade's places, a
+   register's folded rows) are animated by the controller; nothing here. */
+
+@media (prefers-reduced-motion: reduce) {
+    details::details-content, details[open]::details-content,
+    html.fold-ready .onpage, html.fold-ready.onpage-closed .onpage,
+    html.fold-ready .side :is(.ntree, .nta-group, .ntgroup),
+    html.fold-ready .fold > .bd, html.fold-ready .stype > .stun { transition: none; }
+}
+/* ==================== /HOUSE — THE FOLD ==================== */

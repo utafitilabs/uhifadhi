@@ -9,7 +9,10 @@
    black Times New Roman on white and does not look like the product it came
    from. #}
 <!DOCTYPE html>
-<html lang="{{ shell_lang|default('en') }}">
+{# `fold` on <html>, the one element every page has: it eases every fold on
+   the page — the sidebar, the page index, any table row whose hidden changes —
+   so it sits outside anything a page draws (the sheet's "HOUSE — THE FOLD"). #}
+<html lang="{{ shell_lang|default('en') }}" data-controller="uhifadhi--shell-bundle--fold">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

@@ -207,6 +207,12 @@
                 "name": "uhifadhi--shell-bundle--cascade",
                 "fetch": "eager",
                 "enabled": true
+            },
+            "fold": {
+                "main": "../src/Uhifadhi/Bundle/ShellBundle/assets/controllers/fold_controller.js",
+                "name": "uhifadhi--shell-bundle--fold",
+                "fetch": "eager",
+                "enabled": true
             }
         },
         "importmap": {

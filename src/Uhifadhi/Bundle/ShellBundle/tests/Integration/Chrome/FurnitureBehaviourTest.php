@@ -168,7 +168,7 @@ final class FurnitureBehaviourTest extends ContractTestCase
         self::assertIsArray($symfony);
         $controllers = $symfony['controllers'] ?? null;
         self::assertIsArray($controllers);
-        self::assertSame(['theme', 'confirm-modal', 'sidebar', 'sidebar-tree', 'localtime', 'scope', 'register-fold', 'reorder', 'onpage', 'dropdown', 'cascade'], array_keys($controllers));
+        self::assertSame(['theme', 'confirm-modal', 'sidebar', 'sidebar-tree', 'localtime', 'scope', 'register-fold', 'reorder', 'onpage', 'dropdown', 'cascade', 'fold'], array_keys($controllers));
 
         foreach ($controllers as $name => $config) {
             self::assertIsArray($config);
@@ -288,6 +288,21 @@ final class FurnitureBehaviourTest extends ContractTestCase
             '/<body[^>]*\bdata-controller="[^"]*'.preg_quote(ShellBundle::CONTROLLER_PREFIX.'localtime', '/').'/',
             $html,
             'The frame localises times only if the scanner is mounted on the <body> it owns.',
+        );
+    }
+
+    /**
+     * EVERY FOLD EASES FROM ONE CONTROLLER, ON THE ONE ELEMENT EVERY PAGE HAS.
+     * It watches the whole document — the sidebar, the page index, any table
+     * row — so it sits on <html>, outside anything a page draws.
+     */
+    public function testTheDocumentMountsTheFoldOnItsRoot(): void
+    {
+        $html = $this->render('@fixtures/bare_document_page.html.twig');
+
+        self::assertMatchesRegularExpression(
+            '/<html[^>]*\bdata-controller="'.preg_quote(ShellBundle::CONTROLLER_PREFIX.'fold', '/').'"/',
+            $html,
         );
     }
 

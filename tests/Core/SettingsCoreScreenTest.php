@@ -98,6 +98,15 @@ final class SettingsCoreScreenTest extends FieldApiTestCase
         self::assertSame('Set this area’s own', $places->eq(2)->filter('button.btn.sm.ed-custom')->text());
 
         self::assertCount(1, $this->settingRow($page, 'Ping interval')->filter('td.lvc.org .valf'), 'the setting row only repeats the default');
+
+        $stale = $this->placesOf($page, CoreSettings::STALE_AFTER);
+        $unset = $stale->eq(0)->filter('td.lvc.org .ed-in input');
+        self::assertSame('', $unset->attr('value'), 'unset, the default field is empty');
+        self::assertNull($unset->attr('placeholder'), 'a placeholder is cut short inside the narrow field');
+        self::assertNull($unset->attr('required'));
+        self::assertSame('empty — two ping intervals', $stale->eq(0)->filter('td.lvc.org .ed-hint[data-means-line]')->text());
+        self::assertSame('two ping intervals · the default', self::squash($stale->eq(1)->filter('.ed-follow')->text()));
+        self::assertCount(0, $places->eq(0)->filter('.ed-hint'), 'a setting with a default has no meaning line');
         self::assertSame('No unsaved changes', $page->filter('.ed-bar b')->text());
         self::assertSame(['Discard', 'Review ▴', 'Save'], $page->filter('.ed-bar button')->each(static fn (Crawler $c): string => $c->text()));
     }

@@ -3227,6 +3227,9 @@ html.onpage-closed a.onpage-row { justify-content: center; gap: 0; width: 36px; 
 .ed-in input::-webkit-inner-spin-button, .ed-in input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .ed-in .u { font: 500 10.5px 'JetBrains Mono', monospace; color: var(--dim); padding: 0 8px 0 2px; }
 .ed-in.chg { border-color: var(--warn); box-shadow: none; }
+/* the quiet line under the default's control: what its choice, or an empty field, means */
+.ed-hint { display: block; margin-top: 4px; font: 500 9.5px 'JetBrains Mono', monospace; color: var(--dim); }
+.dw td.lvc.org .ed-hint[data-means-line] { min-width: 160px; }
 /* An override cell is one line: the value (its control, or the follows text) and its door. It never wraps; the column widens instead. */
 .dw .ed-line { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; vertical-align: middle; }
 .dw .ed-fa { font: 500 11.5px 'JetBrains Mono', monospace; color: var(--fog); }

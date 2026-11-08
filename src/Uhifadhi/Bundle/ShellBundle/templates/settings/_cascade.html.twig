@@ -47,7 +47,8 @@
                         <td><span class="cn l1"><span class="ncar">▾</span>{{ ux_icon('shell:landmark', {class: 'lvi', width: 14, height: 14}) }}<span class="cnw">{{ table.organization }}<em>the default for every area</em></span></span></td>
                         <td class="lvc org">
                             {%- if configure -%}
-                                <span class="ed-line"><span class="ed-in"><input type="number" name="org[{{ setting.key }}]" value="{{ setting.defaultInput }}"{% if setting.min is not null %} min="{{ setting.min }}"{% endif %}{% if setting.max is not null %} max="{{ setting.max }}"{% endif %} step="{{ setting.step }}"{% if setting.unsetMeans %} placeholder="{{ setting.unsetMeans }}"{% else %} required{% endif %} aria-label="{{ setting.label }} — the default">{{ _unit|raw }}</span></span>
+                                <span class="ed-line"><span class="ed-in"><input type="number" name="org[{{ setting.key }}]" value="{{ setting.defaultInput }}"{% if setting.min is not null %} min="{{ setting.min }}"{% endif %}{% if setting.max is not null %} max="{{ setting.max }}"{% endif %} step="{{ setting.step }}"{% if setting.unsetMeans %} data-unset="{{ setting.unsetMeans }}"{% else %} required{% endif %} aria-label="{{ setting.label }} — the default">{{ _unit|raw }}</span></span>
+                                {%- if setting.unsetMeans %}<span class="ed-hint" data-means-line>empty — {{ setting.unsetMeans }}</span>{% endif -%}
                             {%- else -%}
                                 <span class="valf">{{ setting.defaultText }}</span>
                             {%- endif -%}

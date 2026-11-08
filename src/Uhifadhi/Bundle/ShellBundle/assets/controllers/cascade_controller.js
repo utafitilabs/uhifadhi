@@ -19,8 +19,9 @@ import { Controller } from '@hotwired/stimulus';
  *                  its name is .cmname > b
  *   its places     the tr.dk rows after it; the default's is tr.dk[data-default]
  *                  and holds its one control; an area's is tr.dk[data-place]
- *   a figure       .ed-in > input, its unit in .ed-in > .u; an empty field
- *                  reads as its placeholder (what unset means)
+ *   a figure       .ed-in > input, its unit in .ed-in > .u; an empty
+ *                  default reads as its data-unset (what unset means), said
+ *                  under it by .ed-hint[data-means-line]
  *   follows        .ed-line > .ed-follow + .btn.sm.ed-custom: the click puts
  *                  the default's control there, preset to its value and named
  *                  area[<key>][<uuid>]
@@ -191,7 +192,7 @@ export default class extends Controller {
         const unit = element.querySelector('.u');
         const figure = input.value.trim();
         if ('' === figure) {
-            return input.placeholder || '';
+            return input.dataset.unset || '';
         }
 
         return figure + (unit ? ' ' + unit.textContent.trim() : '');
@@ -323,7 +324,7 @@ export default class extends Controller {
         input.value = fromDefault.querySelector('input').value;
         input.name = 'area[' + row.dataset.setting + '][' + row.dataset.place + ']';
         input.required = true;
-        input.removeAttribute('placeholder');
+        delete input.dataset.unset;
         input.setAttribute('aria-label', place.setting + ' — ' + place.place);
 
         const reset = document.createElement('button');

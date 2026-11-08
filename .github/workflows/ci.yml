@@ -97,7 +97,7 @@ jobs:
   # how a shell selector a module restated stayed invisible until somebody
   # pushed the core: the module's suite was measuring a snapshot.
   #
-  # So every module the fleet ships is checked out at its current line, POINTED AT THIS
+  # So every module the fleet ships is checked out at its line, POINTED AT THIS
   # CORE COMMIT, and put through its own `composer check`. A module that
   # breaks against the core the core is about to become fails the core's
   # push, which is where the breakage was introduced and where it is cheap.
@@ -120,24 +120,29 @@ jobs:
           # own workflow rather than flattened into one: a module tested with
           # something other than what it asks for is not the module's suite.
           - module: patrol
+            line: '0.11'
             image: ghcr.io/utafitilabs/postgis:17
             database: patrol_bundle_test
             extensions: ctype, iconv, pdo_pgsql
           - module: incident
+            line: '0.5'
             image: ghcr.io/utafitilabs/postgis:17
             database: incidents_bundle_test
             extensions: ctype, iconv, pdo_pgsql
           - module: storage
+            line: '0.4'
             image: ghcr.io/utafitilabs/postgis:17
             database: storage_bundle_test
             # gd for the thumbnails, and imagick deliberately absent — the
             # module's own CI exercises the GD-only path on purpose.
             extensions: ctype, iconv, gd, fileinfo, pdo_pgsql
           - module: devkit
+            line: '0.3'
             image: ghcr.io/utafitilabs/postgis:17
             database: uhifadhi_devkit_test
             extensions: ctype, iconv
           - module: roster
+            line: '0.2'
             image: ghcr.io/utafitilabs/postgis:17
             database: roster_bundle_test
             extensions: ctype, iconv, pdo_pgsql
@@ -176,14 +181,16 @@ jobs:
         with:
           path: core
 
-      - name: Check out the module at its current line
+      - name: Check out the module at the line that pairs with this core
         uses: actions/checkout@v4
         with:
           repository: utafitilabs/${{ matrix.module }}-module
-          # No ref: the repository's default branch is its current version line
-          # (0.3, 0.7, …), the Symfony shape — main no longer exists.
+          # THE LINE, NOT THE DEFAULT BRANCH. This core is the 0.2 line; each
+          # module is pinned to the line that pairs with it, so a module line
+          # cut for a newer core never reaches this job unasked.
           # Every fleet module is public, so the job's own token checks it out.
           # A private module would need a Contents:read token added here.
+          ref: ${{ matrix.line }}
           path: module
 
       - name: Setup PHP

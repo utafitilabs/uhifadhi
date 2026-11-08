@@ -1,0 +1,203 @@
+{
+    "statement": {
+        "kind": "line",
+        "labels": [
+            "W1",
+            "W2",
+            "W3",
+            "W4",
+            "W5"
+        ],
+        "series": [
+            {
+                "label": "Anomaly",
+                "points": [
+                    0.1,
+                    0.4,
+                    null,
+                    0.9,
+                    1.1
+                ],
+                "accent": true,
+                "marked": 3
+            }
+        ],
+        "ranges": [
+            {
+                "from": 0.5,
+                "to": null,
+                "label": "Warm",
+                "swatch": "var(--fail)"
+            },
+            {
+                "from": null,
+                "to": -0.5,
+                "label": "Cool",
+                "cat": 3
+            }
+        ],
+        "highlight": 3,
+        "panel": "upper",
+        "unit": "°C",
+        "legend": "none"
+    },
+    "built": {
+        "type": "line",
+        "data": {
+            "labels": [
+                "W1",
+                "W2",
+                "W3",
+                "W4",
+                "W5"
+            ],
+            "datasets": [
+                {
+                    "label": "Anomaly",
+                    "data": [
+                        0.1,
+                        0.4,
+                        null,
+                        0.9,
+                        1.1
+                    ],
+                    "backgroundColor": "transparent",
+                    "borderColor": "var(--acc)",
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                    "fill": false,
+                    "pointRadius": [
+                        0,
+                        0,
+                        0,
+                        4,
+                        0
+                    ],
+                    "pointBackgroundColor": "var(--acc)",
+                    "pointBorderColor": "var(--cv)",
+                    "pointBorderWidth": 2
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "display": false
+                    },
+                    "offset": true
+                },
+                "y": {
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    }
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": false,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "°C",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                },
+                "panels": {
+                    "axisWidth": 44
+                },
+                "ranges": {
+                    "ranges": [
+                        {
+                            "from": 0.5,
+                            "to": null,
+                            "label": "Warm",
+                            "color": "var(--fail)"
+                        },
+                        {
+                            "from": null,
+                            "to": -0.5,
+                            "label": "Cool",
+                            "color": "var(--cat-3)"
+                        }
+                    ],
+                    "opacity": 0.08,
+                    "highlight": 3,
+                    "highlightColor": "var(--acc)",
+                    "highlightOpacity": 0.14,
+                    "family": "var(--font-mono)"
+                }
+            }
+        }
+    },
+    "packages": []
+}

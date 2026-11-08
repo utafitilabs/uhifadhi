@@ -8,6 +8,37 @@
 
 Not released yet.
 
+ * THE CHART.JS CATALOGUE. `AtlasChart` takes the contract's `ChartKind`
+   (`Uhifadhi\Contracts\Performance\ChartKind`; the atlas's own enum is gone) and draws its
+   25 kinds: line, area, stacked area, band, stepped, multi-axis line, bar, combo, stacked bar/line,
+   horizontal bar, ranked, stacked, stacked horizontal, grouped bar, floating bar, diverging,
+   doughnut, pie, gauge, nested doughnut, polar area, radar, scatter, scatter on two axes, bubble.
+   A chart may state the parts of a whole (`ChartPart`), a figure in the hole (`ChartCentre`), an
+   empty whole's word, a nested ring (`ChartChild`), a band (`ChartBand`), the axes of a chart of
+   two measures (`ChartAxis`), quadrants, a curve, gaps drawn dashed, a gradient or radial fill, a
+   log scale, centred axes, a threshold colour, decimation, a clock axis and the plot's border; a
+   series its unit, its axis, a marker, a curve, a dash, a step mode and the hatch; a point a
+   `ChartPoint` or a `ChartSpan`; figures a stack's totals and a size; an axis its foot. A
+   statement its kind cannot be is refused with the reason. The builder builds what the design
+   workspace's door builds (`ChartBuilderParityTest`); the house look follows it: the type at the
+   house scale (ticks 10.5px), the grid in `--ln`, no axis lines, the hover on. The plate resolves
+   every token in the configuration, arrays included, puts on the functions JSON cannot carry
+   and the centre, empty, quadrants and frame plugins, writes slice names per side and stack
+   totals, and draws at twice the pixels at least.
+ * A TIME AXIS AND THE EXTENSION KINDS. `ChartTime` (a `TimeUnit`, and a date-fns format and
+   hover of its own) makes the index axis time; a decimated run is read on it and is refused
+   without it. Eight more kinds: stacked panels (`ChartPane`, a series' `pane` and `bar`), heatmap
+   and calendar heatmap (`rows`, `values`, `start`, `ChartRamp`), treemap (`names`), sankey
+   (`ChartFlowTarget`, `flows`), boxplot and violin (`ChartReadings`), funnel — each refused where
+   its statement cannot be drawn, and an extension kind empty where its own figures are. The
+   date adapter and the five packages are declared in `assets/package.json` for Flex to write into
+   the importmap, pinned; a card whose chart needs one holds its canvas back and the plate imports
+   and registers the package first, so a page loads only what its charts need. Every name beside a
+   horizontal bar and under an upright one is drawn, a long one beside a horizontal bar on two
+   lines; `Diverging` reads sideways, and with figures on an unstated axis leaves room past each
+   end; a centred axis's title is written at its end; a scatter's shaped marker and a line's are
+   drawn larger; an empty whole has no legend.
+
  * A LEGEND ROW MAY BE A RAMP (`LegendItem::$ramp`, two or three plate tokens drawn as a
    gradient) for a layer whose colour is continuous, with the endpoints in the label.
  * A LIVE STREAM NAMES THE PARAMETER ITS HUB TAKES TOPICS ON (#61): `LiveStream` carries

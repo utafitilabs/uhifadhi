@@ -16,7 +16,6 @@ namespace Uhifadhi\Bundle\TeamBundle\Service;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
 use Uhifadhi\Bundle\AtlasBundle\Model\AxisScale;
 use Uhifadhi\Bundle\AtlasBundle\Model\Bar;
-use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartNoughts;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
@@ -38,6 +37,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Contracts\Access\Verb;
+use Uhifadhi\Contracts\Performance\ChartKind;
 
 /**
  * WHAT THE TEAM SECTION'S OVERVIEW READS, AND OWNS NOTHING OF.

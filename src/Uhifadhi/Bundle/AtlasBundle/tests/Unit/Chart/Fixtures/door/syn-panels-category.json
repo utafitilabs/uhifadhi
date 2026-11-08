@@ -1,0 +1,247 @@
+{
+    "statement": {
+        "kind": "stacked-panels",
+        "labels": [
+            "W1",
+            "W2",
+            "W3"
+        ],
+        "panes": [
+            {
+                "title": "Hours"
+            },
+            {
+                "title": "Alerts",
+                "weight": 1,
+                "max": 4
+            }
+        ],
+        "series": [
+            {
+                "label": "Hours",
+                "points": [
+                    40,
+                    52,
+                    47
+                ],
+                "marker": "rect"
+            },
+            {
+                "label": "Alerts",
+                "pane": 1,
+                "bar": true,
+                "points": [
+                    1,
+                    3,
+                    0
+                ]
+            }
+        ]
+    },
+    "built": {
+        "type": "bar",
+        "data": {
+            "labels": [
+                "W1",
+                "W2",
+                "W3"
+            ],
+            "datasets": [
+                {
+                    "label": "Hours",
+                    "data": [
+                        40,
+                        52,
+                        47
+                    ],
+                    "yAxisID": "y",
+                    "borderColor": "var(--cat-1)",
+                    "backgroundColor": "var(--cat-1)",
+                    "type": "line",
+                    "tension": 0.25,
+                    "fill": false,
+                    "borderWidth": 2,
+                    "pointRadius": 3.5,
+                    "pointStyle": "rect",
+                    "pointBackgroundColor": "var(--cat-1)",
+                    "pointBorderColor": "var(--cat-1)"
+                },
+                {
+                    "label": "Alerts",
+                    "data": [
+                        1,
+                        3,
+                        0
+                    ],
+                    "yAxisID": "y2",
+                    "borderColor": "var(--cat-2)",
+                    "backgroundColor": "var(--cat-2)",
+                    "type": "bar",
+                    "borderWidth": 0,
+                    "borderRadius": 0,
+                    "borderSkipped": false
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "interaction": {
+                "mode": "index",
+                "intersect": false
+            },
+            "scales": {
+                "x": {
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    },
+                    "offset": true
+                },
+                "y2": {
+                    "type": "linear",
+                    "position": "left",
+                    "stack": "panes",
+                    "stackWeight": 1,
+                    "offset": true,
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    },
+                    "title": {
+                        "display": true,
+                        "text": "ALERTS",
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 9.5,
+                            "weight": 600
+                        },
+                        "padding": {
+                            "top": 6,
+                            "bottom": 2
+                        }
+                    },
+                    "max": 4
+                },
+                "y": {
+                    "type": "linear",
+                    "position": "left",
+                    "stack": "panes",
+                    "stackWeight": 1,
+                    "offset": true,
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    },
+                    "title": {
+                        "display": true,
+                        "text": "HOURS",
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 9.5,
+                            "weight": 600
+                        },
+                        "padding": {
+                            "top": 6,
+                            "bottom": 2
+                        }
+                    }
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": [
+        "chartjs-adapter-date-fns"
+    ]
+}

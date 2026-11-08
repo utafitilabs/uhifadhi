@@ -1,0 +1,270 @@
+{
+    "statement": {
+        "kind": "treemap",
+        "title": "Incidents this year, by kind and subcategory",
+        "labels": [
+            "Poaching & wildlife crime",
+            "Human–wildlife conflict",
+            "Compliance & encroachment",
+            "Fire & illegal burning"
+        ],
+        "names": {
+            "Poaching & wildlife crime": "Poaching",
+            "Human–wildlife conflict": "Human–wildlife",
+            "Compliance & encroachment": "Compliance",
+            "Fire & illegal burning": "Fire"
+        },
+        "parts": [
+            {
+                "cat": 1
+            },
+            {
+                "cat": 5
+            },
+            {
+                "cat": 2
+            },
+            {
+                "cat": 6
+            }
+        ],
+        "childLabel": "Subcategory",
+        "children": [
+            {
+                "label": "Snaring",
+                "value": 86,
+                "of": 0
+            },
+            {
+                "label": "Bushmeat",
+                "value": 44,
+                "of": 0
+            },
+            {
+                "label": "Trophy",
+                "value": 23,
+                "of": 0
+            },
+            {
+                "label": "Illegal fishing",
+                "value": 15,
+                "of": 0
+            },
+            {
+                "label": "Crop raiding",
+                "value": 118,
+                "of": 1
+            },
+            {
+                "label": "Livestock",
+                "value": 61,
+                "of": 1
+            },
+            {
+                "label": "Injury",
+                "value": 24,
+                "of": 1
+            },
+            {
+                "label": "Property",
+                "value": 17,
+                "of": 1
+            },
+            {
+                "label": "Encroachment",
+                "value": 63,
+                "of": 2
+            },
+            {
+                "label": "Charcoal",
+                "value": 41,
+                "of": 2
+            },
+            {
+                "label": "Timber",
+                "value": 22,
+                "of": 2
+            },
+            {
+                "label": "Burning",
+                "value": 29,
+                "of": 3
+            },
+            {
+                "label": "Wildfire",
+                "value": 13,
+                "of": 3
+            }
+        ],
+        "unit": "incidents"
+    },
+    "built": {
+        "type": "treemap",
+        "data": {
+            "datasets": [
+                {
+                    "label": "Subcategory",
+                    "tree": [
+                        {
+                            "kind": "Poaching & wildlife crime",
+                            "part": "Snaring",
+                            "value": 86
+                        },
+                        {
+                            "kind": "Poaching & wildlife crime",
+                            "part": "Bushmeat",
+                            "value": 44
+                        },
+                        {
+                            "kind": "Poaching & wildlife crime",
+                            "part": "Trophy",
+                            "value": 23
+                        },
+                        {
+                            "kind": "Poaching & wildlife crime",
+                            "part": "Illegal fishing",
+                            "value": 15
+                        },
+                        {
+                            "kind": "Human–wildlife conflict",
+                            "part": "Crop raiding",
+                            "value": 118
+                        },
+                        {
+                            "kind": "Human–wildlife conflict",
+                            "part": "Livestock",
+                            "value": 61
+                        },
+                        {
+                            "kind": "Human–wildlife conflict",
+                            "part": "Injury",
+                            "value": 24
+                        },
+                        {
+                            "kind": "Human–wildlife conflict",
+                            "part": "Property",
+                            "value": 17
+                        },
+                        {
+                            "kind": "Compliance & encroachment",
+                            "part": "Encroachment",
+                            "value": 63
+                        },
+                        {
+                            "kind": "Compliance & encroachment",
+                            "part": "Charcoal",
+                            "value": 41
+                        },
+                        {
+                            "kind": "Compliance & encroachment",
+                            "part": "Timber",
+                            "value": 22
+                        },
+                        {
+                            "kind": "Fire & illegal burning",
+                            "part": "Burning",
+                            "value": 29
+                        },
+                        {
+                            "kind": "Fire & illegal burning",
+                            "part": "Wildfire",
+                            "value": 13
+                        }
+                    ],
+                    "key": "value",
+                    "groups": [
+                        "kind",
+                        "part"
+                    ],
+                    "spacing": 1,
+                    "borderWidth": 0,
+                    "borderRadius": 2,
+                    "captions": {
+                        "display": true,
+                        "color": "var(--tx)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 700
+                        },
+                        "padding": 4
+                    },
+                    "labels": {
+                        "display": true,
+                        "color": "var(--tx)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "overflow": "hidden",
+                        "position": "middle"
+                    },
+                    "atlasTree": {
+                        "group": {
+                            "Poaching & wildlife crime": "color-mix(in srgb, var(--cat-1) 24%, transparent)",
+                            "Human–wildlife conflict": "color-mix(in srgb, var(--cat-5) 24%, transparent)",
+                            "Compliance & encroachment": "color-mix(in srgb, var(--cat-2) 24%, transparent)",
+                            "Fire & illegal burning": "color-mix(in srgb, var(--cat-6) 24%, transparent)"
+                        },
+                        "leaf": {
+                            "Poaching & wildlife crime": "color-mix(in srgb, var(--cat-1) 58%, transparent)",
+                            "Human–wildlife conflict": "color-mix(in srgb, var(--cat-5) 58%, transparent)",
+                            "Compliance & encroachment": "color-mix(in srgb, var(--cat-2) 58%, transparent)",
+                            "Fire & illegal burning": "color-mix(in srgb, var(--cat-6) 58%, transparent)"
+                        },
+                        "names": {
+                            "Poaching & wildlife crime": "Poaching",
+                            "Human–wildlife conflict": "Human–wildlife",
+                            "Compliance & encroachment": "Compliance",
+                            "Fire & illegal burning": "Fire"
+                        }
+                    },
+                    "unit": "incidents"
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "plugins": {
+                "legend": {
+                    "display": false
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "incidents",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": [
+        "chartjs-chart-treemap"
+    ]
+}

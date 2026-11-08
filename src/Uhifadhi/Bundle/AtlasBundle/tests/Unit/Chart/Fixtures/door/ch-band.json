@@ -1,0 +1,288 @@
+{
+    "statement": {
+        "kind": "band",
+        "title": "Response time per week, with the fastest and the slowest",
+        "labels": [
+            "2026-08-17",
+            "2026-08-24",
+            "2026-08-31",
+            "2026-09-07",
+            "2026-09-14",
+            "2026-09-21",
+            "2026-09-28",
+            "2026-10-05",
+            "2026-10-12",
+            "2026-10-19",
+            "2026-10-26",
+            "2026-11-02"
+        ],
+        "time": {
+            "unit": "week"
+        },
+        "series": [
+            {
+                "label": "Median response",
+                "points": [
+                    24,
+                    22,
+                    27,
+                    25,
+                    21,
+                    19,
+                    23,
+                    26,
+                    22,
+                    20,
+                    18,
+                    21
+                ],
+                "cat": 1
+            }
+        ],
+        "band": {
+            "label": "Fastest to slowest",
+            "fromLabel": "Fastest",
+            "toLabel": "Slowest",
+            "from": [
+                9,
+                8,
+                11,
+                10,
+                7,
+                8,
+                9,
+                12,
+                8,
+                7,
+                6,
+                8
+            ],
+            "to": [
+                52,
+                47,
+                61,
+                55,
+                44,
+                40,
+                49,
+                58,
+                46,
+                42,
+                38,
+                44
+            ]
+        },
+        "unit": "min"
+    },
+    "built": {
+        "type": "line",
+        "data": {
+            "labels": [
+                "2026-08-17",
+                "2026-08-24",
+                "2026-08-31",
+                "2026-09-07",
+                "2026-09-14",
+                "2026-09-21",
+                "2026-09-28",
+                "2026-10-05",
+                "2026-10-12",
+                "2026-10-19",
+                "2026-10-26",
+                "2026-11-02"
+            ],
+            "datasets": [
+                {
+                    "label": "Fastest to slowest",
+                    "edgeLabel": "Fastest",
+                    "data": [
+                        9,
+                        8,
+                        11,
+                        10,
+                        7,
+                        8,
+                        9,
+                        12,
+                        8,
+                        7,
+                        6,
+                        8
+                    ],
+                    "borderColor": "transparent",
+                    "backgroundColor": "color-mix(in srgb, var(--cat-1) 18%, transparent)",
+                    "borderWidth": 0,
+                    "pointRadius": 0,
+                    "pointHoverRadius": 0,
+                    "tension": 0.25,
+                    "unit": "min",
+                    "fill": false,
+                    "legendHidden": true
+                },
+                {
+                    "label": "Fastest to slowest",
+                    "edgeLabel": "Slowest",
+                    "data": [
+                        52,
+                        47,
+                        61,
+                        55,
+                        44,
+                        40,
+                        49,
+                        58,
+                        46,
+                        42,
+                        38,
+                        44
+                    ],
+                    "borderColor": "transparent",
+                    "backgroundColor": "color-mix(in srgb, var(--cat-1) 18%, transparent)",
+                    "borderWidth": 0,
+                    "pointRadius": 0,
+                    "pointHoverRadius": 0,
+                    "tension": 0.25,
+                    "unit": "min",
+                    "fill": "-1"
+                },
+                {
+                    "label": "Median response",
+                    "data": [
+                        24,
+                        22,
+                        27,
+                        25,
+                        21,
+                        19,
+                        23,
+                        26,
+                        22,
+                        20,
+                        18,
+                        21
+                    ],
+                    "backgroundColor": "transparent",
+                    "borderColor": "var(--cat-1)",
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                    "fill": false,
+                    "pointRadius": 2,
+                    "pointBackgroundColor": "var(--cat-1)",
+                    "pointBorderColor": "var(--cat-1)"
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "interaction": {
+                "mode": "index",
+                "intersect": false
+            },
+            "scales": {
+                "x": {
+                    "type": "time",
+                    "time": {
+                        "unit": "week",
+                        "displayFormats": {
+                            "week": "'W'II"
+                        },
+                        "tooltipFormat": "'Week of' d MMM yyyy",
+                        "isoWeekday": true
+                    },
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "source": "labels"
+                    },
+                    "offset": false
+                },
+                "y": {
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    }
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false,
+                        "atlasFilter": "legendHidden"
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "min",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": [
+        "chartjs-adapter-date-fns"
+    ]
+}

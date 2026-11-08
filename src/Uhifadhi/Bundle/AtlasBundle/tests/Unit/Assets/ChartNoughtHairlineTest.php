@@ -46,7 +46,7 @@ final class ChartNoughtHairlineTest extends TestCase
 
         self::assertStringContainsString('dataset.data.map((value) => (0 === value ? fade(color, opacity) : color))', $js);
         self::assertStringContainsString("for (const property of ['backgroundColor', 'borderColor'])", $js);
-        self::assertLessThan(strpos($js, 'this.hairline(event.detail.config)'), strpos($js, 'this.paint(event.detail.config)'));
+        self::assertLessThan(strpos($js, 'this.hairline(config);'), strpos($js, 'this.walk(config);'));
     }
 
     /** The two shapes a resolved token takes — a hex and an rgb() — both carry an alpha. */
@@ -56,7 +56,7 @@ final class ChartNoughtHairlineTest extends TestCase
 
         self::assertStringContainsString('function fade(color, opacity)', $js);
         self::assertStringContainsString('Math.round(opacity * 255)', $js);
-        self::assertStringContainsString('/ ${opacity})', $js);
+        self::assertStringContainsString('/ ${+(alpha * opacity).toFixed(4)})', $js);
     }
 
     private static function controllerJs(): string

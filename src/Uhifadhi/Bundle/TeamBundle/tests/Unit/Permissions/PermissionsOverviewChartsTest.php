@@ -14,11 +14,11 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Unit\Permissions;
 
 use PHPUnit\Framework\TestCase;
-use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartNoughts;
 use Uhifadhi\Bundle\AtlasBundle\Model\KeyEntry;
 use Uhifadhi\Bundle\TeamBundle\Permissions\PermissionsOverviewCharts;
+use Uhifadhi\Contracts\Performance\ChartKind;
 
 /**
  * The hub's four plots, read off the overview reader's rows as the design's

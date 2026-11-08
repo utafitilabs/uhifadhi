@@ -1,0 +1,237 @@
+{
+    "statement": {
+        "kind": "nested-doughnut",
+        "title": "Incidents this quarter, by kind and subcategory",
+        "labels": [
+            "Poaching & wildlife crime",
+            "Human–wildlife conflict",
+            "Compliance & encroachment",
+            "Fire & illegal burning"
+        ],
+        "parts": [
+            {
+                "cat": 1
+            },
+            {
+                "cat": 5
+            },
+            {
+                "cat": 2
+            },
+            {
+                "cat": 6
+            }
+        ],
+        "series": [
+            {
+                "label": "Incidents",
+                "points": [
+                    38,
+                    52,
+                    27,
+                    11
+                ]
+            }
+        ],
+        "childLabel": "Subcategory",
+        "children": [
+            {
+                "label": "Snaring",
+                "value": 21,
+                "of": 0
+            },
+            {
+                "label": "Bushmeat",
+                "value": 11,
+                "of": 0
+            },
+            {
+                "label": "Trophy",
+                "value": 6,
+                "of": 0
+            },
+            {
+                "label": "Crop raiding",
+                "value": 31,
+                "of": 1
+            },
+            {
+                "label": "Livestock",
+                "value": 15,
+                "of": 1
+            },
+            {
+                "label": "Injury",
+                "value": 6,
+                "of": 1
+            },
+            {
+                "label": "Encroachment",
+                "value": 16,
+                "of": 2
+            },
+            {
+                "label": "Charcoal",
+                "value": 11,
+                "of": 2
+            },
+            {
+                "label": "Burning",
+                "value": 8,
+                "of": 3
+            },
+            {
+                "label": "Wildfire",
+                "value": 3,
+                "of": 3
+            }
+        ],
+        "unit": "incidents",
+        "figures": {}
+    },
+    "built": {
+        "type": "doughnut",
+        "data": {
+            "labels": [
+                "Poaching & wildlife crime",
+                "Human–wildlife conflict",
+                "Compliance & encroachment",
+                "Fire & illegal burning"
+            ],
+            "datasets": [
+                {
+                    "label": "Subcategory",
+                    "labels": [
+                        "Snaring",
+                        "Bushmeat",
+                        "Trophy",
+                        "Crop raiding",
+                        "Livestock",
+                        "Injury",
+                        "Encroachment",
+                        "Charcoal",
+                        "Burning",
+                        "Wildfire"
+                    ],
+                    "data": [
+                        21,
+                        11,
+                        6,
+                        31,
+                        15,
+                        6,
+                        16,
+                        11,
+                        8,
+                        3
+                    ],
+                    "backgroundColor": [
+                        "color-mix(in srgb, var(--cat-1) 58%, transparent)",
+                        "color-mix(in srgb, var(--cat-1) 58%, transparent)",
+                        "color-mix(in srgb, var(--cat-1) 58%, transparent)",
+                        "color-mix(in srgb, var(--cat-5) 58%, transparent)",
+                        "color-mix(in srgb, var(--cat-5) 58%, transparent)",
+                        "color-mix(in srgb, var(--cat-5) 58%, transparent)",
+                        "color-mix(in srgb, var(--cat-2) 58%, transparent)",
+                        "color-mix(in srgb, var(--cat-2) 58%, transparent)",
+                        "color-mix(in srgb, var(--cat-6) 58%, transparent)",
+                        "color-mix(in srgb, var(--cat-6) 58%, transparent)"
+                    ],
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 2,
+                    "hoverOffset": 0,
+                    "unit": "incidents"
+                },
+                {
+                    "label": "Incidents",
+                    "data": [
+                        38,
+                        52,
+                        27,
+                        11
+                    ],
+                    "backgroundColor": [
+                        "var(--cat-1)",
+                        "var(--cat-5)",
+                        "var(--cat-2)",
+                        "var(--cat-6)"
+                    ],
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 2,
+                    "hoverOffset": 0,
+                    "labels": [
+                        "Poaching & wildlife crime",
+                        "Human–wildlife conflict",
+                        "Compliance & encroachment",
+                        "Fire & illegal burning"
+                    ]
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "cutout": "38%",
+            "layout": {
+                "padding": 34
+            },
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false,
+                        "atlasRing": 1
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "incidents",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                },
+                "figures": {
+                    "unit": "",
+                    "precision": 0,
+                    "names": true,
+                    "muted": "var(--fog)",
+                    "only": 0
+                }
+            }
+        }
+    },
+    "packages": []
+}

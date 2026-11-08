@@ -1,0 +1,336 @@
+{
+    "statement": {
+        "kind": "stacked-area",
+        "title": "Patrol hours by type, per month",
+        "labels": [
+            "2025-12-01",
+            "2026-01-01",
+            "2026-02-01",
+            "2026-03-01",
+            "2026-04-01",
+            "2026-05-01",
+            "2026-06-01",
+            "2026-07-01",
+            "2026-08-01",
+            "2026-09-01",
+            "2026-10-01",
+            "2026-11-01"
+        ],
+        "time": {
+            "unit": "month"
+        },
+        "series": [
+            {
+                "label": "Foot",
+                "points": [
+                    248,
+                    236,
+                    262,
+                    271,
+                    280,
+                    259,
+                    251,
+                    266,
+                    274,
+                    287,
+                    279,
+                    291
+                ],
+                "cat": 1
+            },
+            {
+                "label": "Joint",
+                "points": [
+                    34,
+                    30,
+                    41,
+                    38,
+                    44,
+                    36,
+                    33,
+                    40,
+                    46,
+                    49,
+                    42,
+                    47
+                ],
+                "cat": 5
+            },
+            {
+                "label": "Vehicle",
+                "points": [
+                    152,
+                    149,
+                    160,
+                    168,
+                    171,
+                    158,
+                    150,
+                    163,
+                    170,
+                    176,
+                    169,
+                    181
+                ],
+                "cat": 2
+            },
+            {
+                "label": "Boat",
+                "points": [
+                    22,
+                    20,
+                    26,
+                    31,
+                    35,
+                    38,
+                    29,
+                    24,
+                    21,
+                    25,
+                    28,
+                    30
+                ],
+                "cat": 3
+            }
+        ],
+        "unit": "h"
+    },
+    "built": {
+        "type": "line",
+        "data": {
+            "labels": [
+                "2025-12-01",
+                "2026-01-01",
+                "2026-02-01",
+                "2026-03-01",
+                "2026-04-01",
+                "2026-05-01",
+                "2026-06-01",
+                "2026-07-01",
+                "2026-08-01",
+                "2026-09-01",
+                "2026-10-01",
+                "2026-11-01"
+            ],
+            "datasets": [
+                {
+                    "label": "Foot",
+                    "data": [
+                        248,
+                        236,
+                        262,
+                        271,
+                        280,
+                        259,
+                        251,
+                        266,
+                        274,
+                        287,
+                        279,
+                        291
+                    ],
+                    "backgroundColor": "color-mix(in srgb, var(--cat-1) 42%, transparent)",
+                    "borderColor": "var(--cat-1)",
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                    "fill": "origin",
+                    "pointRadius": 3.5,
+                    "pointBackgroundColor": "var(--cat-1)",
+                    "pointBorderColor": "var(--cat-1)",
+                    "pointStyle": "circle"
+                },
+                {
+                    "label": "Joint",
+                    "data": [
+                        34,
+                        30,
+                        41,
+                        38,
+                        44,
+                        36,
+                        33,
+                        40,
+                        46,
+                        49,
+                        42,
+                        47
+                    ],
+                    "backgroundColor": "color-mix(in srgb, var(--cat-5) 42%, transparent)",
+                    "borderColor": "var(--cat-5)",
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                    "fill": "-1",
+                    "pointRadius": 4.5,
+                    "pointBackgroundColor": "var(--cat-5)",
+                    "pointBorderColor": "var(--cat-5)",
+                    "pointStyle": "triangle"
+                },
+                {
+                    "label": "Vehicle",
+                    "data": [
+                        152,
+                        149,
+                        160,
+                        168,
+                        171,
+                        158,
+                        150,
+                        163,
+                        170,
+                        176,
+                        169,
+                        181
+                    ],
+                    "backgroundColor": "color-mix(in srgb, var(--cat-2) 42%, transparent)",
+                    "borderColor": "var(--cat-2)",
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                    "fill": "-1",
+                    "pointRadius": 4.5,
+                    "pointBackgroundColor": "var(--cat-2)",
+                    "pointBorderColor": "var(--cat-2)",
+                    "pointStyle": "rect"
+                },
+                {
+                    "label": "Boat",
+                    "data": [
+                        22,
+                        20,
+                        26,
+                        31,
+                        35,
+                        38,
+                        29,
+                        24,
+                        21,
+                        25,
+                        28,
+                        30
+                    ],
+                    "backgroundColor": "color-mix(in srgb, var(--cat-3) 42%, transparent)",
+                    "borderColor": "var(--cat-3)",
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                    "fill": "-1",
+                    "pointRadius": 4.5,
+                    "pointBackgroundColor": "var(--cat-3)",
+                    "pointBorderColor": "var(--cat-3)",
+                    "pointStyle": "rectRot"
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "interaction": {
+                "mode": "index",
+                "intersect": false
+            },
+            "scales": {
+                "x": {
+                    "type": "time",
+                    "time": {
+                        "unit": "month",
+                        "displayFormats": {
+                            "month": "MMM"
+                        },
+                        "tooltipFormat": "MMMM yyyy",
+                        "isoWeekday": true
+                    },
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "source": "labels"
+                    },
+                    "offset": false
+                },
+                "y": {
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    },
+                    "stacked": true
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": true,
+                        "pointStyleWidth": 10
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": true,
+                    "unit": "h",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": [
+        "chartjs-adapter-date-fns"
+    ]
+}

@@ -1,0 +1,142 @@
+{
+    "statement": {
+        "kind": "funnel",
+        "title": "The incident journey this quarter",
+        "labels": [
+            "Reported",
+            "Verified",
+            "In progress",
+            "Resolved",
+            "Closed"
+        ],
+        "series": [
+            {
+                "label": "Incidents",
+                "cat": 3,
+                "points": [
+                    412,
+                    338,
+                    291,
+                    246,
+                    231
+                ]
+            }
+        ],
+        "unit": "incidents",
+        "figures": {}
+    },
+    "built": {
+        "type": "funnel",
+        "data": {
+            "labels": [
+                "Reported",
+                "Verified",
+                "In progress",
+                "Resolved",
+                "Closed"
+            ],
+            "datasets": [
+                {
+                    "label": "Incidents",
+                    "data": [
+                        412,
+                        338,
+                        291,
+                        246,
+                        231
+                    ],
+                    "backgroundColor": [
+                        "var(--cat-3)",
+                        "color-mix(in srgb, var(--cat-3) 86%, transparent)",
+                        "color-mix(in srgb, var(--cat-3) 72%, transparent)",
+                        "color-mix(in srgb, var(--cat-3) 58%, transparent)",
+                        "color-mix(in srgb, var(--cat-3) 45%, transparent)"
+                    ],
+                    "borderWidth": 0,
+                    "shrinkAnchor": "top",
+                    "shrinkFraction": 1,
+                    "unit": "incidents"
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "indexAxis": "y",
+            "scales": {
+                "x": {
+                    "display": false,
+                    "beginAtZero": false,
+                    "grid": {
+                        "display": false
+                    }
+                },
+                "y": {
+                    "display": true,
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    }
+                }
+            },
+            "layout": {
+                "padding": {
+                    "right": 48
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": false
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "incidents",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                },
+                "figures": {
+                    "unit": "",
+                    "precision": 0
+                }
+            }
+        }
+    },
+    "packages": [
+        "chartjs-chart-funnel"
+    ]
+}

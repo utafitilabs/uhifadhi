@@ -1,0 +1,233 @@
+{
+    "statement": {
+        "kind": "grouped-bar",
+        "title": "Patrols per month, three areas",
+        "labels": [
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov"
+        ],
+        "series": [
+            {
+                "label": "Kilimani",
+                "points": [
+                    118,
+                    124,
+                    131,
+                    127,
+                    136,
+                    140
+                ],
+                "cat": 1
+            },
+            {
+                "label": "Mbuyu",
+                "points": [
+                    64,
+                    70,
+                    66,
+                    73,
+                    78,
+                    75
+                ],
+                "cat": 5
+            },
+            {
+                "label": "Olkeju",
+                "points": [
+                    92,
+                    88,
+                    97,
+                    101,
+                    95,
+                    104
+                ],
+                "cat": 2
+            }
+        ],
+        "unit": "patrols",
+        "barRadius": 3
+    },
+    "built": {
+        "type": "bar",
+        "data": {
+            "labels": [
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov"
+            ],
+            "datasets": [
+                {
+                    "label": "Kilimani",
+                    "data": [
+                        118,
+                        124,
+                        131,
+                        127,
+                        136,
+                        140
+                    ],
+                    "backgroundColor": "var(--cat-1)",
+                    "borderColor": "var(--cat-1)",
+                    "borderWidth": 1.5,
+                    "borderRadius": [
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3
+                    ],
+                    "borderSkipped": false
+                },
+                {
+                    "label": "Mbuyu",
+                    "data": [
+                        64,
+                        70,
+                        66,
+                        73,
+                        78,
+                        75
+                    ],
+                    "backgroundColor": "var(--cat-5)",
+                    "borderColor": "var(--cat-5)",
+                    "borderWidth": 1.5,
+                    "borderRadius": [
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3
+                    ],
+                    "borderSkipped": false
+                },
+                {
+                    "label": "Olkeju",
+                    "data": [
+                        92,
+                        88,
+                        97,
+                        101,
+                        95,
+                        104
+                    ],
+                    "backgroundColor": "var(--cat-2)",
+                    "borderColor": "var(--cat-2)",
+                    "borderWidth": 1.5,
+                    "borderRadius": [
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3
+                    ],
+                    "borderSkipped": false
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "autoSkip": false
+                    }
+                },
+                "y": {
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    }
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "patrols",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": []
+}

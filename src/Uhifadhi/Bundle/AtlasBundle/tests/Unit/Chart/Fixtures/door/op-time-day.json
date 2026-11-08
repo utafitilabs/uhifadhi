@@ -1,0 +1,273 @@
+{
+    "statement": {
+        "kind": "line",
+        "title": "Patrols per day at Kilimani, October",
+        "labels": [
+            "2026-10-01",
+            "2026-10-02",
+            "2026-10-03",
+            "2026-10-04",
+            "2026-10-05",
+            "2026-10-06",
+            "2026-10-07",
+            "2026-10-08",
+            "2026-10-09",
+            "2026-10-10",
+            "2026-10-11",
+            "2026-10-12",
+            "2026-10-13",
+            "2026-10-14",
+            "2026-10-15",
+            "2026-10-16",
+            "2026-10-17",
+            "2026-10-18",
+            "2026-10-19",
+            "2026-10-20",
+            "2026-10-21",
+            "2026-10-22",
+            "2026-10-23",
+            "2026-10-24",
+            "2026-10-25",
+            "2026-10-26",
+            "2026-10-27",
+            "2026-10-28",
+            "2026-10-29",
+            "2026-10-30",
+            "2026-10-31"
+        ],
+        "time": {
+            "unit": "day"
+        },
+        "series": [
+            {
+                "label": "Patrols",
+                "points": [
+                    14,
+                    15,
+                    13,
+                    11,
+                    9,
+                    14,
+                    16,
+                    15,
+                    17,
+                    16,
+                    12,
+                    10,
+                    15,
+                    16,
+                    14,
+                    17,
+                    18,
+                    12,
+                    9,
+                    15,
+                    17,
+                    16,
+                    18,
+                    17,
+                    13,
+                    11,
+                    15,
+                    16,
+                    17,
+                    14,
+                    12
+                ]
+            }
+        ],
+        "unit": "patrols",
+        "legend": "none"
+    },
+    "built": {
+        "type": "line",
+        "data": {
+            "labels": [
+                "2026-10-01",
+                "2026-10-02",
+                "2026-10-03",
+                "2026-10-04",
+                "2026-10-05",
+                "2026-10-06",
+                "2026-10-07",
+                "2026-10-08",
+                "2026-10-09",
+                "2026-10-10",
+                "2026-10-11",
+                "2026-10-12",
+                "2026-10-13",
+                "2026-10-14",
+                "2026-10-15",
+                "2026-10-16",
+                "2026-10-17",
+                "2026-10-18",
+                "2026-10-19",
+                "2026-10-20",
+                "2026-10-21",
+                "2026-10-22",
+                "2026-10-23",
+                "2026-10-24",
+                "2026-10-25",
+                "2026-10-26",
+                "2026-10-27",
+                "2026-10-28",
+                "2026-10-29",
+                "2026-10-30",
+                "2026-10-31"
+            ],
+            "datasets": [
+                {
+                    "label": "Patrols",
+                    "data": [
+                        14,
+                        15,
+                        13,
+                        11,
+                        9,
+                        14,
+                        16,
+                        15,
+                        17,
+                        16,
+                        12,
+                        10,
+                        15,
+                        16,
+                        14,
+                        17,
+                        18,
+                        12,
+                        9,
+                        15,
+                        17,
+                        16,
+                        18,
+                        17,
+                        13,
+                        11,
+                        15,
+                        16,
+                        17,
+                        14,
+                        12
+                    ],
+                    "backgroundColor": "transparent",
+                    "borderColor": "var(--cat-1)",
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                    "fill": false,
+                    "pointRadius": 0,
+                    "pointBackgroundColor": "var(--cat-1)",
+                    "pointBorderColor": "var(--cat-1)"
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "type": "time",
+                    "time": {
+                        "unit": "day",
+                        "displayFormats": {
+                            "day": "d MMM"
+                        },
+                        "tooltipFormat": "EEE d MMM yyyy",
+                        "isoWeekday": true
+                    },
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "source": "labels"
+                    },
+                    "offset": false
+                },
+                "y": {
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    }
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": false,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "patrols",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": [
+        "chartjs-adapter-date-fns"
+    ]
+}

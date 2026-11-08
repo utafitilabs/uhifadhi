@@ -1,0 +1,143 @@
+{
+    "statement": {
+        "kind": "pie",
+        "title": "Patrols by type, this month",
+        "labels": [
+            "Foot",
+            "Joint",
+            "Vehicle",
+            "Boat",
+            "Aerial"
+        ],
+        "parts": [
+            {
+                "cat": 1
+            },
+            {
+                "cat": 5
+            },
+            {
+                "cat": 2
+            },
+            {
+                "cat": 3
+            },
+            {
+                "cat": 4
+            }
+        ],
+        "series": [
+            {
+                "label": "Patrols",
+                "points": [
+                    193,
+                    35,
+                    134,
+                    23,
+                    12
+                ]
+            }
+        ],
+        "unit": "patrols",
+        "figures": {},
+        "legend": "none"
+    },
+    "built": {
+        "type": "pie",
+        "data": {
+            "labels": [
+                "Foot",
+                "Joint",
+                "Vehicle",
+                "Boat",
+                "Aerial"
+            ],
+            "datasets": [
+                {
+                    "label": "Patrols",
+                    "data": [
+                        193,
+                        35,
+                        134,
+                        23,
+                        12
+                    ],
+                    "backgroundColor": [
+                        "var(--cat-1)",
+                        "var(--cat-5)",
+                        "var(--cat-2)",
+                        "var(--cat-3)",
+                        "var(--cat-4)"
+                    ],
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 2,
+                    "hoverOffset": 0
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "cutout": 0,
+            "layout": {
+                "padding": 34
+            },
+            "plugins": {
+                "legend": {
+                    "display": false,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "patrols",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                },
+                "figures": {
+                    "unit": "",
+                    "precision": 0,
+                    "names": true,
+                    "muted": "var(--fog)",
+                    "only": null
+                }
+            }
+        }
+    },
+    "packages": []
+}

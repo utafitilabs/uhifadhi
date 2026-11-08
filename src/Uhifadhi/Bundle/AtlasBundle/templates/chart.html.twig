@@ -15,7 +15,9 @@
 {# THE CONTROLLER IS ON THE PLATE, NOT THE CANVAS. The canvas is UX Chart.js's
    own element and carries its controller; the pre-connect event bubbles to
    this one, which is where a series' category token becomes a colour. #}
-<div class="chart-plate" data-controller="{{ controller }}"{% if boxStyle %} style="{{ boxStyle }}"{% endif %}>
+{# A CHART THAT NEEDS A PACKAGE is held in a template until the plate has
+   loaded it: the library makes the chart the moment its canvas connects. #}
+<div class="chart-plate" data-controller="{{ controller }}"{% if needs %} data-{{ controller }}-needs-value="{{ needs|json_encode }}"{% endif %}{% if boxStyle %} style="{{ boxStyle }}"{% endif %}>
     {% if title %}<span class="tab">{{ title }}{% if unit %}<span class="src">&middot; {{ unit }}</span>{% endif %}</span>{% endif %}
 
     {% if empty %}
@@ -25,7 +27,13 @@
             <span>the module that would publish it has nothing to say yet &mdash; which is not a nought</span>
         </div>
     {% else %}
-        <div class="chart-box">{{ canvas|raw }}</div>
+        <div class="chart-box">
+            {%- if needs -%}
+                <template data-{{ controller }}-target="held">{{ canvas|raw }}</template>
+            {%- else -%}
+                {{ canvas|raw }}
+            {%- endif -%}
+        </div>
     {% endif %}
 
     {# THE CHIP LEGEND: the house pill, one per series, wearing its category

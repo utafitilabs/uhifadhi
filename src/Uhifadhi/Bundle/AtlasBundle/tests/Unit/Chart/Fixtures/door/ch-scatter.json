@@ -1,0 +1,423 @@
+{
+    "statement": {
+        "kind": "scatter",
+        "title": "Patrols this month, distance against duration",
+        "labels": [],
+        "series": [
+            {
+                "label": "Foot",
+                "cat": 1,
+                "points": [
+                    {
+                        "x": 9.2,
+                        "y": 3.1
+                    },
+                    {
+                        "x": 12.4,
+                        "y": 4
+                    },
+                    {
+                        "x": 14.1,
+                        "y": 4.6
+                    },
+                    {
+                        "x": 8,
+                        "y": 2.8
+                    },
+                    {
+                        "x": 16.8,
+                        "y": 5.4
+                    },
+                    {
+                        "x": 11,
+                        "y": 3.9
+                    },
+                    {
+                        "x": 19.5,
+                        "y": 6.3
+                    },
+                    {
+                        "x": 13.3,
+                        "y": 4.1
+                    },
+                    {
+                        "x": 21.7,
+                        "y": 7.2
+                    },
+                    {
+                        "x": 10.6,
+                        "y": 3.3
+                    },
+                    {
+                        "x": 15.2,
+                        "y": 5.1
+                    },
+                    {
+                        "x": 18,
+                        "y": 5.6
+                    },
+                    {
+                        "x": 7.4,
+                        "y": 2.5
+                    },
+                    {
+                        "x": 22.9,
+                        "y": 7.8
+                    },
+                    {
+                        "x": 12,
+                        "y": 4.4
+                    }
+                ]
+            },
+            {
+                "label": "Vehicle",
+                "cat": 2,
+                "points": [
+                    {
+                        "x": 46,
+                        "y": 3.2
+                    },
+                    {
+                        "x": 62,
+                        "y": 3.9
+                    },
+                    {
+                        "x": 88,
+                        "y": 5.1
+                    },
+                    {
+                        "x": 54,
+                        "y": 3
+                    },
+                    {
+                        "x": 103,
+                        "y": 6.2
+                    },
+                    {
+                        "x": 71,
+                        "y": 4.4
+                    },
+                    {
+                        "x": 118,
+                        "y": 6.8
+                    },
+                    {
+                        "x": 40,
+                        "y": 2.7
+                    },
+                    {
+                        "x": 95,
+                        "y": 5.3
+                    },
+                    {
+                        "x": 77,
+                        "y": 4.9
+                    },
+                    {
+                        "x": 66,
+                        "y": 3.6
+                    },
+                    {
+                        "x": 110,
+                        "y": 6
+                    },
+                    {
+                        "x": 58,
+                        "y": 4.1
+                    },
+                    {
+                        "x": 84,
+                        "y": 4.6
+                    },
+                    {
+                        "x": 99,
+                        "y": 5.9
+                    }
+                ]
+            }
+        ],
+        "xAxis": {
+            "title": "Distance, km",
+            "unit": "km"
+        },
+        "yAxis": {
+            "title": "Duration, h",
+            "unit": "h"
+        }
+    },
+    "built": {
+        "type": "scatter",
+        "data": {
+            "labels": [],
+            "datasets": [
+                {
+                    "label": "Foot",
+                    "data": [
+                        {
+                            "x": 9.2,
+                            "y": 3.1
+                        },
+                        {
+                            "x": 12.4,
+                            "y": 4
+                        },
+                        {
+                            "x": 14.1,
+                            "y": 4.6
+                        },
+                        {
+                            "x": 8,
+                            "y": 2.8
+                        },
+                        {
+                            "x": 16.8,
+                            "y": 5.4
+                        },
+                        {
+                            "x": 11,
+                            "y": 3.9
+                        },
+                        {
+                            "x": 19.5,
+                            "y": 6.3
+                        },
+                        {
+                            "x": 13.3,
+                            "y": 4.1
+                        },
+                        {
+                            "x": 21.7,
+                            "y": 7.2
+                        },
+                        {
+                            "x": 10.6,
+                            "y": 3.3
+                        },
+                        {
+                            "x": 15.2,
+                            "y": 5.1
+                        },
+                        {
+                            "x": 18,
+                            "y": 5.6
+                        },
+                        {
+                            "x": 7.4,
+                            "y": 2.5
+                        },
+                        {
+                            "x": 22.9,
+                            "y": 7.8
+                        },
+                        {
+                            "x": 12,
+                            "y": 4.4
+                        }
+                    ],
+                    "backgroundColor": "var(--cat-1)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "pointStyle": "circle",
+                    "pointRadius": 4,
+                    "pointHoverRadius": 5
+                },
+                {
+                    "label": "Vehicle",
+                    "data": [
+                        {
+                            "x": 46,
+                            "y": 3.2
+                        },
+                        {
+                            "x": 62,
+                            "y": 3.9
+                        },
+                        {
+                            "x": 88,
+                            "y": 5.1
+                        },
+                        {
+                            "x": 54,
+                            "y": 3
+                        },
+                        {
+                            "x": 103,
+                            "y": 6.2
+                        },
+                        {
+                            "x": 71,
+                            "y": 4.4
+                        },
+                        {
+                            "x": 118,
+                            "y": 6.8
+                        },
+                        {
+                            "x": 40,
+                            "y": 2.7
+                        },
+                        {
+                            "x": 95,
+                            "y": 5.3
+                        },
+                        {
+                            "x": 77,
+                            "y": 4.9
+                        },
+                        {
+                            "x": 66,
+                            "y": 3.6
+                        },
+                        {
+                            "x": 110,
+                            "y": 6
+                        },
+                        {
+                            "x": 58,
+                            "y": 4.1
+                        },
+                        {
+                            "x": 84,
+                            "y": 4.6
+                        },
+                        {
+                            "x": 99,
+                            "y": 5.9
+                        }
+                    ],
+                    "backgroundColor": "var(--cat-2)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "pointStyle": "triangle",
+                    "pointRadius": 6,
+                    "pointHoverRadius": 7
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "type": "linear",
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    },
+                    "title": {
+                        "display": true,
+                        "text": "DISTANCE, KM",
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 9.5,
+                            "weight": 600
+                        },
+                        "padding": {
+                            "top": 6,
+                            "bottom": 2
+                        }
+                    }
+                },
+                "y": {
+                    "type": "linear",
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    },
+                    "title": {
+                        "display": true,
+                        "text": "DURATION, H",
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 9.5,
+                            "weight": 600
+                        },
+                        "padding": {
+                            "top": 6,
+                            "bottom": 2
+                        }
+                    }
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": true,
+                        "pointStyleWidth": 10
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": true,
+                    "unit": "",
+                    "xUnit": "km",
+                    "yUnit": "h",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": []
+}

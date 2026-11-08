@@ -1,0 +1,286 @@
+{
+    "statement": {
+        "kind": "stacked-horizontal",
+        "title": "Patrols by type, per area, this month",
+        "labels": [
+            "Kilimani Crater Conservation Area",
+            "Olkeju National Park",
+            "Mbuyu Game Reserve",
+            "Sekenke Wildlife Management Area"
+        ],
+        "series": [
+            {
+                "label": "Foot",
+                "points": [
+                    62,
+                    48,
+                    39,
+                    44
+                ],
+                "cat": 1
+            },
+            {
+                "label": "Joint",
+                "points": [
+                    8,
+                    12,
+                    6,
+                    9
+                ],
+                "cat": 5
+            },
+            {
+                "label": "Vehicle",
+                "points": [
+                    41,
+                    35,
+                    28,
+                    30
+                ],
+                "cat": 2
+            },
+            {
+                "label": "Boat",
+                "points": [
+                    6,
+                    0,
+                    14,
+                    3
+                ],
+                "cat": 3
+            },
+            {
+                "label": "Aerial",
+                "points": [
+                    4,
+                    2,
+                    1,
+                    5
+                ],
+                "cat": 4
+            }
+        ],
+        "unit": "patrols",
+        "barRadius": 1.5
+    },
+    "built": {
+        "type": "bar",
+        "data": {
+            "labels": [
+                [
+                    "Kilimani Crater",
+                    "Conservation Area"
+                ],
+                [
+                    "Olkeju",
+                    "National Park"
+                ],
+                "Mbuyu Game Reserve",
+                [
+                    "Sekenke Wildlife",
+                    "Management Area"
+                ]
+            ],
+            "datasets": [
+                {
+                    "label": "Foot",
+                    "data": [
+                        62,
+                        48,
+                        39,
+                        44
+                    ],
+                    "backgroundColor": "var(--cat-1)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "stack": "one",
+                    "borderRadius": [
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5
+                    ],
+                    "borderSkipped": false
+                },
+                {
+                    "label": "Joint",
+                    "data": [
+                        8,
+                        12,
+                        6,
+                        9
+                    ],
+                    "backgroundColor": "var(--cat-5)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "stack": "one",
+                    "borderRadius": [
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5
+                    ],
+                    "borderSkipped": false
+                },
+                {
+                    "label": "Vehicle",
+                    "data": [
+                        41,
+                        35,
+                        28,
+                        30
+                    ],
+                    "backgroundColor": "var(--cat-2)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "stack": "one",
+                    "borderRadius": [
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5
+                    ],
+                    "borderSkipped": false
+                },
+                {
+                    "label": "Boat",
+                    "data": [
+                        6,
+                        0,
+                        14,
+                        3
+                    ],
+                    "backgroundColor": "var(--cat-3)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "stack": "one",
+                    "borderRadius": [
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5
+                    ],
+                    "borderSkipped": false
+                },
+                {
+                    "label": "Aerial",
+                    "data": [
+                        4,
+                        2,
+                        1,
+                        5
+                    ],
+                    "backgroundColor": "var(--cat-4)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "stack": "one",
+                    "borderRadius": [
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5
+                    ],
+                    "borderSkipped": false
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    },
+                    "stacked": true
+                },
+                "y": {
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "autoSkip": false
+                    },
+                    "stacked": true
+                }
+            },
+            "indexAxis": "y",
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "patrols",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": []
+}

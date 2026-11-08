@@ -1,0 +1,243 @@
+{
+    "statement": {
+        "kind": "line",
+        "title": "Patrol hours per month",
+        "labels": [
+            "2025-12-01",
+            "2026-01-01",
+            "2026-02-01",
+            "2026-03-01",
+            "2026-04-01",
+            "2026-05-01",
+            "2026-06-01",
+            "2026-07-01",
+            "2026-08-01",
+            "2026-09-01",
+            "2026-10-01",
+            "2026-11-01"
+        ],
+        "time": {
+            "unit": "month"
+        },
+        "series": [
+            {
+                "label": "Kilimani",
+                "points": [
+                    412,
+                    398,
+                    440,
+                    455,
+                    470,
+                    430,
+                    418,
+                    446,
+                    462,
+                    480,
+                    471,
+                    489
+                ],
+                "cat": 1
+            },
+            {
+                "label": "Olkeju",
+                "points": [
+                    301,
+                    322,
+                    310,
+                    335,
+                    342,
+                    330,
+                    318,
+                    345,
+                    352,
+                    360,
+                    349,
+                    366
+                ],
+                "cat": 2
+            }
+        ],
+        "unit": "h"
+    },
+    "built": {
+        "type": "line",
+        "data": {
+            "labels": [
+                "2025-12-01",
+                "2026-01-01",
+                "2026-02-01",
+                "2026-03-01",
+                "2026-04-01",
+                "2026-05-01",
+                "2026-06-01",
+                "2026-07-01",
+                "2026-08-01",
+                "2026-09-01",
+                "2026-10-01",
+                "2026-11-01"
+            ],
+            "datasets": [
+                {
+                    "label": "Kilimani",
+                    "data": [
+                        412,
+                        398,
+                        440,
+                        455,
+                        470,
+                        430,
+                        418,
+                        446,
+                        462,
+                        480,
+                        471,
+                        489
+                    ],
+                    "backgroundColor": "transparent",
+                    "borderColor": "var(--cat-1)",
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                    "fill": false,
+                    "pointRadius": 3.5,
+                    "pointBackgroundColor": "var(--cat-1)",
+                    "pointBorderColor": "var(--cat-1)",
+                    "pointStyle": "circle"
+                },
+                {
+                    "label": "Olkeju",
+                    "data": [
+                        301,
+                        322,
+                        310,
+                        335,
+                        342,
+                        330,
+                        318,
+                        345,
+                        352,
+                        360,
+                        349,
+                        366
+                    ],
+                    "backgroundColor": "transparent",
+                    "borderColor": "var(--cat-2)",
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                    "fill": false,
+                    "pointRadius": 4.5,
+                    "pointBackgroundColor": "var(--cat-2)",
+                    "pointBorderColor": "var(--cat-2)",
+                    "pointStyle": "triangle"
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "type": "time",
+                    "time": {
+                        "unit": "month",
+                        "displayFormats": {
+                            "month": "MMM"
+                        },
+                        "tooltipFormat": "MMMM yyyy",
+                        "isoWeekday": true
+                    },
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "source": "labels"
+                    },
+                    "offset": false
+                },
+                "y": {
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    }
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": true,
+                        "pointStyleWidth": 10
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": true,
+                    "unit": "h",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": [
+        "chartjs-adapter-date-fns"
+    ]
+}

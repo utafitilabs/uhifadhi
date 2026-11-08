@@ -20,13 +20,13 @@ use Uhifadhi\Bundle\AtlasBundle\Chart\ChartBuilder;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
 use Uhifadhi\Bundle\AtlasBundle\Model\AxisScale;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartFigures;
-use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartNoughts;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartPanel;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartRange;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
 use Uhifadhi\Bundle\AtlasBundle\Model\LineStyle;
+use Uhifadhi\Contracts\Performance\ChartKind;
 
 /**
  * THE PLATFORM'S ONE CHART, AND WHAT A MODULE MAY SAY ABOUT IT.
@@ -172,7 +172,7 @@ final class AtlasChartTest extends TestCase
         self::assertSame(['unit' => 'h', 'precision' => 0], self::at($plugins, ChartBuilder::FIGURES_PLUGIN));
         // A ranking's figures sit past the bar's right end; a column's above its top.
         self::assertSame(['right' => 36], self::at(self::under($ranked->getOptions(), 'layout'), 'padding'));
-        self::assertSame(['top' => 16], self::at(self::under($vertical->getOptions(), 'layout'), 'padding'));
+        self::assertSame(['top' => 16, 'bottom' => 0], self::at(self::under($vertical->getOptions(), 'layout'), 'padding'));
 
         $none = self::at($bare->getOptions(), 'plugins');
         self::assertIsArray($none);
@@ -357,7 +357,7 @@ final class AtlasChartTest extends TestCase
             [new ChartSeries('Niño 3.4', [0.5, 1.1, 3.3], accent: true, marked: 2)],
         ));
 
-        self::assertSame([0.0, 0.0, 4.0], self::at(self::dataset($chart, 0), 'pointRadius'));
+        self::assertSame([0, 0, 4], self::at(self::dataset($chart, 0), 'pointRadius'));
         self::assertSame('var(--acc)', self::at(self::dataset($chart, 0), 'pointBackgroundColor'));
         self::assertSame('var(--cv)', self::at(self::dataset($chart, 0), 'pointBorderColor'));
     }
@@ -382,8 +382,7 @@ final class AtlasChartTest extends TestCase
 
     /**
      * A PAIR OF PANELS ON ONE AXIS. The upper writes no index ticks — the
-     * lower, on the same labels, writes them once for both — and each keeps
-     * its axis line, the one the series stand on. Both hold their value axis
+     * lower, on the same labels, writes them once for both. Both hold their value axis
      * at one width, stated under the panels plugin's id, so the plots line
      * up and a column banded in one is banded in the other at the same place.
      *
@@ -396,7 +395,6 @@ final class AtlasChartTest extends TestCase
         $alone = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['W1'], [new ChartSeries('S', [1.0])]));
 
         self::assertFalse(self::at(self::under(self::scale($upper, 'x'), 'ticks'), 'display'));
-        self::assertTrue(self::at(self::under(self::scale($upper, 'x'), 'border'), 'display'));
         self::assertArrayNotHasKey('display', self::under(self::scale($lower, 'x'), 'ticks'));
         foreach ([$upper, $lower] as $panel) {
             $plugins = self::at($panel->getOptions(), 'plugins');
@@ -592,8 +590,8 @@ final class AtlasChartTest extends TestCase
     }
 
     /**
-     * EVERY AXIS WEARS THE HOUSE'S TICKS: the mono face at the size the
-     * design renders its chart text at, in `--fog`, handed over as TOKENS
+     * EVERY AXIS WEARS THE HOUSE'S TICKS: the mono face at the house scale's
+     * "small counts", 10.5px at 400, in `--fog`, handed over as TOKENS
      * the plate resolves — so a tick turns over with the theme like a series.
      *
      * @see https://www.chartjs.org/docs/latest/axes/styling.html#tick-configuration — `ticks.color`, "Color of ticks"; `ticks.font`
@@ -606,53 +604,58 @@ final class AtlasChartTest extends TestCase
             foreach (['x', 'y'] as $axis) {
                 $ticks = self::under(self::scale($built, $axis), 'ticks');
                 self::assertSame('var(--fog)', $ticks['color'] ?? null, $kind->name.' '.$axis);
-                self::assertSame(['family' => 'var(--font-mono)', 'size' => 6.7], $ticks['font'] ?? null, $kind->name.' '.$axis);
+                self::assertSame(['family' => 'var(--font-mono)', 'size' => 10.5, 'weight' => 400], $ticks['font'] ?? null, $kind->name.' '.$axis);
             }
         }
     }
 
     /**
-     * THE GRID IS THE FOG AT 22% AND .6 WIDE; THE AXIS LINE IS THE FOG AT
-     * 55% AND .8 WIDE, on the index axis only. Written the way the design
-     * writes them, as `color-mix()` over the token, which the plate turns
-     * into the resolved colour at that alpha. Chart.js 4 draws the axis line
-     * as the scale's `border` — `grid.drawBorder` is not an option any more.
+     * THE GRID IS THE LINE TOKEN, ONE PIXEL, ON THE VALUE AXIS ONLY, and no
+     * axis draws a line of its own: the gridlines are the whole frame.
+     * Chart.js 4 draws an axis line as the scale's `border` — `grid.drawBorder`
+     * is not an option any more.
      *
      * @see https://www.chartjs.org/docs/latest/axes/styling.html#grid-line-configuration — `grid.color`, `grid.lineWidth`, `grid.drawTicks`
      * @see https://www.chartjs.org/docs/latest/axes/styling.html#border-configuration — "options for the border that run perpendicular to the axis"
      * @see https://www.chartjs.org/docs/latest/migration/v4-migration.html — "`scales[id].grid.drawBorder` has been renamed to `scales[id].border.display`"
      */
-    public function testTheGridAndTheAxisLineAreTheFogAtTheirOpacities(): void
+    public function testTheGridIsTheLineTokenAndNoAxisDrawsALine(): void
     {
         $built = self::builder()->chart(new AtlasChart(ChartKind::Bar, ['a'], [new ChartSeries('X', [1.0])]));
 
         $value = self::scale($built, 'y');
-        self::assertSame(['color' => 'color-mix(in srgb, var(--fog) 22%, transparent)', 'lineWidth' => 0.6, 'drawTicks' => false], self::under($value, 'grid'));
+        self::assertSame(['color' => 'var(--ln)', 'lineWidth' => 1, 'drawTicks' => false], self::under($value, 'grid'));
         self::assertSame(['display' => false], self::under($value, 'border'));
 
         $index = self::scale($built, 'x');
         self::assertSame(['display' => false], self::under($index, 'grid'));
-        self::assertSame(['display' => true, 'color' => 'color-mix(in srgb, var(--fog) 55%, transparent)', 'width' => 0.8], self::under($index, 'border'));
+        self::assertSame(['display' => false], self::under($index, 'border'));
 
-        // Sideways, the letters swap and the rule does not.
+        // Sideways, the letters swap and the grid stays on the value axis.
         $ranked = self::builder()->chart(new AtlasChart(ChartKind::Ranked, ['a'], [new ChartSeries('X', [1.0])]));
-        self::assertFalse(self::under(self::scale($ranked, 'x'), 'border')['display'] ?? null);
-        self::assertTrue(self::under(self::scale($ranked, 'y'), 'border')['display'] ?? null);
+        self::assertSame('var(--ln)', self::under(self::scale($ranked, 'x'), 'grid')['color'] ?? null);
+        self::assertFalse(self::under(self::scale($ranked, 'y'), 'grid')['display'] ?? null);
 
         self::assertStringNotContainsString('drawBorder', (string) json_encode($built->getOptions()));
     }
 
     /**
-     * NO TOOLTIPS. The design draws none; a figure that matters is written
-     * on the bar, or read off the axis.
+     * A HOVER ANSWERS WHAT A FIGURE DOES NOT. Tooltips are on, in the house's
+     * raised surface and ink at the scale's 11px, and they carry the chart's
+     * unit for the plate, which writes their words.
      *
-     * @see https://www.chartjs.org/docs/latest/configuration/tooltip.html — namespace `options.plugins.tooltip`; `enabled`, "Are on-canvas tooltips enabled?"
+     * @see https://www.chartjs.org/docs/latest/configuration/tooltip.html — namespace `options.plugins.tooltip`; `enabled`, `backgroundColor`, `titleFont`, `bodyFont`
      */
-    public function testTooltipsAreOff(): void
+    public function testTooltipsAreOnInTheHouseInkWithTheChartsUnit(): void
     {
-        $built = self::builder()->chart(new AtlasChart(ChartKind::Line, ['a'], [new ChartSeries('X', [1.0])]));
+        $built = self::builder()->chart(new AtlasChart(ChartKind::Line, ['a'], [new ChartSeries('X', [1.0])], unit: 'h'));
+        $tooltip = self::under(self::under($built->getOptions(), 'plugins'), 'tooltip');
 
-        self::assertSame(['enabled' => false], self::under(self::under($built->getOptions(), 'plugins'), 'tooltip'));
+        self::assertTrue($tooltip['enabled'] ?? null);
+        self::assertSame('var(--raised)', $tooltip['backgroundColor'] ?? null);
+        self::assertSame('var(--tx)', $tooltip['bodyColor'] ?? null);
+        self::assertSame(['family' => 'var(--font-mono)', 'size' => 11, 'weight' => 600], $tooltip['titleFont'] ?? null);
+        self::assertSame('h', $tooltip['unit'] ?? null);
     }
 
     /**

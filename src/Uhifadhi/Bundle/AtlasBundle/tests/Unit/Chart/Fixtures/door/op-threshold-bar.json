@@ -1,0 +1,205 @@
+{
+    "statement": {
+        "kind": "bar",
+        "title": "Incidents open per area, against the limit of 5",
+        "labels": [
+            "Kilimani",
+            "Olkeju",
+            "Mbuyu",
+            "Sekenke"
+        ],
+        "series": [
+            {
+                "label": "Open",
+                "cat": 3,
+                "points": [
+                    3,
+                    7,
+                    4,
+                    9
+                ]
+            }
+        ],
+        "threshold": {
+            "value": 5,
+            "above": "var(--fail)"
+        },
+        "target": 5,
+        "targetLabel": "Limit, 5 open",
+        "unit": "incidents",
+        "axis": {
+            "max": 10,
+            "step": 5
+        },
+        "barRadius": 3,
+        "figures": {}
+    },
+    "built": {
+        "type": "bar",
+        "data": {
+            "labels": [
+                "Kilimani",
+                "Olkeju",
+                "Mbuyu",
+                "Sekenke"
+            ],
+            "datasets": [
+                {
+                    "label": "Open",
+                    "data": [
+                        3,
+                        7,
+                        4,
+                        9
+                    ],
+                    "backgroundColor": [
+                        "var(--cat-3)",
+                        "var(--fail)",
+                        "var(--cat-3)",
+                        "var(--fail)"
+                    ],
+                    "borderColor": [
+                        "var(--cat-3)",
+                        "var(--fail)",
+                        "var(--cat-3)",
+                        "var(--fail)"
+                    ],
+                    "borderWidth": 1.5,
+                    "borderRadius": [
+                        3,
+                        3,
+                        3,
+                        3
+                    ],
+                    "borderSkipped": false
+                },
+                {
+                    "label": "Limit, 5 open",
+                    "data": [
+                        5,
+                        5,
+                        5,
+                        5
+                    ],
+                    "borderColor": "var(--fog)",
+                    "backgroundColor": "transparent",
+                    "borderDash": [
+                        5,
+                        4
+                    ],
+                    "borderWidth": 1.5,
+                    "pointRadius": 0,
+                    "fill": false,
+                    "type": "line"
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "autoSkip": false
+                    }
+                },
+                "y": {
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "stepSize": 5
+                    },
+                    "max": 10
+                }
+            },
+            "layout": {
+                "padding": {
+                    "top": 16,
+                    "bottom": 0
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "incidents",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                },
+                "figures": {
+                    "unit": "",
+                    "precision": 0
+                }
+            }
+        }
+    },
+    "packages": []
+}

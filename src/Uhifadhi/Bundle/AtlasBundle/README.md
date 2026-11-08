@@ -44,7 +44,7 @@ composer require uhifadhi/uhifadhi
 ```
 
 Flex registers the bundle, writes `config/packages/atlas.yaml`, and writes the three importmap
-entries. The atlas is built on [Symfony UX Map](https://symfony.com/bundles/ux-map/current/index.html)
+entries and the chart packages (the date adapter and the extension kinds' packages). The atlas is built on [Symfony UX Map](https://symfony.com/bundles/ux-map/current/index.html)
 and its Leaflet bridge, so an installation also registers `UXMapBundle` and names the renderer:
 
 ```yaml
@@ -59,7 +59,7 @@ The bundle registration (`config/bundles.php`) — the recipe's `bundles` block:
 Uhifadhi\Bundle\AtlasBundle\AtlasBundle::class => ['all' => true],
 ```
 
-The three importmap entries are written by Flex, not by the recipe; what lands in a host, and the
+The importmap entries are written by Flex, not by the recipe; what lands in a host, and the
 two conditions it depends on, are in [shipping importmap assets from a
 bundle](docs/importmap-assets.md).
 

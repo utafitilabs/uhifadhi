@@ -18,16 +18,25 @@ use PHPUnit\Framework\TestCase;
 use Twig\Environment;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
 use Uhifadhi\Bundle\AtlasBundle\Model\AxisScale;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartCentre;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartFigures;
-use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartNoughts;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartPanel;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartPart;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartPoint;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartQuadrant;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartQuadrants;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartRamp;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartRange;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartTexture;
+use Uhifadhi\Bundle\AtlasBundle\Model\ChartTime;
 use Uhifadhi\Bundle\AtlasBundle\Model\LineStyle;
+use Uhifadhi\Bundle\AtlasBundle\Model\TimeUnit;
 use Uhifadhi\Bundle\AtlasBundle\Tests\Integration\TestKernel;
 use Uhifadhi\Bundle\AtlasBundle\Twig\ChartRuntime;
+use Uhifadhi\Contracts\Performance\ChartKind;
 
 /**
  * `atlas_chart()` THROUGH THE REAL LIBRARY, in a real container.
@@ -117,6 +126,47 @@ final class AtlasChartTest extends TestCase
     }
 
     /**
+     * A WHOLE, ALL THE WAY TO THE SERVED VIEW: a gauge's half ring, a token
+     * per part in an ARRAY (which the plate resolves like a single one), the
+     * hatch over the part that is "not yet", and the figure in the hole under
+     * the centre plugin's id.
+     */
+    public function testAGaugeCarriesAColourPerPartAndItsCentreFigureIntoTheServedView(): void
+    {
+        $view = self::view(self::render(new AtlasChart(
+            ChartKind::Gauge,
+            ['Covered', 'Not yet covered'],
+            [new ChartSeries('Posts', [14.0, 4.0])],
+            unit: 'posts',
+            parts: [new ChartPart(cat: 1), new ChartPart(swatch: 'var(--dim)', texture: ChartTexture::Hatch)],
+            centre: new ChartCentre('14', 'of 18 posts covered'),
+        )));
+
+        self::assertSame('doughnut', $view['type']);
+        self::assertSame(['var(--cat-1)', 'var(--dim)'], self::at($view, 'data', 'datasets', '0', 'backgroundColor'));
+        self::assertSame([null, 'hatch'], self::at($view, 'data', 'datasets', '0', 'texture'));
+        self::assertSame(180, self::at($view, 'data', 'datasets', '0', 'circumference'));
+        self::assertSame('14', self::at($view, 'options', 'plugins', 'centre', 'figure'));
+        self::assertFalse(self::at($view, 'options', 'plugins', 'legend', 'display'));
+    }
+
+    /** A scatter's items and its four regions reach the served view as the plate reads them. */
+    public function testAScatterCarriesItsItemsAndItsQuadrantsIntoTheServedView(): void
+    {
+        $view = self::view(self::render(new AtlasChart(
+            ChartKind::Scatter,
+            [],
+            [new ChartSeries('Posts', [new ChartPoint(410.0, 31.0), new ChartPoint(88.0, 6.0)], cat: 1)],
+            quadrants: new ChartQuadrants(246.0, 19.0, [new ChartQuadrant('Under-patrolled', swatch: 'var(--warn)'), new ChartQuadrant('Pressed'), new ChartQuadrant('Covered', swatch: 'var(--ok)'), new ChartQuadrant('Quiet')]),
+        )));
+
+        self::assertSame('scatter', $view['type']);
+        self::assertSame(['x' => 410, 'y' => 31], self::at($view, 'data', 'datasets', '0', 'data', '0'));
+        self::assertSame(['color' => 'var(--warn)', 'label' => 'Under-patrolled'], self::at($view, 'options', 'plugins', 'quadrants', 'parts', '0'));
+        self::assertSame('linear', self::at($view, 'options', 'scales', 'x', 'type'));
+    }
+
+    /**
      * THE CHIP LEGEND IS THE PLATE'S OWN MARKUP: one house pill per series
      * under the box, wearing the series' category through the shell's
      * `data-cat` door, the target as the idle pill — and the canvas legend
@@ -197,6 +247,41 @@ final class AtlasChartTest extends TestCase
         self::assertSame('line', self::at($lower, 'data', 'datasets', '1', 'type'));
         self::assertSame([6, 4], self::at($lower, 'data', 'datasets', '1', 'borderDash'));
         self::assertSame(2, self::at($lower, 'options', 'plugins', 'ranges', 'highlight'));
+    }
+
+    /**
+     * A CHART DRAWN BY A PACKAGE CHART.JS DOES NOT CARRY waits for it. The
+     * library's controller makes the chart the moment its canvas connects,
+     * so the canvas is served inside a `<template>` — which the page does not
+     * render and Stimulus does not watch — and the plate, told what to load,
+     * puts it on the page once each package is registered.
+     */
+    public function testAChartThatNeedsAPackageIsHeldBackUntilThePlateHasLoadedIt(): void
+    {
+        $html = self::render(new AtlasChart(
+            ChartKind::Heatmap,
+            ['00:00', '01:00'],
+            [new ChartSeries('Incidents', [])],
+            rows: ['Mon'],
+            values: [[1.0, 4.0]],
+            ramp: new ChartRamp([1.0, 2.0, 3.0, 4.0]),
+        ));
+
+        self::assertStringContainsString('data-uhifadhi--atlas-bundle--chart-plate-needs-value="[&quot;chartjs-chart-matrix&quot;]"', $html);
+        self::assertSame(1, preg_match('#<template data-uhifadhi--atlas-bundle--chart-plate-target="held">\s*<canvas[^>]*symfony--ux-chartjs--chart#', $html));
+        self::assertSame('matrix', self::at(self::view($html), 'type'));
+    }
+
+    /** A time axis needs the date adapter; a chart that needs nothing is drawn at once. */
+    public function testATimeAxisWaitsForTheDateAdapterAndAPlainChartForNothing(): void
+    {
+        $timed = self::render(new AtlasChart(ChartKind::Line, ['2026-10-01', '2026-11-01'], [new ChartSeries('Patrols', [3.0, 4.0])], time: new ChartTime(TimeUnit::Month)));
+        self::assertStringContainsString('chart-plate-needs-value="[&quot;chartjs-adapter-date-fns&quot;]"', $timed);
+        self::assertSame('time', self::at(self::view($timed), 'options', 'scales', 'x', 'type'));
+
+        $plain = self::render(new AtlasChart(ChartKind::Bar, ['apr'], [new ChartSeries('X', [1.0])]));
+        self::assertStringNotContainsString('needs-value', $plain);
+        self::assertStringNotContainsString('<template', $plain);
     }
 
     /**

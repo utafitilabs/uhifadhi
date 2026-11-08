@@ -1,0 +1,101 @@
+{
+    "statement": {
+        "kind": "pie",
+        "labels": [
+            "One"
+        ],
+        "series": [
+            {
+                "label": "Parts",
+                "points": [
+                    0
+                ]
+            }
+        ],
+        "empty": "Nothing yet",
+        "legend": "none"
+    },
+    "built": {
+        "type": "pie",
+        "data": {
+            "labels": [
+                "One"
+            ],
+            "datasets": [
+                {
+                    "label": "Parts",
+                    "data": [
+                        0
+                    ],
+                    "backgroundColor": [
+                        "var(--cat-1)"
+                    ],
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 2,
+                    "hoverOffset": 0
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "cutout": 0,
+            "plugins": {
+                "legend": {
+                    "display": false,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                },
+                "empty": {
+                    "caption": "Nothing yet",
+                    "ring": "var(--ln)",
+                    "muted": "var(--fog)",
+                    "family": "var(--font-mono)",
+                    "cutout": 0.68
+                }
+            }
+        }
+    },
+    "packages": []
+}

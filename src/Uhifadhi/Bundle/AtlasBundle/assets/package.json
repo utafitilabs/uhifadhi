@@ -20,7 +20,28 @@
         "importmap": {
             "uhifadhi/basemaps": "path:%PACKAGE%/basemaps.js",
             "uhifadhi/boundary": "path:%PACKAGE%/boundary.js",
-            "uhifadhi/map-chrome": "path:%PACKAGE%/chrome.js"
+            "uhifadhi/map-chrome": "path:%PACKAGE%/chrome.js",
+            "chartjs-adapter-date-fns": "3.0.0",
+            "date-fns": "2.30.0",
+            "chartjs-chart-matrix": "3.1.0",
+            "chartjs-chart-treemap": "4.2.2",
+            "chartjs-chart-sankey": "0.19.1",
+            "@sgratzl/chartjs-chart-boxplot": "4.4.5",
+            "@sgratzl/boxplots": "2.0.0",
+            "chartjs-chart-funnel": "4.2.5",
+            "chroma-js": "3.2.0",
+            "chart.js/helpers": "4.5.1"
         }
+    },
+    "peerDependencies": {
+        "chartjs-adapter-date-fns": "3.0.0",
+        "date-fns": "2.30.0",
+        "chartjs-chart-matrix": "3.1.0",
+        "chartjs-chart-treemap": "4.2.2",
+        "chartjs-chart-sankey": "0.19.1",
+        "@sgratzl/chartjs-chart-boxplot": "4.4.5",
+        "@sgratzl/boxplots": "2.0.0",
+        "chartjs-chart-funnel": "4.2.5",
+        "chroma-js": "3.2.0"
     }
 }

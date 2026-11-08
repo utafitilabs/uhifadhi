@@ -70,11 +70,24 @@ final class ImportmapPackageTest extends TestCase
         }
     }
 
-    /** And the root manifest publishes nothing no bundle ships. */
+    /**
+     * And the root manifest publishes nothing no bundle ships: every entry is
+     * a file of the core, or a third-party package a bundle declares.
+     */
     public function testEveryModuleTheInstalledPackagePublishesIsAFileTheCoreShips(): void
     {
+        $declared = [];
+        foreach (self::BUNDLES as $bundle) {
+            $declared += self::importmap(self::ROOT.'/src/Uhifadhi/Bundle/'.$bundle);
+        }
+
         foreach (self::importmap(self::ROOT) as $specifier => $entry) {
             self::assertIsString($entry);
+            if (!str_starts_with($entry, 'path:')) {
+                self::assertArrayHasKey($specifier, $declared, $specifier.' is a package no bundle declares.');
+
+                continue;
+            }
             self::assertStringStartsWith('path:%PACKAGE%/', $entry, $specifier.' is not a path into this repository.');
 
             self::assertFileExists(
@@ -91,8 +104,25 @@ final class ImportmapPackageTest extends TestCase
      */
     public function testEveryPublishedNameIsABareSpecifier(): void
     {
-        foreach (array_keys(self::importmap(self::ROOT)) as $specifier) {
-            self::assertMatchesRegularExpression('#^uhifadhi/[a-z][a-z0-9-]*$#', $specifier);
+        foreach (self::importmap(self::ROOT) as $specifier => $entry) {
+            if (\is_string($entry) && str_starts_with($entry, 'path:')) {
+                self::assertMatchesRegularExpression('#^uhifadhi/[a-z][a-z0-9-]*$#', $specifier);
+            }
+        }
+    }
+
+    /**
+     * A THIRD-PARTY PACKAGE IS PINNED, to the version the design was drawn
+     * with: Flex runs `importmap:require <name>@<constraint>`, and a range
+     * would let two installations draw the same chart with two libraries.
+     */
+    public function testEveryThirdPartyPackageIsPinnedToOneVersion(): void
+    {
+        foreach (self::importmap(self::ROOT) as $specifier => $entry) {
+            self::assertIsString($entry);
+            if (!str_starts_with($entry, 'path:')) {
+                self::assertMatchesRegularExpression('#^\d+\.\d+\.\d+$#', $entry, $specifier.' is not pinned.');
+            }
         }
     }
 

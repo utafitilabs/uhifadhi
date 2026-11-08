@@ -16,7 +16,6 @@ namespace Uhifadhi\Bundle\TeamBundle\Permissions;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
 use Uhifadhi\Bundle\AtlasBundle\Model\AxisScale;
 use Uhifadhi\Bundle\AtlasBundle\Model\Bar;
-use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartNoughts;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
@@ -24,6 +23,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\DotKey;
 use Uhifadhi\Bundle\AtlasBundle\Model\KeyEntry;
 use Uhifadhi\Bundle\AtlasBundle\Model\KeyMark;
 use Uhifadhi\Bundle\AtlasBundle\Model\RankedBars;
+use Uhifadhi\Contracts\Performance\ChartKind;
 
 /**
  * THE HUB'S FOUR PLOTS, as the atlas draws the Team overview's: two lists of

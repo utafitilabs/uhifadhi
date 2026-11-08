@@ -1,0 +1,269 @@
+{
+    "statement": {
+        "kind": "stacked-horizontal",
+        "title": "Watches per post, this week",
+        "labels": [
+            "Eastgate",
+            "Riverbend",
+            "Northgate",
+            "Westgate",
+            "Springs",
+            "Junction",
+            "Roadside",
+            "Lakeshore"
+        ],
+        "series": [
+            {
+                "label": "Verified",
+                "points": [
+                    17,
+                    15,
+                    19,
+                    12,
+                    16,
+                    14,
+                    18,
+                    10
+                ],
+                "swatch": "var(--ok)"
+            },
+            {
+                "label": "Empty",
+                "points": [
+                    1,
+                    2,
+                    1,
+                    4,
+                    2,
+                    3,
+                    1,
+                    5
+                ],
+                "swatch": "var(--dim)",
+                "texture": "hatch"
+            },
+            {
+                "label": "Unverified",
+                "points": [
+                    3,
+                    4,
+                    1,
+                    5,
+                    3,
+                    4,
+                    2,
+                    6
+                ],
+                "swatch": "var(--warn)"
+            }
+        ],
+        "unit": "watches",
+        "axis": {
+            "max": 21,
+            "step": 7
+        },
+        "barRadius": 1.5
+    },
+    "built": {
+        "type": "bar",
+        "data": {
+            "labels": [
+                "Eastgate",
+                "Riverbend",
+                "Northgate",
+                "Westgate",
+                "Springs",
+                "Junction",
+                "Roadside",
+                "Lakeshore"
+            ],
+            "datasets": [
+                {
+                    "label": "Verified",
+                    "data": [
+                        17,
+                        15,
+                        19,
+                        12,
+                        16,
+                        14,
+                        18,
+                        10
+                    ],
+                    "backgroundColor": "var(--ok)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "stack": "one",
+                    "borderRadius": [
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5
+                    ],
+                    "borderSkipped": false
+                },
+                {
+                    "label": "Empty",
+                    "data": [
+                        1,
+                        2,
+                        1,
+                        4,
+                        2,
+                        3,
+                        1,
+                        5
+                    ],
+                    "backgroundColor": "var(--dim)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "stack": "one",
+                    "texture": "hatch",
+                    "borderRadius": [
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5
+                    ],
+                    "borderSkipped": false
+                },
+                {
+                    "label": "Unverified",
+                    "data": [
+                        3,
+                        4,
+                        1,
+                        5,
+                        3,
+                        4,
+                        2,
+                        6
+                    ],
+                    "backgroundColor": "var(--warn)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "stack": "one",
+                    "borderRadius": [
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5
+                    ],
+                    "borderSkipped": false
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "stepSize": 7
+                    },
+                    "max": 21,
+                    "stacked": true
+                },
+                "y": {
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "autoSkip": false
+                    },
+                    "stacked": true
+                }
+            },
+            "indexAxis": "y",
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "watches",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": []
+}

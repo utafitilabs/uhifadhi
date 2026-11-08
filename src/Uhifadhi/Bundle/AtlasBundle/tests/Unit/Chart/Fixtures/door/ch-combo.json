@@ -1,0 +1,221 @@
+{
+    "statement": {
+        "kind": "combo",
+        "title": "Patrols per week against the target",
+        "labels": [
+            "W34",
+            "W35",
+            "W36",
+            "W37",
+            "W38",
+            "W39",
+            "W40",
+            "W41",
+            "W42",
+            "W43",
+            "W44",
+            "W45"
+        ],
+        "series": [
+            {
+                "label": "Patrols",
+                "points": [
+                    28,
+                    31,
+                    26,
+                    33,
+                    29,
+                    24,
+                    35,
+                    32,
+                    30,
+                    27,
+                    34,
+                    31
+                ]
+            }
+        ],
+        "target": 30,
+        "targetLabel": "Target, 30 a week",
+        "unit": "patrols",
+        "barRadius": 3
+    },
+    "built": {
+        "type": "bar",
+        "data": {
+            "labels": [
+                "W34",
+                "W35",
+                "W36",
+                "W37",
+                "W38",
+                "W39",
+                "W40",
+                "W41",
+                "W42",
+                "W43",
+                "W44",
+                "W45"
+            ],
+            "datasets": [
+                {
+                    "label": "Patrols",
+                    "data": [
+                        28,
+                        31,
+                        26,
+                        33,
+                        29,
+                        24,
+                        35,
+                        32,
+                        30,
+                        27,
+                        34,
+                        31
+                    ],
+                    "backgroundColor": "var(--cat-1)",
+                    "borderColor": "var(--cat-1)",
+                    "borderWidth": 1.5,
+                    "borderRadius": [
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3
+                    ],
+                    "borderSkipped": false
+                },
+                {
+                    "label": "Target, 30 a week",
+                    "data": [
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30,
+                        30
+                    ],
+                    "borderColor": "var(--fog)",
+                    "backgroundColor": "transparent",
+                    "borderDash": [
+                        5,
+                        4
+                    ],
+                    "borderWidth": 1.5,
+                    "pointRadius": 0,
+                    "fill": false,
+                    "type": "line"
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "autoSkip": false
+                    }
+                },
+                "y": {
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    }
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "patrols",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": []
+}

@@ -32,8 +32,49 @@ their API once it settles.
 - [The events](#the-events)
 - [A whole module template](#a-whole-module-template)
 - [Charts](#charts)
-  - [The five kinds](#the-five-kinds)
-  - [A ranking](#a-ranking)
+  - [The kinds](#the-kinds)
+    - [Line](#line)
+    - [Area](#area)
+    - [Stacked area](#stacked-area)
+    - [Band](#band)
+    - [Stepped](#stepped)
+    - [Two measures on two axes: MultiAxisLine, StackedBarLine, ScatterMultiAxis](#two-measures-on-two-axes-multiaxisline-stackedbarline-scattermultiaxis)
+    - [Bar](#bar)
+    - [Combo](#combo)
+    - [Horizontal bar](#horizontal-bar)
+    - [A ranking](#a-ranking)
+    - [Stacked and stacked horizontal](#stacked-and-stacked-horizontal)
+    - [Grouped bar](#grouped-bar)
+    - [Floating bar](#floating-bar)
+    - [Diverging](#diverging)
+    - [Doughnut, pie and gauge](#doughnut-pie-and-gauge)
+    - [Nested doughnut](#nested-doughnut)
+    - [Polar area](#polar-area)
+    - [Radar](#radar)
+    - [Scatter and bubble](#scatter-and-bubble)
+    - [Stacked panels](#stacked-panels)
+    - [Heatmap](#heatmap)
+    - [Calendar heatmap](#calendar-heatmap)
+    - [Treemap](#treemap)
+    - [Sankey](#sankey)
+    - [Boxplot and violin](#boxplot-and-violin)
+    - [Funnel](#funnel)
+  - [Options a kind can take](#options-a-kind-can-take)
+    - [A time axis](#a-time-axis)
+    - [Rounded bars](#rounded-bars)
+    - [Curve](#curve)
+    - [Point markers and dashes](#point-markers-and-dashes)
+    - [Gaps drawn dashed](#gaps-drawn-dashed)
+    - [Stepped modes](#stepped-modes)
+    - [Gradient and radial fills](#gradient-and-radial-fills)
+    - [Doughnut empty state](#doughnut-empty-state)
+    - [Quadrants](#quadrants)
+    - [Centred axes](#centred-axes)
+    - [Chart-area border](#chart-area-border)
+    - [Log scale](#log-scale)
+    - [Colour by threshold](#colour-by-threshold)
+    - [Data decimation](#data-decimation)
+    - [Figures on a stack and at a size](#figures-on-a-stack-and-at-a-size)
   - [The figure on the bar](#the-figure-on-the-bar)
   - [A stated axis](#a-stated-axis)
   - [The chip legend](#the-chip-legend)
@@ -43,9 +84,10 @@ their API once it settles.
   - [A line over the bars, and a marked point](#a-line-over-the-bars-and-a-marked-point)
   - [A pair of panels on one axis](#a-pair-of-panels-on-one-axis)
   - [The bar radius](#the-bar-radius)
-  - [Ticks, grid and axis line](#ticks-grid-and-axis-line)
+  - [The house look](#the-house-look)
   - [How tall a chart is](#how-tall-a-chart-is)
   - [What each statement becomes in Chart.js](#what-each-statement-becomes-in-chartjs)
+  - [The packages a chart is drawn with](#the-packages-a-chart-is-drawn-with)
 - [The sparkline](#the-sparkline)
 - [Ranked bars and the dot key](#ranked-bars-and-the-dot-key)
 - [The heat table and its legend](#the-heat-table-and-its-legend)
@@ -645,8 +687,8 @@ position in the palette), never a colour.
 
 ```php
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
-use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
+use Uhifadhi\Contracts\Performance\ChartKind;
 
 $chart = new AtlasChart(
     ChartKind::Bar,
@@ -666,25 +708,152 @@ $chart = new AtlasChart(
 The fourth argument is attributes for the canvas — an `aria-label`, a data attribute of your own.
 A chart nobody published a point in is not drawn: the plate says so in the house's own words.
 
-### The five kinds
+### The kinds
+
+The kind says what the data is; the atlas decides what that looks like. `ChartKind` is the
+contract's own enum (`Uhifadhi\Contracts\Performance\ChartKind`), the same list a performance
+topic states its charts with, so a kind a topic can state is a kind the atlas can draw. Each
+kind below says what it is for, what a caller states for it, and when it is the wrong chart —
+the caveat. Where the caveat is a rule the atlas can check, the statement is refused with a
+sentence that says why.
 
 | Kind | What the data is | Chart.js |
 |---|---|---|
-| `Line` | a run over time | `type: 'line'` |
-| `Bar` | a comparison across categories | `type: 'bar'` |
-| `Stacked` | parts of a whole, period by period | `type: 'bar'`, both scales `stacked` |
-| `Diverging` | a movement either side of nought | `type: 'bar'`, value axis not pinned at nought |
-| `Ranked` | a comparison read as a league table — sideways, the name on the left, the longest on top | `type: 'bar'`, `indexAxis: 'y'` |
+| `Line` | a measure over time | `type: 'line'` |
+| `Area` | a running total | `type: 'line'`, `fill: 'origin'` |
+| `StackedArea` | the parts of a total over time | `type: 'line'`, each layer `fill: '-1'`, value scale `stacked` |
+| `Band` | a line with the range around it | `type: 'line'`, two edge datasets, the upper `fill: '-1'` |
+| `Stepped` | a level that changes at events | `type: 'line'`, `stepped` |
+| `MultiAxisLine` | two measures over time on two scales | `type: 'line'`, a second axis `y1` |
+| `Bar` | counts per period | `type: 'bar'` |
+| `Combo` | counts per period against a target or a rate | `type: 'bar'` with a line dataset |
+| `StackedBarLine` | the parts of each period, with a rate on a second scale | `type: 'bar'`, stacked, a line on `y1` |
+| `HorizontalBar` | counts per category with long names | `type: 'bar'`, `indexAxis: 'y'` |
+| `Ranked` | a comparison read as a league table | `type: 'bar'`, `indexAxis: 'y'` |
+| `Stacked` | the parts of each period or category | `type: 'bar'`, both scales `stacked` |
+| `StackedHorizontal` | the parts of each category, long names | `type: 'bar'`, stacked, `indexAxis: 'y'` |
+| `GroupedBar` | two to four series side by side | `type: 'bar'` |
+| `FloatingBar` | a range per item, start to end | `type: 'bar'`, `[start, end]` data, `indexAxis: 'y'` |
+| `Diverging` | a movement either side of nought | `type: 'bar'`, `indexAxis: 'y'`, value axis not pinned at nought |
+| `Doughnut` | a part of a whole with a figure in the hole | `type: 'doughnut'` |
+| `Pie` | a part of a whole without a central figure | `type: 'pie'` |
+| `Gauge` | one value against its capacity | `type: 'doughnut'`, half a ring |
+| `NestedDoughnut` | two levels of one whole | `type: 'doughnut'`, two rings |
+| `PolarArea` | a count around a cycle | `type: 'polarArea'` |
+| `Radar` | a profile across comparable measures | `type: 'radar'` |
+| `Scatter` | two measures per item | `type: 'scatter'` |
+| `ScatterMultiAxis` | two measures per item against one shared measure | `type: 'scatter'`, a second axis `y1` |
+| `Bubble` | two measures per item, a third as the size | `type: 'bubble'` |
+| `StackedPanels` | two measures of different size over one time axis | `type: 'bar'`, two value axes stacked (`stack`, `stackWeight`) |
+| `Heatmap` | a count on a grid of two categories | `type: 'matrix'` (chartjs-chart-matrix) |
+| `CalendarHeatmap` | a count per day, laid out as a calendar | `type: 'matrix'` (chartjs-chart-matrix) |
+| `Treemap` | two levels of one whole as rectangles | `type: 'treemap'` (chartjs-chart-treemap) |
+| `Sankey` | counts flowing from one set of categories into another | `type: 'sankey'` (chartjs-chart-sankey) |
+| `Boxplot` | how the readings at each label spread | `type: 'boxplot'` (@sgratzl/chartjs-chart-boxplot) |
+| `Violin` | the same spread, drawn as a density | `type: 'violin'` (@sgratzl/chartjs-chart-boxplot) |
+| `Funnel` | one measure through ordered stages | `type: 'funnel'` (chartjs-chart-funnel) |
 
-### A ranking
+The last seven are drawn by a package Chart.js does not carry, and a time axis needs the date
+adapter; see [The packages a chart is drawn with](#the-packages-a-chart-is-drawn-with).
 
-`ChartKind::Ranked` is the horizontal bar. The caller hands the rows already ordered — the atlas
-draws them top to bottom as given — and the value axis becomes the horizontal one.
+#### Line
+
+A measure over time, one line per series. A line of up to sixteen points wears a dot a point; a
+longer run is bare. Where two or more lines share the plot, each also wears its own marker, so a
+line is never told by its colour alone.
+
+**Not for** categories without an order: a line between two posts says something lies between
+them. Two lines in neighbouring categories can sit close in hue — where the caller is free to
+choose, state categories that sit apart (1 and 5).
+
+#### Area
+
+A running total, the line filled down to the floor at a faint strength of its colour. Takes
+`fill: ChartFill::Gradient` (see [Gradient and radial fills](#gradient-and-radial-fills)).
+
+**Not for** values that go below nought: the fill would hang from the floor upward and downward
+at once.
+
+#### Stacked area
+
+The parts of a total over time: each layer fills down to the one below it, the first to the
+floor, so the top line is the whole. The hover answers for every layer at the hovered period.
+
+**Not for** parts that do not add up to a whole. Order the layers so that neighbours sit apart in
+hue; a layer only ever meets the ones beside it.
+
+#### Band
+
+A line with the range around it — the median response, with the fastest and the slowest. State
+the line as the one series and the range as `band: new ChartBand($fastest, $slowest, 'Fastest to
+slowest', 'Fastest', 'Slowest')`. The band carries one legend row under its name; each edge answers
+the hover with its own word.
+
+**Not for** two unrelated series: the band reads as the spread of the line it surrounds.
+**Refused:** a band without an edge for every label.
+
+#### Stepped
+
+A level that holds, then changes at an event: patrols out now, people on duty. Each series may
+state where the level changes — `stepped: ChartStep::After` (the house), `Before` or `Middle`.
+
+**Not for** readings sampled from something continuous (a temperature): a step says nothing
+changed between two readings. On a product chart, keep to one step mode.
+
+#### Two measures on two axes: MultiAxisLine, StackedBarLine, ScatterMultiAxis
+
+Three kinds draw a second measure against a scale of its own on the right: `MultiAxisLine` (two
+lines over time), `StackedBarLine` (the parts of each period with a rate as a line — state the
+rate series `line: LineStyle::Solid`) and `ScatterMultiAxis` (two measures per item against one
+shared measure). The series read against the right axis states `axis: ChartSide::Right` and its
+own `unit`; the right axis is stated with `y2Axis: new ChartAxis('Verified, %', max: 100.0, step:
+25.0)` and draws no grid of its own — one grid per chart.
+
+**The caveat.** Two scales on one plot invite a reader to compare heights that are on different
+rulers. These kinds are kept because some readers expect them; each axis is titled with what it
+measures, and each series wears its own marker so the marker says which axis to read. Where the
+two measures can stand apart, two charts on one axis (a [pair of panels](#a-pair-of-panels-on-one-axis))
+are the honest form. **Refused:** a `MultiAxisLine` or `ScatterMultiAxis` of anything but exactly
+two series, the second on the right.
+
+#### Bar
+
+Counts per period, the bars standing up, rounded at 3px where the design states it
+(`barRadius: 3.0`). Every bar is named under it: the names are never thinned out to fit. On a
+[time axis](#a-time-axis) the axis places the ticks instead.
+
+**Not for** more than about two dozen bars: past that the bars thin to lines and a line chart
+says the same thing better.
+
+#### Combo
+
+Counts per period read against a target or a rate: the bars, and a `target` drawn as a dashed
+line across the whole axis, named in the legend. A rate is a series stated `line:
+LineStyle::Solid`.
+
+**Not for** two unrelated measures. The target line is told by its dash and its legend row, never
+by its grey alone.
+
+#### Horizontal bar
+
+Counts per category whose names are long, read sideways, in the categories' declared order.
+Every bar is named, and a name longer than eighteen characters is drawn on two lines, broken at
+the space nearest its middle; the hover writes it on one. The same holds for `Ranked`,
+`StackedHorizontal`, `FloatingBar` and `Diverging`.
+
+**Not for** time: periods read left to right, so a count per period is a `Bar`. Where the order
+should be the counts', the kind is `Ranked`.
+
+#### A ranking
+
+`ChartKind::Ranked` is the horizontal bar read as a league table. The caller hands the rows already
+ordered — the atlas draws them top to bottom as given — and the value axis becomes the horizontal
+one.
 
 ```php
 new AtlasChart(
     ChartKind::Ranked,
-    ['Endulen', 'Nainokanoka', 'Lerai'],
+    ['Eastgate', 'Riverbend', 'Northgate'],
     [new ChartSeries('Patrols', [46.0, 38.0, 27.0])],
     unit: 'patrols',
     axis: AxisScale::covering(46.0, 3),
@@ -697,10 +866,328 @@ to `'y'`. The default for this property is `'x'` and thus will show vertical bar
 ([charts/bar — Horizontal Bar Chart](https://www.chartjs.org/docs/latest/charts/bar.html#horizontal-bar-chart)).
 The builder writes `indexAxis: 'y'` and swaps which letter carries the names and which the values.
 
+**Not for** categories whose order is their meaning (the days of a week): ranking them hides it.
+
+#### Stacked and stacked horizontal
+
+The parts of each period or category: verified, empty, unverified. Parts of one bar are separated
+by a one-pixel line of the card's own ground, not by their hue alone; the house rounds a stack at
+1.5px. `StackedHorizontal` is the same, sideways, for long names. A status part states its token
+as `swatch: 'var(--ok)'`; a part that means "empty" or "not yet" also states `texture:
+ChartTexture::Hatch`, because its grey sits too close to its neighbours to be told apart.
+`figures: new ChartFigures(totals: true)` writes one figure at the end of each stack instead of one
+per part.
+
+**Not for** more than five parts. Put a part whose hue is close to two others between them and
+hatch it.
+
+#### Grouped bar
+
+Two to four series side by side in each category.
+
+**Not for** more than four series: the groups become a comb nobody can read. **Refused:** a grouped
+bar of five series or more.
+
+#### Floating bar
+
+A range per item, start to end — a shift, a closure, a season — each point a `new ChartSpan(6.0,
+14.0)` (or null for none). `clock: true` writes the value axis and the hover as the hours of a
+day, 06:00; state the axis `new AxisScale(max: 24.0, step: 6.0, min: 0.0)`.
+
+**Not for** single values: a floating bar of one number is a bar. **Refused:** a point that is not a
+span, or a span that runs backward.
+
+#### Diverging
+
+A movement either side of nought — more and fewer, met and missed — read sideways, the names down
+the left and the bars running left or right of nought. Nought is drawn a step stronger than the
+rest of the grid, and a bar below nought wears its figure past its left end. With `figures` and no
+stated `axis`, the value axis leaves a tenth of room past each end so a figure clears the names.
+
+**Not for** values that are never below nought: the axis would give half its height to nothing.
+
+#### Doughnut, pie and gauge
+
+A part of a whole. The parts are the chart's **labels**, not its series, so each label states what
+it wears: `parts: [new ChartPart(cat: 1), new ChartPart(cat: 5), …]`, one per label (unstated,
+positions 1, 2, 3 …). A part that is a status states `swatch`; one that means "not yet" adds the
+hatch. `centre: new ChartCentre('18', 'of 33 on duty')` writes a figure in the hole of a doughnut
+or a gauge, its caption under it. `figures: new ChartFigures()` writes each slice's name and figure
+outside it — laid out down each side so that two small neighbours never print on top of each other.
+
+- **Doughnut** — **not for** more than six parts.
+- **Pie** — no figure in the hole; **not for** comparing two wholes (two pies cannot be read
+  against each other). The last slice meets the first round the ring, and no order of five parts
+  keeps every pair apart in hue, so state `figures` and every slice carries its name.
+- **Gauge** — half a ring, opening downward: one value against its capacity, the rest of the
+  capacity a hatched part. **Not for** more than one value. The legend is never drawn; the figure in
+  the hole names the value.
+
+#### Nested doughnut
+
+Two levels of one whole: the kinds on the inner ring, their parts outside. The series' points are
+the kinds' totals; the outer ring is `children: [new ChartChild('Snaring', 21.0, of: 0), …]`, each
+naming its kind by position and wearing its kind's colour at a tint. The legend names the inner
+ring; `figures` names every outer part beside its arc.
+
+**Not for** more than two levels. **Refused:** children that are not stated in their kinds' order,
+or whose values do not sum to their kind's total.
+
+#### Polar area
+
+A count around a cycle — by hour of the day, by month of the year: every sector one colour, the
+magnitude read from the radius, each sector's name at the middle of its angle round the rim. Takes
+`fill: ChartFill::Radial`.
+
+**Not for** categories that are not a cycle, or sector names much longer than a few letters when
+there are many sectors.
+
+#### Radar
+
+A profile across five to eight comparable measures, filled. A measure not taken is a null and
+breaks the ring there rather than drawing it to nought. A `target` is the same ring all the way
+round, dashed.
+
+**Not for** time, or more than three profiles on one radar: filled rings hide each other.
+
+#### Scatter and bubble
+
+Two measures per item, each point a `new ChartPoint(x: 9.2, y: 3.1)`; a bubble adds the third as its
+size, `new ChartPoint(410.0, 31.0, size: 14.0)`, drawn as the bubble's area. Each axis is stated and
+titled: `xAxis: new ChartAxis('Distance, km', 'km')`, `yAxis: new ChartAxis('Duration, h', 'h', min:
+0.0, max: 8.0, step: 2.0)`; the units are written in the hover. Where the items have names, state
+one label per point and the hover says whose point it is. A bubble's `sizeLabel` says what its
+size measures. Takes [quadrants](#quadrants) and [centred axes](#centred-axes).
+
+- **Scatter** — **not for** one measure. Two series of neighbouring categories each wear their own
+  marker; a triangle, a square or a diamond is drawn larger than a circle, since it reads smaller.
+- **Bubble** — **not for** more than about thirty items: the bubbles bury each other.
+
+**Refused:** a point that is not a `ChartPoint`, or a bubble's point without a size.
+
+#### Stacked panels
+
+Two measures of different size over one time axis — patrols a day above, incidents a day below —
+each in a pane of its own with its own value axis, title and share of the height, never two scales
+on one plot. State the two panes, the first on top, and the pane each series is drawn in; a series
+may be drawn as bars there.
+
+```php
+new AtlasChart(
+    ChartKind::StackedPanels,
+    $days,
+    [
+        new ChartSeries('Patrols', $patrols, cat: 1, unit: 'patrols'),
+        new ChartSeries('Incidents', $incidents, cat: 5, unit: 'incidents', pane: 1, bar: true),
+    ],
+    panes: [new ChartPane('Patrols', weight: 2.0), new ChartPane('Incidents', max: 6.0, step: 3.0)],
+    time: new ChartTime(TimeUnit::Day),
+    barRadius: 1.5,
+);
+```
+
+The hover answers for both panes at the hovered day. **Not for** two measures a reader must compare
+point by point at one height (state a `MultiAxisLine`), or more than two panes. **Refused:** a chart
+that does not state exactly two panes with at least one series in the second, or a series naming a
+pane other than the first (0) or the second (1).
+
+#### Heatmap
+
+A count on a grid of two categories — the hour of the day across, the day of the week down — each
+cell coloured by the band its value falls in, one hue from faint to full, nought in the grid's ink.
+State the columns as the labels, the `rows`, a value at each label of each row (`values:
+[[…], […]]`, a row at a time), and the `ramp`'s four breaks: `new ChartRamp([2.0, 4.0, 6.0, 8.0])`
+makes the bands 1–2, 3–4, 5–6, 7–8 and 9 or more, named in the legend. A ramp in another hue states
+its token. The hover names the cell and its value.
+
+**Not for** reading exact values (the bands are coarse; a table says the figure), a measure that
+goes below nought, or two measures at once. **Refused:** a grid without a value at every label of
+every row, a heatmap without a ramp, a ramp of other than four breaks.
+
+#### Calendar heatmap
+
+A count per day, laid out as a calendar: a column a week, Monday at the top, the month named over
+the week its first day falls in. State the `start` (a date) and one value per day from it, with the
+ramp as on a heatmap; the hover names the day.
+
+**Not for** fewer than a few weeks (a bar of days says it better) or reading a trend over the year.
+**Refused:** a calendar without its start or its ramp, or values stated as rows.
+
+#### Treemap
+
+The nested doughnut's statement drawn as nested rectangles, each sized by its count: the labels
+are the groups, `children` the leaves, each leaf in its group's colour at a lighter tint and named
+inside its rectangle with its count. `names` gives a group a short caption where its full name does
+not fit (`['Poaching & wildlife crime' => 'Poaching']`); the hover keeps the full one. There is no
+legend: every rectangle names itself.
+
+**Not for** comparing two leaves of different groups (areas are read less well than lengths), or a
+whole with more than about fifteen leaves. **Refused:** a leaf naming a group there is not.
+
+#### Sankey
+
+Counts flowing from one set of categories into another — from the kind of an incident to how it
+ended. The labels are the sources, coloured as parts; `targets` are the outcomes, each a
+`ChartFlowTarget` with its own category or token; `flows` give the count from each source to each
+target, a row per source (`flows[source][target]`), a nought drawing no flow. A flow wears its
+source's colour. The nodes are drawn in the stated order, so order the sources so that neighbours
+sit apart in hue. A source's short name goes in `names`.
+
+**Not for** flows that come back (a cycle), more than about six nodes a side, or reading exact
+counts off the band widths — the hover gives the count. **Refused:** a flow table without a flow
+from every source to every target, a target that wears both a category and a token.
+
+#### Boxplot and violin
+
+How the readings at each label spread — every response time this quarter, per area. Each point is
+every reading at that label, `new ChartReadings([22.0, 31.0, …])`; the package works out the middle
+half, the median and the whiskers (a boxplot), or the density (a violin). The hover writes the
+figures in words. Take a `yAxis` title.
+
+- **Boxplot** — **not for** a handful of readings (fewer than about ten draws a box that means
+  nothing: show the readings), or a reader who has never read one.
+- **Violin** — the same, and **not for** a small sample, whose density is invented between the
+  readings.
+
+**Refused:** a point that is not a `ChartReadings`, or a label with no readings.
+
+#### Funnel
+
+One measure through ordered stages — reported, verified, resolved, closed — each stage a step of
+one hue, the first the strongest, its figure beside it. One series, a point per stage.
+
+**Not for** stages that are not one population moving forward, or comparing two funnels. **Refused:**
+a stage holding more than the stage before it.
+
+### Options a kind can take
+
+Each option is a fact the caller states on the `AtlasChart` or one of its series; the atlas decides
+how it is drawn.
+
+#### A time axis
+
+`time: new ChartTime(TimeUnit::Month)` makes the index axis time: the labels are ISO dates
+(`'2026-11-01'`, or `'2026-11-09T06:00'` for hours) and the axis spaces them as the calendar does,
+so a missing week is a gap and not a neighbour. The unit is `Hour`, `Day`, `Week`, `Month` or
+`Year`; the ticks and the hover are written in the house's words for it (`06:00`, `9 Nov`, `W45`,
+`Nov`; the hover `Mon 9 Nov 2026`, `Week of 9 Nov 2026`, `November 2026`), and either may be stated
+in date-fns tokens where those do not fit: `new ChartTime(TimeUnit::Day, format: 'EEE d')`. Weeks
+start on Monday. On the lines, the bars, the stacks and `StackedPanels`. A bar sits between its
+ticks; a line's point on its tick.
+
+**Not for** periods that are not dates (a shift, a season), or bars whose names should stay words:
+there a plain label reads better. **Refused:** a format or a hover stated as nothing.
+
+#### Rounded bars
+
+`barRadius` rounds every bar's corners, the base included — see [The bar radius](#the-bar-radius).
+On `Bar`, `HorizontalBar`, `Ranked`, `GroupedBar` and `FloatingBar`; 1.5px on a stack. **Not for** a
+stack's inner joins beyond 1.5px, or bars thinner than twice the radius.
+
+#### Curve
+
+`curve: ChartCurve::Straight | Gentle | Cubic | Monotone` on the chart, or on one series. The house
+draws `Gentle` between readings; `Cubic` swings past a sudden jump; `Monotone` never goes past a
+reading. On `Line`, `Area`, `StackedArea`, `Band` and `MultiAxisLine`. **Not for**: `Cubic` on a
+level or a count, which must never overshoot — use `Monotone` there.
+
+#### Point markers and dashes
+
+`marker: PointMarker::Circle | Triangle | Rect | RectRot | CrossRot | Star` on a series; unstated,
+a chart of several series gives each the next marker in that order. `dash: true` dashes a series'
+line — a third encoding where two lines sit close in hue even with their markers. On `Line`,
+`MultiAxisLine`, `Scatter`, `ScatterMultiAxis` and `Radar`. **Not for** more than four series on one
+plot.
+
+#### Gaps drawn dashed
+
+A reading that never came is a null and the line is broken there. `gaps: ChartGaps::Dashed` crosses
+the silence with a dashed run in the muted ink instead, so the eye sees the device was silent and
+not a value. On `Line`, `Area` and `Stepped`. **Not for** filling a silence with a value, or a gap
+shorter than one reading interval.
+
+#### Stepped modes
+
+`stepped: ChartStep::After | Before | Middle` on a `Stepped` series: where the level changes against
+the reading that changed it. **Not for** mixing modes on one chart except to compare them.
+
+#### Gradient and radial fills
+
+`fill: ChartFill::Gradient` on an `Area`: its colour at the top of the plot fading to nothing at the
+floor. `fill: ChartFill::Radial` on a `PolarArea`: faint at the centre, full at the rim, so the
+strength says the radius again. Both are laid at draw time across the plot as it is. **Not for** a
+stacked area or two overlapping areas (the fade hides the lower), nor for a doughnut or a pie, where
+a fade reads as a second measure.
+
+#### Doughnut empty state
+
+`empty: 'Nothing filed yet'` on a `Doughnut`, `Pie`, `Gauge` or `NestedDoughnut`: when every part
+is nought, the ring is drawn in the grid's ink with the word in the hole, so an empty day reads as
+empty and not as broken, and the legend is left off — there is nothing to key. **Not for** a whole that is not known: that is "no reading", not "nothing".
+
+#### Quadrants
+
+`quadrants: new ChartQuadrants(246.0, 19.0, [$topLeft, $topRight, $bottomRight, $bottomLeft])`
+splits a `Scatter` or `Bubble` at a stated x and y into four regions, each a `ChartQuadrant` with a
+word and, where it is a verdict, a token at a faint strength. **Not for** splits that are not stated
+facts — a mean of the points on screen moves with every filter — or a status fill without its word.
+**Refused:** quadrants of anything but four parts.
+
+#### Centred axes
+
+`axes: ChartAxes::Centre` on a `Scatter` or `Bubble`: both axes cross at nought, a step stronger
+than the grid, for a change either way on both measures. State each axis' range so nought sits
+inside it. Each axis title is written at its axis's end, in small capitals: the horizontal one
+under the axis at its right end, the vertical one beside the axis at its top. **Not for** values
+that are never below nought. Where the regions need fills and words, quadrants are the form.
+
+#### Chart-area border
+
+`frame: true` draws a dashed line round the plot. The house does not use it — the card is the
+border and the gridlines the frame; it is for a chart on a bare page.
+
+#### Log scale
+
+`scale: ChartScale::Log` rules the value axis in powers of ten, a gridline and a figure at each
+power only; state the axis' foot and top at powers of ten, `axis: new AxisScale(max: 100000.0, min:
+10.0)`. On `Bar`, `HorizontalBar`, `Ranked`, `GroupedBar`, `Line`, `Area` and `Stepped`. **Not
+for** values at or below nought (there is no log of nought), stacks (the parts of a log stack lie),
+or a reader asked to compare lengths: on a log axis a bar's length is not its size, so state
+`figures` with it.
+
+#### Colour by threshold
+
+`threshold: new ChartThreshold(5.0, above: 'var(--fail)')` colours every bar past the value in the
+token above (a status), the rest in their own colour or `below`; on a line, the points past it are
+drawn larger in that token, ringed. State the limit as a `target` too, and on bars the `figures`:
+the colour is never the only sign. On `Bar`, `HorizontalBar`, `Ranked`, `GroupedBar`, and the
+lines. **Not for** identity — the status tokens mean only "past the limit" — nor a line of more
+than sixteen readings, where no point is drawn for the colour to sit on; use a
+[range](#a-shaded-range-of-the-value-axis-with-a-word) there.
+
+#### Data decimation
+
+`decimation: new ChartDecimation()` on a long device series — thousands of readings, each point a
+`ChartPoint` with `x` in milliseconds, in time order, on a [time axis](#a-time-axis) — state its
+unit; there are no labels. The library draws about one point per pixel
+(`DecimationAlgorithm::Lttb`, keeping peaks and troughs; `MinMax` keeps every extreme) and the hover
+answers for the nearest drawn reading. On `Line` and `Area`, unstacked. **Not for** reading one
+reading (what is drawn is a sample) or a series short enough to draw whole. **Refused:** a decimated
+run without a time axis.
+
+#### Figures on a stack and at a size
+
+`new ChartFigures(totals: true)` on a stack writes the stack's total once at its end; `size: 9.0`
+writes every figure at that size in pixels where a surface's design draws it other than the
+house's 10.5.
+
 ### The figure on the bar
 
 `figures: new ChartFigures(unit: 'h', precision: 0)` writes the figure past the end of every
-bar — `46`, `128 h` — so a ranking is read without a hover. A null point gets no figure.
+bar — `46`, `128 h` — so a ranking is read without a hover. A null point gets no figure; a bar that
+ends below nought wears its figure under its end. On a whole the same statement names and figures
+every slice outside it, and on a stack `totals: true` writes one figure per stack (see
+[Figures on a stack and at a size](#figures-on-a-stack-and-at-a-size)).
 
 Chart.js core draws no value labels, and the host's importmap ships `chart.js` alone — no
 datalabels plugin, and the atlas adds no dependency to a host. What the docs give instead is an
@@ -731,6 +1218,11 @@ and a module may have a rule of its own for where the top lands; `AxisScale::cov
 3)` is the common one: the smallest multiple of three that still covers the largest value, never
 below three, so an empty month keeps a width to measure against. Left unstated, the library picks
 its own ticks.
+
+An axis that does not stand on nought states its foot — `new AxisScale(max: -60.0, step: 10.0, min:
+-90.0)` for a signal in dBm, `min: 0.0, max: 24.0` for the hours of a day — and an axis that rules
+itself (a log axis) leaves the step out. An axis whose top is not above its foot, or whose step is
+wider than the axis, is refused.
 
 Chart.js: `max` — "User defined maximum number for the scale, overrides maximum value from
 data" (`options.scales[scaleId]`); `ticks.stepSize` — "User-defined fixed step size for the
@@ -865,31 +1357,42 @@ draws two plates.
 
 ### The bar radius
 
-`barRadius: 1.5` rounds every bar's four corners by that many pixels, as an SVG `rx` does; the
-designs draw 0.8, 1.2, 1.5, 2.5 and 3, so the number is the chart's to state. Unstated, bars are
+`barRadius: 3.0` rounds every bar's four corners by that many pixels, as an SVG `rx` does; the
+house draws 3 on a bar and 1.5 on a stack, and the number is the chart's to state. Unstated, bars are
 square. A nought's hairline stub is rounded at 1 whatever the bars are. Chart.js: `borderRadius`
 per bar (an indexable option) with `borderSkipped: false`, since a numeric radius is "applied to
 all corners of the rectangle … except corners touching the borderSkipped"
 ([charts/bar](https://www.chartjs.org/docs/latest/charts/bar.html#borderradius)).
 
-### Ticks, grid and axis line
+### The house look
 
-Every chart wears the same ticks, grid and axis line, and a module states none of them:
+Every chart wears the same type, grid and hover, and a module states none of them:
 
 | Part | Look | Chart.js option |
 |---|---|---|
-| Tick labels, both axes | the mono face (`--font-mono`) at 6.7px in `--fog`, 5px from the axis | `scales.<axis>.ticks.font`, `.color`, `.padding` |
-| Grid, value axis only | `--fog` at 22%, 0.6px, no tick marks | `scales.<value>.grid.color`, `.lineWidth`, `.drawTicks: false` |
-| Axis line, index axis only | `--fog` at 55%, 0.8px | `scales.<index>.border` (`display`, `color`, `width`) |
-| Tooltips | none | `plugins.tooltip.enabled: false` |
+| Tick labels, legend, point labels | the mono face (`--font-mono`) at 10.5px, weight 400, in `--fog`; ticks 5px from the axis | `scales.<axis>.ticks.font`, `.color`, `.padding`; `plugins.legend.labels` |
+| An axis title | the mono face at 9.5px, weight 600, uppercase, in `--fog` | `scales.<axis>.title` |
+| Grid, value axis only | the line token `--ln`, 1px, no tick marks; nought on a diverging chart and a centred axis in `--ln2` | `scales.<value>.grid` |
+| Axis lines | none: the gridlines are the whole frame | `scales.<axis>.border.display: false` |
+| The hover | on, on the raised surface (`--raised`, edged `--ln2`) in `--tx`, the mono face at 11px, 600 for the title and 400 for the lines; its words are the plate's — the series, the reading and its unit, "no reading" for a null, a slice's share of its whole | `plugins.tooltip`, `plugins.tooltip.callbacks` |
+| The figure on a bar or beside a slice | the mono face at 10.5px, weight 700, in the plate's ink | the plate's figures plugin |
+| The figure in a hole and its caption | 26px 700; 10.5px 600, uppercase | the plate's centre plugin |
+| A range's or a region's word | 8.5px, uppercase | the plate's ranges and quadrants plugins |
+| Pixels | at least twice the device's pixels, so a 1x screen draws sharp | `devicePixelRatio: Math.max(2, window.devicePixelRatio)` |
 
-The design's chart text is 7.5 units of a 640-wide viewBox drawn in a 574px card, 6.7px on
-screen; a canvas does not scale text with its width, so the rendered size is the one carried.
-The colours cross as tokens — `var(--fog)`, and a faded line as the design writes it,
-`color-mix(in srgb, var(--fog) 22%, transparent)` — and the plate resolves each against the
-element it is mounted on, at mount and again when the theme flips, exactly as it resolves a
-series' category. A flip starts from a copy of the configuration taken before anything was
-resolved, because Chart.js keeps and mutates the object it was handed.
+The colours cross as tokens — `var(--fog)`, and a faded one as the design writes it,
+`color-mix(in srgb, var(--cat-1) 18%, transparent)` — and the plate resolves **every string in the
+configuration** against the element it is mounted on, arrays included (a doughnut's colour per
+slice), at mount and again when the theme flips. A flip starts from a copy of the configuration
+taken before anything was resolved, because Chart.js keeps and mutates the object it was handed.
+
+What JSON cannot carry the builder states as a fact and the plate turns into a function on every
+paint: a gradient laid across the plot as it is now, a silence drawn dashed (a line segment style),
+a log axis's ticks and grid, a clock on a value axis, nought's stronger line, the legend's filter
+(a band's lower edge has no row) and a nested doughnut's rows, a paired panel's axis width. And it
+draws what Chart.js core does not, as inline plugins put on where their options were stated: the
+figures, the ranges and the picked label, the figure in a hole, an empty whole, quadrants and the
+plot's border ([developers/plugins](https://www.chartjs.org/docs/latest/developers/plugins.html)).
 
 Styling reference: [axes/styling](https://www.chartjs.org/docs/latest/axes/styling.html);
 `grid.drawBorder` is not a Chart.js 4 option ("`scales[id].grid.drawBorder` has been renamed to
@@ -909,16 +1412,60 @@ design rules one number for every chart.
 
 | Statement | Chart.js option | Documented at |
 |---|---|---|
-| `ChartKind::Ranked` | `options.indexAxis: 'y'`; value scale `x`, index scale `y` | [charts/bar](https://www.chartjs.org/docs/latest/charts/bar.html#horizontal-bar-chart) |
+| `Ranked`, `HorizontalBar`, `StackedHorizontal`, `FloatingBar`, `Diverging` | `options.indexAxis: 'y'`; value scale `x`, index scale `y` with `ticks.autoSkip: false`; a label over eighteen characters as two lines (`data.labels[i]` a pair) | [charts/bar](https://www.chartjs.org/docs/latest/charts/bar.html#horizontal-bar-chart) |
 | `AxisScale(max, step)` | `options.scales.<value>.max`, `options.scales.<value>.ticks.stepSize` | [axes/cartesian/linear](https://www.chartjs.org/docs/latest/axes/cartesian/linear.html) |
 | `ChartFigures(unit, precision)` | `options.plugins.figures = {unit, precision}`, `options.layout.padding`, and the plate's inline plugin `{id: 'figures', afterDatasetsDraw}` | [developers/plugins](https://www.chartjs.org/docs/latest/developers/plugins.html), [configuration/layout](https://www.chartjs.org/docs/latest/configuration/layout.html) |
 | `ChartSeries(accent: true)` | `backgroundColor`/`borderColor` as `var(--acc)`, resolved by the plate like a category | [ux-chartjs `chartjs:pre-connect`](https://symfony.com/bundles/ux-chartjs/current/index.html) |
 | `ChartNoughts::Hairline` | `datasets[].minBarLength: 2`, `options.plugins.noughts = {opacity: 0.28}`, and the plate's per-bar colors | [charts/bar](https://www.chartjs.org/docs/latest/charts/bar.html#dataset-properties), [general/options](https://www.chartjs.org/docs/latest/general/options.html#indexable-options) |
 | `AtlasChart::$barWidth` | `datasets[].maxBarThickness` | [charts/bar](https://www.chartjs.org/docs/latest/charts/bar.html#dataset-properties) |
 | `AtlasChart::$barRadius` | `datasets[].borderRadius` (one per bar, a nought's stub at 1), `datasets[].borderSkipped: false` | [charts/bar](https://www.chartjs.org/docs/latest/charts/bar.html#borderradius) |
-| (every chart) | `scales.*.ticks.{color, font, padding}`, `scales.<value>.grid`, `scales.*.border`, `plugins.tooltip.enabled: false` | [axes/styling](https://www.chartjs.org/docs/latest/axes/styling.html), [configuration/tooltip](https://www.chartjs.org/docs/latest/configuration/tooltip.html) |
+| (every chart) | `scales.*.ticks.{color, font, padding}`, `scales.<value>.grid`, `scales.*.border.display: false`, `plugins.tooltip` (on), and the plate's `devicePixelRatio` | [axes/styling](https://www.chartjs.org/docs/latest/axes/styling.html), [configuration/tooltip](https://www.chartjs.org/docs/latest/configuration/tooltip.html) |
+| `AtlasChart::$parts` | `datasets[0].backgroundColor` as one token per slice; `datasets[0].texture`, hatched by the plate | [charts/doughnut](https://www.chartjs.org/docs/latest/charts/doughnut.html) |
+| `ChartCentre`, `$empty` | `options.plugins.centre`, `options.plugins.empty`, and the plate's inline plugins | [developers/plugins](https://www.chartjs.org/docs/latest/developers/plugins.html) |
+| `$children` | a first dataset — the outer ring — with its own `labels`; `plugins.legend.labels.atlasRing` | [charts/doughnut](https://www.chartjs.org/docs/latest/charts/doughnut.html) |
+| `ChartBand` | two edge datasets, the upper `fill: '-1'`; `plugins.legend.labels.atlasFilter` | [charts/area](https://www.chartjs.org/docs/latest/charts/area.html) |
+| `ChartCurve`, `ChartStep`, `PointMarker`, `$dash` | `tension`, `cubicInterpolationMode`, `stepped`, `pointStyle`, `borderDash` | [charts/line](https://www.chartjs.org/docs/latest/charts/line.html) |
+| `ChartGaps::Dashed` | `spanGaps: true`, `gapStyle`, and the plate's `segment` styling | [charts/line — segment](https://www.chartjs.org/docs/latest/charts/line.html#segment) |
+| `ChartFill` | `datasets[].gradient`, made a gradient by the plate at draw time | [general/options — scriptable](https://www.chartjs.org/docs/latest/general/options.html#scriptable-options) |
+| `ChartScale::Log` | `scales.<value>.type: 'logarithmic'`, ticks and grid at powers of ten | [axes/cartesian/logarithmic](https://www.chartjs.org/docs/latest/axes/cartesian/logarithmic.html) |
+| `ChartAxes::Centre` | `scales.x.position` and `scales.y.position: 'center'`, both titles off; `options.plugins.axisEnds` and the plate's inline plugin | [axes/cartesian](https://www.chartjs.org/docs/latest/axes/cartesian/#axis-position) |
+| `ChartThreshold` | one `backgroundColor` per bar, or `pointBackgroundColor`/`pointRadius` per point | [general/options — indexable](https://www.chartjs.org/docs/latest/general/options.html#indexable-options) |
+| `ChartDecimation` | `options.plugins.decimation`, `parsing: false`, the time x axis | [configuration/decimation](https://www.chartjs.org/docs/latest/configuration/decimation.html) |
+| `ChartTime` | `scales.x.type: 'time'`, `time.{unit, displayFormats, tooltipFormat, isoWeekday}`, `ticks.source` | [axes/cartesian/time](https://www.chartjs.org/docs/latest/axes/cartesian/time.html) |
+| `StackedPanels`, `ChartPane` | `scales.y` and `scales.y2` with `stack: 'panes'`, `stackWeight`; a series' `yAxisID` | [axes/cartesian](https://www.chartjs.org/docs/latest/axes/cartesian/#common-options-to-all-cartesian-axes) |
+| `Heatmap`, `CalendarHeatmap`, `ChartRamp` | `{x, y, v}` cells, one `backgroundColor` per cell, `atlasCell` made `width`/`height` by the plate; `legend.labels.atlasRamp`; a calendar's `ticks.atlasNames` | [chartjs-chart-matrix](https://chartjs-chart-matrix.pages.dev/) |
+| `Treemap` | `tree`, `groups`, `captions`, `labels`; `atlasTree` made colours and words by the plate | [chartjs-chart-treemap](https://chartjs-chart-treemap.pages.dev/) |
+| `Sankey`, `ChartFlowTarget` | `{from, to, flow}` data, `labels`, `priority`; `atlasFlows` made `colorFrom`/`colorTo` by the plate | [chartjs-chart-sankey](https://github.com/kurkle/chartjs-chart-sankey) |
+| `Boxplot`, `Violin`, `ChartReadings` | a list of readings per label, `coef: 1.5` | [chartjs-chart-boxplot](https://github.com/sgratzl/chartjs-chart-boxplot) |
+| `Funnel` | one dataset, a step of one hue per stage, `indexAxis: 'y'` | [chartjs-chart-funnel](https://github.com/sgratzl/chartjs-chart-funnel) |
+| `ChartAxis` (x, y, y2) | `scales.x`, `scales.y`, `scales.y1` (`min`, `max`, `ticks.stepSize`, `title`) | [axes/labelling](https://www.chartjs.org/docs/latest/axes/labelling.html) |
+| `ChartQuadrants`, `$frame` | `options.plugins.quadrants`, `options.plugins.frame`, and the plate's inline plugins | [developers/plugins](https://www.chartjs.org/docs/latest/developers/plugins.html) |
 | `ChartLegend::Chips` / `None` | `options.plugins.legend.display: false`, plus the plate's own `.chart-legend` markup | [configuration/legend](https://www.chartjs.org/docs/latest/configuration/legend.html) |
 | `ChartSeries::$cat` | `backgroundColor`/`borderColor` as `var(--cat-n)`, resolved by the plate at mount and on theme flip | [ux-chartjs `chartjs:pre-connect`](https://symfony.com/bundles/ux-chartjs/current/index.html) |
+
+### The packages a chart is drawn with
+
+Chart.js draws the core kinds alone. A time axis needs a date adapter, and the extension kinds a
+package each:
+
+| Needed by | Package | Version |
+|---|---|---|
+| a time axis, `StackedPanels` | `chartjs-adapter-date-fns`, and `date-fns` under it | 3.0.0, 2.30.0 |
+| `Heatmap`, `CalendarHeatmap` | `chartjs-chart-matrix` | 3.1.0 |
+| `Treemap` | `chartjs-chart-treemap` | 4.2.2 |
+| `Sankey` | `chartjs-chart-sankey` | 0.19.1 |
+| `Boxplot`, `Violin` | `@sgratzl/chartjs-chart-boxplot`, and `@sgratzl/boxplots` under it | 4.4.5, 2.0.0 |
+| `Funnel` | `chartjs-chart-funnel`, and `chroma-js` under it | 4.2.5, 3.2.0 |
+| every extension | `chart.js/helpers` | 4.5.1 |
+
+The core declares each in its `assets/package.json`, and Flex writes them into the installation's
+`importmap.php` on install, as it writes `chart.js` for UX Chart.js. An installation that was set
+up before them runs `php bin/console importmap:require` for each name at its version.
+
+A page loads a package only where a chart on it needs one: the card holds that chart's canvas back,
+and the chart plate imports the package, registers it with Chart.js and then puts the canvas on the
+page. A page of bars loads none of them. A package that does not load leaves its chart undrawn and
+says so in the browser's console.
 
 ## The sparkline
 

@@ -51,9 +51,12 @@ final class ChartSwatchTokenTest extends TestCase
     {
         $js = self::controllerJs();
 
-        foreach (['backgroundColor', 'borderColor', 'pointBackgroundColor', 'pointBorderColor'] as $property) {
-            self::assertStringContainsString("'".$property."'", $js);
-        }
+        // Every string, wherever it sits — a slice's colour in an array included — but the data and the labels.
+        self::assertStringContainsString('walk(node, key) {', $js);
+        self::assertStringContainsString("if (('data' === key || 'labels' === key) && Array.isArray(node))", $js);
+        self::assertStringContainsString('node[i] = this.walk(node[i]);', $js);
+        self::assertStringContainsString('node[k] = this.walk(node[k], k);', $js);
+        self::assertStringContainsString('return this.resolve(node);', $js);
     }
 
     /**
@@ -80,15 +83,14 @@ final class ChartSwatchTokenTest extends TestCase
         $js = self::controllerJs();
 
         self::assertStringContainsString("const RANGES = 'ranges';", $js);
-        self::assertStringContainsString('beforeDatasetsDraw(chart, args, options)', $js);
-        self::assertStringContainsString('range.color = this.resolve(range.color);', $js);
-        self::assertStringContainsString('ranges.highlightColor = this.resolve(ranges.highlightColor);', $js);
+        self::assertStringContainsString('id: RANGES, beforeDatasetsDraw: (chart, args, options) =>', $js);
         self::assertStringContainsString('value.getPixelForValue(', $js);
         self::assertStringContainsString('index.getPixelForValue(options.highlight)', $js);
         // And a paired panel's value axis is held at the stated width, at mount and after a flip.
         self::assertStringContainsString("const PANELS = 'panels';", $js);
         self::assertStringContainsString('value.afterFit = (scale) =>', $js);
-        self::assertSame(2, substr_count($js, 'this.panel('));
+        self::assertStringContainsString('this.panel(config);', $js);
+        self::assertSame(1, substr_count($js, 'this.callables(config);'), 'the callables are put on in paint(), which mount and flip both run');
     }
 
     /** The builder ships no colour of its own — a series is a category. */

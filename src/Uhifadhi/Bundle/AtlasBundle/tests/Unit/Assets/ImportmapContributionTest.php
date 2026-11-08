@@ -15,8 +15,11 @@ namespace Uhifadhi\Bundle\AtlasBundle\Tests\Unit\Assets;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\UX\Chartjs\Builder\ChartBuilder as UxChartBuilder;
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
+use Uhifadhi\Bundle\AtlasBundle\Chart\ChartBuilder;
 use Uhifadhi\Bundle\AtlasBundle\Tests\Integration\Asset\AssetContractTest;
+use Uhifadhi\Bundle\AtlasBundle\Tests\Unit\Chart\DoorStatement;
 use Uhifadhi\Bundle\AtlasBundle\Twig\ChartRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
 
@@ -43,6 +46,18 @@ use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
  * package name Flex keys by, the three bare specifiers (which are the public
  * names every importer in the product types), and that each one points at a file
  * this bundle actually ships.
+ *
+ * AND THE CHART PACKAGES CHART.JS DOES NOT CARRY, as a UX package ships a
+ * third-party one: by name and version in the same block, which Flex hands
+ * to `importmap:require` (symfony/ux-chartjs's own assets/package.json
+ * declares `"chart.js": "^3.4.1 || ^4.0"` that way). "When an application
+ * installs your package, Symfony Flex runs the importmap:require command to
+ * add each importmap entry to the importmap.php file of the application" —
+ * and the list mirrors `peerDependencies`, as the same page asks.
+ *
+ * @see https://symfony.com/doc/current/frontend/create_ux_bundle.html — `symfony.importmap`, version constraints and `path:%PACKAGE%/…`; "the list of packages in importmap should be the same as the ones in peerDependencies"
+ * @see vendor/symfony/ux-chartjs/assets/package.json — `symfony.importmap.chart.js`
+ * @see https://symfony.com/doc/current/frontend/asset_mapper.html — "The importmap:require command will add both the main package and its dependencies"; a subpath is required by its exact path
  */
 final class ImportmapContributionTest extends TestCase
 {
@@ -61,6 +76,70 @@ final class ImportmapContributionTest extends TestCase
         yield 'uhifadhi/basemaps' => ['uhifadhi/basemaps', 'basemaps.js'];
         yield 'uhifadhi/boundary' => ['uhifadhi/boundary', 'boundary.js'];
         yield 'uhifadhi/map-chrome' => ['uhifadhi/map-chrome', 'chrome.js'];
+    }
+
+    /**
+     * THE CHART PACKAGES, pinned to the versions the design was drawn with:
+     * the date adapter and date-fns under it, the five extension packages,
+     * the libraries two of them import, and Chart.js's helpers, which every
+     * extension imports by that subpath.
+     */
+    private const array CHART_PACKAGES = [
+        'chartjs-adapter-date-fns' => '3.0.0',
+        'date-fns' => '2.30.0',
+        'chartjs-chart-matrix' => '3.1.0',
+        'chartjs-chart-treemap' => '4.2.2',
+        'chartjs-chart-sankey' => '0.19.1',
+        '@sgratzl/chartjs-chart-boxplot' => '4.4.5',
+        '@sgratzl/boxplots' => '2.0.0',
+        'chartjs-chart-funnel' => '4.2.5',
+        'chroma-js' => '3.2.0',
+        'chart.js/helpers' => '4.5.1',
+    ];
+
+    public function testTheChartPackagesAreDeclaredByNameAndPinnedVersion(): void
+    {
+        $packages = array_filter(self::importmap(), static fn (mixed $entry): bool => \is_string($entry) && !str_starts_with($entry, 'path:'));
+
+        self::assertSame(self::CHART_PACKAGES, $packages);
+        self::assertSame(array_diff_key(self::CHART_PACKAGES, ['chart.js/helpers' => true]), self::assetPackage()['peerDependencies'] ?? null);
+    }
+
+    /**
+     * Every package the builder names for a catalogue card — the parity
+     * fixtures cover every kind and the time axis — is one Flex writes, and
+     * one the plate knows how to load.
+     */
+    public function testEveryPackageAStatementCanNeedIsDeclaredAndLoadedByThePlate(): void
+    {
+        $builder = new ChartBuilder(new UxChartBuilder());
+        $plate = (string) file_get_contents(self::root().'/assets/controllers/chart_plate_controller.js');
+        $named = [];
+        foreach (glob(self::root().'/tests/Unit/Chart/Fixtures/door/*.json') ?: [] as $file) {
+            $fixture = json_decode((string) file_get_contents($file), true, 512, \JSON_THROW_ON_ERROR);
+            self::assertIsArray($fixture);
+            self::assertIsArray($fixture['statement'] ?? null);
+            $named = [...$named, ...$builder->packages(DoorStatement::chart($fixture['statement']))];
+        }
+
+        self::assertSame(['chartjs-adapter-date-fns', 'chartjs-chart-matrix', 'chartjs-chart-treemap', 'chartjs-chart-sankey', '@sgratzl/chartjs-chart-boxplot', 'chartjs-chart-funnel'], self::sorted(array_values(array_unique($named))));
+        foreach (array_unique($named) as $package) {
+            self::assertArrayHasKey($package, self::CHART_PACKAGES);
+            self::assertStringContainsString(\sprintf("'%s': () => import('%s')", $package, $package), $plate);
+        }
+    }
+
+    /**
+     * @param list<string> $packages
+     *
+     * @return list<string>
+     */
+    private static function sorted(array $packages): array
+    {
+        $order = array_flip(array_keys(self::CHART_PACKAGES));
+        usort($packages, static fn (string $a, string $b): int => ($order[$a] ?? 99) <=> ($order[$b] ?? 99));
+
+        return $packages;
     }
 
     /**
@@ -119,7 +198,7 @@ final class ImportmapContributionTest extends TestCase
             $logicalPaths[$specifier] = AtlasBundle::ASSET_NAMESPACE.'/'.$file;
         }
 
-        self::assertSame($specifiers, array_keys(self::importmap()));
+        self::assertSame($specifiers, array_keys(array_filter(self::importmap(), static fn (mixed $entry): bool => \is_string($entry) && str_starts_with($entry, 'path:'))));
 
         $resolved = [];
         foreach (AssetContractTest::sharedModules() as $specifier => [$logicalPath]) {

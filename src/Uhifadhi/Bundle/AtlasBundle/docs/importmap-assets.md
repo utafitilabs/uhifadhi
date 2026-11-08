@@ -21,6 +21,29 @@ Symfony Flex runs `importmap:require` once per entry on install. What lands in a
 'uhifadhi/widgets'    => ['path' => './vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/ShellBundle/assets/widgets.js'],
 ```
 
+**The chart packages** — Chart.js's date adapter and the five extension packages the chart kinds
+need, with the libraries under them — are declared in the same block by name and pinned version,
+as `symfony/ux-chartjs` declares `chart.js`
+([create a UX bundle](https://symfony.com/doc/current/frontend/create_ux_bundle.html): "When an
+application installs your package, Symfony Flex runs the `importmap:require` command to add each
+`importmap` entry"). Flex downloads each into `assets/vendor/` and writes:
+
+```php
+'chartjs-adapter-date-fns'       => ['version' => '3.0.0'],
+'date-fns'                       => ['version' => '2.30.0'],
+'chartjs-chart-matrix'           => ['version' => '3.1.0'],
+'chartjs-chart-treemap'          => ['version' => '4.2.2'],
+'chartjs-chart-sankey'           => ['version' => '0.19.1'],
+'@sgratzl/chartjs-chart-boxplot' => ['version' => '4.4.5'],
+'@sgratzl/boxplots'              => ['version' => '2.0.0'],
+'chartjs-chart-funnel'           => ['version' => '4.2.5'],
+'chroma-js'                      => ['version' => '3.2.0'],
+'chart.js/helpers'               => ['version' => '4.5.1'],
+```
+
+None is preloaded: the chart plate imports each with a dynamic `import()`, which AssetMapper
+leaves out of the page's preloads, and only where a chart on the page needs it.
+
 **WHICH `assets/package.json`, THOUGH.** Flex builds ONE path per installed composer package —
 `<vendor-dir>/<the package's name>/assets/package.json` — and looks nowhere else
 (`PackageJsonSynchronizer::resolvePackageJson`). The bundles here are names the core `replace`s;

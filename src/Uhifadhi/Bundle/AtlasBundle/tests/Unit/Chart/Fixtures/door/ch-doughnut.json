@@ -1,0 +1,150 @@
+{
+    "statement": {
+        "kind": "doughnut",
+        "title": "The roster today",
+        "labels": [
+            "On duty",
+            "Training",
+            "Off shift",
+            "On leave",
+            "Sick",
+            "Travelling"
+        ],
+        "parts": [
+            {
+                "cat": 1
+            },
+            {
+                "cat": 5
+            },
+            {
+                "cat": 2
+            },
+            {
+                "cat": 3
+            },
+            {
+                "cat": 4
+            },
+            {
+                "cat": 6
+            }
+        ],
+        "series": [
+            {
+                "label": "People",
+                "points": [
+                    18,
+                    2,
+                    7,
+                    3,
+                    2,
+                    1
+                ]
+            }
+        ],
+        "unit": "people",
+        "centre": {
+            "figure": 18,
+            "caption": "of 33 on duty"
+        }
+    },
+    "built": {
+        "type": "doughnut",
+        "data": {
+            "labels": [
+                "On duty",
+                "Training",
+                "Off shift",
+                "On leave",
+                "Sick",
+                "Travelling"
+            ],
+            "datasets": [
+                {
+                    "label": "People",
+                    "data": [
+                        18,
+                        2,
+                        7,
+                        3,
+                        2,
+                        1
+                    ],
+                    "backgroundColor": [
+                        "var(--cat-1)",
+                        "var(--cat-5)",
+                        "var(--cat-2)",
+                        "var(--cat-3)",
+                        "var(--cat-4)",
+                        "var(--cat-6)"
+                    ],
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 2,
+                    "hoverOffset": 0
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "cutout": "68%",
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "people",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                },
+                "centre": {
+                    "figure": "18",
+                    "caption": "of 33 on duty",
+                    "ink": "var(--tx)",
+                    "muted": "var(--fog)",
+                    "family": "var(--font-mono)"
+                }
+            }
+        }
+    },
+    "packages": []
+}

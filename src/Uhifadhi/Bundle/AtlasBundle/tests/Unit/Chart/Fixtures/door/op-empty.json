@@ -1,0 +1,131 @@
+{
+    "statement": {
+        "kind": "doughnut",
+        "title": "Incidents filed today at Westgate Post, by kind",
+        "labels": [
+            "Poaching & wildlife crime",
+            "Human–wildlife conflict",
+            "Compliance & encroachment",
+            "Fire & illegal burning"
+        ],
+        "parts": [
+            {
+                "cat": 1
+            },
+            {
+                "cat": 5
+            },
+            {
+                "cat": 2
+            },
+            {
+                "cat": 6
+            }
+        ],
+        "series": [
+            {
+                "label": "Incidents",
+                "points": [
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            }
+        ],
+        "unit": "incidents",
+        "empty": "Nothing filed yet"
+    },
+    "built": {
+        "type": "doughnut",
+        "data": {
+            "labels": [
+                "Poaching & wildlife crime",
+                "Human–wildlife conflict",
+                "Compliance & encroachment",
+                "Fire & illegal burning"
+            ],
+            "datasets": [
+                {
+                    "label": "Incidents",
+                    "data": [
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "backgroundColor": [
+                        "var(--cat-1)",
+                        "var(--cat-5)",
+                        "var(--cat-2)",
+                        "var(--cat-6)"
+                    ],
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 2,
+                    "hoverOffset": 0
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "cutout": "68%",
+            "plugins": {
+                "legend": {
+                    "display": false,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "incidents",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                },
+                "empty": {
+                    "caption": "Nothing filed yet",
+                    "ring": "var(--ln)",
+                    "muted": "var(--fog)",
+                    "family": "var(--font-mono)",
+                    "cutout": 0.68
+                }
+            }
+        }
+    },
+    "packages": []
+}

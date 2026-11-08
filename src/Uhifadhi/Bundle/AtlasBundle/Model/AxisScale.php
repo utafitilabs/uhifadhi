@@ -14,7 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AtlasBundle\Model;
 
 /**
- * THE TOP OF A VALUE AXIS AND THE DISTANCE BETWEEN ITS GRIDLINES, stated.
+ * THE TOP OF A VALUE AXIS AND THE DISTANCE BETWEEN ITS GRIDLINES, stated —
+ * and its foot, where the axis does not stand on nought.
  *
  * THE RULE IS THE CALLER'S. Left alone, Chart.js picks its own ticks, and
  * they are fine for a run over time; a ranking wants its gridlines on whole
@@ -22,16 +23,23 @@ namespace Uhifadhi\Bundle\AtlasBundle\Model;
  * never below three" is one module's rule, and another module may have
  * another. What the atlas owns is where the two numbers go.
  *
- * @see https://www.chartjs.org/docs/latest/axes/cartesian/linear.html — `max` "overrides maximum value from data" (options.scales[scaleId]); `ticks.stepSize` "User-defined fixed step size for the scale"
+ * A FOOT IS STATED WHERE NOUGHT IS NOT ON THE AXIS: hours of a day from 0
+ * to 24, a signal from -90 to -60 dBm, a log axis from 10. Unstated, the axis
+ * stands on nought. A STEP MAY BE LEFT OUT where the axis rules itself — a
+ * log axis draws a line at each power of ten.
+ *
+ * @see https://www.chartjs.org/docs/latest/axes/cartesian/linear.html — `max` "overrides maximum value from data" (options.scales[scaleId]); `min`; `ticks.stepSize` "User-defined fixed step size for the scale"
  */
 final readonly class AxisScale
 {
     public function __construct(
         public float $max,
-        public float $step,
+        public ?float $step = null,
+        public ?float $min = null,
     ) {
-        if ($max <= 0.0 || $step <= 0.0 || $step > $max) {
-            throw new \InvalidArgumentException(\sprintf('An axis runs from nought to a positive maximum in positive steps no wider than itself; max %s with step %s is not one.', $max, $step));
+        $foot = $min ?? 0.0;
+        if ($max <= $foot || (null !== $step && ($step <= 0.0 || $step > $max - $foot))) {
+            throw new \InvalidArgumentException(\sprintf('An axis runs from its foot (nought, unless stated) up to its maximum in positive steps no wider than itself; %s to %s with step %s is not one.', $foot, $max, $step ?? 'none'));
         }
     }
 

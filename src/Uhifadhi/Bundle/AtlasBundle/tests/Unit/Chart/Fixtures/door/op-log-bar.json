@@ -1,0 +1,174 @@
+{
+    "statement": {
+        "kind": "bar",
+        "title": "Files kept per area",
+        "labels": [
+            "Kilimani",
+            "Olkeju",
+            "Mbuyu",
+            "Sekenke"
+        ],
+        "series": [
+            {
+                "label": "Files kept",
+                "points": [
+                    18000,
+                    2460,
+                    315,
+                    12
+                ]
+            }
+        ],
+        "scale": "log",
+        "axis": {
+            "min": 10,
+            "max": 100000
+        },
+        "unit": "files",
+        "barRadius": 3,
+        "figures": {},
+        "legend": "none"
+    },
+    "built": {
+        "type": "bar",
+        "data": {
+            "labels": [
+                "Kilimani",
+                "Olkeju",
+                "Mbuyu",
+                "Sekenke"
+            ],
+            "datasets": [
+                {
+                    "label": "Files kept",
+                    "data": [
+                        18000,
+                        2460,
+                        315,
+                        12
+                    ],
+                    "backgroundColor": "var(--cat-1)",
+                    "borderColor": "var(--cat-1)",
+                    "borderWidth": 1.5,
+                    "borderRadius": [
+                        3,
+                        3,
+                        3,
+                        3
+                    ],
+                    "borderSkipped": false
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "autoSkip": false
+                    }
+                },
+                "y": {
+                    "beginAtZero": false,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false,
+                        "atlasLog": true
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "atlasLog": true
+                    },
+                    "max": 100000,
+                    "min": 10,
+                    "type": "logarithmic"
+                }
+            },
+            "layout": {
+                "padding": {
+                    "top": 16,
+                    "bottom": 0
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": false,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "files",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                },
+                "figures": {
+                    "unit": "",
+                    "precision": 0
+                }
+            }
+        }
+    },
+    "packages": []
+}

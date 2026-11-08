@@ -1,0 +1,292 @@
+{
+    "statement": {
+        "kind": "scatter",
+        "title": "Per post: incidents against patrol km, this month",
+        "labels": [],
+        "series": [
+            {
+                "label": "Posts",
+                "cat": 1,
+                "points": [
+                    {
+                        "x": 410,
+                        "y": 31
+                    },
+                    {
+                        "x": 352,
+                        "y": 24
+                    },
+                    {
+                        "x": 298,
+                        "y": 19
+                    },
+                    {
+                        "x": 276,
+                        "y": 27
+                    },
+                    {
+                        "x": 240,
+                        "y": 12
+                    },
+                    {
+                        "x": 198,
+                        "y": 15
+                    },
+                    {
+                        "x": 150,
+                        "y": 21
+                    },
+                    {
+                        "x": 88,
+                        "y": 6
+                    },
+                    {
+                        "x": 122,
+                        "y": 25
+                    },
+                    {
+                        "x": 330,
+                        "y": 9
+                    }
+                ]
+            }
+        ],
+        "quadrants": {
+            "x": 246,
+            "y": 19,
+            "parts": [
+                {
+                    "swatch": "var(--warn)",
+                    "label": "Under-patrolled"
+                },
+                {
+                    "label": "Pressed"
+                },
+                {
+                    "swatch": "var(--ok)",
+                    "label": "Covered"
+                },
+                {
+                    "label": "Quiet"
+                }
+            ]
+        },
+        "xAxis": {
+            "title": "Patrol km",
+            "unit": "km"
+        },
+        "yAxis": {
+            "title": "Incidents",
+            "unit": "incidents"
+        },
+        "legend": "none"
+    },
+    "built": {
+        "type": "scatter",
+        "data": {
+            "labels": [],
+            "datasets": [
+                {
+                    "label": "Posts",
+                    "data": [
+                        {
+                            "x": 410,
+                            "y": 31
+                        },
+                        {
+                            "x": 352,
+                            "y": 24
+                        },
+                        {
+                            "x": 298,
+                            "y": 19
+                        },
+                        {
+                            "x": 276,
+                            "y": 27
+                        },
+                        {
+                            "x": 240,
+                            "y": 12
+                        },
+                        {
+                            "x": 198,
+                            "y": 15
+                        },
+                        {
+                            "x": 150,
+                            "y": 21
+                        },
+                        {
+                            "x": 88,
+                            "y": 6
+                        },
+                        {
+                            "x": 122,
+                            "y": 25
+                        },
+                        {
+                            "x": 330,
+                            "y": 9
+                        }
+                    ],
+                    "backgroundColor": "var(--cat-1)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "pointStyle": "circle",
+                    "pointRadius": 4,
+                    "pointHoverRadius": 5
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "type": "linear",
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    },
+                    "title": {
+                        "display": true,
+                        "text": "PATROL KM",
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 9.5,
+                            "weight": 600
+                        },
+                        "padding": {
+                            "top": 6,
+                            "bottom": 2
+                        }
+                    }
+                },
+                "y": {
+                    "type": "linear",
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    },
+                    "title": {
+                        "display": true,
+                        "text": "INCIDENTS",
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 9.5,
+                            "weight": 600
+                        },
+                        "padding": {
+                            "top": 6,
+                            "bottom": 2
+                        }
+                    }
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": false,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "",
+                    "xUnit": "km",
+                    "yUnit": "incidents",
+                    "sizeLabel": "",
+                    "clock": false
+                },
+                "quadrants": {
+                    "x": 246,
+                    "y": 19,
+                    "parts": [
+                        {
+                            "color": "var(--warn)",
+                            "label": "Under-patrolled"
+                        },
+                        {
+                            "color": "transparent",
+                            "label": "Pressed"
+                        },
+                        {
+                            "color": "var(--ok)",
+                            "label": "Covered"
+                        },
+                        {
+                            "color": "transparent",
+                            "label": "Quiet"
+                        }
+                    ],
+                    "opacity": 0.08,
+                    "ink": "var(--fog)",
+                    "line": "var(--ln2)",
+                    "family": "var(--font-mono)"
+                }
+            }
+        }
+    },
+    "packages": []
+}

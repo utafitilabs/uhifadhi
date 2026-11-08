@@ -44,10 +44,9 @@ final class ChartFiguresPluginTest extends TestCase
         $js = self::controllerJs();
 
         self::assertStringContainsString("const FIGURES = '".ChartBuilder::FIGURES_PLUGIN."';", $js);
-        self::assertStringContainsString('config.options?.plugins?.[FIGURES]', $js);
-        self::assertStringContainsString('config.plugins = [...(config.plugins ?? []), ', $js);
-        self::assertStringContainsString('id: FIGURES', $js);
-        self::assertStringContainsString('afterDatasetsDraw(chart, args, options)', $js);
+        self::assertStringContainsString('if (stated[FIGURES])', $js);
+        self::assertStringContainsString('config.plugins = [...(config.plugins ?? []), ...this.plugins(config)];', $js);
+        self::assertStringContainsString('id: FIGURES, afterDatasetsDraw: (chart, args, options) =>', $js);
     }
 
     /** Every bar of every visible dataset, read from the library's own metadata. */
@@ -86,7 +85,38 @@ final class ChartFiguresPluginTest extends TestCase
         self::assertStringContainsString('getComputedStyle(this.element)', $js);
         self::assertStringContainsString("getPropertyValue('--font-mono')", $js);
         self::assertStringContainsString('ctx.fillStyle = ink.color', $js);
+        // At the house scale's "small count, bold", or the size a surface stated.
+        self::assertStringContainsString("const FIGURE_FONT = '700 10.5px ';", $js);
+        self::assertStringContainsString('options.size ? `700 ${options.size}px ` : FIGURE_FONT', $js);
         self::assertDoesNotMatchRegularExpression('/#[0-9a-fA-F]{6}\b/', $js);
+    }
+
+    /**
+     * A BAR BELOW NOUGHT WEARS ITS FIGURE UNDER ITS END; A STACK ASKED FOR
+     * TOTALS WEARS ONE FIGURE, ITS VISIBLE PARTS SUMMED, never a nought.
+     */
+    public function testABarBelowNoughtAndAStacksTotalPlaceTheirFigures(): void
+    {
+        $js = self::controllerJs();
+
+        self::assertStringContainsString("ctx.textBaseline = below ? 'top' : 'bottom';", $js);
+        self::assertStringContainsString('if (options.totals && index !== last)', $js);
+        self::assertStringContainsString('value = any && sum ? sum : null;', $js);
+    }
+
+    /**
+     * A SLICE'S NAME AND FIGURE SIT OUTSIDE IT, LAID OUT PER SIDE: sorted down
+     * the side, pushed one line apart, kept inside the canvas.
+     */
+    public function testSliceNamesAreLaidOutPerSideAndNeverCollide(): void
+    {
+        $js = self::controllerJs();
+
+        self::assertStringContainsString('const middle = (mark.startAngle + mark.endAngle) / 2;', $js);
+        self::assertStringContainsString("sides[right ? 'right' : 'left'].push(", $js);
+        self::assertStringContainsString('side.sort((a, b) => a.y - b.y);', $js);
+        self::assertStringContainsString('side[i].y = Math.max(side[i].y, top, i ? side[i - 1].y + line : top);', $js);
+        self::assertStringContainsString('side[j].y = Math.min(side[j].y, bottom, j < side.length - 1 ? side[j + 1].y - line : bottom);', $js);
     }
 
     private static function controllerJs(): string

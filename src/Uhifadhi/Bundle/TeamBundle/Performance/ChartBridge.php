@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Performance;
 
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
-use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind as AtlasKind;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries as AtlasSeries;
 use Uhifadhi\Contracts\Performance\ChartSeries;
 use Uhifadhi\Contracts\Performance\TopicChart;
@@ -29,16 +28,15 @@ use Uhifadhi\Contracts\Performance\TopicChart;
  * translation is a dozen lines and it belongs to the host, which is the
  * only party that has both.
  *
- * THE TWO ENUMS ARE KEPT IN STEP BY VALUE, not by a match arm per case:
- * a kind added to the contract and not to the atlas should fail where
- * it is drawn rather than silently become a bar.
+ * THE KIND CROSSES AS IT IS: the atlas draws the contract's own
+ * `ChartKind`, so a kind a topic can state is a kind the atlas can draw.
  */
 final readonly class ChartBridge
 {
     public static function atlas(TopicChart $chart): AtlasChart
     {
         return new AtlasChart(
-            kind: AtlasKind::from($chart->kind->value),
+            kind: $chart->kind,
             labels: $chart->labels,
             series: array_map(
                 /*

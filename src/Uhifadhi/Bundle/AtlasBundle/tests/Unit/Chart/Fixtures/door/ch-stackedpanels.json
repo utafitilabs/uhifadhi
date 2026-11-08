@@ -1,0 +1,420 @@
+{
+    "statement": {
+        "kind": "stacked-panels",
+        "title": "Patrols and incidents per day, the last four weeks, Kilimani",
+        "labels": [
+            "2026-10-13",
+            "2026-10-14",
+            "2026-10-15",
+            "2026-10-16",
+            "2026-10-17",
+            "2026-10-18",
+            "2026-10-19",
+            "2026-10-20",
+            "2026-10-21",
+            "2026-10-22",
+            "2026-10-23",
+            "2026-10-24",
+            "2026-10-25",
+            "2026-10-26",
+            "2026-10-27",
+            "2026-10-28",
+            "2026-10-29",
+            "2026-10-30",
+            "2026-10-31",
+            "2026-11-01",
+            "2026-11-02",
+            "2026-11-03",
+            "2026-11-04",
+            "2026-11-05",
+            "2026-11-06",
+            "2026-11-07",
+            "2026-11-08",
+            "2026-11-09"
+        ],
+        "time": {
+            "unit": "day"
+        },
+        "panes": [
+            {
+                "title": "Patrols",
+                "weight": 2
+            },
+            {
+                "title": "Incidents",
+                "weight": 1,
+                "max": 6,
+                "step": 3
+            }
+        ],
+        "series": [
+            {
+                "label": "Patrols",
+                "cat": 1,
+                "unit": "patrols",
+                "points": [
+                    14,
+                    15,
+                    13,
+                    16,
+                    15,
+                    11,
+                    9,
+                    14,
+                    16,
+                    15,
+                    17,
+                    16,
+                    12,
+                    10,
+                    15,
+                    16,
+                    14,
+                    17,
+                    18,
+                    12,
+                    9,
+                    15,
+                    17,
+                    16,
+                    18,
+                    17,
+                    13,
+                    11
+                ]
+            },
+            {
+                "label": "Incidents",
+                "cat": 5,
+                "unit": "incidents",
+                "pane": 1,
+                "bar": true,
+                "points": [
+                    2,
+                    1,
+                    3,
+                    0,
+                    2,
+                    4,
+                    5,
+                    1,
+                    0,
+                    2,
+                    1,
+                    3,
+                    4,
+                    5,
+                    2,
+                    1,
+                    0,
+                    2,
+                    1,
+                    3,
+                    6,
+                    2,
+                    1,
+                    0,
+                    1,
+                    2,
+                    3,
+                    4
+                ]
+            }
+        ],
+        "barRadius": 1.5
+    },
+    "built": {
+        "type": "bar",
+        "data": {
+            "labels": [
+                "2026-10-13",
+                "2026-10-14",
+                "2026-10-15",
+                "2026-10-16",
+                "2026-10-17",
+                "2026-10-18",
+                "2026-10-19",
+                "2026-10-20",
+                "2026-10-21",
+                "2026-10-22",
+                "2026-10-23",
+                "2026-10-24",
+                "2026-10-25",
+                "2026-10-26",
+                "2026-10-27",
+                "2026-10-28",
+                "2026-10-29",
+                "2026-10-30",
+                "2026-10-31",
+                "2026-11-01",
+                "2026-11-02",
+                "2026-11-03",
+                "2026-11-04",
+                "2026-11-05",
+                "2026-11-06",
+                "2026-11-07",
+                "2026-11-08",
+                "2026-11-09"
+            ],
+            "datasets": [
+                {
+                    "label": "Patrols",
+                    "data": [
+                        14,
+                        15,
+                        13,
+                        16,
+                        15,
+                        11,
+                        9,
+                        14,
+                        16,
+                        15,
+                        17,
+                        16,
+                        12,
+                        10,
+                        15,
+                        16,
+                        14,
+                        17,
+                        18,
+                        12,
+                        9,
+                        15,
+                        17,
+                        16,
+                        18,
+                        17,
+                        13,
+                        11
+                    ],
+                    "unit": "patrols",
+                    "yAxisID": "y",
+                    "borderColor": "var(--cat-1)",
+                    "backgroundColor": "var(--cat-1)",
+                    "type": "line",
+                    "tension": 0.25,
+                    "fill": false,
+                    "borderWidth": 2,
+                    "pointRadius": 0,
+                    "pointStyle": "circle",
+                    "pointBackgroundColor": "var(--cat-1)",
+                    "pointBorderColor": "var(--cat-1)"
+                },
+                {
+                    "label": "Incidents",
+                    "data": [
+                        2,
+                        1,
+                        3,
+                        0,
+                        2,
+                        4,
+                        5,
+                        1,
+                        0,
+                        2,
+                        1,
+                        3,
+                        4,
+                        5,
+                        2,
+                        1,
+                        0,
+                        2,
+                        1,
+                        3,
+                        6,
+                        2,
+                        1,
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ],
+                    "unit": "incidents",
+                    "yAxisID": "y2",
+                    "borderColor": "var(--cat-5)",
+                    "backgroundColor": "var(--cat-5)",
+                    "type": "bar",
+                    "borderWidth": 0,
+                    "borderRadius": 1.5,
+                    "borderSkipped": false
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "interaction": {
+                "mode": "index",
+                "intersect": false
+            },
+            "scales": {
+                "x": {
+                    "type": "time",
+                    "time": {
+                        "unit": "day",
+                        "displayFormats": {
+                            "day": "d MMM"
+                        },
+                        "tooltipFormat": "EEE d MMM yyyy",
+                        "isoWeekday": true
+                    },
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "source": "labels"
+                    },
+                    "offset": true
+                },
+                "y2": {
+                    "type": "linear",
+                    "position": "left",
+                    "stack": "panes",
+                    "stackWeight": 1,
+                    "offset": true,
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "stepSize": 3
+                    },
+                    "title": {
+                        "display": true,
+                        "text": "INCIDENTS",
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 9.5,
+                            "weight": 600
+                        },
+                        "padding": {
+                            "top": 6,
+                            "bottom": 2
+                        }
+                    },
+                    "max": 6
+                },
+                "y": {
+                    "type": "linear",
+                    "position": "left",
+                    "stack": "panes",
+                    "stackWeight": 2,
+                    "offset": true,
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    },
+                    "title": {
+                        "display": true,
+                        "text": "PATROLS",
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 9.5,
+                            "weight": 600
+                        },
+                        "padding": {
+                            "top": 6,
+                            "bottom": 2
+                        }
+                    }
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": [
+        "chartjs-adapter-date-fns"
+    ]
+}

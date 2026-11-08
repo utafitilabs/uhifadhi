@@ -1,0 +1,193 @@
+{
+    "statement": {
+        "kind": "bar",
+        "title": "Incidents filed per week",
+        "labels": [
+            "W34",
+            "W35",
+            "W36",
+            "W37",
+            "W38",
+            "W39",
+            "W40",
+            "W41",
+            "W42",
+            "W43",
+            "W44",
+            "W45"
+        ],
+        "series": [
+            {
+                "label": "Incidents filed",
+                "points": [
+                    14,
+                    9,
+                    12,
+                    17,
+                    11,
+                    8,
+                    15,
+                    19,
+                    13,
+                    10,
+                    16,
+                    12
+                ]
+            }
+        ],
+        "unit": "incidents",
+        "barRadius": 3,
+        "legend": "none"
+    },
+    "built": {
+        "type": "bar",
+        "data": {
+            "labels": [
+                "W34",
+                "W35",
+                "W36",
+                "W37",
+                "W38",
+                "W39",
+                "W40",
+                "W41",
+                "W42",
+                "W43",
+                "W44",
+                "W45"
+            ],
+            "datasets": [
+                {
+                    "label": "Incidents filed",
+                    "data": [
+                        14,
+                        9,
+                        12,
+                        17,
+                        11,
+                        8,
+                        15,
+                        19,
+                        13,
+                        10,
+                        16,
+                        12
+                    ],
+                    "backgroundColor": "var(--cat-1)",
+                    "borderColor": "var(--cat-1)",
+                    "borderWidth": 1.5,
+                    "borderRadius": [
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3,
+                        3
+                    ],
+                    "borderSkipped": false
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "autoSkip": false
+                    }
+                },
+                "y": {
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    }
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": false,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "incidents",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": []
+}

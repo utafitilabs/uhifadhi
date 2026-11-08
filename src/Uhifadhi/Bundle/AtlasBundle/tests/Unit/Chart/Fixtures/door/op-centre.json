@@ -1,0 +1,294 @@
+{
+    "statement": {
+        "kind": "scatter",
+        "title": "Per post: change in patrols against change in incidents, on October",
+        "labels": [
+            "Eastgate",
+            "Riverbend",
+            "Northgate",
+            "Westgate",
+            "Springs",
+            "Junction",
+            "Roadside",
+            "Headquarters",
+            "Lakeshore",
+            "Hilltop",
+            "Crossing",
+            "Ridge"
+        ],
+        "series": [
+            {
+                "label": "Posts",
+                "cat": 1,
+                "points": [
+                    {
+                        "x": 6,
+                        "y": -4
+                    },
+                    {
+                        "x": 3,
+                        "y": -1
+                    },
+                    {
+                        "x": -2,
+                        "y": 3
+                    },
+                    {
+                        "x": -7,
+                        "y": 5
+                    },
+                    {
+                        "x": 8,
+                        "y": -6
+                    },
+                    {
+                        "x": 1,
+                        "y": 2
+                    },
+                    {
+                        "x": -4,
+                        "y": -2
+                    },
+                    {
+                        "x": 0,
+                        "y": 1
+                    },
+                    {
+                        "x": 5,
+                        "y": 2
+                    },
+                    {
+                        "x": -6,
+                        "y": -3
+                    },
+                    {
+                        "x": 2,
+                        "y": -5
+                    },
+                    {
+                        "x": -3,
+                        "y": 6
+                    }
+                ]
+            }
+        ],
+        "axes": "centre",
+        "xAxis": {
+            "title": "Patrols, change",
+            "unit": "patrols",
+            "min": -10,
+            "max": 10,
+            "step": 5
+        },
+        "yAxis": {
+            "title": "Incidents, change",
+            "unit": "incidents",
+            "min": -8,
+            "max": 8,
+            "step": 4
+        },
+        "legend": "none"
+    },
+    "built": {
+        "type": "scatter",
+        "data": {
+            "labels": [
+                "Eastgate",
+                "Riverbend",
+                "Northgate",
+                "Westgate",
+                "Springs",
+                "Junction",
+                "Roadside",
+                "Headquarters",
+                "Lakeshore",
+                "Hilltop",
+                "Crossing",
+                "Ridge"
+            ],
+            "datasets": [
+                {
+                    "label": "Posts",
+                    "data": [
+                        {
+                            "x": 6,
+                            "y": -4
+                        },
+                        {
+                            "x": 3,
+                            "y": -1
+                        },
+                        {
+                            "x": -2,
+                            "y": 3
+                        },
+                        {
+                            "x": -7,
+                            "y": 5
+                        },
+                        {
+                            "x": 8,
+                            "y": -6
+                        },
+                        {
+                            "x": 1,
+                            "y": 2
+                        },
+                        {
+                            "x": -4,
+                            "y": -2
+                        },
+                        {
+                            "x": 0,
+                            "y": 1
+                        },
+                        {
+                            "x": 5,
+                            "y": 2
+                        },
+                        {
+                            "x": -6,
+                            "y": -3
+                        },
+                        {
+                            "x": 2,
+                            "y": -5
+                        },
+                        {
+                            "x": -3,
+                            "y": 6
+                        }
+                    ],
+                    "backgroundColor": "var(--cat-1)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "pointStyle": "circle",
+                    "pointRadius": 4,
+                    "pointHoverRadius": 5
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "type": "linear",
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": true,
+                        "color": "var(--ln2)",
+                        "width": 1
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "stepSize": 5
+                    },
+                    "title": {
+                        "display": false
+                    },
+                    "min": -10,
+                    "max": 10,
+                    "position": "center"
+                },
+                "y": {
+                    "type": "linear",
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": true,
+                        "color": "var(--ln2)",
+                        "width": 1
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "stepSize": 4
+                    },
+                    "title": {
+                        "display": false
+                    },
+                    "min": -8,
+                    "max": 8,
+                    "position": "center"
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": false,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "",
+                    "xUnit": "patrols",
+                    "yUnit": "incidents",
+                    "sizeLabel": "",
+                    "clock": false
+                },
+                "axisEnds": {
+                    "x": "Patrols, change",
+                    "y": "Incidents, change",
+                    "ink": "var(--fog)",
+                    "family": "var(--font-mono)",
+                    "size": 10.5,
+                    "weight": 400,
+                    "tickPadding": 5
+                }
+            }
+        }
+    },
+    "packages": []
+}

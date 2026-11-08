@@ -1,0 +1,186 @@
+{
+    "statement": {
+        "kind": "radar",
+        "title": "Two services across the performance topics",
+        "labels": [
+            "Patrol coverage",
+            "Response time",
+            "Snares removed",
+            "Report completeness",
+            "Arrests per case",
+            "Training hours"
+        ],
+        "series": [
+            {
+                "label": "Protection Service",
+                "points": [
+                    82,
+                    64,
+                    71,
+                    88,
+                    55,
+                    69
+                ],
+                "cat": 1
+            },
+            {
+                "label": "Community Service",
+                "points": [
+                    74,
+                    58,
+                    null,
+                    91,
+                    null,
+                    77
+                ],
+                "cat": 5
+            }
+        ],
+        "unit": "of 100",
+        "axis": {
+            "max": 100,
+            "step": 25
+        }
+    },
+    "built": {
+        "type": "radar",
+        "data": {
+            "labels": [
+                "Patrol coverage",
+                "Response time",
+                "Snares removed",
+                "Report completeness",
+                "Arrests per case",
+                "Training hours"
+            ],
+            "datasets": [
+                {
+                    "label": "Protection Service",
+                    "data": [
+                        82,
+                        64,
+                        71,
+                        88,
+                        55,
+                        69
+                    ],
+                    "borderColor": "var(--cat-1)",
+                    "backgroundColor": "color-mix(in srgb, var(--cat-1) 18%, transparent)",
+                    "pointBackgroundColor": "var(--cat-1)",
+                    "pointBorderColor": "var(--p1)",
+                    "pointRadius": 3,
+                    "borderWidth": 2,
+                    "fill": true,
+                    "pointStyle": "circle",
+                    "spanGaps": false
+                },
+                {
+                    "label": "Community Service",
+                    "data": [
+                        74,
+                        58,
+                        null,
+                        91,
+                        null,
+                        77
+                    ],
+                    "borderColor": "var(--cat-5)",
+                    "backgroundColor": "color-mix(in srgb, var(--cat-5) 18%, transparent)",
+                    "pointBackgroundColor": "var(--cat-5)",
+                    "pointBorderColor": "var(--p1)",
+                    "pointRadius": 3,
+                    "borderWidth": 2,
+                    "fill": true,
+                    "pointStyle": "triangle",
+                    "spanGaps": false
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "r": {
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)"
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "backdropColor": "transparent",
+                        "showLabelBackdrop": false,
+                        "z": 1,
+                        "stepSize": 25
+                    },
+                    "pointLabels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        }
+                    },
+                    "angleLines": {
+                        "color": "var(--ln)"
+                    },
+                    "max": 100
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": true,
+                        "pointStyleWidth": 10
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": true,
+                    "unit": "of 100",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": []
+}

@@ -1,0 +1,125 @@
+{
+    "statement": {
+        "kind": "gauge",
+        "title": "Posts covered, this shift",
+        "labels": [
+            "Covered",
+            "Not yet covered"
+        ],
+        "parts": [
+            {
+                "cat": 1
+            },
+            {
+                "swatch": "var(--dim)",
+                "texture": "hatch"
+            }
+        ],
+        "series": [
+            {
+                "label": "Posts",
+                "points": [
+                    14,
+                    4
+                ]
+            }
+        ],
+        "unit": "posts",
+        "centre": {
+            "figure": 14,
+            "caption": "of 18 posts covered"
+        }
+    },
+    "built": {
+        "type": "doughnut",
+        "data": {
+            "labels": [
+                "Covered",
+                "Not yet covered"
+            ],
+            "datasets": [
+                {
+                    "label": "Posts",
+                    "data": [
+                        14,
+                        4
+                    ],
+                    "backgroundColor": [
+                        "var(--cat-1)",
+                        "var(--dim)"
+                    ],
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 2,
+                    "hoverOffset": 0,
+                    "texture": [
+                        null,
+                        "hatch"
+                    ],
+                    "circumference": 180,
+                    "rotation": -90
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "cutout": "72%",
+            "plugins": {
+                "legend": {
+                    "display": false,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "posts",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                },
+                "centre": {
+                    "figure": "14",
+                    "caption": "of 18 posts covered",
+                    "ink": "var(--tx)",
+                    "muted": "var(--fog)",
+                    "family": "var(--font-mono)"
+                }
+            }
+        }
+    },
+    "packages": []
+}

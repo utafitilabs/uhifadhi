@@ -6,6 +6,12 @@
 
 ## 1.0.0
 
+ * `Performance\ChartKind` is the one list of chart kinds — the atlas draws it as it is — and
+   holds the 25 Chart.js kinds the atlas draws; its values are the kind names the design states
+   charts with (`horizontal-bar`, `polar-area`, `nested-doughnut` …). `Ranked` joins it, and
+   the eight kinds drawn by a package of their own or across two panes: `StackedPanels`,
+   `Heatmap`, `CalendarHeatmap`, `Treemap`, `Sankey`, `Boxplot`, `Violin`, `Funnel`.
+
  * `Performance\TopicKpi` carries an optional `asOf` (last): when a figure read from the
    facts ledger in a period still open was true, so a performance page says how old it is.
 

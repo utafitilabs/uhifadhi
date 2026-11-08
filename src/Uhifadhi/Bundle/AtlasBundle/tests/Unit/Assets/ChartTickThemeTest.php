@@ -37,10 +37,9 @@ final class ChartTickThemeTest extends TestCase
     {
         $js = self::controllerJs();
 
-        foreach (["[scale.ticks, 'color']", "[scale.ticks?.font, 'family']", "[scale.grid, 'color']", "[scale.border, 'color']"] as $door) {
-            self::assertStringContainsString($door, $js);
-        }
-        self::assertStringContainsString('Object.values(config?.options?.scales ?? {})', $js);
+        // The whole configuration is walked from its root: every scale's ticks, grid and border with it.
+        self::assertStringContainsString('this.walk(config);', $js);
+        self::assertStringContainsString('for (const k of Object.keys(node))', $js);
     }
 
     /** A faded line is the token at an alpha, turned into a colour the canvas reads. */
@@ -57,11 +56,11 @@ final class ChartTickThemeTest extends TestCase
     {
         $js = self::controllerJs();
 
-        $copied = strpos($js, 'this.stated = structuredClone(event.detail.config);');
+        $copied = strpos($js, 'this.stated = structuredClone(config);');
         self::assertNotFalse($copied);
-        self::assertLessThan(strpos($js, 'this.paint(event.detail.config);'), $copied);
+        self::assertLessThan(strpos($js, 'this.paint(config);'), $copied);
 
-        self::assertStringContainsString('const fresh = structuredClone(this.stated);', $js);
+        self::assertStringContainsString('const fresh = this.paint(structuredClone(this.stated));', $js);
         self::assertStringContainsString('this.chart.options = fresh.options;', $js);
         self::assertStringNotContainsString('this.chart.config._config', $js);
     }
@@ -73,8 +72,8 @@ final class ChartTickThemeTest extends TestCase
 
         $doc = strpos($js, 'THE FIGURES PLUGIN');
         self::assertNotFalse($doc);
-        self::assertGreaterThan(strpos($js, 'hairline(config) {'), $doc);
-        self::assertLessThan(strpos($js, 'figure(config) {'), $doc);
+        self::assertLessThan(strpos($js, 'drawFigures(chart, options, element, family) {'), $doc);
+        self::assertGreaterThan(strpos($js, 'plugins(config) {'), $doc);
     }
 
     private static function controllerJs(): string

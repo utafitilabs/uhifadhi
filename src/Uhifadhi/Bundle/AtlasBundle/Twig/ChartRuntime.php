@@ -43,6 +43,16 @@ use Uhifadhi\Bundle\AtlasBundle\Model\ChartLegend;
  * same vocabulary every chip on the page is written in — and the
  * library's own legend switched off by the builder.
  *
+ * A CHART CHART.JS CANNOT DRAW ALONE IS HELD BACK. A time axis needs the
+ * date adapter and an extension kind its package; the library's controller
+ * makes the chart the moment its canvas connects, and a package is loaded
+ * only for a chart that needs it. So the plate is told what to load and
+ * the canvas is served inside a `<template>`, which the browser does not
+ * render and Stimulus does not watch; the plate puts it on the page once
+ * every package is registered.
+ *
+ * @see https://html.spec.whatwg.org/multipage/scripting.html#the-template-element — "the template contents are not a child of the element itself"
+ * @see https://stimulus.hotwired.dev/reference/values — `data-[identifier]-[name]-value`, an Array value read as JSON
  * @see https://symfony.com/doc/current/templating/twig_extension.html — a lazy-loaded extension's work lives in a RuntimeExtensionInterface class named from the extension as [Runtime::class, 'method']
  * @see vendor/symfony/twig-bundle/DependencyInjection/Compiler/RuntimeLoaderPass.php — the 'twig.runtime' tag AtlasBundle::loadExtension() writes by hand, collected into twig.runtime_loader
  * @see vendor/symfony/twig-bundle/Resources/config/twig.php — 'twig.runtime_loader', the ContainerRuntimeLoader that builds this class on the first call
@@ -90,6 +100,7 @@ final readonly class ChartRuntime implements RuntimeExtensionInterface
 
         return $this->twig->render(self::TEMPLATE, [
             'controller' => self::CONTROLLER,
+            'needs' => $chart->isEmpty() ? [] : $this->charts->packages($chart),
             'title' => $title,
             'caption' => $caption,
             'empty' => $chart->isEmpty(),

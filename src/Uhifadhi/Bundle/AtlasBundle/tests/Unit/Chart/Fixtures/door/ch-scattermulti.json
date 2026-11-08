@@ -1,0 +1,450 @@
+{
+    "statement": {
+        "kind": "scatter-multi-axis",
+        "title": "Patrols this month: distance and observations against duration",
+        "labels": [],
+        "series": [
+            {
+                "label": "Distance",
+                "cat": 1,
+                "unit": "km",
+                "points": [
+                    {
+                        "x": 2.5,
+                        "y": 7.8
+                    },
+                    {
+                        "x": 3.1,
+                        "y": 9.6
+                    },
+                    {
+                        "x": 3.6,
+                        "y": 10.4
+                    },
+                    {
+                        "x": 4,
+                        "y": 12.9
+                    },
+                    {
+                        "x": 4.4,
+                        "y": 12.1
+                    },
+                    {
+                        "x": 4.9,
+                        "y": 15.6
+                    },
+                    {
+                        "x": 5.3,
+                        "y": 14.8
+                    },
+                    {
+                        "x": 5.8,
+                        "y": 18.2
+                    },
+                    {
+                        "x": 6.2,
+                        "y": 17.1
+                    },
+                    {
+                        "x": 6.7,
+                        "y": 20.9
+                    },
+                    {
+                        "x": 7.1,
+                        "y": 19.4
+                    },
+                    {
+                        "x": 7.6,
+                        "y": 23
+                    },
+                    {
+                        "x": 8,
+                        "y": 22.6
+                    },
+                    {
+                        "x": 3.3,
+                        "y": 8.9
+                    }
+                ]
+            },
+            {
+                "label": "Observations",
+                "cat": 5,
+                "unit": "observations",
+                "axis": "right",
+                "points": [
+                    {
+                        "x": 2.5,
+                        "y": 4
+                    },
+                    {
+                        "x": 3.1,
+                        "y": 7
+                    },
+                    {
+                        "x": 3.6,
+                        "y": 5
+                    },
+                    {
+                        "x": 4,
+                        "y": 9
+                    },
+                    {
+                        "x": 4.4,
+                        "y": 8
+                    },
+                    {
+                        "x": 4.9,
+                        "y": 12
+                    },
+                    {
+                        "x": 5.3,
+                        "y": 9
+                    },
+                    {
+                        "x": 5.8,
+                        "y": 14
+                    },
+                    {
+                        "x": 6.2,
+                        "y": 11
+                    },
+                    {
+                        "x": 6.7,
+                        "y": 15
+                    },
+                    {
+                        "x": 7.1,
+                        "y": 13
+                    },
+                    {
+                        "x": 7.6,
+                        "y": 18
+                    },
+                    {
+                        "x": 8,
+                        "y": 16
+                    },
+                    {
+                        "x": 3.3,
+                        "y": 6
+                    }
+                ]
+            }
+        ],
+        "xAxis": {
+            "title": "Duration, h",
+            "unit": "h"
+        },
+        "yAxis": {
+            "title": "Distance, km",
+            "unit": "km"
+        },
+        "y2Axis": {
+            "title": "Observations"
+        }
+    },
+    "built": {
+        "type": "scatter",
+        "data": {
+            "labels": [],
+            "datasets": [
+                {
+                    "label": "Distance",
+                    "data": [
+                        {
+                            "x": 2.5,
+                            "y": 7.8
+                        },
+                        {
+                            "x": 3.1,
+                            "y": 9.6
+                        },
+                        {
+                            "x": 3.6,
+                            "y": 10.4
+                        },
+                        {
+                            "x": 4,
+                            "y": 12.9
+                        },
+                        {
+                            "x": 4.4,
+                            "y": 12.1
+                        },
+                        {
+                            "x": 4.9,
+                            "y": 15.6
+                        },
+                        {
+                            "x": 5.3,
+                            "y": 14.8
+                        },
+                        {
+                            "x": 5.8,
+                            "y": 18.2
+                        },
+                        {
+                            "x": 6.2,
+                            "y": 17.1
+                        },
+                        {
+                            "x": 6.7,
+                            "y": 20.9
+                        },
+                        {
+                            "x": 7.1,
+                            "y": 19.4
+                        },
+                        {
+                            "x": 7.6,
+                            "y": 23
+                        },
+                        {
+                            "x": 8,
+                            "y": 22.6
+                        },
+                        {
+                            "x": 3.3,
+                            "y": 8.9
+                        }
+                    ],
+                    "unit": "km",
+                    "backgroundColor": "var(--cat-1)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "pointStyle": "circle",
+                    "pointRadius": 4,
+                    "pointHoverRadius": 5
+                },
+                {
+                    "label": "Observations",
+                    "data": [
+                        {
+                            "x": 2.5,
+                            "y": 4
+                        },
+                        {
+                            "x": 3.1,
+                            "y": 7
+                        },
+                        {
+                            "x": 3.6,
+                            "y": 5
+                        },
+                        {
+                            "x": 4,
+                            "y": 9
+                        },
+                        {
+                            "x": 4.4,
+                            "y": 8
+                        },
+                        {
+                            "x": 4.9,
+                            "y": 12
+                        },
+                        {
+                            "x": 5.3,
+                            "y": 9
+                        },
+                        {
+                            "x": 5.8,
+                            "y": 14
+                        },
+                        {
+                            "x": 6.2,
+                            "y": 11
+                        },
+                        {
+                            "x": 6.7,
+                            "y": 15
+                        },
+                        {
+                            "x": 7.1,
+                            "y": 13
+                        },
+                        {
+                            "x": 7.6,
+                            "y": 18
+                        },
+                        {
+                            "x": 8,
+                            "y": 16
+                        },
+                        {
+                            "x": 3.3,
+                            "y": 6
+                        }
+                    ],
+                    "unit": "observations",
+                    "yAxisID": "y1",
+                    "backgroundColor": "var(--cat-5)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "pointStyle": "triangle",
+                    "pointRadius": 6,
+                    "pointHoverRadius": 7
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "type": "linear",
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    },
+                    "title": {
+                        "display": true,
+                        "text": "DURATION, H",
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 9.5,
+                            "weight": 600
+                        },
+                        "padding": {
+                            "top": 6,
+                            "bottom": 2
+                        }
+                    }
+                },
+                "y": {
+                    "type": "linear",
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    },
+                    "title": {
+                        "display": true,
+                        "text": "DISTANCE, KM",
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 9.5,
+                            "weight": 600
+                        },
+                        "padding": {
+                            "top": 6,
+                            "bottom": 2
+                        }
+                    }
+                },
+                "y1": {
+                    "type": "linear",
+                    "position": "right",
+                    "beginAtZero": true,
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    },
+                    "title": {
+                        "display": true,
+                        "text": "OBSERVATIONS",
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 9.5,
+                            "weight": 600
+                        },
+                        "padding": {
+                            "top": 6,
+                            "bottom": 2
+                        }
+                    }
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": true,
+                        "pointStyleWidth": 10
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": true,
+                    "unit": "",
+                    "xUnit": "h",
+                    "yUnit": "km",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": []
+}

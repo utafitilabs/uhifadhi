@@ -1,0 +1,288 @@
+{
+    "statement": {
+        "kind": "sankey",
+        "title": "Incidents this quarter, from kind to outcome",
+        "series": [
+            {
+                "label": "Incidents"
+            }
+        ],
+        "labels": [
+            "Human–wildlife conflict",
+            "Poaching & wildlife crime",
+            "Fire & illegal burning",
+            "Compliance & encroachment"
+        ],
+        "names": {
+            "Poaching & wildlife crime": "Poaching",
+            "Human–wildlife conflict": "Human–wildlife",
+            "Compliance & encroachment": "Compliance",
+            "Fire & illegal burning": "Fire"
+        },
+        "parts": [
+            {
+                "cat": 5
+            },
+            {
+                "cat": 1
+            },
+            {
+                "cat": 6
+            },
+            {
+                "cat": 2
+            }
+        ],
+        "targets": [
+            {
+                "label": "Resolved",
+                "swatch": "var(--fog)"
+            },
+            {
+                "label": "Closed with a fine",
+                "swatch": "var(--fog)"
+            },
+            {
+                "label": "Closed without",
+                "swatch": "var(--fog)"
+            },
+            {
+                "label": "Still open",
+                "swatch": "var(--fog)"
+            }
+        ],
+        "flows": [
+            [
+                31,
+                0,
+                15,
+                6
+            ],
+            [
+                14,
+                12,
+                5,
+                7
+            ],
+            [
+                5,
+                2,
+                2,
+                2
+            ],
+            [
+                9,
+                11,
+                3,
+                4
+            ]
+        ],
+        "unit": "incidents"
+    },
+    "built": {
+        "type": "sankey",
+        "data": {
+            "datasets": [
+                {
+                    "label": "Incidents",
+                    "data": [
+                        {
+                            "from": "Human–wildlife conflict",
+                            "to": "Resolved",
+                            "flow": 31
+                        },
+                        {
+                            "from": "Human–wildlife conflict",
+                            "to": "Closed without",
+                            "flow": 15
+                        },
+                        {
+                            "from": "Human–wildlife conflict",
+                            "to": "Still open",
+                            "flow": 6
+                        },
+                        {
+                            "from": "Poaching & wildlife crime",
+                            "to": "Resolved",
+                            "flow": 14
+                        },
+                        {
+                            "from": "Poaching & wildlife crime",
+                            "to": "Closed with a fine",
+                            "flow": 12
+                        },
+                        {
+                            "from": "Poaching & wildlife crime",
+                            "to": "Closed without",
+                            "flow": 5
+                        },
+                        {
+                            "from": "Poaching & wildlife crime",
+                            "to": "Still open",
+                            "flow": 7
+                        },
+                        {
+                            "from": "Fire & illegal burning",
+                            "to": "Resolved",
+                            "flow": 5
+                        },
+                        {
+                            "from": "Fire & illegal burning",
+                            "to": "Closed with a fine",
+                            "flow": 2
+                        },
+                        {
+                            "from": "Fire & illegal burning",
+                            "to": "Closed without",
+                            "flow": 2
+                        },
+                        {
+                            "from": "Fire & illegal burning",
+                            "to": "Still open",
+                            "flow": 2
+                        },
+                        {
+                            "from": "Compliance & encroachment",
+                            "to": "Resolved",
+                            "flow": 9
+                        },
+                        {
+                            "from": "Compliance & encroachment",
+                            "to": "Closed with a fine",
+                            "flow": 11
+                        },
+                        {
+                            "from": "Compliance & encroachment",
+                            "to": "Closed without",
+                            "flow": 3
+                        },
+                        {
+                            "from": "Compliance & encroachment",
+                            "to": "Still open",
+                            "flow": 4
+                        }
+                    ],
+                    "colorMode": "from",
+                    "alpha": 0.45,
+                    "borderWidth": 0,
+                    "nodeWidth": 10,
+                    "nodePadding": 14,
+                    "size": "max",
+                    "color": "var(--tx)",
+                    "font": {
+                        "family": "var(--font-mono)",
+                        "size": 10.5,
+                        "weight": 400
+                    },
+                    "labels": {
+                        "Human–wildlife conflict": "Human–wildlife",
+                        "Poaching & wildlife crime": "Poaching",
+                        "Fire & illegal burning": "Fire",
+                        "Compliance & encroachment": "Compliance",
+                        "Resolved": "Resolved",
+                        "Closed with a fine": "Closed with a fine",
+                        "Closed without": "Closed without",
+                        "Still open": "Still open"
+                    },
+                    "priority": {
+                        "Human–wildlife conflict": 0,
+                        "Poaching & wildlife crime": 1,
+                        "Fire & illegal burning": 2,
+                        "Compliance & encroachment": 3,
+                        "Resolved": 0,
+                        "Closed with a fine": 1,
+                        "Closed without": 2,
+                        "Still open": 3
+                    },
+                    "atlasFlows": {
+                        "from": [
+                            "var(--cat-5)",
+                            "var(--cat-5)",
+                            "var(--cat-5)",
+                            "var(--cat-1)",
+                            "var(--cat-1)",
+                            "var(--cat-1)",
+                            "var(--cat-1)",
+                            "var(--cat-6)",
+                            "var(--cat-6)",
+                            "var(--cat-6)",
+                            "var(--cat-6)",
+                            "var(--cat-2)",
+                            "var(--cat-2)",
+                            "var(--cat-2)",
+                            "var(--cat-2)"
+                        ],
+                        "to": [
+                            "var(--fog)",
+                            "var(--fog)",
+                            "var(--fog)",
+                            "var(--fog)",
+                            "var(--fog)",
+                            "var(--fog)",
+                            "var(--fog)",
+                            "var(--fog)",
+                            "var(--fog)",
+                            "var(--fog)",
+                            "var(--fog)",
+                            "var(--fog)",
+                            "var(--fog)",
+                            "var(--fog)",
+                            "var(--fog)"
+                        ]
+                    },
+                    "unit": "incidents"
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "layout": {
+                "padding": {
+                    "top": 4,
+                    "bottom": 4,
+                    "left": 2,
+                    "right": 2
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": false
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "incidents",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": [
+        "chartjs-chart-sankey"
+    ]
+}

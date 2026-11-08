@@ -1,0 +1,212 @@
+{
+    "statement": {
+        "kind": "bar",
+        "labels": [
+            "W1",
+            "W2",
+            "W3"
+        ],
+        "series": [
+            {
+                "label": "Rain",
+                "points": [
+                    12,
+                    30,
+                    8
+                ],
+                "cat": 2
+            },
+            {
+                "label": "Normal",
+                "points": [
+                    15,
+                    18,
+                    14
+                ],
+                "line": "dashed"
+            },
+            {
+                "label": "Last year",
+                "points": [
+                    9,
+                    22,
+                    11
+                ],
+                "line": "solid",
+                "cat": 4
+            }
+        ],
+        "panel": "lower",
+        "figures": {
+            "unit": "mm",
+            "precision": 1
+        },
+        "unit": "mm"
+    },
+    "built": {
+        "type": "bar",
+        "data": {
+            "labels": [
+                "W1",
+                "W2",
+                "W3"
+            ],
+            "datasets": [
+                {
+                    "label": "Rain",
+                    "data": [
+                        12,
+                        30,
+                        8
+                    ],
+                    "backgroundColor": "var(--cat-2)",
+                    "borderColor": "var(--cat-2)",
+                    "borderWidth": 1.5
+                },
+                {
+                    "label": "Normal",
+                    "data": [
+                        15,
+                        18,
+                        14
+                    ],
+                    "backgroundColor": "transparent",
+                    "borderColor": "var(--cat-2)",
+                    "borderWidth": 1.4,
+                    "type": "line",
+                    "tension": 0.25,
+                    "fill": false,
+                    "pointRadius": 0,
+                    "borderDash": [
+                        6,
+                        4
+                    ]
+                },
+                {
+                    "label": "Last year",
+                    "data": [
+                        9,
+                        22,
+                        11
+                    ],
+                    "backgroundColor": "transparent",
+                    "borderColor": "var(--cat-4)",
+                    "borderWidth": 1.4,
+                    "type": "line",
+                    "tension": 0.25,
+                    "fill": false,
+                    "pointRadius": 0
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "autoSkip": false
+                    },
+                    "offset": true
+                },
+                "y": {
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    }
+                }
+            },
+            "layout": {
+                "padding": {
+                    "top": 16,
+                    "bottom": 0
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "mm",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                },
+                "panels": {
+                    "axisWidth": 44
+                },
+                "figures": {
+                    "unit": "mm",
+                    "precision": 1
+                }
+            }
+        }
+    },
+    "packages": []
+}

@@ -1,0 +1,253 @@
+{
+    "statement": {
+        "kind": "stacked",
+        "labels": [
+            "2026-09-28",
+            "2026-10-05",
+            "2026-10-12",
+            "2026-10-19",
+            "2026-10-26",
+            "2026-11-02"
+        ],
+        "time": {
+            "unit": "week"
+        },
+        "series": [
+            {
+                "label": "Critical",
+                "cat": 6,
+                "points": [
+                    1,
+                    0,
+                    2,
+                    1,
+                    0,
+                    1
+                ]
+            },
+            {
+                "label": "High",
+                "cat": 5,
+                "points": [
+                    3,
+                    4,
+                    2,
+                    5,
+                    3,
+                    2
+                ]
+            },
+            {
+                "label": "Routine",
+                "cat": 3,
+                "points": [
+                    8,
+                    6,
+                    9,
+                    7,
+                    10,
+                    6
+                ]
+            }
+        ],
+        "barRadius": 1.5,
+        "legend": "chips",
+        "unit": "incidents"
+    },
+    "built": {
+        "type": "bar",
+        "data": {
+            "labels": [
+                "2026-09-28",
+                "2026-10-05",
+                "2026-10-12",
+                "2026-10-19",
+                "2026-10-26",
+                "2026-11-02"
+            ],
+            "datasets": [
+                {
+                    "label": "Critical",
+                    "data": [
+                        1,
+                        0,
+                        2,
+                        1,
+                        0,
+                        1
+                    ],
+                    "backgroundColor": "var(--cat-6)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "stack": "one",
+                    "borderRadius": [
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5
+                    ],
+                    "borderSkipped": false
+                },
+                {
+                    "label": "High",
+                    "data": [
+                        3,
+                        4,
+                        2,
+                        5,
+                        3,
+                        2
+                    ],
+                    "backgroundColor": "var(--cat-5)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "stack": "one",
+                    "borderRadius": [
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5
+                    ],
+                    "borderSkipped": false
+                },
+                {
+                    "label": "Routine",
+                    "data": [
+                        8,
+                        6,
+                        9,
+                        7,
+                        10,
+                        6
+                    ],
+                    "backgroundColor": "var(--cat-3)",
+                    "borderColor": "var(--p1)",
+                    "borderWidth": 1,
+                    "stack": "one",
+                    "borderRadius": [
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5,
+                        1.5
+                    ],
+                    "borderSkipped": false
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "type": "time",
+                    "time": {
+                        "unit": "week",
+                        "displayFormats": {
+                            "week": "'W'II"
+                        },
+                        "tooltipFormat": "'Week of' d MMM yyyy",
+                        "isoWeekday": true
+                    },
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "source": "labels"
+                    },
+                    "offset": true,
+                    "stacked": true
+                },
+                "y": {
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    },
+                    "stacked": true
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": false,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": false
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": false,
+                    "unit": "incidents",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": [
+        "chartjs-adapter-date-fns"
+    ]
+}

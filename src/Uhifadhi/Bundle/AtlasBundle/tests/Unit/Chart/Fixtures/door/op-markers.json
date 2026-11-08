@@ -1,0 +1,258 @@
+{
+    "statement": {
+        "kind": "line",
+        "title": "Patrols per week at three posts",
+        "labels": [
+            "2026-09-14",
+            "2026-09-21",
+            "2026-09-28",
+            "2026-10-05",
+            "2026-10-12",
+            "2026-10-19",
+            "2026-10-26",
+            "2026-11-02"
+        ],
+        "time": {
+            "unit": "week"
+        },
+        "series": [
+            {
+                "label": "Eastgate",
+                "points": [
+                    11,
+                    13,
+                    12,
+                    15,
+                    14,
+                    12,
+                    16,
+                    15
+                ],
+                "cat": 1,
+                "marker": "circle"
+            },
+            {
+                "label": "Riverbend",
+                "points": [
+                    8,
+                    9,
+                    11,
+                    10,
+                    12,
+                    9,
+                    11,
+                    13
+                ],
+                "cat": 5,
+                "marker": "triangle"
+            },
+            {
+                "label": "Westgate",
+                "points": [
+                    5,
+                    7,
+                    6,
+                    8,
+                    7,
+                    9,
+                    8,
+                    7
+                ],
+                "cat": 7,
+                "marker": "rect"
+            }
+        ],
+        "unit": "patrols"
+    },
+    "built": {
+        "type": "line",
+        "data": {
+            "labels": [
+                "2026-09-14",
+                "2026-09-21",
+                "2026-09-28",
+                "2026-10-05",
+                "2026-10-12",
+                "2026-10-19",
+                "2026-10-26",
+                "2026-11-02"
+            ],
+            "datasets": [
+                {
+                    "label": "Eastgate",
+                    "data": [
+                        11,
+                        13,
+                        12,
+                        15,
+                        14,
+                        12,
+                        16,
+                        15
+                    ],
+                    "backgroundColor": "transparent",
+                    "borderColor": "var(--cat-1)",
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                    "fill": false,
+                    "pointRadius": 3.5,
+                    "pointBackgroundColor": "var(--cat-1)",
+                    "pointBorderColor": "var(--cat-1)",
+                    "pointStyle": "circle"
+                },
+                {
+                    "label": "Riverbend",
+                    "data": [
+                        8,
+                        9,
+                        11,
+                        10,
+                        12,
+                        9,
+                        11,
+                        13
+                    ],
+                    "backgroundColor": "transparent",
+                    "borderColor": "var(--cat-5)",
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                    "fill": false,
+                    "pointRadius": 4.5,
+                    "pointBackgroundColor": "var(--cat-5)",
+                    "pointBorderColor": "var(--cat-5)",
+                    "pointStyle": "triangle"
+                },
+                {
+                    "label": "Westgate",
+                    "data": [
+                        5,
+                        7,
+                        6,
+                        8,
+                        7,
+                        9,
+                        8,
+                        7
+                    ],
+                    "backgroundColor": "transparent",
+                    "borderColor": "var(--cat-7)",
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                    "fill": false,
+                    "pointRadius": 4.5,
+                    "pointBackgroundColor": "var(--cat-7)",
+                    "pointBorderColor": "var(--cat-7)",
+                    "pointStyle": "rect"
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "animation": false,
+            "scales": {
+                "x": {
+                    "type": "time",
+                    "time": {
+                        "unit": "week",
+                        "displayFormats": {
+                            "week": "'W'II"
+                        },
+                        "tooltipFormat": "'Week of' d MMM yyyy",
+                        "isoWeekday": true
+                    },
+                    "grid": {
+                        "display": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "maxRotation": 0,
+                        "autoSkipPadding": 8,
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5,
+                        "source": "labels"
+                    },
+                    "offset": false
+                },
+                "y": {
+                    "beginAtZero": true,
+                    "grid": {
+                        "color": "var(--ln)",
+                        "lineWidth": 1,
+                        "drawTicks": false
+                    },
+                    "border": {
+                        "display": false
+                    },
+                    "ticks": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "padding": 5
+                    }
+                }
+            },
+            "plugins": {
+                "legend": {
+                    "display": true,
+                    "position": "bottom",
+                    "labels": {
+                        "color": "var(--fog)",
+                        "font": {
+                            "family": "var(--font-mono)",
+                            "size": 10.5,
+                            "weight": 400
+                        },
+                        "boxWidth": 8,
+                        "boxHeight": 8,
+                        "padding": 12,
+                        "usePointStyle": true,
+                        "pointStyleWidth": 10
+                    }
+                },
+                "tooltip": {
+                    "enabled": true,
+                    "backgroundColor": "var(--raised)",
+                    "borderColor": "var(--ln2)",
+                    "borderWidth": 1,
+                    "titleColor": "var(--tx)",
+                    "bodyColor": "var(--tx)",
+                    "titleFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 600
+                    },
+                    "bodyFont": {
+                        "family": "var(--font-mono)",
+                        "size": 11,
+                        "weight": 400
+                    },
+                    "padding": 8,
+                    "cornerRadius": 7,
+                    "boxWidth": 8,
+                    "boxHeight": 8,
+                    "boxPadding": 4,
+                    "usePointStyle": true,
+                    "unit": "patrols",
+                    "xUnit": "",
+                    "yUnit": "",
+                    "sizeLabel": "",
+                    "clock": false
+                }
+            }
+        }
+    },
+    "packages": [
+        "chartjs-adapter-date-fns"
+    ]
+}

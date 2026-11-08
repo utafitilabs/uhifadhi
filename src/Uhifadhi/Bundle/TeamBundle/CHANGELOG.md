@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * A DEPARTMENT'S CONFIGURE PAGE SAYS WHAT SWITCHING A MODULE ON DOES: its
+   people may use the module as far as their position grants, and people
+   outside every department that runs it are refused (the access check's
+   third question). The two flashes say the same.
+
  * A DEPARTMENT'S RECORD (the design's departments/ecology/index.html): `GET /departments/{uuid}`
    draws three panels — Overview (the facts strip Belong · Support · Modules, the figures with their
    change, sparkline and source, the goals as cards against their targets, What produced these

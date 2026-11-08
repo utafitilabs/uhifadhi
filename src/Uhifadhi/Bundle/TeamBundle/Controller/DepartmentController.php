@@ -433,12 +433,12 @@ final readonly class DepartmentController
      * ATTACH OR DETACH A MODULE — the lens control, one door for both directions
      * because it is one decision seen from two sides.
      *
-     * IT GRANTS NOTHING AND HIDES NOTHING. Attaching makes the module lead this
-     * department's view and puts its KPIs on the performance tab; it moves no
-     * permission and fences off no row, so a module two departments attach is one
-     * module listed first for both. That is why there is no reason field and no
-     * audit line here, unlike {@see changeScope()}: nothing about who may do what
-     * has moved.
+     * IT DECIDES WHO MAY USE THE MODULE. Attaching makes the module lead this
+     * department's view and puts its KPIs on the performance tab, and the access
+     * check (GrantVoter) then refuses the module's permissions to everybody
+     * placed outside every department that runs it; while no department runs a
+     * module, the position alone decides. A module two departments attach is one
+     * module listed first for both.
      *
      * §5.6: it is department management, so an area administrator reaches the
      * departments their authority reaches and no others.
@@ -461,7 +461,7 @@ final readonly class DepartmentController
             $this->departmentWrites->detach($department, $module);
 
             return $this->toLens($request, $department, \sprintf(
-                '%s no longer leads for %s. The module and every row in it are untouched — this was emphasis, not access.',
+                '%s no longer leads for %s. The module and every row in it are untouched; who may use it now follows the departments that still run it, and while none does, the position alone decides.',
                 (string) $module->getName(),
                 (string) $department->getName(),
             ));
@@ -470,7 +470,7 @@ final readonly class DepartmentController
         $this->departmentWrites->attach($department, $module);
 
         return $this->toLens($request, $department, \sprintf(
-            '%s leads for %s now, and its figures roll up on this department’s performance tab. It grants nobody anything and hides nothing — another department attaching it reads the same rows.',
+            '%s leads for %s now, and its figures roll up on this department’s performance tab. This department’s people may use it as far as their position grants; people outside every department that runs it are refused.',
             (string) $module->getName(),
             (string) $department->getName(),
         ));

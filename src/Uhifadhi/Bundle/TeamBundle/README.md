@@ -225,11 +225,12 @@ from), People & access (who belongs to it and who supports it, its members and
 its history) and Settings (the modules it runs, read). What needs a decision —
 a goal at risk or off track, a goal nobody can measure — is the banner above
 them. The record reads; its Configure page switches the modules and declares
-and withdraws the goals. Attaching **grants nothing and hides nothing**: no permission
-moves, no row becomes unreachable, and a module two departments attach is one
-module — the same rows, listed first for both, neither able to hide anything from
-the other. It takes no reason and leaves no audit line for exactly that reason;
-a **scope** change, which does move authority, is the thing that is audited.
+and withdraws the goals. Attaching **decides who may use the module**: the access
+check refuses a module's permissions to everybody placed outside every department
+that runs it, and while no department runs a module, the position alone decides.
+A module two departments attach is one module — the same rows, listed first for
+both. Attaching takes no reason and leaves no audit line; a **scope** change is
+audited.
 
 Only the modules this deployment actually has are offered — a catalogue row whose
 provider is no longer registered is not one, because attaching it would point at

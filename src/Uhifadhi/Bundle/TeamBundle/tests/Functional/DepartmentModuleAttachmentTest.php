@@ -31,11 +31,11 @@ use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
  * has and lights the attached ones, the overview and the performance strip read
  * that set, and the write is gated exactly as every other department write is.
  *
- * IT GRANTS NOTHING AND HIDES NOTHING. An attachment re-orders a page and
- * nothing else: no permission moves, no row becomes unreachable. That is stated
- * in the control's own copy, and asserted here, because it is the one thing a
- * reader could reasonably fear about a screen that looks like a permission
- * matrix.
+ * IT DECIDES WHO MAY USE THE MODULE. The access check asks whether the person
+ * is placed in a department that runs the module whose permission is asked, so
+ * once any department runs a module, everybody outside every department that
+ * runs it is refused. The control's own copy says so, and this suite asserts it,
+ * because an administrator switching a module on is changing who gets in.
  */
 final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
 {
@@ -87,15 +87,19 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
     }
 
     /**
-     * THE COPY IS THE MODEL, VERBATIM. A control that looks like a permission
-     * matrix has to say that it is not one.
+     * THE COPY IS THE MODEL, VERBATIM: switching a module on lets this
+     * department's people use it as their position grants, and refuses
+     * everybody outside every department that runs it.
      */
-    public function testTheControlSaysWhatAnAttachmentDoesAndDoesNot(): void
+    public function testTheControlSaysWhoMayUseAModuleOnceItIsSwitchedOn(): void
     {
         $crawler = $this->lens($this->seed());
 
         $copy = $crawler->filter('[data-dp-configure]')->text();
-        self::assertStringContainsString('it grants nothing and hides nothing', $copy);
+        self::assertStringNotContainsString('grants nothing', $copy);
+        self::assertStringContainsString('people placed in this department, or supporting it, may use the module as far as their position grants', $copy);
+        self::assertStringContainsString('people outside every department that runs it are refused', $copy);
+        self::assertStringContainsString('While no department runs a module, the position alone decides', $copy);
         self::assertStringContainsString('lead', $copy);
     }
 
@@ -130,8 +134,8 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
         self::assertSame([], $this->attachedSlugs($department));
     }
 
-    /** THE FLASH SAYS WHICH WAY IT WENT, and that nothing was granted. */
-    public function testTheFlashNamesTheModuleAndStatesThatNothingWasGranted(): void
+    /** THE FLASH SAYS WHICH WAY IT WENT, and who may use the module now. */
+    public function testTheFlashNamesTheModuleAndWhoMayUseItNow(): void
     {
         $department = $this->seed();
 
@@ -141,7 +145,24 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
 
         $flash = $crawler->filter('[data-shell-flash]')->text();
         self::assertStringContainsString('Surveys', $flash);
-        self::assertStringContainsStringIgnoringCase('grants nobody anything', $flash);
+        self::assertStringNotContainsString('grants nobody anything', $flash);
+        self::assertStringContainsString('people outside every department that runs it are refused', $flash);
+    }
+
+    /** SWITCHING OFF says that who may use the module follows the departments still running it. */
+    public function testTheFlashOnSwitchingOffSaysWhoMayUseItNow(): void
+    {
+        $department = $this->seed();
+        $this->attach($department, 'surveys');
+
+        $crawler = $this->lens($department);
+        $this->client->submit($crawler->filter('tr[data-dept-attached]')->selectButton('Switch off')->form());
+        $crawler = $this->client->followRedirect();
+
+        $flash = $crawler->filter('[data-shell-flash]')->text();
+        self::assertStringContainsString('Surveys', $flash);
+        self::assertStringNotContainsString('not access', $flash);
+        self::assertStringContainsString('who may use it now follows the departments that still run it', $flash);
     }
 
     /** A SLUG THE INSTALLATION DOES NOT HAVE is not a module to attach. */

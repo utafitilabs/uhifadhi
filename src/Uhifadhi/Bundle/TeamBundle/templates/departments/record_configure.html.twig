@@ -128,7 +128,9 @@
                 </form>
             {% endif %}
         </div>
-        {# MODULES — what it runs; switching one grants nothing and hides nothing. #}
+        {# MODULES — what it runs. Switching one on makes it lead here AND decides
+           who may use it: the access check refuses everybody placed outside
+           every department that runs a module's permission. #}
         <div class="c" {{ tb.wrap('modules', 'module') }}>
             <span class="tab">Modules<span class="src">&middot; what {{ department.name }} runs</span></span>
             {% set on = modules|filter(m => m.on)|length %}
@@ -159,7 +161,7 @@
             </table>
             {{ tb.none(modules is empty ? 'No module is installed.' : 'No module matches these filters.') }}
             {{ tb.foot(modules|length, 'modules', 'module') }}
-            <p class="sbn">Switching a module on makes it <b>lead</b> for this department&rsquo;s people &mdash; it grants nothing and hides nothing. A module two departments run is one module, listed first for both.</p>
+            <p class="sbn">Switching a module on makes it <b>lead</b> for this department&rsquo;s people, and decides who may use it: people placed in this department, or supporting it, may use the module as far as their position grants, and people outside every department that runs it are refused. While no department runs a module, the position alone decides. A module two departments run is one module, listed first for both.</p>
         </div>
 
         {# GOALS — what it says it will do, judged by whatever the modules publish. #}

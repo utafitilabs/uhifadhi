@@ -147,12 +147,13 @@ class Department
      * THE MODULES THIS DEPARTMENT LEADS WITH — the lens, and the only thing on
      * this entity that says what its people see first.
      *
-     * ATTACHING GRANTS NOTHING AND HIDES NOTHING. It re-orders a page: the
-     * attached modules lead the department's overview, and the figures on its
-     * performance surfaces are those modules' KPIs rolled up through the
-     * attachment. No permission moves, and no row becomes unreachable — a module
-     * two departments attach is ONE module, listed first for both, reading the
-     * same rows. That is what makes a department a lens and not a fence.
+     * ATTACHING DECIDES WHO MAY USE THE MODULE. The attached modules lead the
+     * department's overview, the figures on its performance surfaces are those
+     * modules' KPIs rolled up through the attachment, and the access check
+     * refuses a module's permissions to everybody placed outside every
+     * department that runs it; while no department runs a module, the position
+     * alone decides. A module two departments attach is ONE module, listed
+     * first for both, reading the same rows.
      *
      * THE OWNING SIDE IS HERE AND THERE IS NO INVERSE. The join table is this
      * bundle's ({@see Module} is the registry's, and the registry knows nothing

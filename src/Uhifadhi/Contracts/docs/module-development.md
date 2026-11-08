@@ -2334,10 +2334,13 @@ that does its job, never in an earlier one; a version that moves a value somewhe
 screen that changes it there, or keeps the old field until it can. A release with the old field
 gone and the new screen still a design renders every page green and leaves an Admin a value
 nobody can change. `tests/Core/EverySettingHasAnEditorTest` holds the settings to it: every owner
-that declares a setting has its screen at `/settings/configure/{owner}`, posting a form with a
-field and the label of each of its settings, and an owner whose screen is designed and not yet
-built is listed there by name until the screen exists. A module that declares settings copies the
-test into its own suite.
+that declares a setting has its screen — `/settings/configure/core` for the core's,
+`/settings/configure/modules/{slug}` for a module's — posting a form with a field and the label of
+each of its settings. A module's screen is the core's: every installed module whose slug owns a
+Number or Choice setting is drawn there with the same cascade, read at `/settings/modules/{slug}`,
+with a door from Settings › Modules. A Choice's `choiceMeanings` give the line said under the
+default's control, following the selection; a `note` is said under the setting's name. A module
+that declares settings copies the test into its own suite.
 
 ### The four tests to copy
 

@@ -30,6 +30,8 @@ department confined to Kilimani.
 | team_settings_deletions | GET /settings/deletions | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
 | settings_core | GET /settings/core | `settings.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | settings_configure_core | GET /settings/configure/core | — | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
+| settings_module | GET /settings/modules/sightings | `settings.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
+| settings_configure_module | GET /settings/configure/modules/sightings | — | sign-in | sign-in | refused | refused | refused | refused | allowed | allowed |
 | team_index | GET /team | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_overview | GET /team/overview | `directory.read`, `positions.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_assignments | GET /team/assignments | `directory.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
@@ -108,6 +110,7 @@ department confined to Kilimani.
 | area_live_sheet · an Admin's | GET /live/{admin} | `areas.read` | sign-in | sign-in | not found | not found | not found | not found | not found | not found |
 | area_live_sheet · a Super Admin's | GET /live/{super-admin} | `areas.read` | sign-in | sign-in | not found | not found | not found | not found | not found | not found |
 | settings_configure_core | POST /settings/configure/core | — | sign-in | sign-in | refused | refused | refused | refused | → /settings/configure/core | → /settings/configure/core |
+| settings_configure_module | POST /settings/configure/modules/sightings | — | sign-in | sign-in | refused | refused | refused | refused | → /settings/configure/modules/sightings | → /settings/configure/modules/sightings |
 | team_login | POST /login | — | sign-in | sign-in | sign-in | sign-in | sign-in | sign-in | sign-in | sign-in |
 | team_reset_send | POST /reset-password | — | allowed | allowed | allowed | allowed | allowed | allowed | allowed | allowed |
 | team_reset_submit | POST /reset-password/{reset} | — | allowed | allowed | allowed | allowed | allowed | allowed | allowed | allowed |

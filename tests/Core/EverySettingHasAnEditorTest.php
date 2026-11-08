@@ -21,7 +21,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Uhifadhi\Bundle\RegistryBundle\Settings\SettingsCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
-use Uhifadhi\Core\Tests\Application\Kernel;
+use Uhifadhi\Core\Tests\Core\Fixtures\SettingsModuleKernel;
 
 /**
  * EVERY SETTING AN INSTALLATION DECLARES CAN BE CHANGED ON A SCREEN.
@@ -33,9 +33,11 @@ use Uhifadhi\Core\Tests\Application\Kernel;
  * green, because every page still renders. So the build asks the question
  * directly, of the catalogue the installation compiles: each owner that
  * declares a setting has its own screen at the address the settings design
- * gives it, `/settings/configure/{owner}`, that opens for a Super Admin, posts
- * a form, and names each of the owner's settings by its own label beside a
- * field.
+ * gives it — `/settings/configure/core` for the core's,
+ * `/settings/configure/modules/{slug}` for a module's — that opens for a
+ * Super Admin, posts a form, and names each of the owner's settings by its
+ * own label beside a field. The application carries a module that declares
+ * settings, so the modules' address is asked as well as the core's.
  */
 #[CoversNothing]
 final class EverySettingHasAnEditorTest extends WebTestCase
@@ -45,13 +47,14 @@ final class EverySettingHasAnEditorTest extends WebTestCase
 
     protected static function getKernelClass(): string
     {
-        return Kernel::class;
+        return SettingsModuleKernel::class;
     }
 
     /** Without this, every test below passes over an empty catalogue and proves nothing. */
     public function testTheInstallationDeclaresSettings(): void
     {
-        self::assertNotSame([], $this->catalogue()->owners(), 'The core declares settings of its own; a catalogue without them is not reading its sources.');
+        self::assertContains('core', $this->catalogue()->owners(), 'The core declares settings of its own; a catalogue without them is not reading its sources.');
+        self::assertContains('sightings', $this->catalogue()->owners(), 'Without a module that declares settings, the modules’ address is never asked.');
     }
 
     public function testEveryOwnerChangesItsSettingsOnItsOwnScreen(): void
@@ -60,7 +63,7 @@ final class EverySettingHasAnEditorTest extends WebTestCase
         $missing = [];
 
         foreach ($this->catalogue()->owners() as $owner) {
-            $path = '/settings/configure/'.$owner;
+            $path = 'core' === $owner ? '/settings/configure/core' : '/settings/configure/modules/'.$owner;
             $crawler = $this->client->request('GET', $path);
             $status = $this->client->getResponse()->getStatusCode();
             if (200 !== $status) {

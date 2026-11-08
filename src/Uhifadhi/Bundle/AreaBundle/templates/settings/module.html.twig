@@ -1,0 +1,28 @@
+{# SETTINGS › MODULES › <MODULE> — one module's settings as a cascade, read
+   (uhifadhi-web/settings/modules/incidents.html). Its doors: back to every
+   module, and Configure for those who may change a setting. #}
+{% extends '@Shell/settings/_section.html.twig' %}
+
+{% block shell_breadcrumbs %}
+    {%- set brand = shell_brand() -%}
+    <a href="{{ brand.url }}">{{ brand.name }}</a> / settings / <a href="{{ modulesUrl }}">modules</a> / {{ slug }}
+{% endblock %}
+
+{% block shell_page_actions %}
+    <a class="open-btn" href="{{ modulesUrl }}">&larr; All modules</a>
+    {%- if configureUrl -%}
+        <a class="tgl w-act" href="{{ configureUrl }}">{{ ux_icon('shell:settings', {width: 15, height: 15}) }} Configure</a>
+    {%- endif -%}
+{% endblock %}
+
+{% block shell_page %}
+    {%- set own = table.placesWithTheirOwn -%}
+    <div data-controller="uhifadhi--shell-bundle--cascade">
+    {{ include('@Shell/settings/_cascade.html.twig', {
+        table: table,
+        heading: title ~ ' settings',
+        src: '· ' ~ own ~ (own == 1 ? ' area sets its own' : ' areas set their own') ~ ' · only Super Admins and Admins change this',
+        configure: null,
+    }, with_context: false) }}
+    </div>
+{% endblock %}

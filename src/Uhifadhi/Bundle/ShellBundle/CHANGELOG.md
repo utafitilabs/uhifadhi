@@ -8,6 +8,23 @@
 
 Not released yet.
 
+ * THE SETTINGS CASCADE DRAWS A CHOICE: `Model\CascadeSetting` takes `choices`
+   (`Model\CascadeChoice`: value, label, meaning) and `note`. On a Configure page a choice is the
+   house `.seg.row` of native radios inside labels, named as a figure's field is
+   (`org[<key>]`, `area[<key>][<uuid>]`), with the chosen one's meaning under the default's
+   control; the note is `.cx-note` under the setting's name. The cascade controller marks a
+   changed choice, carries it through Set this area's own / Use the default, and reviews it
+   ("Default · <setting>: Warn → Accept"). `shell.css` gains `.seg.row`, `.seg label`,
+   `.cx-note` and `.cmdoor`.
+
+ * `@Shell/_banner.html.twig` takes `{button: {name, value}}` as a door: a submit button of
+   the form the banner sits in, posting that name and value with the form's fields.
+
+ * SETTINGS › MODULES OPENS ONTO EACH MODULE'S SETTINGS: `Contract\ModuleSettingsPagesInterface`
+   (`uhifadhi.module_settings_pages`) lists the modules with a settings page
+   (`Model\ModuleSettingsPage`); the Modules screen draws a Module settings card with a door
+   to each.
+
  * THE FOLD (design: uhifadhi-web/house-fold.css, house-fold.js): every fold opens and shuts the same
    way, height (or width) and opacity easing together over 200ms, ease-out opening and ease-in closing,
    from one block of the shell sheet ("HOUSE — THE FOLD") and one controller, `fold`, mounted on

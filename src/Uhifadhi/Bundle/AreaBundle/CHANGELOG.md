@@ -6,6 +6,13 @@
 
 ## 1.0.0
 
+ * SETTINGS › MODULES › <MODULE>: every installed module that declares a setting has a page
+   of them, read at `/settings/modules/{slug}` (`settings.read`) and changed at
+   `/settings/configure/modules/{slug}` by Super Admins and Admins, drawn with the same
+   cascade as Settings › Core (`Controller\SettingsModuleController`,
+   `Shell\ModuleSettingsPages`). The cascade service draws and saves Choice settings as well as
+   Number ones.
+
  * EVERY STATION CARD ON CONFIGURE › STATIONS CARRIES ITS OWN BOARD AND ITS
    MODULES' BLOCKS. A card is a `<details>` the browser opens on its own, so
    the controller hands the template `boards` (the area's standing postings,

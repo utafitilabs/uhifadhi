@@ -23,6 +23,24 @@
         {{ include('@Shell/settings/_matrix.html.twig', {matrix: settings.matrix}, with_context: false) }}
     </div>
 
+    {#- EACH MODULE THAT DECLARES SETTINGS HAS A PAGE OF THEM: the default for
+        every area, and where an area sets its own. #}
+    {%- if moduleSettings|default([]) is not empty %}
+    <div class="c">
+        <span class="tab">Module settings<span class="src">&middot; the default for every area, and where an area sets its own</span></span>
+        <table class="tbl">
+            <tr><th>module</th><th>what it does</th><th></th></tr>
+            {%- for page in moduleSettings %}
+            <tr>
+                <td><b>{{ page.label }}</b></td>
+                <td class="fog">{{ page.description }}</td>
+                <td><a class="cmdoor" href="{{ page.url }}">{{ ux_icon('shell:settings', {width: 13, height: 13}) }} Settings</a></td>
+            </tr>
+            {%- endfor %}
+        </table>
+    </div>
+    {%- endif %}
+
     {{ include('@Shell/_page_hint.html.twig', {
         lead: 'This tab is drawn to its scope, not to its full depth.',
         say: 'What it states is settled: the catalogue, and the areas that run each of them — the matrix above is the reading of it. Still to draw: installing and removing at organization scope, and the screen that says what data an uninstall would orphan.',

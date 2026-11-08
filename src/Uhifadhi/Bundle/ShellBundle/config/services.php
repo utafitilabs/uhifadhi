@@ -16,6 +16,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 use Uhifadhi\Bundle\ShellBundle\Access\ShellConcerns;
 use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\LayoutContract;
+use Uhifadhi\Bundle\ShellBundle\Contract\ModuleSettingsPagesInterface;
 use Uhifadhi\Bundle\ShellBundle\Controller\FaviconController;
 use Uhifadhi\Bundle\ShellBundle\Controller\SettingsController;
 use Uhifadhi\Bundle\ShellBundle\Controller\WelcomeController;
@@ -302,6 +303,7 @@ return static function (ContainerConfigurator $container): void {
             service('shell.settings.reading'),
             service('shell.settings.packages'),
             service(DeletionPageInterface::SERVICE)->nullOnInvalid(),
+            service(ModuleSettingsPagesInterface::SERVICE)->nullOnInvalid(),
         ]);
 
     /*

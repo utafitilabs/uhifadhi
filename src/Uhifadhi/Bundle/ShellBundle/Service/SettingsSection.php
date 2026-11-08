@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\ShellBundle\Service;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
+use Uhifadhi\Bundle\ShellBundle\Contract\ModuleSettingsPagesInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
 use Uhifadhi\Bundle\ShellBundle\Model\SettingsScreen;
 use Uhifadhi\Contracts\Settings\SettingsTab;
@@ -61,6 +62,8 @@ final class SettingsSection
         private readonly PackageRegisterService $packages,
         /** WHO MAY READ THE DELETIONS: a Super Admin, where deleting is installed at all. */
         private readonly ?DeletionPageInterface $deletions = null,
+        /** THE MODULES WITH A SETTINGS PAGE, which Settings › Modules opens onto; none where nobody draws them. */
+        private readonly ?ModuleSettingsPagesInterface $modulePages = null,
     ) {
     }
 
@@ -115,6 +118,7 @@ final class SettingsSection
             // WHAT IS INSTALLED IS A REGISTER, its bar and its foot read off
             // the request — and read only on the screen that draws it.
             ...(SettingsTab::Installation === $tab ? ['packages' => $this->packages->read($request, $this->reading->packages())] : []),
+            ...(SettingsTab::Modules === $tab ? ['moduleSettings' => $this->modulePages?->pages() ?? []] : []),
         ]);
     }
 

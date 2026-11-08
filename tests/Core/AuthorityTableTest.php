@@ -14,14 +14,15 @@ declare(strict_types=1);
 namespace Uhifadhi\Core\Tests\Core;
 
 use PHPUnit\Framework\Attributes\CoversNothing;
-use Uhifadhi\Core\Tests\Application\Kernel;
 use Uhifadhi\Core\Tests\Core\Authority\CoreProbes;
+use Uhifadhi\Core\Tests\Core\Fixtures\SettingsModuleKernel;
 use Uhifadhi\Test\Authority\World;
 use Uhifadhi\Test\AuthorityTableTestCase;
 
 /**
  * THE CORE'S AUTHORITY TABLE: every route the core mounts, through the base
- * a module extends.
+ * a module extends. The application carries a module that declares settings,
+ * so the routes that take a module's slug answer for a real one.
  *
  *     UHIFADHI_RECORD_AUTHORITY_TABLE=1 vendor/bin/phpunit tests/Core/AuthorityTableTest.php
  */
@@ -30,7 +31,7 @@ final class AuthorityTableTest extends AuthorityTableTestCase
 {
     protected static function getKernelClass(): string
     {
-        return Kernel::class;
+        return SettingsModuleKernel::class;
     }
 
     protected static function tableFile(): string

@@ -16,6 +16,7 @@ namespace Uhifadhi\Core\Tests\Core\Authority;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaCreateController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\SettingsCoreController;
+use Uhifadhi\Bundle\AreaBundle\Controller\SettingsModuleController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneImportController;
@@ -36,6 +37,8 @@ use Uhifadhi\Bundle\TeamBundle\Controller\TeamConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Deletion\DeletionPage;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
+use Uhifadhi\Core\Tests\Core\Fixtures\SightingsModuleProvider;
+use Uhifadhi\Core\Tests\Core\Fixtures\SightingsSettings;
 use Uhifadhi\Test\Authority\Probe;
 use Uhifadhi\Test\Authority\World;
 
@@ -131,6 +134,8 @@ final class CoreProbes
             Probe::get('team_settings_deletions'),
             Probe::get('settings_core', [], ['settings.read']),
             Probe::get('settings_configure_core'),
+            Probe::get('settings_module', ['slug' => SightingsModuleProvider::SLUG], ['settings.read']),
+            Probe::get('settings_configure_module', ['slug' => SightingsModuleProvider::SLUG]),
 
             Probe::get('team_index'),
             Probe::get('team_overview'),
@@ -223,6 +228,7 @@ final class CoreProbes
 
         return [
             Probe::post('settings_configure_core', [], SettingsCoreController::CSRF_ID, ['org' => [CoreSettings::PING_INTERVAL => '10']]),
+            Probe::post('settings_configure_module', ['slug' => SightingsModuleProvider::SLUG], SettingsModuleController::CSRF_ID, ['org' => [SightingsSettings::MERGE_WITHIN => '300']]),
             Probe::post('team_login', [], 'authenticate', ['_username' => 'nobody@unr.example', '_password' => 'not a password'], tokenField: '_csrf_token'),
             Probe::post('team_reset_send', [], PasswordResetController::CSRF_REQUEST, ['email' => 'rehema.kimaro@unr.example']),
             Probe::post('team_reset_submit', ['token' => $world->reset], PasswordResetController::CSRF_RESET, ['password' => 'a long new passphrase', 'password_confirm' => 'a long new passphrase']),

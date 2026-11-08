@@ -26,11 +26,14 @@ namespace Uhifadhi\Contracts\Settings;
 final readonly class SettingDefinition
 {
     /**
-     * @param list<string>          $choices      the accepted values of a Choice setting, in the order shown
-     * @param int                   $decimals     for a Number, how many decimal places it takes — 0 is whole numbers
-     * @param array<string, string> $choiceLabels for a Choice, each choice's label as Settings prints it, keyed by the stored value
-     * @param string|null           $unsetMeans   for a Number left unset (default null): what unset means, as Settings prints it —
-     *                                            "two ping intervals" — the owner computing the value until an Admin sets one
+     * @param list<string>          $choices        the accepted values of a Choice setting, in the order shown
+     * @param int                   $decimals       for a Number, how many decimal places it takes — 0 is whole numbers
+     * @param array<string, string> $choiceLabels   for a Choice, each choice's label as Settings prints it, keyed by the stored value
+     * @param string|null           $unsetMeans     for a Number left unset (default null): what unset means, as Settings prints it —
+     *                                              "two ping intervals" — the owner computing the value until an Admin sets one
+     * @param array<string, string> $choiceMeanings for a Choice, what each choice does, one plain line keyed by the stored value —
+     *                                              every choice has one or none has; Settings prints the chosen one's under the default
+     * @param string|null           $note           a line true whichever value is in force, printed under the setting's name
      */
     public function __construct(
         public string $key,
@@ -49,6 +52,8 @@ final readonly class SettingDefinition
         public ?string $unsetMeans = null,
         public int $decimals = 0,
         public array $choiceLabels = [],
+        public array $choiceMeanings = [],
+        public ?string $note = null,
     ) {
         if (1 !== preg_match('/^[a-z][a-z0-9]*(\.[a-z][a-z0-9_]*)+$/', $key)) {
             throw new \InvalidArgumentException(\sprintf('A setting key is "<owner>.<name>" in lower case; "%s" is not.', $key));
@@ -68,6 +73,20 @@ final readonly class SettingDefinition
 
         if ([] !== $choiceLabels && (SettingType::Choice !== $type || [] !== array_diff(array_keys($choiceLabels), $choices))) {
             throw new \InvalidArgumentException(\sprintf('The setting "%s" labels only its own choices.', $key));
+        }
+
+        if ([] !== $choiceMeanings && (SettingType::Choice !== $type || [] !== array_diff(array_keys($choiceMeanings), $choices) || [] !== array_diff($choices, array_keys($choiceMeanings)))) {
+            throw new \InvalidArgumentException(\sprintf('The setting "%s" says what each of its own choices does, or none.', $key));
+        }
+
+        foreach ($choiceMeanings as $meaning) {
+            if ('' === trim($meaning)) {
+                throw new \InvalidArgumentException(\sprintf('The setting "%s" has a choice whose meaning says nothing.', $key));
+            }
+        }
+
+        if (null !== $note && '' === trim($note)) {
+            throw new \InvalidArgumentException(\sprintf('The setting "%s" has a note that says nothing.', $key));
         }
 
         match ($type) {
@@ -104,6 +123,12 @@ final readonly class SettingDefinition
     public function labelOf(string $choice): string
     {
         return $this->choiceLabels[$choice] ?? $choice;
+    }
+
+    /** What a choice does, as the line under the default's control says it — null where the setting says none. */
+    public function meaningOf(string $choice): ?string
+    {
+        return $this->choiceMeanings[$choice] ?? null;
     }
 
     private static function hasPlaces(float $value, int $places): bool

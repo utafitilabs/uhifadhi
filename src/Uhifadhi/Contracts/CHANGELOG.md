@@ -6,6 +6,10 @@
 
 ## 1.0.0
 
+ * `Settings\SettingDefinition` takes `choiceMeanings` — for a Choice, one plain line per
+   choice saying what it does, for every choice or none — and `note`, a line true whichever
+   value is in force, printed under the setting's name; `meaningOf()` reads a choice's line.
+
  * `Performance\ChartKind` is the one list of chart kinds — the atlas draws it as it is — and
    holds the 25 Chart.js kinds the atlas draws; its values are the kind names the design states
    charts with (`horizontal-bar`, `polar-area`, `nested-doughnut` …). `Ranked` joins it, and

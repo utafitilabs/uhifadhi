@@ -84,6 +84,26 @@ final class SettingDefinitionTest extends TestCase
     }
 
     /**
+     * A CHOICE SAYS WHAT EACH CHOICE DOES, in one plain line Settings prints
+     * under the default's control, following the selection; a setting may
+     * carry a note, a line that is true whichever value is in force.
+     */
+    public function testAChoiceSaysWhatEachChoiceDoesAndASettingMayCarryANote(): void
+    {
+        $outside = new SettingDefinition('incidents.outside_boundary', 'incidents', 'Placement', 'A report placed outside the area’s boundary',
+            'What happens when the point is outside the area.', SettingType::Choice, 'warn', SettingDepth::Area,
+            choices: ['accept', 'warn', 'refuse'],
+            choiceMeanings: ['accept' => 'filed as now', 'warn' => 'filed after a warning', 'refuse' => 'not filed'],
+            note: 'A report sent from a phone is always filed.');
+
+        self::assertSame('filed after a warning', $outside->meaningOf('warn'));
+        self::assertSame('A report sent from a phone is always filed.', $outside->note);
+        self::assertNull(self::lateThreshold()->note);
+        self::assertNull(new SettingDefinition('incidents.currency', 'incidents', 'Incidents', 'Currency',
+            'Fines are recorded in.', SettingType::Choice, 'TZS', SettingDepth::Organization, choices: ['TZS', 'KES'])->meaningOf('KES'));
+    }
+
+    /**
      * A NUMBER MAY CARRY DECIMALS — the zone overlap tolerance is 2.5 % — and
      * then takes a decimal value to that many places; a whole-number setting
      * still refuses one.
@@ -157,6 +177,8 @@ final class SettingDefinitionTest extends TestCase
             'unsetMeans' => null,
             'decimals' => 0,
             'choiceLabels' => [],
+            'choiceMeanings' => [],
+            'note' => null,
         ], $overrides);
 
         $this->expectException(\InvalidArgumentException::class);
@@ -186,6 +208,11 @@ final class SettingDefinitionTest extends TestCase
         yield 'a decimal default on a whole number' => [['default' => 15.5], 'The default must be acceptable.'];
         yield 'a label for no choice' => [['type' => SettingType::Choice, 'default' => 'TZS', 'unit' => null, 'min' => null, 'max' => null, 'choices' => ['TZS'], 'choiceLabels' => ['EUR' => 'Euro']], 'A label names one of the choices.'];
         yield 'labels on a number' => [['choiceLabels' => ['15' => 'Fifteen']], 'Only a choice has labels.'];
+        yield 'a meaning for no choice' => [['type' => SettingType::Choice, 'default' => 'TZS', 'unit' => null, 'min' => null, 'max' => null, 'choices' => ['TZS'], 'choiceMeanings' => ['EUR' => 'paid in euros']], 'A meaning says what one of the choices does.'];
+        yield 'meanings on a number' => [['choiceMeanings' => ['15' => 'a quarter hour']], 'Only a choice has meanings.'];
+        yield 'an empty meaning' => [['type' => SettingType::Choice, 'default' => 'TZS', 'unit' => null, 'min' => null, 'max' => null, 'choices' => ['TZS'], 'choiceMeanings' => ['TZS' => ' ']], 'A meaning line says something.'];
+        yield 'meanings for some choices only' => [['type' => SettingType::Choice, 'default' => 'TZS', 'unit' => null, 'min' => null, 'max' => null, 'choices' => ['TZS', 'KES'], 'choiceMeanings' => ['TZS' => 'shillings']], 'The line under the control would go blank on the choice without one.'];
+        yield 'an empty note' => [['note' => ' '], 'A note says something, or is not given.'];
         yield 'unset without saying what it means' => [['default' => null], 'Settings would print nothing for it.'];
         yield 'a switch left unset' => [['type' => SettingType::Toggle, 'default' => null, 'unit' => null, 'min' => null, 'max' => null, 'unsetMeans' => 'something'], 'Only a number may be left unset.'];
         yield 'what unset means, with a default' => [['unsetMeans' => 'two ping intervals'], 'A default and an unset meaning cannot both hold.'];

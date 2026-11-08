@@ -1,0 +1,28 @@
+{# SETTINGS › CONFIGURE › CORE — the core's settings as a cascade, changed
+   (uhifadhi-web/settings/configure/core.html). Nothing is saved until Save; a
+   refused save comes back with the store's reason on the bar. #}
+{% extends '@Shell/settings/_section.html.twig' %}
+
+{% block title %}{{ title }} · configure{% endblock %}
+
+{% block shell_breadcrumbs %}
+    {%- set brand = shell_brand() -%}
+    <a href="{{ brand.url }}">{{ brand.name }}</a> / <a href="{{ path('settings') }}">settings</a> / configure / core
+{% endblock %}
+
+{% block shell_page_actions %}
+    <a class="open-btn" href="{{ readUrl }}">&larr; Back</a>
+    <span class="tgl w-act on" aria-current="page">{{ ux_icon('shell:settings', {width: 15, height: 15}) }} Configure</span>
+{% endblock %}
+
+{% block shell_page %}
+    <form method="post" action="{{ path('settings_configure_core') }}" data-controller="uhifadhi--shell-bundle--cascade"{% if saved %} data-uhifadhi--shell-bundle--cascade-saved-value="true"{% endif %}>
+    <input type="hidden" name="_token" value="{{ token }}">
+    {{ include('@Shell/settings/_cascade.html.twig', {
+        table: table,
+        heading: 'Core settings',
+        src: '· configure · nothing is saved until Save',
+        configure: {saved: saved, refusal: refusal},
+    }, with_context: false) }}
+    </form>
+{% endblock %}

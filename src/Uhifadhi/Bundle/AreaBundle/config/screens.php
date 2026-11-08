@@ -22,6 +22,7 @@ use Uhifadhi\Bundle\AreaBundle\Controller\AreaWidgetsController;
 use Uhifadhi\Bundle\AreaBundle\Controller\LiveSheetController;
 use Uhifadhi\Bundle\AreaBundle\Controller\MeController;
 use Uhifadhi\Bundle\AreaBundle\Controller\OrgDashboardController;
+use Uhifadhi\Bundle\AreaBundle\Controller\SettingsCoreController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationPostingsController;
@@ -50,6 +51,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\LiveSheet;
 use Uhifadhi\Bundle\AreaBundle\Service\MyDashboard;
 use Uhifadhi\Bundle\AreaBundle\Service\OrgOverviewCatalogue;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceStreamService;
+use Uhifadhi\Bundle\AreaBundle\Service\SettingsCascadeService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationNoticeStore;
 use Uhifadhi\Bundle\AreaBundle\Service\StationOverviewService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationPostingsService;
@@ -69,6 +71,7 @@ use Uhifadhi\Bundle\AreaBundle\Widget\OrgOverviewWidgets;
 use Uhifadhi\Bundle\ShellBundle\Contract\AreaShellSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
+use Uhifadhi\Bundle\ShellBundle\Model\CascadeTable;
 use Uhifadhi\Bundle\ShellBundle\Model\ModuleGroup;
 use Uhifadhi\Contracts\Me\MyCardProviderInterface;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
@@ -617,6 +620,33 @@ return static function (ContainerConfigurator $container): void {
             ])
             ->tag('controller.service_arguments');
         $services->alias(AreaModulesController::class, 'area.controller.modules')->public();
+    }
+
+    /*
+     * SETTINGS › CORE is drawn in the shell's settings frame with the shell's
+     * cascade, so it is registered only where the shell is installed.
+     */
+    if (class_exists(CascadeTable::class)) {
+        $services->set('area.settings_cascade', SettingsCascadeService::class)
+            ->args([
+                service('registry.settings.catalogue'),
+                service('registry.settings.writer'),
+                service(AreaOfInterestRepository::class),
+            ]);
+
+        $services->set('area.controller.settings_core', SettingsCoreController::class)
+            ->args([
+                service('twig'),
+                service('area.settings_cascade'),
+                service('shell.settings.section'),
+                service('shell.settings.reading'),
+                service('security.csrf.token_manager'),
+                service('router'),
+                service('security.authorization_checker'),
+                service('security.token_storage'),
+            ])
+            ->tag('controller.service_arguments');
+        $services->alias(SettingsCoreController::class, 'area.controller.settings_core')->public();
     }
 
     /*

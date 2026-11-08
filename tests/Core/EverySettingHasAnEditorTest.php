@@ -36,21 +36,10 @@ use Uhifadhi\Core\Tests\Application\Kernel;
  * gives it, `/settings/configure/{owner}`, that opens for a Super Admin, posts
  * a form, and names each of the owner's settings by its own label beside a
  * field.
- *
- * A SCREEN THAT IS DESIGNED AND NOT YET BUILT is the one exception, listed by
- * owner below with what is missing. The listing is held to the truth both
- * ways: an owner on it must still be without its screen, so the day the
- * screen is built this fails until the line is taken out, and an exception
- * cannot outlive the gap it names.
  */
 #[CoversNothing]
 final class EverySettingHasAnEditorTest extends WebTestCase
 {
-    /** @var array<string, string> owner => what is missing */
-    private const array AWAITING_THEIR_SCREEN = [
-        'core' => 'Settings › Core: designed as settings/configure/core, not built — the ping interval, stale-after and zone overlap tolerance are read and shown, and no screen writes them',
-    ];
-
     private KernelBrowser $client;
     private EntityManagerInterface $em;
 
@@ -71,10 +60,6 @@ final class EverySettingHasAnEditorTest extends WebTestCase
         $missing = [];
 
         foreach ($this->catalogue()->owners() as $owner) {
-            if (isset(self::AWAITING_THEIR_SCREEN[$owner])) {
-                continue;
-            }
-
             $path = '/settings/configure/'.$owner;
             $crawler = $this->client->request('GET', $path);
             $status = $this->client->getResponse()->getStatusCode();
@@ -104,23 +89,6 @@ final class EverySettingHasAnEditorTest extends WebTestCase
         }
 
         self::assertSame([], $missing, "A setting with nowhere to change it:\n".implode("\n", $missing));
-    }
-
-    public function testAnOwnerAwaitingItsScreenIsStillWithoutOne(): void
-    {
-        $this->signedInAsSomebodyWhoMaySeeEverything();
-        $owners = $this->catalogue()->owners();
-
-        foreach (array_keys(self::AWAITING_THEIR_SCREEN) as $owner) {
-            self::assertContains($owner, $owners, \sprintf('"%s" declares no setting any more; take its line out of AWAITING_THEIR_SCREEN.', $owner));
-
-            $this->client->request('GET', '/settings/configure/'.$owner);
-            self::assertSame(
-                404,
-                $this->client->getResponse()->getStatusCode(),
-                \sprintf('/settings/configure/%s exists now: take its line out of AWAITING_THEIR_SCREEN so the screen is held to every setting.', $owner),
-            );
-        }
     }
 
     protected function setUp(): void

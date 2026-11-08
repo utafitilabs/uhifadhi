@@ -43,6 +43,12 @@ enum SettingsTab: string
     /** What is installed, at what version, where it runs, and its health. */
     case Installation = 'installation';
 
+    /**
+     * What the platform does whatever modules run, for the organization and
+     * customised per area. Drawn by the bundle that owns areas.
+     */
+    case Core = 'core';
+
     /** The catalogue: every module the installation can run, and who runs it. */
     case Modules = 'modules';
 
@@ -77,6 +83,7 @@ enum SettingsTab: string
         return match ($this) {
             self::Overview => 'Overview',
             self::Installation => 'Installation',
+            self::Core => 'Core',
             self::Modules => 'Modules',
             self::Organization => 'Organization',
             self::Deletions => 'Deletions',
@@ -93,6 +100,7 @@ enum SettingsTab: string
         return match ($this) {
             self::Overview => 'What this installation gives you, what it runs, and who it belongs to. Organization scope — an area’s own settings are on the area, and a module’s are on that module’s Configure page.',
             self::Installation => 'What is installed, at what version, which areas run it, and whether any of it needs attention. This is the page that used to be the front door.',
+            self::Core => 'What the platform does whatever modules run. The default for every area, and where an area sets its own.',
             self::Modules => 'The catalogue: every module this installation can run, what it does, and which areas run it.',
             self::Organization => 'Who this installation belongs to: the name it is known by, its mark, and where in the world it is.',
             self::Deletions => 'Every delete a Super Admin made: who, what, when, and what went with it. The records themselves are gone; these lines are all that stays.',

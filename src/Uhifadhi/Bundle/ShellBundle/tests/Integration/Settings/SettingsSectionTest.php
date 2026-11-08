@@ -52,9 +52,29 @@ final class SettingsSectionTest extends ShellKernelTestCase
     }
 
     /**
+     * THE SCREENS THE STRIP AND THE SIDEBAR CARRY: every one but Deletions,
+     * which this kernel never shows. Core is carried though another bundle
+     * draws it.
+     *
+     * @return list<SettingsTab>
+     */
+    private static function shownScreens(): array
+    {
+        $screens = [];
+        foreach (SettingsTab::cases() as $tab) {
+            if (SettingsTab::Deletions !== $tab) {
+                $screens[] = $tab;
+            }
+        }
+
+        return $screens;
+    }
+
+    /**
      * THE SCREENS THE SHELL DRAWS: every one but Deletions, which whoever
      * keeps the deletes serves and which this kernel - with nothing that
-     * deletes - never shows (ruled 28 Sep, #48).
+     * deletes - never shows (ruled 28 Sep, #48), and Core, which whoever keeps
+     * the areas serves.
      *
      * @return list<SettingsTab>
      */
@@ -62,7 +82,7 @@ final class SettingsSectionTest extends ShellKernelTestCase
     {
         $screens = [];
         foreach (SettingsTab::cases() as $tab) {
-            if (SettingsTab::Deletions !== $tab) {
+            if (SettingsTab::Deletions !== $tab && SettingsTab::Core !== $tab) {
                 $screens[] = $tab;
             }
         }
@@ -114,7 +134,7 @@ final class SettingsSectionTest extends ShellKernelTestCase
         $tabs = $this->get($this->address($tab))->filter('div.atabs a');
 
         self::assertSame(
-            array_map(static fn (SettingsTab $one): string => $one->label(), self::shellScreens()),
+            array_map(static fn (SettingsTab $one): string => $one->label(), self::shownScreens()),
             $tabs->each(static fn (Crawler $one): string => trim($one->text())),
         );
         self::assertCount(1, $tabs->filter('.on'));
@@ -161,7 +181,7 @@ final class SettingsSectionTest extends ShellKernelTestCase
 
         $children = $crawler->filter('nav.nav .ntree a')->each(static fn (Crawler $one): string => trim($one->text()));
         self::assertSame(
-            array_map(static fn (SettingsTab $one): string => $one->label(), self::shellScreens()),
+            array_map(static fn (SettingsTab $one): string => $one->label(), self::shownScreens()),
             $children,
         );
     }

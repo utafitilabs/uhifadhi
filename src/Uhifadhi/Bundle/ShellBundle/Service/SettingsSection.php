@@ -84,9 +84,10 @@ final class SettingsSection
     public function screen(?string $segment, Request $request): ?SettingsScreen
     {
         $tab = null === $segment ? SettingsTab::first() : SettingsTab::tryFrom($segment);
-        // DELETIONS IS DRAWN BY WHOEVER KEEPS THE DELETES, on a route of its
-        // own at the same address; here it is no screen.
-        if (null === $tab || SettingsTab::Deletions === $tab) {
+        // DELETIONS IS DRAWN BY WHOEVER KEEPS THE DELETES, and Core by whoever
+        // keeps the areas, each on a route of its own at the same address;
+        // here neither is a screen.
+        if (null === $tab || SettingsTab::Deletions === $tab || SettingsTab::Core === $tab) {
             return null;
         }
 

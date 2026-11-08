@@ -1,6 +1,6 @@
 {
     "name": "@uhifadhi/shell-bundle",
-    "description": "Front-end behaviour of the shell \u2014 the furniture's Stimulus controllers, mapped into hosts via AssetMapper.",
+    "description": "Front-end behaviour of the shell — the furniture's Stimulus controllers, mapped into hosts via AssetMapper.",
     "license": "AGPL-3.0-or-later",
     "symfony": {
         "controllers": {
@@ -56,6 +56,12 @@
             "dropdown": {
                 "main": "controllers/dropdown_controller.js",
                 "name": "uhifadhi--shell-bundle--dropdown",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "cascade": {
+                "main": "controllers/cascade_controller.js",
+                "name": "uhifadhi--shell-bundle--cascade",
                 "fetch": "eager",
                 "enabled": true
             }

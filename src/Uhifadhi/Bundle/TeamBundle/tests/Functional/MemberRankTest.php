@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use Symfony\Component\Clock\Test\ClockSensitiveTrait;
 use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Controller\MemberController;
 use Uhifadhi\Bundle\TeamBundle\Entity\Rank;
@@ -32,6 +33,32 @@ use Uhifadhi\Bundle\TeamBundle\Service\RankService;
 #[CoversClass(MemberHistory::class)]
 final class MemberRankTest extends WebTestCaseWithSchema
 {
+    use ClockSensitiveTrait;
+
+    /**
+     * THE FROM DATE OFFERS TODAY WHERE THE INSTALLATION IS: PHP's default
+     * zone, whatever zone the clock answers in. Half past midnight in East
+     * Africa is still the day before in UTC.
+     */
+    public function testTheFromDateOffersTodayInTheInstallationsZone(): void
+    {
+        $this->administrator();
+        $this->ladder();
+        $joseph = $this->person('Joseph', 'Mollel');
+        $this->em->flush();
+
+        $zone = date_default_timezone_get();
+        date_default_timezone_set('Africa/Dar_es_Salaam');
+        try {
+            self::mockTime(new \DateTimeImmutable('2026-11-07 21:30:00', new \DateTimeZone('UTC')));
+            $crawler = $this->client->request('GET', '/team/'.$joseph->getUuidString().'/configure');
+        } finally {
+            date_default_timezone_set($zone);
+        }
+
+        self::assertSame('2026-11-08', $crawler->filter('#position input[type="date"][name="since"]')->attr('value'));
+    }
+
     public function testTheRecordStatesTheRankInTheBandAndInsideThePositionCard(): void
     {
         $naomi = $this->administrator();

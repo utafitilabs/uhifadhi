@@ -280,6 +280,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.presence_stream'),
             service('area.my_dashboard'),
             service('security.authorization_checker'),
+            service('clock'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(OrgDashboardController::class, 'area.controller.dashboard')->public();

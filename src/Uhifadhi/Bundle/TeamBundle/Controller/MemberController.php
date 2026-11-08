@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Clock\ClockInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -199,6 +200,7 @@ final readonly class MemberController
         private ?ApiTokenRepository $apiTokens = null,
         private ?ApiTokenManager $apiTokenManager = null,
         private ?Security $security = null,
+        private ?ClockInterface $clock = null,
     ) {
     }
 
@@ -272,7 +274,7 @@ final readonly class MemberController
             'usesRanks' => $this->personRank->usesRanks(),
             'rankNow' => null !== ($ranks[0] ?? null) && null === $ranks[0]->getUntil() ? $ranks[0] : null,
             'rankChoices' => $this->personRank->usesRanks() ? $this->personRank->choices() : [],
-            'today' => (new \DateTimeImmutable('today'))->format('Y-m-d'),
+            'today' => $this->now()->format('Y-m-d'),
             'member' => $member,
             'card' => $card,
             'placement' => $member->getPlacement(),
@@ -1156,5 +1158,19 @@ final readonly class MemberController
         }
 
         return null;
+    }
+
+    /**
+     * NOW, WHERE THE INSTALLATION IS. A wall-clock answer — today's date, the
+     * hour a greeting is chosen by — is read in PHP's default zone, which the
+     * installation sets with `date.timezone`; the clock may answer in any
+     * zone (a MockClock answers in UTC), so the instant is moved into it.
+     *
+     * @see https://www.php.net/manual/en/datetime.configuration.php#ini.date.timezone — "The default timezone used by all date/time functions"
+     * @see vendor/symfony/dependency-injection/Kernel/Resources/config/services.php — `clock` is a bare Clock, which reads the global clock (NativeClock in date_default_timezone_get()) unless a test sets one
+     */
+    private function now(): \DateTimeImmutable
+    {
+        return ($this->clock?->now() ?? new \DateTimeImmutable())->setTimezone(new \DateTimeZone(date_default_timezone_get()));
     }
 }

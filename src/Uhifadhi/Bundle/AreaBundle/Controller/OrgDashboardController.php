@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\Controller;
 
+use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -103,6 +104,7 @@ final readonly class OrgDashboardController
         private MyDashboard $mine,
         /** Which of the two `/` draws is decided by the areas read, asked here. */
         private AuthorizationCheckerInterface $authorization,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -118,7 +120,7 @@ final readonly class OrgDashboardController
     public function dashboard(Request $request): Response
     {
         if (!$this->authorization->isGranted(self::READ)) {
-            return $this->mine(new \DateTimeImmutable());
+            return $this->mine($this->now());
         }
 
         // ONE MOMENT FOR THE WHOLE PAGE, handed to every cell, so two figures
@@ -373,7 +375,7 @@ final readonly class OrgDashboardController
     #[Route('/me', name: self::MINE, methods: ['GET'])]
     public function myDashboard(): Response
     {
-        return $this->mine(new \DateTimeImmutable());
+        return $this->mine($this->now());
     }
 
     /** The dashboard of the one person signed in: their own cards, from every package. */
@@ -398,5 +400,19 @@ final readonly class OrgDashboardController
         $user = $this->tokens->getToken()?->getUser();
 
         return $user instanceof ModuleUserInterface ? $user : null;
+    }
+
+    /**
+     * NOW, WHERE THE INSTALLATION IS. A wall-clock answer — today's date, the
+     * hour a greeting is chosen by — is read in PHP's default zone, which the
+     * installation sets with `date.timezone`; the clock may answer in any
+     * zone (a MockClock answers in UTC), so the instant is moved into it.
+     *
+     * @see https://www.php.net/manual/en/datetime.configuration.php#ini.date.timezone — "The default timezone used by all date/time functions"
+     * @see vendor/symfony/dependency-injection/Kernel/Resources/config/services.php — `clock` is a bare Clock, which reads the global clock (NativeClock in date_default_timezone_get()) unless a test sets one
+     */
+    private function now(): \DateTimeImmutable
+    {
+        return $this->clock->now()->setTimezone(new \DateTimeZone(date_default_timezone_get()));
     }
 }

@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
 
+use PHPUnit\Framework\Attributes\DataProvider;
+
 /**
  * A DASHBOARD FOR EVERYONE (open item #19, option A ruled 28 Sep 2026).
  *
@@ -38,6 +40,36 @@ final class MyDashboardTest extends WebTestCase
         self::assertSame(200, $this->browser()->getResponse()->getStatusCode());
         self::assertStringContainsString('Naserian', $crawler->filter('h1')->text());
         self::assertStringContainsString((string) $person->getUuidString(), $crawler->filter('[data-fake="figure"]')->text(), 'asked about the person signed in');
+    }
+
+    /**
+     * THE GREETING IS THE HOUR WHERE THE INSTALLATION IS: PHP's default zone,
+     * whatever zone the clock answers in (this kernel's answers in UTC). Half
+     * past midnight in East Africa is 21:30 the evening before in UTC, and is
+     * a morning; 14:30 in UTC is half past five there, an evening.
+     *
+     * @return iterable<string, array{string, string}>
+     */
+    public static function instants(): iterable
+    {
+        yield 'just after midnight there' => ['2026-11-07 21:30:00', 'Good morning, Naserian'];
+        yield 'half past five there' => ['2026-11-08 14:30:00', 'Good evening, Naserian'];
+    }
+
+    #[DataProvider('instants')]
+    public function testTheGreetingIsTheHourInTheInstallationsZone(string $utc, string $greeting): void
+    {
+        $zone = date_default_timezone_get();
+        date_default_timezone_set('Africa/Dar_es_Salaam');
+        try {
+            $this->boot(self::NO_AREAS, clock: $utc);
+            $this->signInAsPerson()->named('Naserian', 'Lekishon');
+            $this->em->flush();
+
+            self::assertSame($greeting, trim($this->browser()->request('GET', '/me')->filter('h1')->text()));
+        } finally {
+            date_default_timezone_set($zone);
+        }
     }
 
     public function testEveryCardStandsInItsSlotInItsOrder(): void

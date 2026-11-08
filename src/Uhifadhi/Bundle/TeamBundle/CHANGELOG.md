@@ -13,6 +13,9 @@ Not released yet.
    outside every department that runs it are refused (the access check's
    third question). The two flashes say the same.
 
+ * A RANK'S "FROM" DATE OFFERS TODAY IN PHP'S DEFAULT ZONE, read through the
+   `clock` service: an installation sets `date.timezone` to its own zone.
+
  * A DEPARTMENT'S RECORD (the design's departments/ecology/index.html): `GET /departments/{uuid}`
    draws three panels — Overview (the facts strip Belong · Support · Modules, the figures with their
    change, sparkline and source, the goals as cards against their targets, What produced these

@@ -1518,6 +1518,7 @@ return static function (ContainerConfigurator $container): void {
             service(ApiTokenRepository::class),
             service('team.api_token.manager'),
             service('security.helper'),
+            service('clock')->nullOnInvalid(),
         ])
         ->tag('controller.service_arguments');
     $services->alias(MemberController::class, 'team.controller.member')->public();

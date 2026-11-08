@@ -13,6 +13,10 @@
    a card opened in the browser lists its people with Appoint leader and End
    assignment, where it used to say nobody was stationed there.
 
+ * THE GREETING ON `/me` AND `/` IS THE HOUR IN PHP'S DEFAULT ZONE, read
+   through the `clock` service: an installation sets `date.timezone` to its
+   own zone.
+
  * EVERY REGISTER WEARS THE HOUSE BAR AND THE HOUSE FOOT. The bar is `.lfilt`:
    a `details.i-dd` chip an axis, its options links with counts of the whole
    set (`_partial/_filter.html.twig`, which also takes the page's own address

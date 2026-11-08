@@ -18,7 +18,7 @@ else on a page: never in a card, a dot or an index.
 
 A bordered, tinted row 24px above the content: a 16px icon, then the sentence —
 its head 12.5px 600, the cause after it 12.5px 400 in fog — then its doors at
-the right, each a `.btn.sm`. A door is a link or a form posted by its button.
+the right, each a `.btn.sm`. A door is a link, a form posted by its button, or a submit button of the form the banner sits in.
 Below 900px the doors wrap under the sentence. A banner of several lines keeps
 one icon, on the first line's centre, and draws one line a thing to act on,
 each with its own doors.
@@ -42,7 +42,7 @@ each with its own doors.
 |---|---|
 | `title` | the head, in the heavier weight; empty or null draws no banner |
 | `text` | optional: the cause after the head, in fog |
-| `actions` | optional: label → door. A string is a link's `href`; a mapping `{action, fields, method}` is a form whose `fields` are hidden inputs and whose submit button reads the label (`method` is `post` unless given) |
+| `actions` | optional: label → door. A string is a link's `href`; a mapping `{action, fields, method}` is a form whose `fields` are hidden inputs and whose submit button reads the label (`method` is `post` unless given); `{button: {name, value}}` is a submit button of the form around the banner, posting that name and value with the form's fields — a banner inside a form holds no form of its own |
 | `tone` | `warn` (the default), `fail`, `info` or `ok` |
 | `icon` | optional: a namespaced ux-icons name in place of the tone's |
 | `id` | optional: the wrapper's id, for a door that links to the banner |
@@ -77,7 +77,7 @@ warn banner's shape in the accent. An unknown tone is a render error.
 ## The tests
 
 - `tests/Integration/Banner/BannerIncludeTest` renders the partial with a link
-  and a form, a title alone, each tone, several lines and nothing, and checks
+  and a form, a submit button of the surrounding form, a title alone, each tone, several lines and nothing, and checks
   every class it writes is in `shell.css`;
 - `tests/Unit/Template/VocabularyConformanceTest` asks the sheet for every class
   of the partial, the tones included.

@@ -21,7 +21,9 @@
      text     the cause after it, in fog; optional
      actions  label → door: a string is a link's href, a mapping
               {action, fields?, method?} a form whose fields are hidden
-              inputs and whose button is the label (method post unless given)
+              inputs and whose button is the label (method post unless given),
+              and {button: {name, value}} a submit button of the form the
+              banner sits in, posting that name and value with its fields
      tone     warn (the default), fail, info or ok — the reviewed state, the
               attention settled and the banner kept as the record
      icon     a namespaced ux-icons name in place of the tone's
@@ -41,7 +43,9 @@
     {%- if (line.actions ?? {}) is not empty %}
     <span class="banner-acts">
         {%- for label, door in line.actions %}
-        {%- if door is iterable %}
+        {%- if door is iterable and door.button is defined %}
+        <button type="submit" class="btn sm" name="{{ door.button.name }}" value="{{ door.button.value }}">{{ label }}</button>
+        {%- elseif door is iterable %}
         <form method="{{ door.method ?? 'post' }}" action="{{ door.action }}">
             {%- for name, value in door.fields ?? {} %}
             <input type="hidden" name="{{ name }}" value="{{ value }}">

@@ -81,6 +81,27 @@ final class BannerIncludeTest extends ContractTestCase
         self::assertSame('Mark reviewed', $button->text());
     }
 
+    /**
+     * A DOOR THAT FILES THE PAGE'S OWN FORM. A banner inside a form cannot
+     * hold a form of its own; `{button: {name, value}}` is a submit button of
+     * the form around it, posting its name and value with every other field.
+     */
+    public function testAnActionMaySubmitTheFormAroundTheBanner(): void
+    {
+        $acts = $this->page([[
+            'title' => 'This point is outside Kilimani',
+            'actions' => ['Move the point' => '#where', 'File it outside the area' => ['button' => ['name' => 'placement', 'value' => 'outside']]],
+        ]])->filter('div.banner .banner-acts');
+
+        self::assertSame(['a', 'button'], $acts->children()->each(static fn (Crawler $c): string => $c->nodeName()));
+        self::assertCount(0, $acts->filter('form'), 'a banner inside a form holds no form of its own');
+        $button = $acts->filter('button.btn.sm');
+        self::assertSame('submit', $button->attr('type'));
+        self::assertSame('placement', $button->attr('name'));
+        self::assertSame('outside', $button->attr('value'));
+        self::assertSame('File it outside the area', $button->text());
+    }
+
     public function testATitleAloneDrawsNoCauseAndNoDoors(): void
     {
         $banner = $this->page([['title' => '2 stations have no patrol']])->filter('div.banner');

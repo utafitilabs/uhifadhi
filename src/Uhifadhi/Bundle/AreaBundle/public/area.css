@@ -649,15 +649,8 @@ tr.cmparked .cmname b { color: rgb(var(--c-fog)); font-weight: 500; }
 tr.cmparked td { color: rgb(var(--c-dim)); }
 
 
-/* The door into a module's own configure pages. Same height as the switch
-   beside it (26px), so a row with a door and a row without sit level. */
-.cmdoor {
-    display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px;
-    border: 1px solid var(--c-ln2); border-radius: 7px; font-size: 11.5px; font-weight: 600;
-    color: rgb(var(--c-tx)); text-decoration: none; background: rgb(var(--c-raised)); white-space: nowrap;
-}
-.cmdoor:hover { border-color: rgb(var(--c-acc)); color: rgb(var(--c-acc)); }
-.cmdoor svg { width: 13px; height: 13px; flex: none; color: rgb(var(--c-acc)); }
+/* Where a module has no configure pages: the place of the shell's .cmdoor, at
+   its height (26px), so a row with a door and a row without sit level. */
 .cmnodoor {
     display: inline-flex; align-items: center; height: 26px; padding: 0 10px;
     border: 1px dashed var(--c-ln2); border-radius: 7px; font-family: var(--font-mono);

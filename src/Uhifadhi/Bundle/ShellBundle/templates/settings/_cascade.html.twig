@@ -10,7 +10,10 @@
    READ-ONLY unless `configure` is given: {saved, refusal}. Then each default
    is a field `org[<key>]` and each area's own value `area[<key>][<uuid>]`
    (an area with no field follows the default), and the save bar follows the
-   card. The shell draws and never writes: the including page wraps this in
+   card. A choice is the house segmented row of native radios inside labels,
+   all of one control named as a field is, each posting its stored value;
+   under the default's, the chosen one's meaning. A setting's note is said
+   under its name. The shell draws and never writes: the including page wraps this in
    its own form, with its token, on the element that carries the cascade
    controller (`uhifadhi--shell-bundle--cascade`, `-saved-value` after a
    save), and the controller makes Set this area’s own / Use the default, the
@@ -18,6 +21,13 @@
 
    Takes: table (Model\CascadeTable), heading and src (the card's tab), configure. #}
 {%- set _cols = 4 -%}
+{%- macro choice(setting, name, chosen, label) -%}
+    <span class="seg row" role="radiogroup" aria-label="{{ label }}">
+        {%- for option in setting.choices -%}
+        <label><input type="radio" name="{{ name }}" value="{{ option.value }}"{% if option.value == chosen %} checked{% endif %}{% if option.meaning is not null %} data-means="{{ option.meaning }}"{% endif %}>{{ option.label }}</label>
+        {%- endfor -%}
+    </span>
+{%- endmacro -%}
     <div class="c">
         <span class="tab">{{ heading }}<span class="src">{{ src }}</span></span>
         <div class="dw-scroll">
@@ -38,6 +48,7 @@
                     <tr data-setting="{{ setting.key }}">
                         <td>
                             <button type="button" class="mrow" aria-expanded="false"><span class="car" aria-hidden="true">▸</span><span class="cmname"><b>{{ setting.label }}</b><span class="cmwhat">{{ setting.description }}</span></span></button>
+                            {%- if setting.note %}<p class="cx-note">{{ setting.note }}</p>{% endif %}
                         </td>
                         <td class="lvc org"><span class="valf">{{ setting.defaultText }}</span></td>
                         <td class="lvc area">{% if setting.places is not empty %}<span class="sumc">{{ setting.ownCount }} of {{ setting.places|length }} areas set their own</span>{% else %}<span class="cx-why">—</span>{% endif %}</td>
@@ -46,7 +57,10 @@
                     <tr class="dk dk-node dk-on{% if setting.places is empty %} dk-end{% endif %}" data-setting="{{ setting.key }}" data-default hidden>
                         <td><span class="cn l1"><span class="ncar">▾</span>{{ ux_icon('shell:landmark', {class: 'lvi', width: 14, height: 14}) }}<span class="cnw">{{ table.organization }}<em>the default for every area</em></span></span></td>
                         <td class="lvc org">
-                            {%- if configure -%}
+                            {%- if configure and setting.isChoice -%}
+                                <span class="ed-line">{{ _self.choice(setting, 'org[' ~ setting.key ~ ']', setting.defaultInput, setting.label ~ ' — the default') }}</span>
+                                {%- if setting.saysMeanings %}<span class="ed-hint" data-means-line>{{ setting.defaultMeaning }}</span>{% endif -%}
+                            {%- elseif configure -%}
                                 <span class="ed-line"><span class="ed-in"><input type="number" name="org[{{ setting.key }}]" value="{{ setting.defaultInput }}"{% if setting.min is not null %} min="{{ setting.min }}"{% endif %}{% if setting.max is not null %} max="{{ setting.max }}"{% endif %} step="{{ setting.step }}"{% if setting.unsetMeans %} data-unset="{{ setting.unsetMeans }}"{% else %} required{% endif %} aria-label="{{ setting.label }} — the default">{{ _unit|raw }}</span></span>
                                 {%- if setting.unsetMeans %}<span class="ed-hint" data-means-line>empty — {{ setting.unsetMeans }}</span>{% endif -%}
                             {%- else -%}
@@ -63,7 +77,9 @@
                         <td class="lvc area">
                             <span class="ed-line">
                             {%- if place.own -%}
-                                {%- if configure -%}
+                                {%- if configure and setting.isChoice -%}
+                                    {{ _self.choice(setting, 'area[' ~ setting.key ~ '][' ~ place.uuid ~ ']', place.input, setting.label ~ ' — ' ~ place.name) }}<button type="button" class="btn sm ed-reset" title="Go back to {{ setting.defaultText }}, the default">Use the default</button>
+                                {%- elseif configure -%}
                                     <span class="ed-in"><input type="number" name="area[{{ setting.key }}][{{ place.uuid }}]" value="{{ place.input }}"{% if setting.min is not null %} min="{{ setting.min }}"{% endif %}{% if setting.max is not null %} max="{{ setting.max }}"{% endif %} step="{{ setting.step }}" required aria-label="{{ setting.label }} — {{ place.name }}">{{ _unit|raw }}</span><button type="button" class="btn sm ed-reset" title="Go back to {{ setting.defaultText }}, the default">Use the default</button>
                                 {%- else -%}
                                     <span class="valf">{{ place.text }}</span> <span class="ed-fa">· this {{ place.kind }}’s own</span>

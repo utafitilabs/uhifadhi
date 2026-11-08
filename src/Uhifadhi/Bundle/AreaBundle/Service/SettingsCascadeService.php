@@ -20,6 +20,7 @@ use Uhifadhi\Bundle\RegistryBundle\Settings\SettingsCatalogue;
 use Uhifadhi\Bundle\RegistryBundle\Settings\SettingsRefused;
 use Uhifadhi\Bundle\RegistryBundle\Settings\SettingsWriter;
 use Uhifadhi\Bundle\RegistryBundle\Settings\SettingValues;
+use Uhifadhi\Bundle\ShellBundle\Model\CascadeChoice;
 use Uhifadhi\Bundle\ShellBundle\Model\CascadePlace;
 use Uhifadhi\Bundle\ShellBundle\Model\CascadeSetting;
 use Uhifadhi\Bundle\ShellBundle\Model\CascadeTable;
@@ -34,7 +35,8 @@ use Uhifadhi\Contracts\Settings\SettingType;
  * THE FORM POSTS THE WHOLE STATE, not a diff: `org[<key>]` is the default's
  * field, `area[<key>][<uuid>]` an area's own value, and an area with no field
  * follows the default. What differs from the store is written; an area whose
- * value is gone is reset. Only Number settings have a field here.
+ * value is gone is reset. Number and Choice settings have a control here; a
+ * choice posts its stored value, as its radio's value.
  */
 final readonly class SettingsCascadeService
 {
@@ -49,7 +51,7 @@ final readonly class SettingsCascadeService
     {
         $areas = $this->areas->findAllOrdered();
         $groups = [];
-        foreach ($this->numbers($owner) as $definition) {
+        foreach ($this->editable($owner) as $definition) {
             $values = $this->writer->valuesOf($definition->key);
             $default = $values->organization ?? $definition->default;
             $defaultText = null === $default ? (string) $definition->unsetMeans : $this->say($definition, $default);
@@ -83,6 +85,8 @@ final readonly class SettingsCascadeService
                 $definition->unsetMeans,
                 $definition->depth->reaches(SettingDepth::Department),
                 $places,
+                array_map(static fn (string $choice): CascadeChoice => new CascadeChoice($choice, $definition->labelOf($choice), $definition->meaningOf($choice)), SettingType::Choice === $definition->type ? $definition->choices : []),
+                $definition->note,
             );
         }
 
@@ -99,7 +103,7 @@ final readonly class SettingsCascadeService
     {
         $known = array_map(static fn (AreaOfInterest $area): string => (string) $area->getUuidString(), $this->areas->findAllOrdered());
         $changes = [];
-        foreach ($this->numbers($owner) as $definition) {
+        foreach ($this->editable($owner) as $definition) {
             $values = $this->writer->valuesOf($definition->key);
             $posted = $organization[$definition->key] ?? null;
             if (\is_string($posted)) {
@@ -152,17 +156,27 @@ final readonly class SettingsCascadeService
         return new SettingChange($definition->key, SettingDepth::Organization, null, $value);
     }
 
+    /** Whether the owner declares a setting this cascade has a control for. */
+    public function hasSettings(string $owner): bool
+    {
+        return [] !== $this->editable($owner);
+    }
+
     /**
      * @return list<SettingDefinition>
      */
-    private function numbers(string $owner): array
+    private function editable(string $owner): array
     {
-        return array_values(array_filter($this->catalogue->forOwner($owner), static fn (SettingDefinition $d): bool => SettingType::Number === $d->type));
+        return array_values(array_filter($this->catalogue->forOwner($owner), static fn (SettingDefinition $d): bool => SettingType::Toggle !== $d->type));
     }
 
     /** A field as the store keeps it; anything else passes as typed, for the store to refuse. */
     private static function parse(SettingDefinition $definition, string $field): int|float|string
     {
+        if (SettingType::Choice === $definition->type) {
+            return $field;
+        }
+
         if (1 === preg_match('/^-?\d+$/', $field)) {
             return (int) $field;
         }
@@ -186,6 +200,10 @@ final readonly class SettingsCascadeService
 
     private function say(SettingDefinition $definition, int|float|bool|string $value): string
     {
+        if (SettingType::Choice === $definition->type && \is_string($value)) {
+            return $definition->labelOf($value);
+        }
+
         return trim(self::figure($definition, $value).' '.($definition->unit ?? ''));
     }
 

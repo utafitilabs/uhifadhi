@@ -22,6 +22,9 @@ import { Controller } from '@hotwired/stimulus';
  *   a figure       .ed-in > input, its unit in .ed-in > .u; an empty
  *                  default reads as its data-unset (what unset means), said
  *                  under it by .ed-hint[data-means-line]
+ *   a choice       .seg.row[role=radiogroup] > label > input[type=radio], one
+ *                  per choice, the label's text its word; under the default's,
+ *                  .ed-hint[data-means-line] says the checked radio's data-means
  *   follows        .ed-line > .ed-follow + .btn.sm.ed-custom: the click puts
  *                  the default's control there, preset to its value and named
  *                  area[<key>][<uuid>]
@@ -52,6 +55,7 @@ export default class extends Controller {
         this.onInput = (event) => this.input(event);
         this.tbody.addEventListener('click', this.onClick);
         this.tbody.addEventListener('input', this.onInput);
+        this.tbody.addEventListener('change', this.onInput);
 
         this.scroller = this.table.closest('.dw-scroll');
         if (this.scroller) {
@@ -97,6 +101,7 @@ export default class extends Controller {
     disconnect() {
         this.tbody?.removeEventListener('click', this.onClick);
         this.tbody?.removeEventListener('input', this.onInput);
+        this.tbody?.removeEventListener('change', this.onInput);
         this.scroller?.removeEventListener('scroll', this.onScroll);
         this.discardButton?.removeEventListener('click', this.onDiscard);
         this.reviewButton?.removeEventListener('click', this.onReview);
@@ -178,7 +183,7 @@ export default class extends Controller {
     }
 
     control(row) {
-        return row.querySelector('.ed-in, .ed-follow');
+        return row.querySelector('.seg.row, .ed-in, .ed-follow');
     }
 
     valueOf(element) {
@@ -187,6 +192,11 @@ export default class extends Controller {
         }
         if (element.classList.contains('ed-follow')) {
             return null;
+        }
+        if (element.classList.contains('seg')) {
+            const checked = element.querySelector('input:checked');
+
+            return checked ? checked.closest('label').textContent.trim() : '';
         }
         const input = element.querySelector('input');
         const unit = element.querySelector('.u');
@@ -216,7 +226,7 @@ export default class extends Controller {
     defaultOf(main) {
         const found = this.places().find((place) => place.main === main && place.isDefault);
 
-        return found ? found.row.querySelector('.ed-in') : null;
+        return found ? found.row.querySelector('.seg.row, .ed-in') : null;
     }
 
     shown(value) {
@@ -234,6 +244,11 @@ export default class extends Controller {
             }
             const key = this.key(place);
             const now = this.valueOf(element);
+            const means = place.isDefault ? place.row.querySelector('[data-means-line]') : null;
+            const checked = element.classList.contains('seg') ? element.querySelector('input:checked') : null;
+            if (means && checked) {
+                means.textContent = checked.dataset.means || '';
+            }
             const was = this.saved[key];
             place.row.querySelectorAll('.ed-dot').forEach((dot) => dot.remove());
             const changed = undefined !== was && now !== was;
@@ -320,12 +335,21 @@ export default class extends Controller {
         }
         const made = fromDefault.cloneNode(true);
         made.classList.remove('chg');
-        const input = made.querySelector('input');
-        input.value = fromDefault.querySelector('input').value;
-        input.name = 'area[' + row.dataset.setting + '][' + row.dataset.place + ']';
-        input.required = true;
-        delete input.dataset.unset;
-        input.setAttribute('aria-label', place.setting + ' — ' + place.place);
+        const name = 'area[' + row.dataset.setting + '][' + row.dataset.place + ']';
+        let input;
+        if (made.classList.contains('seg')) {
+            // A clone keeps each radio's checkedness; renamed before it joins the form, it never unchecks the default's.
+            made.querySelectorAll('input[type="radio"]').forEach((radio) => { radio.name = name; });
+            made.setAttribute('aria-label', place.setting + ' — ' + place.place);
+            input = made.querySelector('input:checked') || made.querySelector('input');
+        } else {
+            input = made.querySelector('input');
+            input.value = fromDefault.querySelector('input').value;
+            input.name = name;
+            input.required = true;
+            delete input.dataset.unset;
+            input.setAttribute('aria-label', place.setting + ' — ' + place.place);
+        }
 
         const reset = document.createElement('button');
         reset.type = 'button';

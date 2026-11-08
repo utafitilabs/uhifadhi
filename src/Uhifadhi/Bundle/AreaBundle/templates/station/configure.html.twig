@@ -251,6 +251,7 @@
                                 {% endif %}
 
                                 <div class="stbhd">Stationed here<span>{{ row.posted }}</span></div>
+                                {% set board = boards[row.uuid]|default([]) %}
                                 {% if board is empty %}
                                     <div class="stnorow">Nobody is stationed here &mdash; a station with nobody at it is a normal state, not an error.</div>
                                 {% else %}

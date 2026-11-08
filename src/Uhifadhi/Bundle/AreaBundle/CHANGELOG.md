@@ -6,6 +6,13 @@
 
 ## 1.0.0
 
+ * EVERY STATION CARD ON CONFIGURE › STATIONS CARRIES ITS OWN BOARD AND ITS
+   MODULES' BLOCKS. A card is a `<details>` the browser opens on its own, so
+   the controller hands the template `boards` (the area's standing postings,
+   keyed by station) and the contributed blocks for every row of the page;
+   a card opened in the browser lists its people with Appoint leader and End
+   assignment, where it used to say nobody was stationed there.
+
  * EVERY REGISTER WEARS THE HOUSE BAR AND THE HOUSE FOOT. The bar is `.lfilt`:
    a `details.i-dd` chip an axis, its options links with counts of the whole
    set (`_partial/_filter.html.twig`, which also takes the page's own address

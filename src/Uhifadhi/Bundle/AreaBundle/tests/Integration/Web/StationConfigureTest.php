@@ -338,6 +338,34 @@ final class StationConfigureTest extends WebTestCase
         self::assertStringContainsString('derived', $body);
     }
 
+    /**
+     * EVERY CARD CARRIES ITS OWN BOARD. A card is a native disclosure the
+     * browser opens without asking the server, so the body that arrives with
+     * the page is the one the reader sees: a card opened in the browser lists
+     * its own people with their controls, whichever card the address named.
+     */
+    public function testEveryCardListsItsOwnPeopleAndTheirControls(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+        $other = $this->stations()->add($area, 'Northgate Post', -29.7, -3.1);
+        $this->postings()->post($other, $this->aPerson('K.', 'Sanga'), PostingSource::WrittenHere);
+
+        $page = new Crawler($this->body($this->section($area)));
+        $eastgate = $this->stationCard($page, 'Eastgate Post');
+
+        self::assertCount(0, $eastgate->filter('.stnorow'));
+        self::assertSame(['J. Mollel', 'T. Ndosi'], $this->stationed($eastgate));
+        self::assertSame(['Leads'], $eastgate->filter('.stboard .stlead')->each(static fn (Crawler $c): string => trim($c->text())));
+        self::assertSame(['Appoint leader'], $eastgate->filter('.stboard form[action$="/lead"] button')->each(static fn (Crawler $b): string => trim($b->text())));
+        self::assertSame(['End assignment', 'End assignment'], $eastgate->filter('.stboard form[action$="/end"] button')->each(static fn (Crawler $b): string => trim($b->text())));
+        self::assertSame(['K. Sanga'], $this->stationed($this->stationCard($page, 'Northgate Post')));
+
+        $opened = new Crawler($this->body($this->section($area).'?open='.$station->getUuidString()));
+        self::assertSame(['K. Sanga'], $this->stationed($this->stationCard($opened, 'Northgate Post')));
+    }
+
     public function testSomebodyIsPostedAppointedAndStoodDownFromTheOpenRow(): void
     {
         $this->boot();
@@ -455,15 +483,20 @@ final class StationConfigureTest extends WebTestCase
         $area = $this->aLiveArea();
         $station = $this->stations()->add($area, 'Eastgate Post', -29.75, -3.2, 'ST-01');
 
-        // ONE CARD IS OPEN AT A TIME on this page, and a card's fields —
-        // the area's and the modules' alike — exist only while it is.
-        $body = $this->body($this->section($area).'?open='.$station->getUuidString());
+        $this->stations()->add($area, 'Northgate Post', -29.7, -3.1);
 
-        self::assertStringContainsString('Watch and presence', $body);
-        self::assertStringContainsString('ao-by patrols', $body);
-        self::assertStringContainsString('day 06-18 and night 18-06', $body);
-        // Inside the card, not as a card of its own.
-        self::assertStringNotContainsString('rband', $body);
+        // EVERY CARD CARRIES ITS BLOCK, whichever card the address opened:
+        // the browser opens a card without asking the server.
+        $page = new Crawler($this->body($this->section($area).'?open='.$station->getUuidString()));
+
+        foreach (['Eastgate Post', 'Northgate Post'] as $name) {
+            $card = $this->stationCard($page, $name)->html();
+            self::assertStringContainsString('Watch and presence', $card);
+            self::assertStringContainsString('ao-by patrols', $card);
+            self::assertStringContainsString('day 06-18 and night 18-06', $card);
+            // Inside the card, not as a card of its own.
+            self::assertStringNotContainsString('rband', $card);
+        }
     }
 
     /**
@@ -504,6 +537,27 @@ final class StationConfigureTest extends WebTestCase
         preg_match_all('#<a class="zc-nm"[^>]*>([^<]+)</a>#', $this->body($url), $found);
 
         return array_map(trim(...), $found[1]);
+    }
+
+    /** One station's card, as the markup the browser discloses. */
+    private function stationCard(Crawler $page, string $name): Crawler
+    {
+        $cards = $page->filter('details.zcard')->reduce(
+            static fn (Crawler $card): bool => $name === trim($card->filter('a.zc-nm')->text()),
+        );
+        self::assertCount(1, $cards, \sprintf('The page carries no card for "%s".', $name));
+
+        return $cards;
+    }
+
+    /**
+     * The names on a card's board.
+     *
+     * @return list<string>
+     */
+    private function stationed(Crawler $card): array
+    {
+        return $card->filter('.stboard .strow > b')->each(static fn (Crawler $b): string => trim($b->text()));
     }
 
     private function body(string $url): string

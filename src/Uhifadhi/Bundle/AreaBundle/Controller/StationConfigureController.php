@@ -154,7 +154,18 @@ final readonly class StationConfigureController
             null === $open ? null : (string) $open->getUuidString(),
         );
         $table = $this->pager->page($register->total, $size, (string) $register->page);
-        $board = null === $open ? [] : $this->board->at($open, new PostingQuery())['rows'];
+
+        /*
+         * EVERY CARD ON THE PAGE CARRIES ITS OWN BOARD. A card is a native
+         * disclosure the browser opens without asking the server, so each
+         * card's people, and the controls on them, arrive with the page. One
+         * read of the area's standing postings serves every card, keyed by
+         * station.
+         */
+        $boards = [];
+        foreach ($this->board->board($this->postings->findStandingByArea($area), new PostingQuery())['rows'] as $row) {
+            $boards[$row->stationUuid][] = $row;
+        }
 
         $posts = [];
         foreach ($this->stations->findByArea($area) as $post) {
@@ -168,22 +179,21 @@ final readonly class StationConfigureController
         }
 
         /*
-         * WHAT THE MODULES ADD TO THE OPEN CARD. Only one card's body is
-         * rendered at a time on this page, so only that post is asked
-         * about — a contributor is never made to answer for eleven cards
-         * nobody is looking at. The answer is keyed by post all the same,
-         * because the page reads it per row and a list would tie the two
-         * to each other's order.
+         * WHAT THE MODULES ADD TO EACH CARD ON THIS PAGE, asked once for the
+         * page's rows: every card's body arrives with the page, so every card
+         * needs its blocks. The answer is keyed by station, because the page
+         * reads it per row and a list would tie the two to each other's order.
          *
          * A module parked in this area is not asked at all.
          */
-        $blocks = null === $open ? [] : [
-            (string) $open->getUuidString() => $this->sections->forOne(
-                new StationRef((string) $open->getUuidString(), (string) $area->getUuidString(), (string) $open->getName()),
-                StationSurface::Configure,
-                fn (string $slug): bool => $this->areaModules->isActive($area, $slug),
+        $blocks = $this->sections->collect(
+            array_map(
+                static fn (StationRow $row): StationRef => new StationRef($row->uuid, (string) $area->getUuidString(), $row->name),
+                $register->rows,
             ),
-        ];
+            StationSurface::Configure,
+            fn (string $slug): bool => $this->areaModules->isActive($area, $slug),
+        );
 
         return new Response($this->twig->render('@Area/station/configure.html.twig', [
             'area' => $area,
@@ -193,7 +203,7 @@ final readonly class StationConfigureController
             'links' => $this->pager->links($request, $table),
             'open' => $open,
             'openRow' => null === $open ? null : self::rowOf($register, (string) $open->getUuidString()),
-            'board' => $board,
+            'boards' => $boards,
             'blocks' => $blocks,
             'people' => $this->directory->people(),
             'nextCode' => $this->stationService->nextCode($area),

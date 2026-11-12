@@ -1571,9 +1571,19 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
    32px, the small-control height .btn and .seg.row share; the .tbl sub-line's
    mono 11px; 9px, the .staddrow gap; .62, a dimmed row; .35, a disabled toggle.
    ========================================================================== */
-.cis-wrap { margin-bottom: 20px; }
+/* 80px, the house's landing offset under the sticky top bar (.onpage [id]): a save, saved or refused, opens at the card. */
+.cis-wrap { margin-bottom: 20px; scroll-margin-top: 80px; }
 table.tbl.cis td { vertical-align: top; }
 table.tbl.cis th:first-child, table.tbl.cis td:first-child { width: 1%; white-space: nowrap; }
+/* The columns hold the widths the list takes with no row added: 212.4px and
+   521px are the Status and Kind max-contents of that list, the share of any
+   extra width; a new row, a hint or a change mark must not move them. 1053px
+   is their sum with Order and Offered. Their heads wrap, as the design's do,
+   so a head is never wider than its column. */
+table.tbl.cis { min-width: 1053px; }
+table.tbl.cis th:nth-child(n+2) { white-space: normal; }
+table.tbl.cis th:nth-child(2) { width: 212.4px; }
+table.tbl.cis th:nth-child(3) { width: 521px; }
 .cis .cmord { min-height: 32px; }
 .cis .cis-fl { display: flex; align-items: center; }
 .cis .fld { height: 32px; padding: 0 13px; font-size: 12.5px; min-width: 180px; }

@@ -153,21 +153,64 @@ final class CheckInStatusWritesTest extends DutyWritesTestCase
 
     /**
      * A PHONE THAT HAS NOT SYNCED since a status stopped being offered still
-     * sends its key. Today the claim is refused by name, as a word the area
-     * does not offer; the check-in is not stored.
+     * sends its key, and the check-in it made is real: it is stored, with the
+     * status the area still holds.
      */
-    public function testAClaimWithAKeyNoLongerOfferedIsRefusedToday(): void
+    public function testAClaimWithAKeyNoLongerOfferedIsAccepted(): void
     {
         [$area] = $this->ground();
         $this->statuses()->seed($area);
         $this->statuses()->save($area, [new CheckInStatusDraft('outside', 'Outside the park', CheckInStatusKind::WorkingElsewhere, false, false)]);
 
+        [$checkIn, $duplicate] = $this->service()->claim($area, $this->aPerson(), $this->claimBody(self::CLAIM, null, status: 'outside'));
+
+        self::assertFalse($duplicate);
+        $status = $checkIn->getStatus();
+        self::assertInstanceOf(CheckInStatus::class, $status);
+        self::assertSame('outside', $status->getKey());
+        self::assertFalse($status->isActive());
+    }
+
+    /** The same holds for a correction sent from a phone that has not synced. */
+    public function testACorrectionWithAKeyNoLongerOfferedIsAccepted(): void
+    {
+        [$area, $eastgate] = $this->ground();
+        [$checkIn] = $this->service()->claim($area, $this->aPerson(), $this->claimBody(self::CLAIM, $eastgate));
+        $this->statuses()->save($area, [new CheckInStatusDraft('outside', 'Outside the park', CheckInStatusKind::WorkingElsewhere, false, false)]);
+
+        $this->service()->amend($checkIn, ['corrections' => [[
+            'clientRef' => 'c-1',
+            'effectiveFrom' => '2026-09-19T09:00:00+03:00',
+            'status' => 'outside',
+            'note' => 'Escort to the hospital',
+        ]]]);
+
+        self::assertSame(['at_post', 'outside'], $this->statuses()->usedKeys($area));
+    }
+
+    /** A key the area never had is refused by name, on a check-in and on a correction. */
+    public function testAKeyTheAreaNeverHadIsRefused(): void
+    {
+        [$area, $eastgate] = $this->ground();
+
         try {
-            $this->service()->claim($area, $this->aPerson(), $this->claimBody(self::CLAIM, null, status: 'outside'));
-            self::fail('A claim with a key no longer offered was stored.');
+            $this->service()->claim($area, $this->aPerson(), $this->claimBody(self::CLAIM, null, status: 'seconded'));
+            self::fail('A claim with a key the area never had was stored.');
         } catch (DutyApiException $refused) {
             self::assertSame(422, $refused->statusCode());
-            self::assertStringContainsString('does not offer the status "outside"', $refused->getMessage());
+            self::assertStringContainsString('does not offer the status "seconded"', $refused->getMessage());
+        }
+
+        [$checkIn] = $this->service()->claim($area, $this->aPerson('Neema', 'Laizer'), $this->claimBody('9d3e2a10-7c41-4f0e-8b2a-1e6f4c9d0b21', $eastgate));
+        try {
+            $this->service()->amend($checkIn, ['corrections' => [[
+                'clientRef' => 'c-1',
+                'effectiveFrom' => '2026-09-19T09:00:00+03:00',
+                'status' => 'seconded',
+            ]]]);
+            self::fail('A correction with a key the area never had was stored.');
+        } catch (DutyApiException $refused) {
+            self::assertSame(422, $refused->statusCode());
         }
     }
 

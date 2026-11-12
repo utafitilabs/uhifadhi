@@ -255,7 +255,8 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
         ];
 
         return [
-            'action' => $this->urls->generate(CheckInStatusesController::ROUTE, ['uuid' => (string) $area->getUuidString()]),
+            // The card's anchor on the action: a refused save is drawn at this address, and opens at the card that carries the refusal.
+            'action' => $this->urls->generate(CheckInStatusesController::ROUTE, ['uuid' => (string) $area->getUuidString()]).'#'.CheckInStatusesController::ANCHOR,
             'token' => $this->csrf->getToken(CheckInStatusesController::TOKEN)->getValue(),
             'refusal' => $refusal,
             'justSaved' => $model['justSaved'],

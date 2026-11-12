@@ -228,10 +228,9 @@ final class FieldDutyEndpointsTest extends FieldApiTestCase
 
     /**
      * A PHONE THAT HAS NOT SYNCED since a status stopped being offered still
-     * sends its key. Today the claim is refused by name, like a word the area
-     * never offered, and the check-in is not stored.
+     * sends its key. The check-in it made is real, so it is stored.
      */
-    public function testAStatusNoLongerOfferedIsRefusedToday(): void
+    public function testAStatusNoLongerOfferedIsAccepted(): void
     {
         $area = $this->area('Northern Conservation Reserve');
         $ranger = $this->onDuty();
@@ -245,9 +244,8 @@ final class FieldDutyEndpointsTest extends FieldApiTestCase
 
         $body = $this->send('POST', $this->checkIns($area), $claim, $this->tokenFor($ranger));
 
-        self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $this->client->getResponse()->getStatusCode());
-        self::assertSame('unsupported_status', self::leaf($body, 'code'));
-        self::assertSame(0, $this->em->getRepository(CheckIn::class)->count([]));
+        self::assertSame(Response::HTTP_CREATED, $this->client->getResponse()->getStatusCode(), (string) json_encode($body));
+        self::assertSame(1, $this->em->getRepository(CheckIn::class)->count([]));
     }
 
     /**

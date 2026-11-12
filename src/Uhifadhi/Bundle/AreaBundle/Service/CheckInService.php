@@ -295,13 +295,16 @@ final readonly class CheckInService
     }
 
     /**
-     * ONE OF THE AREA'S OWN ANSWERS, by the stable word the handset sent.
+     * ONE OF THE AREA'S OWN ANSWERS, by the stable word the handset sent —
+     * offered or not: a phone that has not synced since a status stopped
+     * being offered still sends its key, and the check-in it records is real.
+     * Only a key the area never had is refused.
      *
      * @throws DutyApiException
      */
     private function status(AreaOfInterest $area, string $key): CheckInStatus
     {
-        foreach ($this->statuses->offeredBy($area) as $status) {
+        foreach ($this->statuses->listedFor($area) as $status) {
             if ($key === $status->getKey()) {
                 return $status;
             }

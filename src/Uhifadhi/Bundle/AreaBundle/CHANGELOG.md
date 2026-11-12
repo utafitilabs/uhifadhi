@@ -17,7 +17,12 @@
    area, and a change to a status not offered (422, the sentence on the bar,
    every edit kept). `CheckInStatusKind::label()` says the platform's words (At a
    station, Working elsewhere, Not working, Special assignment) and `meaning()`
-   what each means. Phones take the change at their next sync.
+   what each means. Phones take the change at their next sync, and a check-in
+   or a correction sent with a key no longer offered — from a phone that has
+   not synced since — is accepted with that status; only a key the area never
+   had is refused (`unsupported_status`). A save, saved or refused, opens the
+   page at the card (the form posts to the card's anchor); the table's columns
+   hold their widths whatever rows it holds.
 
  * SETTINGS › MODULES › <MODULE>: every installed module that declares a setting has a page
    of them, read at `/settings/modules/{slug}` (`settings.read`) and changed at

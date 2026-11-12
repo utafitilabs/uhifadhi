@@ -45,7 +45,7 @@ final class CheckInStatusesEditorTest extends WebTestCase
         self::assertStringContainsString('id="check-in-statuses"', $body);
         self::assertStringContainsString('Check-in statuses<span class="src">&middot; duty_checkin_status</span>', $body);
         self::assertStringContainsString('data-controller="uhifadhi--area-bundle--check-in-statuses"', $body);
-        self::assertStringContainsString('action="/areas/'.$area->getUuidString().'/configure/check-in-statuses"', $body);
+        self::assertStringContainsString('action="/areas/'.$area->getUuidString().'/configure/check-in-statuses#check-in-statuses"', $body, 'a save, saved or refused, lands on the card');
         self::assertStringContainsString('At least one At a station status stays offered', $body);
         self::assertStringContainsString('A kind is fixed once a status has check-ins', $body);
         self::assertStringContainsString('Add a status', $body);
@@ -126,6 +126,8 @@ final class CheckInStatusesEditorTest extends WebTestCase
         $body = (string) $response->getContent();
         self::assertStringContainsString('class="ed-bar refused"', $body);
         self::assertStringContainsString('Not saved — another save took the key unfit first. Choose another key; nothing else was lost.', $body);
+        self::assertStringContainsString('action="/areas/'.$area->getUuidString().'/configure/check-in-statuses#check-in-statuses"', $body, 'the refused page opens at the card, which carries the refusal');
+        self::assertStringContainsString('id="check-in-statuses"', $body);
 
         $model = $this->model($body);
         self::assertSame('unfit', $model['refusedKey']);

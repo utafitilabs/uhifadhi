@@ -16,6 +16,8 @@ namespace Uhifadhi\Bundle\AreaBundle\Repository;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\CheckIn;
+use Uhifadhi\Bundle\AreaBundle\Entity\CheckInCorrection;
 use Uhifadhi\Bundle\AreaBundle\Entity\CheckInStatus;
 
 /**
@@ -47,6 +49,63 @@ class CheckInStatusRepository extends ServiceEntityRepository
             ->getResult();
 
         return $rows;
+    }
+
+    /**
+     * EVERY STATUS THIS AREA HOLDS, offered or not: the offered ones in their
+     * order, then the ones no longer offered.
+     *
+     * @return list<CheckInStatus>
+     */
+    public function findListedFor(AreaOfInterest $area): array
+    {
+        /** @var list<CheckInStatus> $rows */
+        $rows = $this->createQueryBuilder('s')
+            ->andWhere('s.area = :area')
+            ->setParameter('area', $area)
+            ->orderBy('s.active', 'DESC')
+            ->addOrderBy('s.position', 'ASC')
+            ->addOrderBy('s.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $rows;
+    }
+
+    /**
+     * THE KEYS SOMETHING ON RECORD ALREADY CARRIES — a check-in made with it,
+     * or a correction to one. A status with such a key keeps its kind, because
+     * those records are read by it.
+     *
+     * @return list<string>
+     */
+    public function getUsedKeys(AreaOfInterest $area): array
+    {
+        $claimed = $this->getEntityManager()->createQueryBuilder()
+            ->select('1')
+            ->from(CheckIn::class, 'c')
+            ->andWhere('c.status = s');
+        $corrected = $this->getEntityManager()->createQueryBuilder()
+            ->select('1')
+            ->from(CheckInCorrection::class, 'k')
+            ->andWhere('k.status = s');
+
+        $qb = $this->createQueryBuilder('s');
+        /** @var list<string> $keys */
+        $keys = $qb
+            ->select('s.key')
+            ->andWhere('s.area = :area')
+            ->andWhere($qb->expr()->orX(
+                $qb->expr()->exists($claimed->getDQL()),
+                $qb->expr()->exists($corrected->getDQL()),
+            ))
+            ->setParameter('area', $area)
+            ->orderBy('s.position', 'ASC')
+            ->addOrderBy('s.id', 'ASC')
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        return $keys;
     }
 
     /** One of them by the stable word the handset sends. */

@@ -19,6 +19,7 @@ use Uhifadhi\Bundle\AreaBundle\Controller\AreaCreateController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaModulesController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaWidgetsController;
+use Uhifadhi\Bundle\AreaBundle\Controller\CheckInStatusesController;
 use Uhifadhi\Bundle\AreaBundle\Controller\LiveSheetController;
 use Uhifadhi\Bundle\AreaBundle\Controller\MeController;
 use Uhifadhi\Bundle\AreaBundle\Controller\OrgDashboardController;
@@ -325,6 +326,21 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaEditController::class, 'area.controller.edit')->public();
+
+    /*
+     * THE SAVE OF AN AREA'S CHECK-IN STATUSES, from the card on Area
+     * settings. A refused list is drawn again through the shell's configure
+     * page, reached by a sub-request.
+     */
+    $services->set('area.controller.check_in_statuses', CheckInStatusesController::class)
+        ->args([
+            service('area.checkin_statuses'),
+            service('security.csrf.token_manager'),
+            service('router'),
+            service('http_kernel'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(CheckInStatusesController::class, 'area.controller.check_in_statuses')->public();
 
     /*
      * THE ZONES HUB — how the area is divided, read: the Overview states the
@@ -729,6 +745,9 @@ return static function (ContainerConfigurator $container): void {
                 service('security.authorization_checker'),
                 service('area.ping_interval'),
                 service('area.zone_overlaps'),
+                service('area.checkin_statuses'),
+                service('security.csrf.token_manager'),
+                service('router'),
                 tagged_iterator('uhifadhi.area_sections'),
             ])
             ->tag('uhifadhi.configuration_sections');

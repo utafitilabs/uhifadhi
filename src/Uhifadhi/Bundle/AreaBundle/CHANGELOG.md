@@ -6,6 +6,19 @@
 
 ## 1.0.0
 
+ * THE AREA'S CHECK-IN STATUSES ARE EDITED on Configure › Area settings: a card
+   lists every status (label, the fixed key, the kind, offered or not, the order)
+   and saves the whole list through the settings save bar to
+   `POST /areas/{uuid}/configure/check-in-statuses` (`area_check_in_statuses`,
+   `areas.configure`). `CheckInStatusService` adds, rewords, reorders,
+   deactivates and reactivates, and changes a kind only while no check-in or
+   correction carries the key; it refuses a list that leaves no At a station
+   status offered, a key not `^[a-z][a-z0-9_]{0,31}$` or already held in the
+   area, and a change to a status not offered (422, the sentence on the bar,
+   every edit kept). `CheckInStatusKind::label()` says the platform's words (At a
+   station, Working elsewhere, Not working, Special assignment) and `meaning()`
+   what each means. Phones take the change at their next sync.
+
  * SETTINGS › MODULES › <MODULE>: every installed module that declares a setting has a page
    of them, read at `/settings/modules/{slug}` (`settings.read`) and changed at
    `/settings/configure/modules/{slug}` by Super Admins and Admins, drawn with the same

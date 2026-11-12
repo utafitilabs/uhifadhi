@@ -1,6 +1,6 @@
 {
     "name": "@uhifadhi/area-bundle",
-    "description": "Front-end behaviour of the area screens \u2014 the register's search, filter and sort, the boundary drop zone and the per-area module shop's drag ordering, mapped into hosts via AssetMapper.",
+    "description": "Front-end behaviour of the area screens \u2014 the register's search, filter and sort, the boundary drop zone, the area's check-in statuses editor and the per-area module shop's drag ordering, mapped into hosts via AssetMapper.",
     "license": "AGPL-3.0-or-later",
     "symfony": {
         "controllers": {
@@ -16,6 +16,11 @@
             },
             "area-presets": {
                 "main": "controllers/area_presets_controller.js",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "check-in-statuses": {
+                "main": "controllers/check_in_statuses_controller.js",
                 "fetch": "eager",
                 "enabled": true
             },

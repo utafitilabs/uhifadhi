@@ -76,3 +76,32 @@
                 year, and must not be made to invent them to save a record.</div>
         </div>
     </div>
+
+{# THE CHECK-IN STATUSES — the AREA's list of the words a ranger checks in with
+   (uhifadhi-web/areas/kilimani/configure/index.html#check-in-statuses). One row
+   per status, the offered ones in handset order, then the ones not offered.
+   The label is reworded freely; the key is fixed once saved, because the phone
+   sends it and every check-in carries it; the kind is one of the platform's
+   four, fixed once the status has check-ins; a status is deactivated, never
+   deleted, and one not offered is frozen until reactivated.
+
+   THE ROWS ARE DRAWN BY THE CONTROLLER from the model below — the list as
+   stored with each status's "used", the four kinds in the platform's words,
+   and after a refused save the list as it was sent — and the whole list posts
+   at once through the settings save bar, as statuses[i][key|label|kind|active|new]. #}
+{%- set _cis = checkInStatuses -%}
+<form class="cis-wrap" id="check-in-statuses" method="post" action="{{ _cis.action }}" data-controller="uhifadhi--area-bundle--check-in-statuses">
+    <input type="hidden" name="_token" value="{{ _cis.token }}" data-token="area_check_in_statuses">
+    <div class="c">
+        <span class="tab">Check-in statuses<span class="src">&middot; duty_checkin_status</span><span class="src" data-cis-count></span></span>
+        <p class="cx-note cis-lead">What a ranger can answer on checking in, in the order the handset offers it. The words are this area&rsquo;s own; each one means one of four things the platform counts.</p>
+        <div class="dw-scroll"><table class="tbl cis"><thead><tr><th class="sorted">Order</th><th>Status &middot; what a ranger reads</th><th>Kind &middot; what it means</th><th>Offered</th></tr></thead><tbody></tbody></table></div>
+        <div class="use"><b>The phone sends the key, not the label.</b> A label can be reworded at any time; a key is fixed once saved, because every check-in already made carries it and a new key would leave them behind. <b>A key is used once in this area</b>, offered or not. <b>A kind is fixed once a status has check-ins</b> &mdash; they read by it; add a new status to mean something else. <b>At least one At a station status stays offered</b> &mdash; it is the only kind that names a station. <b>Deactivate, never delete:</b> a status no longer offered keeps every check-in made with it.</div>
+        <div class="staddrow"><button type="button" class="btn sm" data-act="add">Add a status</button><span class="sp"></span><span class="cx-why">phones pick up a change at their next sync</span></div>
+    </div>
+    <div class="ed-bar{% if _cis.refusal %} refused{% endif %}" role="status"><b>{{ _cis.refusal ?: (_cis.justSaved ? 'Saved' : 'No unsaved changes') }}</b><span class="cx-why"></span><span class="sp"></span><button type="button" class="ed-btn ghost" disabled>Discard</button><button type="button" class="ed-btn" data-review disabled>Review &#9652;</button><button type="submit" class="ed-btn pri" disabled>Save</button></div>
+    <div class="c ed-reviewcard" hidden><span class="tab">Review<span class="src"></span></span><ul class="ed-review"></ul></div>
+    <template data-cis-icon="up">{{ ux_icon('shell:chevron-up') }}</template>
+    <template data-cis-icon="down">{{ ux_icon('shell:chevron-down') }}</template>
+    <script type="application/json" data-cis-model>{{ _cis.model|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_UNESCAPED_UNICODE') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }}</script>
+</form>

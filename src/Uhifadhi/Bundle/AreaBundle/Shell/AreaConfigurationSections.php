@@ -13,18 +13,27 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\Shell;
 
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaModulesController;
+use Uhifadhi\Bundle\AreaBundle\Controller\CheckInStatusesController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\CheckInStatus;
+use Uhifadhi\Bundle\AreaBundle\Enum\CheckInStatusKind;
 use Uhifadhi\Bundle\AreaBundle\Enum\IntervalUnit;
+use Uhifadhi\Bundle\AreaBundle\Model\CheckInStatusDraft;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
+use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
 use Uhifadhi\Bundle\AreaBundle\Service\PingInterval;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
 use Uhifadhi\Contracts\Area\LivePresence;
@@ -68,6 +77,10 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
         private PingInterval $pingInterval,
         // THE TOLERANCE IN FORCE, read the way an import judges it.
         private ZoneOverlapService $overlaps,
+        // THE AREA'S CHECK-IN STATUSES, which the Area settings card edits.
+        private CheckInStatusService $checkInStatuses,
+        private CsrfTokenManagerInterface $csrf,
+        private UrlGeneratorInterface $urls,
         /**
          * WHAT OTHER BUNDLES CONFIGURE ABOUT AN AREA. Departments are the
          * first: they belong to the team bundle, and an area naming them
@@ -97,7 +110,7 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
 
     public function summary(): string
     {
-        return 'Everything this area is set up with, in one place: how its dashboard is composed, and the area’s own identity, access, zones and the posts standing on them.';
+        return 'Everything this area is set up with, in one place: how its dashboard is composed, and the area’s own identity, access, check-in statuses, zones and the posts standing on them.';
     }
 
     public function sections(): array
@@ -185,11 +198,92 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
                     'staleAfter' => IntervalUnit::say($this->pingInterval->staleAfterFor($area) ?? LivePresence::STALE_AFTER_INTERVALS * $this->pingInterval->for($area)),
                     'staleIsTwoPings' => null === $this->pingInterval->staleAfterFor($area),
                     'zoneCount' => $this->zones->countFor($area),
+                    'checkInStatuses' => $this->checkInStatusesCard($area),
                 ],
             );
         }
 
         return $sections;
+    }
+
+    /**
+     * WHAT THE CHECK-IN STATUSES CARD IS DRAWN FROM: the list as stored, each
+     * status marked used when a check-in carries its key, the four kinds in
+     * the platform's words, and — after a refused save — the list as it was
+     * sent and the refusal, or after a save, that it was saved.
+     *
+     * @return array{action: string, token: string, refusal: string|null, justSaved: bool, model: array<string, mixed>}
+     */
+    private function checkInStatusesCard(AreaOfInterest $area): array
+    {
+        $request = $this->requests->getCurrentRequest();
+        $used = $this->checkInStatuses->usedKeys($area);
+
+        $refused = $request?->attributes->get(CheckInStatusesController::REFUSED);
+        $refusal = \is_array($refused) && \is_string($refused['refusal'] ?? null) ? $refused['refusal'] : null;
+        $refusedKey = \is_array($refused) && \is_string($refused['key'] ?? null) ? $refused['key'] : null;
+        $drafts = \is_array($refused) && \is_array($refused['drafts'] ?? null) ? $refused['drafts'] : null;
+
+        $model = [
+            'saved' => array_map(
+                static fn (CheckInStatus $status): array => [
+                    'key' => $status->getKey(),
+                    'label' => $status->getLabel(),
+                    'kind' => $status->getKind()->value,
+                    'active' => $status->isActive(),
+                    'used' => \in_array($status->getKey(), $used, true),
+                ],
+                $this->checkInStatuses->listedFor($area),
+            ),
+            'current' => null === $drafts ? null : array_values(array_map(
+                static fn (CheckInStatusDraft $draft): array => [
+                    'key' => $draft->key,
+                    'label' => $draft->label,
+                    'kind' => $draft->kind?->value,
+                    'active' => $draft->active,
+                    'new' => $draft->new,
+                ],
+                array_filter($drafts, static fn (mixed $draft): bool => $draft instanceof CheckInStatusDraft),
+            )),
+            'kinds' => array_map(
+                static fn (CheckInStatusKind $kind): array => ['v' => $kind->value, 'label' => $kind->label(), 'means' => $kind->meaning()],
+                CheckInStatusKind::cases(),
+            ),
+            'refusal' => $refusal,
+            'refusedKey' => $refusedKey,
+            'justSaved' => null === $refusal && $this->justSaved($request),
+        ];
+
+        return [
+            'action' => $this->urls->generate(CheckInStatusesController::ROUTE, ['uuid' => (string) $area->getUuidString()]),
+            'token' => $this->csrf->getToken(CheckInStatusesController::TOKEN)->getValue(),
+            'refusal' => $refusal,
+            'justSaved' => $model['justSaved'],
+            'model' => $model,
+        ];
+    }
+
+    /**
+     * WHETHER THE REQUEST FOLLOWS A SAVE. The flash is taken once and kept on
+     * the request, because the frame asks for the sections more than once a
+     * page and the second ask must answer as the first did.
+     */
+    private function justSaved(?Request $request): bool
+    {
+        if (null === $request) {
+            return false;
+        }
+
+        $known = $request->attributes->get(CheckInStatusesController::SAVED);
+        if (\is_bool($known)) {
+            return $known;
+        }
+
+        $session = $request->hasSession() ? $request->getSession() : null;
+        $saved = $session instanceof FlashBagAwareSessionInterface && [] !== $session->getFlashBag()->get(CheckInStatusesController::SAVED);
+        $request->attributes->set(CheckInStatusesController::SAVED, $saved);
+
+        return $saved;
     }
 
     private function currentArea(): ?AreaOfInterest

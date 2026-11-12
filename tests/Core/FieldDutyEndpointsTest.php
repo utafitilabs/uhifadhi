@@ -18,6 +18,9 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\CheckIn;
 use Uhifadhi\Bundle\AreaBundle\Entity\PersonPosition;
 use Uhifadhi\Bundle\AreaBundle\Entity\Station;
+use Uhifadhi\Bundle\AreaBundle\Enum\CheckInStatusKind;
+use Uhifadhi\Bundle\AreaBundle\Model\CheckInStatusDraft;
+use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 
 /**
@@ -221,6 +224,30 @@ final class FieldDutyEndpointsTest extends FieldApiTestCase
 
         self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $this->client->getResponse()->getStatusCode());
         self::assertSame('unsupported_status', self::leaf($body, 'code'));
+    }
+
+    /**
+     * A PHONE THAT HAS NOT SYNCED since a status stopped being offered still
+     * sends its key. Today the claim is refused by name, like a word the area
+     * never offered, and the check-in is not stored.
+     */
+    public function testAStatusNoLongerOfferedIsRefusedToday(): void
+    {
+        $area = $this->area('Northern Conservation Reserve');
+        $ranger = $this->onDuty();
+        /** @var CheckInStatusService $statuses */
+        $statuses = static::getContainer()->get(CheckInStatusService::class);
+        $statuses->save($area, [new CheckInStatusDraft('outside', 'Outside the park', CheckInStatusKind::WorkingElsewhere, false, false)]);
+
+        $claim = $this->claim($area);
+        $claim['status'] = 'outside';
+        unset($claim['stationUuid']);
+
+        $body = $this->send('POST', $this->checkIns($area), $claim, $this->tokenFor($ranger));
+
+        self::assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $this->client->getResponse()->getStatusCode());
+        self::assertSame('unsupported_status', self::leaf($body, 'code'));
+        self::assertSame(0, $this->em->getRepository(CheckIn::class)->count([]));
     }
 
     /**

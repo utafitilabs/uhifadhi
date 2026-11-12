@@ -15,6 +15,9 @@ namespace Uhifadhi\Core\Tests\Core;
 
 use Symfony\Component\HttpFoundation\Response;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Enum\CheckInStatusKind;
+use Uhifadhi\Bundle\AreaBundle\Model\CheckInStatusDraft;
+use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
 use Uhifadhi\Bundle\AreaBundle\Service\DutyRosterService;
 use Uhifadhi\Bundle\AreaBundle\Service\PresenceService;
 use Uhifadhi\Bundle\AreaBundle\Settings\CoreSettings;
@@ -228,6 +231,41 @@ final class FieldDutyReadsTest extends FieldApiTestCase
         $updatedAt = self::leaf($body, 'updatedAt');
         self::assertIsString($updatedAt);
         self::assertInstanceOf(\DateTimeImmutable::class, new \DateTimeImmutable($updatedAt));
+    }
+
+    /**
+     * A SAVED CHANGE REACHES A PHONE AT ITS NEXT SYNC: the list it is given
+     * is the list as saved, and the moment it compares against has moved.
+     */
+    public function testASavedChangeReachesThePhoneAtItsNextSync(): void
+    {
+        $area = $this->area('Northern Conservation Reserve');
+        $token = $this->tokenFor($this->onDuty());
+        $this->get($this->roster($area), $token);
+        $this->em->getConnection()->executeStatement("UPDATE duty_checkin_status SET created_at = '2026-01-01 00:00:00', updated_at = '2026-01-01 00:00:00'");
+        $before = self::leaf($this->get($this->roster($area), $token), 'updatedAt');
+
+        /** @var CheckInStatusService $statuses */
+        $statuses = static::getContainer()->get(CheckInStatusService::class);
+        $this->em->clear();
+        $fresh = $this->em->find(AreaOfInterest::class, $area->getId());
+        self::assertInstanceOf(AreaOfInterest::class, $fresh);
+        $statuses->save($fresh, [
+            new CheckInStatusDraft('outside', 'Off park', CheckInStatusKind::WorkingElsewhere, true, false),
+            new CheckInStatusDraft('unfit', 'Unfit for duty', CheckInStatusKind::NotWorking, false, false),
+        ]);
+
+        $body = $this->get($this->roster($area), $token);
+
+        self::assertSame(['outside', 'at_post', 'special'], array_map(
+            static fn (mixed $row): mixed => \is_array($row) ? ($row['key'] ?? null) : null,
+            self::nested($body, 'checkInStatuses'),
+        ));
+        self::assertSame('Off park', self::leaf($body, 'checkInStatuses', 0, 'label'));
+        self::assertIsString($before);
+        $after = self::leaf($body, 'updatedAt');
+        self::assertIsString($after);
+        self::assertGreaterThan(new \DateTimeImmutable($before), new \DateTimeImmutable($after));
     }
 
     /** A window the caller mistyped is refused by name, never quietly widened. */

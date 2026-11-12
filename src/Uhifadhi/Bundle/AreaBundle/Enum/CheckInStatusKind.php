@@ -80,13 +80,25 @@ enum CheckInStatusKind: string
         return self::NotWorking !== $this;
     }
 
+    /** The platform's word for the kind, the one the editor and the roster say. */
     public function label(): string
     {
         return match ($this) {
-            self::AtPost => 'at a station',
-            self::WorkingElsewhere => 'working elsewhere',
-            self::NotWorking => 'not working',
-            self::Special => 'special assignment',
+            self::AtPost => 'At a station',
+            self::WorkingElsewhere => 'Working elsewhere',
+            self::NotWorking => 'Not working',
+            self::Special => 'Special assignment',
+        };
+    }
+
+    /** What choosing a status of this kind says about the person, in one line. */
+    public function meaning(): string
+    {
+        return match ($this) {
+            self::AtPost => 'On duty at a named station · the only kind that takes a station',
+            self::WorkingElsewhere => 'On duty away from a station · outside the park, escorting, in court · the ranger adds a note',
+            self::NotWorking => 'Not on duty · unfit, on leave, stood down',
+            self::Special => 'On duty inside the park, on an assignment away from a station · the ranger adds a note',
         };
     }
 }

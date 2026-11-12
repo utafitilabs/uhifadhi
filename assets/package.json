@@ -112,6 +112,12 @@
                 "fetch": "eager",
                 "enabled": true
             },
+            "check-in-statuses": {
+                "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/check_in_statuses_controller.js",
+                "name": "uhifadhi--area-bundle--check-in-statuses",
+                "fetch": "eager",
+                "enabled": true
+            },
             "module-order": {
                 "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/module_order_controller.js",
                 "name": "uhifadhi--area-bundle--module-order",

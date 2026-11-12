@@ -1562,3 +1562,33 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
    ========================================================================== */
 .lfilt > .dd { flex: none; width: 200px; }
 .lfilt > .dd[data-dd="station"] { width: 240px; }
+
+/* ==========================================================================
+   AREA · THE CHECK-IN STATUSES CARD on Area settings (design:
+   areas/<area>/configure/index.html#check-in-statuses). House parts only —
+   .tbl, .fld, .seg.row, .btn.sm, .chip, .reorder, .cmord, .staddrow and the
+   settings save bar; these are its own sizes, each one the house states:
+   32px, the small-control height .btn and .seg.row share; the .tbl sub-line's
+   mono 11px; 9px, the .staddrow gap; .62, a dimmed row; .35, a disabled toggle.
+   ========================================================================== */
+.cis-wrap { margin-bottom: 20px; }
+table.tbl.cis td { vertical-align: top; }
+table.tbl.cis th:first-child, table.tbl.cis td:first-child { width: 1%; white-space: nowrap; }
+.cis .cmord { min-height: 32px; }
+.cis .cis-fl { display: flex; align-items: center; }
+.cis .fld { height: 32px; padding: 0 13px; font-size: 12.5px; min-width: 180px; }
+.cis .fld.chg { border-color: var(--warn); }
+.cis .fld.cis-key { width: 180px; min-width: 0; flex: none; font-family: var(--font-mono); font-size: 11px; }
+.cis .cis-keyline { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 9px; }
+.cis .cis-keyline .ed-hint { margin-top: 0; }
+.cis .ed-hint.cis-warn { color: var(--warn); }
+.cis .seg button { white-space: nowrap; }
+.cis .seg button[disabled] { opacity: .35; cursor: not-allowed; }
+.cis .seg button[disabled]:hover { color: var(--fog); }
+.cis .btn[disabled] { opacity: .35; cursor: not-allowed; }
+.cis .btn[disabled]:hover { color: var(--fog); border-color: var(--ln2); }
+.cis td.door .cis-act { display: inline-flex; align-items: center; gap: 9px; }
+.cis td.door .ed-hint { text-align: right; }
+.cis tr.cis-off td { color: var(--dim); }
+.cis tr.cis-off .fld, .cis tr.cis-off .seg { opacity: .62; }
+.cis-lead { margin: 0 0 10px; }

@@ -68,6 +68,14 @@ class CheckInStatus
         ['key' => 'special', 'label' => 'Special assignment', 'kind' => CheckInStatusKind::Special],
     ];
 
+    /**
+     * WHAT A KEY MAY BE: what the handset sends and every check-in carries,
+     * so it is written once and kept to a shape any client can store.
+     */
+    public const string KEY_PATTERN = '/^[a-z][a-z0-9_]{0,31}$/';
+
+    public const int LABEL_LENGTH = 64;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -82,7 +90,7 @@ class CheckInStatus
     private string $key = '';
 
     /** What a ranger reads on the button. */
-    #[ORM\Column(length: 64)]
+    #[ORM\Column(length: self::LABEL_LENGTH)]
     private string $label = '';
 
     #[ORM\Column(length: 24, enumType: CheckInStatusKind::class)]

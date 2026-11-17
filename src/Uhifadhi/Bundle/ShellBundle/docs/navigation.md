@@ -21,6 +21,13 @@ Content arrives through `NavigationSourceInterface`, tagged `shell.nav_section`:
 - a **module** may implement one too, for the rare platform-wide row that
   belongs to nobody's area.
 
+A section's label is one of the five `Uhifadhi\Contracts\Shell\NavGroup`
+constants, drawn in this order: Observatory, Organization, System, Settings and,
+at the foot, Help — where the shell itself files the installation's
+[manual](manual.md). A row whose address is a document read beside the app
+says so with `NavItem::$newTab`; the shell draws it with `target="_blank"
+rel="noopener"`.
+
 Pinned by test: **sections with the same label are one section** — a label names a
 place in the sidebar rather than something a source owns, so storage's Files row
 and telemetry's Telemetry row, both filed under "System", draw one heading with

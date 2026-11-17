@@ -26,6 +26,9 @@ department confined to Kilimani.
 | team_profile | GET /me/profile | — | sign-in | sign-in | allowed | allowed | allowed | allowed | allowed | allowed |
 | team_profile_email_confirm | GET /me/profile/email/{email-change} | — | sign-in | sign-in | → /me/profile · error | → /me/profile · error | → /me/profile · error | → /me/profile · error | → /me/profile · error | → /me/profile · error |
 | organization_widgets | GET /widgets | `dashboard.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
+| manual | GET /manual/ | — | sign-in | sign-in | allowed | allowed | allowed | allowed | allowed | allowed |
+| manual_picture | GET /manual/img/cover.png | — | sign-in | sign-in | allowed | allowed | allowed | allowed | allowed | allowed |
+| manual_pdf | GET /manual/manual.pdf | — | sign-in | sign-in | allowed | allowed | allowed | allowed | allowed | allowed |
 | settings | GET /settings | `settings.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |
 | team_settings_deletions | GET /settings/deletions | — | sign-in | sign-in | refused | refused | refused | refused | refused | allowed |
 | settings_core | GET /settings/core | `settings.read` | sign-in | sign-in | refused | allowed | refused | allowed | allowed | allowed |

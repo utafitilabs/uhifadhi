@@ -8,6 +8,21 @@
 
 Not released yet.
 
+ * THE INSTALLATION'S MANUAL, READ IN THE APP (#24): `shell.manual` names the folder an
+   installation builds its own manual into (default null: no manual). `/manual/` (`manual`)
+   serves `<folder>/<folder>.html` as it is, `/manual/img/{name}` (`manual_picture`) a picture
+   under `img/` (`^[a-z0-9][a-z0-9._-]*\.(jpg|jpeg|png|svg|webp)$`, any other name a 404) and
+   `/manual/manual.pdf` (`manual_pdf`) `<folder>/<folder>.pdf` as a download named after the
+   folder; GET only, for anybody signed in (`IS_AUTHENTICATED_REMEMBERED`), `Cache-Control:
+   private, no-cache`, `X-Robots-Tag: noindex`, and 404 with no folder or no file.
+   `Controller\ManualController` (`shell.controller.manual`), `Service\ManualService`
+   (`shell.manual`). The routes are `config/routes/manual.php` (`ShellBundle::MANUAL_ROUTES`),
+   imported by `config/routes/settings.php`, so an installation that imports the settings
+   resource changes no routing. `Service\ManualNavigation` draws a Manual row
+   (`shell:book-open`) in the Help group at the foot of the sidebar, opening in a new tab,
+   where a manual is built and somebody is signed in. `Model\NavItem` takes `newTab`, drawn
+   as `target="_blank" rel="noopener"`. docs/manual.md.
+
  * THE SETTINGS CASCADE DRAWS A CHOICE: `Model\CascadeSetting` takes `choices`
    (`Model\CascadeChoice`: value, label, meaning) and `note`. On a Configure page a choice is the
    house `.seg.row` of native radios inside labels, named as a figure's field is

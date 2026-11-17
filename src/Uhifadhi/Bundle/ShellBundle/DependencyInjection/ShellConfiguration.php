@@ -24,12 +24,20 @@ use Symfony\Component\Config\Definition\Builder\NodeDefinition;
  *     brand_name: Uhifadhi           # the wordmark beside the brand tile
  *     home_route: organization_dashboard  # where the brandmark links
  *     default_theme: light           # light | dark | system
+ *     manual: '%kernel.project_dir%/docs/handbook'  # the folder the manual is built into
  *
  * DELIBERATELY TINY, and it must stay that way — a layout bundle is where
  * configuration goes to breed. Every knob here is something the shell CANNOT
- * know: the deployment's name, the host's route names, and a first-visit
- * preference. Anything a designer would decide belongs in the stylesheet, and
- * anything a page would decide belongs in a block.
+ * know: the deployment's name, the host's route names, a first-visit
+ * preference, and where the installation keeps its own manual. Anything a
+ * designer would decide belongs in the stylesheet, and anything a page would
+ * decide belongs in a block.
+ *
+ * THE MANUAL IS ONE PATH, NOT A SECTION. Its content is the installation's —
+ * a manual change is an installation commit and a deploy, never a core
+ * release — so the shell needs to know where the folder is and nothing else:
+ * the page, the PDF and the download's name all follow from the folder's
+ * name. A nested `manual: {path, title}` would carry a title nothing reads.
  *
  * A FOURTH KEY WAS HERE AND IS GONE. `dev_tools` reserved a flag for a dev-only
  * socket gallery — every block and every token on one page — and the boundary
@@ -81,6 +89,14 @@ final class ShellConfiguration
                     ->info('Theme a visitor who has never chosen one gets: light, dark, or the operating system\'s preference.')
                     ->values(self::THEMES)
                     ->defaultValue('light')
+                ->end()
+                ->scalarNode('manual')
+                    ->info('The folder the installation\'s own manual is built into: <folder>/<folder>.html, <folder>/<folder>.pdf and the pictures under <folder>/img/. Signed-in people read it at /manual/ and the sidebar gains a Manual row under Help. Null: no manual.')
+                    ->defaultNull()
+                    ->validate()
+                        ->ifTrue(static fn (mixed $folder): bool => '' === $folder)
+                        ->thenInvalid('An empty manual folder would be read as the filesystem root; name the folder, or leave the key out for no manual.')
+                    ->end()
                 ->end()
             ->end()
         ;

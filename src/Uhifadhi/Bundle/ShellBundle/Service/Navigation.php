@@ -52,13 +52,13 @@ final class Navigation
      * row under it. A heading drawn twice would tell a reader there are two
      * Systems, which is a sidebar answering "where am I" with a lie.
      *
-     * AND THERE ARE FOUR PLACES, NAMED IN THE CONTRACT. A label that is not one
-     * of {@see NavGroup::ORDER} is refused here, by name, with the four in the
-     * message: a near-miss ("Organization", "Org") used to grow a fifth heading
+     * AND THERE ARE FIVE PLACES, NAMED IN THE CONTRACT. A label that is not one
+     * of {@see NavGroup::ORDER} is refused here, by name, with the five in the
+     * message: a near-miss ("Organization", "Org") used to grow a heading
      * that nobody designed, silently, in whoever's installation had that module.
      *
      * THE GROUPS ARE DRAWN IN THE CONTRACT'S ORDER — Observatory, Organization,
-     * System, Settings — and a contribution's `position` orders its ROWS inside
+     * System, Settings, Help — and a contribution's `position` orders its ROWS inside
      * its group. That is the split a contributing module can actually answer:
      * where its row sits among the System rows is its business, where System
      * sits among the headings is the shell's.
@@ -187,6 +187,7 @@ final class Navigation
             screens: $item->screens,
             path: $below,
             key: $key,
+            newTab: $item->newTab,
         );
 
         return [$row, $below || $here];

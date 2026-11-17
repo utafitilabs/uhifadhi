@@ -6,6 +6,9 @@
 
 ## 1.0.0
 
+ * `Shell\NavGroup::HELP` ('Help') joins the groups, last: the foot of the sidebar, under
+   Settings, where the shell files the installation's manual (#24). `ORDER` holds five.
+
  * `Settings\SettingDefinition` takes `choiceMeanings` — for a Choice, one plain line per
    choice saying what it does, for every choice or none — and `note`, a line true whichever
    value is in force, printed under the setting's name; `meaningOf()` reads a choice's line.

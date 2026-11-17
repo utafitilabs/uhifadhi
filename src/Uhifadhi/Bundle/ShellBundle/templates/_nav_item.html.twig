@@ -41,6 +41,7 @@
 <{{ _tag }} class="{{ _row }}{{ depth >= 3 and _kids ? ' par' }}{{ item.current ? ' on' }}{{ item.path ? ' path' }}{{ item.url is null ? ' off' }}{{ _kids and not item.open ? ' closed' }}"
     {%- if _kids %} data-nav-key="{{ item.key }}"{% endif %}
     {%- if item.url is not null %} href="{{ item.url }}"{% endif %}
+    {%- if item.url is not null and item.newTab %} target="_blank" rel="noopener"{% endif %}
     {%- if item.hint is not null %} title="{{ item.hint }}"{% endif %}>
     {%- if item.icon is not null %}{{ ux_icon(item.icon) }}{% endif -%}
     {%- if depth == 1 %}<span>{{ item.label }}</span>

@@ -11,6 +11,7 @@ installed on its own as `uhifadhi/shell-bundle`.
 - [What it is](#what-it-is)
 - [Installation](#installation)
 - [Getting started](#getting-started)
+- [The manual](#the-manual)
 - [Icons](#icons)
 - [Vocabulary conformance](#vocabulary-conformance)
 - [Learn more](#learn-more)
@@ -117,6 +118,7 @@ shell:
     brand_name: Uhifadhi           # the wordmark beside the brand tile
     home_route: organization_dashboard  # where the brandmark links
     default_theme: light           # light | dark | system
+    manual: ~                      # the folder the installation's manual is built into
 ```
 
 Every key has a default and the tree is closed, so an unknown key fails loudly
@@ -125,6 +127,25 @@ know: the deployment's name, the host's route names, a first-visit preference.
 There is deliberately **no key listing nav entries, area tabs or modules** —
 those arrive as data through the contracts, because a YAML nav is a nav no permission
 check ever reaches.
+
+## The manual
+
+An installation's own manual — its content in the installation's repository,
+never the core's — is read in the app by everybody signed in. Name the folder
+it is built into:
+
+```yaml
+# config/packages/shell.yaml (your application)
+shell:
+    manual: '%kernel.project_dir%/docs/handbook'
+```
+
+and `/manual/` serves `docs/handbook/handbook.html` as it is, its pictures
+under `/manual/img/`, the PDF as a download at `/manual/manual.pdf`, and the
+sidebar gains a **Manual** row under **Help**, at its foot, opening in a new
+tab. The routes come with the settings resource the starter already imports.
+[The manual](docs/manual.md) has the folder's shape, the addresses and who may
+read it.
 
 ## Icons
 
@@ -192,6 +213,8 @@ hooks — is in
   and how a module page fills them.
 - [The navigation contract and the area shell](docs/navigation.md) — how rows reach the
   sidebar and tabs reach a page.
+- [The installation's manual](docs/manual.md) — the folder an installation names,
+  the addresses that serve it and the sidebar row that opens it.
 - [The theme](docs/theming.md) — the box model every page is measured in, the
   token set, the Stimulus controllers the furniture moves by, the one control
   that moves a row within an ordered list, the in-page index, the dropdown, and

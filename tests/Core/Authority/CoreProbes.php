@@ -131,6 +131,10 @@ final class CoreProbes
             Probe::get('team_profile_email_confirm', ['token' => $world->emailChange]),
             Probe::get('organization_widgets'),
 
+            Probe::get('manual'),
+            Probe::get('manual_picture', ['name' => 'cover.png']),
+            Probe::get('manual_pdf'),
+
             Probe::get('settings', [], ['settings.read']),
             Probe::get('team_settings_deletions'),
             Probe::get('settings_core', [], ['settings.read']),

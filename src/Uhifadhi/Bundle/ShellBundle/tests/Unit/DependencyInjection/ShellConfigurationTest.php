@@ -35,7 +35,25 @@ final class ShellConfigurationTest extends TestCase
             'brand_name' => 'Uhifadhi',
             'home_route' => 'organization_dashboard',
             'default_theme' => 'light',
+            'manual' => null,
         ], $this->process([]));
+    }
+
+    /**
+     * THE MANUAL IS A FOLDER THE INSTALLATION KEEPS, named by one path. No
+     * folder is the default: a fresh installation has no manual, and the
+     * shell then serves none and draws no row for one.
+     */
+    public function testADeploymentNamesTheFolderItsManualIsBuiltInto(): void
+    {
+        self::assertSame('/srv/app/docs/handbook', $this->process([['manual' => '/srv/app/docs/handbook']])['manual']);
+        self::assertNull($this->process([['manual' => null]])['manual']);
+    }
+
+    public function testAnEmptyManualPathIsRefusedRatherThanReadAsTheRoot(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->process([['manual' => '']]);
     }
 
     public function testADeploymentNamesItsOwnShell(): void

@@ -90,6 +90,16 @@ class Kernel extends BaseKernel
     }
 
     /**
+     * WHERE THIS INSTALLATION KEEPS ITS MANUAL — a folder beside its code,
+     * as an installation keeps its own. {@see \Uhifadhi\Core\Tests\Core\Fixtures\NoManualKernel}
+     * is one that keeps none.
+     */
+    protected function manualFolder(): ?string
+    {
+        return '%kernel.project_dir%/docs/handbook';
+    }
+
+    /**
      * Where this application's OWN versions go. A checkout has no such
      * directory in it, so one is made: a registered path that is not there is
      * a path the migration finder throws on.
@@ -127,6 +137,9 @@ class Kernel extends BaseKernel
             'assets' => [],
             'asset_mapper' => ['paths' => [__DIR__.'/assets' => '']],
         ]);
+
+        // THE MANUAL, named the way an installation names its own.
+        $container->extension('shell', ['manual' => $this->manualFolder()]);
 
         // THE QUEUE THE CORE'S RECIPE CONFIGURES — the transports in its
         // `config/packages/registry.yaml`: the Doctrine transport on the

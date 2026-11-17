@@ -47,12 +47,13 @@ final class NavigationTest extends TestCase
     /**
      * THE GROUPS COME OUT IN THE PUBLISHED ORDER, whatever a contribution
      * declared. A position is a contributing module's answer to "where among
-     * the rows", which it can know; the order of the four headings is the
+     * the rows", which it can know; the order of the five headings is the
      * shell's, which no module can know.
      */
     public function testTheGroupsAreDrawnInTheContractsOrderAndNotByPosition(): void
     {
         $navigation = new Navigation([
+            self::source(new NavSection(NavGroup::HELP, [new NavItem(label: 'Manual', url: '/manual/')], position: 0)),
             self::source(new NavSection(NavGroup::SETTINGS, [new NavItem(label: 'Settings', url: '/settings')], position: 1)),
             self::source(new NavSection(NavGroup::SYSTEM, [new NavItem(label: 'Telemetry', url: '/telemetry')], position: 90)),
             self::source(new NavSection(NavGroup::SYSTEM, [new NavItem(label: 'Files', url: '/files')], position: 30)),

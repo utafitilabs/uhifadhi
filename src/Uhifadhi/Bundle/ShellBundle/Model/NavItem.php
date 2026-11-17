@@ -79,6 +79,9 @@ final class NavItem
      *                              see the property's own note
      * @param string      $key      DERIVED: where this row sits in the tree,
      *                              which is how a manual fold is remembered
+     * @param bool        $newTab   whether the row opens its address in a new
+     *                              tab — a document read beside the app, such
+     *                              as the installation's manual
      */
     public function __construct(
         public string $label,
@@ -132,6 +135,7 @@ final class NavItem
          * Derived by the shell, like `path`.
          */
         public string $key = '',
+        public bool $newTab = false,
     ) {
         /*
          * ONLY A COLOUR. The value is printed into a `style` attribute, so

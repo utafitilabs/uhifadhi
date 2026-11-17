@@ -18,6 +18,7 @@ use Uhifadhi\Bundle\ShellBundle\Contract\DeletionPageInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\LayoutContract;
 use Uhifadhi\Bundle\ShellBundle\Contract\ModuleSettingsPagesInterface;
 use Uhifadhi\Bundle\ShellBundle\Controller\FaviconController;
+use Uhifadhi\Bundle\ShellBundle\Controller\ManualController;
 use Uhifadhi\Bundle\ShellBundle\Controller\SettingsController;
 use Uhifadhi\Bundle\ShellBundle\Controller\WelcomeController;
 use Uhifadhi\Bundle\ShellBundle\EventListener\RefusalPage;
@@ -28,6 +29,8 @@ use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Bundle\ShellBundle\Security\ImpersonationReturn;
 use Uhifadhi\Bundle\ShellBundle\Service\AreaShell;
 use Uhifadhi\Bundle\ShellBundle\Service\Installation;
+use Uhifadhi\Bundle\ShellBundle\Service\ManualNavigation;
+use Uhifadhi\Bundle\ShellBundle\Service\ManualService;
 use Uhifadhi\Bundle\ShellBundle\Service\Navigation;
 use Uhifadhi\Bundle\ShellBundle\Service\OrgModulesNavigation;
 use Uhifadhi\Bundle\ShellBundle\Service\OrgShell;
@@ -345,6 +348,34 @@ return static function (ContainerConfigurator $container): void {
     $services->set('shell.controller.favicon', FaviconController::class)
         ->args([\dirname(__DIR__).'/public/favicon.svg'])
         ->tag('controller.service_arguments');
+
+    /*
+     * THE INSTALLATION'S MANUAL (#24): the folder `shell.manual` names, the
+     * controller that serves its page, pictures and PDF, and its row at the
+     * foot of the sidebar. The folder is the installation's; null is no
+     * manual, and then every address answers 404 and no row is drawn. The
+     * addresses are config/routes/manual.php, which the settings resource
+     * imports (see ShellBundle::MANUAL_ROUTES).
+     */
+    $services->set('shell.manual', ManualService::class)
+        ->args([param('shell.manual')]);
+    $services->alias(ManualService::class, 'shell.manual');
+
+    $services->set('shell.controller.manual', ManualController::class)
+        ->args([
+            service('shell.manual'),
+            service('security.authorization_checker')->nullOnInvalid(),
+        ])
+        ->tag('controller.service_arguments');
+
+    $services->set('shell.manual.navigation', ManualNavigation::class)
+        ->args([
+            service('shell.manual'),
+            service('router'),
+            service('security.authorization_checker')->nullOnInvalid(),
+            service('security.token_storage')->nullOnInvalid(),
+        ])
+        ->tag(ShellBundle::NAV_TAG);
 
     $services->set('shell.controller.settings', SettingsController::class)
         ->args([

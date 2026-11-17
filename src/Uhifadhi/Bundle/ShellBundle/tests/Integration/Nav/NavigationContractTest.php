@@ -65,7 +65,7 @@ final class NavigationContractTest extends ContractTestCase
      * shell, both rendered — and the ROWS are invented on purpose, because a
      * contract that only works for the modules that exist today is a hardcoded list
      * with extra steps. The GROUP each row joins is not invented: it is one of
-     * the four {@see NavGroup} names, which is the half the shell does own.
+     * the five {@see NavGroup} names, which is the half the shell does own.
      */
     public function testASourceContributesASectionAndTheShellRendersIt(): void
     {
@@ -94,7 +94,7 @@ final class NavigationContractTest extends ContractTestCase
      * AND A GROUP THE CONTRACT DOES NOT KNOW NEVER REACHES THE PAGE. The old
      * rule — any label makes a heading — meant a mistyped group grew a fifth
      * one in whoever's installation had that module, silently. The refusal
-     * names the four, at the moment the author is choosing between them.
+     * names the five, at the moment the author is choosing between them.
      */
     public function testAnInventedGroupIsRefusedAndTheFourAreNamed(): void
     {
@@ -106,7 +106,7 @@ final class NavigationContractTest extends ContractTestCase
 
         try {
             $this->navigation()->sections();
-            self::fail('"Fleet" is not one of the four groups and must be refused.');
+            self::fail('"Fleet" is not one of the five groups and must be refused.');
         } catch (\InvalidArgumentException $refusal) {
             self::assertStringContainsString('"Fleet" is not a sidebar group', $refusal->getMessage());
 
@@ -118,8 +118,8 @@ final class NavigationContractTest extends ContractTestCase
 
     /**
      * THE HEADINGS COME OUT IN THE CONTRACT'S ORDER — what the organization
-     * watches, what it is and holds, what the system raises to you, and
-     * configuration last — whatever order they were registered in and whatever
+     * watches, what it is and holds, what the system raises to you,
+     * configuration, and the manual at the foot — whatever order they were registered in and whatever
      * position each contribution declared. A position is a contributing
      * module's answer to "where among the rows", which it can know; where
      * System sits among the headings is the shell's, which it cannot.
@@ -127,6 +127,7 @@ final class NavigationContractTest extends ContractTestCase
     public function testTheGroupsComeOutInTheContractsOrderWhateverWasDeclared(): void
     {
         HostKernel::$navSources = [
+            'help' => new NavSection(NavGroup::HELP, [], position: 0),
             'settings' => new NavSection(NavGroup::SETTINGS, [], position: 1),
             'system' => new NavSection(NavGroup::SYSTEM, [], position: 30),
             'org' => new NavSection(NavGroup::ORGANIZATION, [], position: 20),

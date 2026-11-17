@@ -14,10 +14,10 @@ declare(strict_types=1);
 namespace Uhifadhi\Contracts\Shell;
 
 /**
- * THE FOUR GROUPS THE SIDEBAR DRAWS, AND WHAT EACH ONE MEANS.
+ * THE FIVE GROUPS THE SIDEBAR DRAWS, AND WHAT EACH ONE MEANS.
  *
  * A group is a PLACE in the sidebar, not a thing a module owns, and there are
- * exactly four of them. They are named here, in the order they are drawn, so
+ * exactly five of them. They are named here, in the order they are drawn, so
  * that a module joins one by CONSTANT instead of by retyping a string: a
  * near-miss label ("Organization", "system", "Org") used to make a fifth
  * heading rather than an error, and a sidebar with two Systems in it answers
@@ -35,9 +35,13 @@ namespace Uhifadhi\Contracts\Shell;
  *   SYSTEM        what the system RAISES TO YOU. Alerts, Telemetry. Rows that
  *                 exist because the installation has something to tell you,
  *                 rather than because you went looking.
- *   SETTINGS      configuration, and it comes LAST. One row with its tabs as
- *                 children today; the group may grow, which is why it is a
- *                 group and not a row filed under System.
+ *   SETTINGS      configuration, after everything the organization does.
+ *                 One row with its tabs as children today; the group may
+ *                 grow, which is why it is a group and not a row filed under
+ *                 System.
+ *   HELP          what is ABOUT the installation rather than part of it: the
+ *                 installation's own manual. It is the foot of the sidebar,
+ *                 under Settings (#24, ruled 17 Nov).
  *
  * ORDER IS PUBLISHED, NOT NEGOTIATED. {@see self::ORDER} is the order the
  * shell draws the headings in, whatever order the container registered the
@@ -59,11 +63,14 @@ final class NavGroup
     /** What the system raises to you. */
     public const string SYSTEM = 'System';
 
-    /** Configuration, last. */
+    /** Configuration, after the work. */
     public const string SETTINGS = 'Settings';
 
+    /** About the installation: its manual, at the foot. */
+    public const string HELP = 'Help';
+
     /**
-     * The four, in the order the sidebar draws them.
+     * The five, in the order the sidebar draws them.
      *
      * @var list<string>
      */
@@ -72,6 +79,7 @@ final class NavGroup
         self::ORGANIZATION,
         self::SYSTEM,
         self::SETTINGS,
+        self::HELP,
     ];
 
     /** A place, not an object: there is nothing to construct. */
@@ -79,17 +87,17 @@ final class NavGroup
     {
     }
 
-    /** Whether a label names one of the four. */
+    /** Whether a label names one of the five. */
     public static function knows(string $group): bool
     {
         return \in_array($group, self::ORDER, true);
     }
 
     /**
-     * Where a group is drawn — 0 for the first, 3 for the last.
+     * Where a group is drawn — 0 for the first, 4 for the last.
      *
      * @throws \InvalidArgumentException when the label names no group, with
-     *                                   the four in the message, because the
+     *                                   the five in the message, because the
      *                                   author who typed it is choosing
      *                                   between them right now
      */
@@ -98,7 +106,7 @@ final class NavGroup
         $position = array_search($group, self::ORDER, true);
 
         if (false === $position) {
-            throw new \InvalidArgumentException(\sprintf('"%s" is not a sidebar group. The four the shell draws are %s — join one by constant, e.g. Uhifadhi\Contracts\Shell\NavGroup::OBSERVATORY.', $group, implode(', ', self::ORDER)));
+            throw new \InvalidArgumentException(\sprintf('"%s" is not a sidebar group. The five the shell draws are %s — join one by constant, e.g. Uhifadhi\Contracts\Shell\NavGroup::OBSERVATORY.', $group, implode(', ', self::ORDER)));
         }
 
         return $position;

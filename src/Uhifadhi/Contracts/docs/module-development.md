@@ -839,10 +839,11 @@ final readonly class SightingsNavigation implements NavigationSourceInterface
             return;
         }
 
-        // THE GROUP IS ONE OF FOUR, AND IT IS A CONSTANT. Observatory is what
+        // THE GROUP IS ONE OF FIVE, AND IT IS A CONSTANT. Observatory is what
         // the organization watches, Organization what it is and holds, System
-        // what the system raises to you, Settings configuration, last. A label
-        // that is not one of them is refused.
+        // what the system raises to you, Settings configuration, and Help —
+        // the installation's manual — the foot. A label that is not one of
+        // them is refused.
         yield new NavSection(NavGroup::OBSERVATORY, [
             new NavItem(
                 label: 'Sightings',

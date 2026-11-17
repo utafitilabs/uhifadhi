@@ -153,6 +153,20 @@ final class ShellBundle extends AbstractBundle
     public const string FAVICON_ROUTES = '@ShellBundle/config/routes/favicon.php';
 
     /**
+     * THE MANUAL'S ADDRESSES — `/manual/`, its pictures and its PDF — shipped
+     * as a resource of their own and IMPORTED BY THE SETTINGS RESOURCE, so
+     * every installation that has the settings section has them with no line
+     * of its own. Whether they serve anything is decided by `shell.manual`,
+     * not by the import: with no folder named, all three answer 404 and the
+     * sidebar draws no row. An installation without the settings section
+     * imports this one directly:
+     *
+     *     shell_manual:
+     *         resource: '@ShellBundle/config/routes/manual.php'
+     */
+    public const string MANUAL_ROUTES = '@ShellBundle/config/routes/manual.php';
+
+    /**
      * The AssetMapper namespace this bundle's assets/ directory is mapped to.
      *
      * It is the npm-style form of the composer package name, and it has to be:
@@ -424,6 +438,13 @@ final class ShellBundle extends AbstractBundle
         $builder->setParameter(
             'shell.default_theme',
             \is_string($config['default_theme'] ?? null) ? $config['default_theme'] : 'light',
+        );
+
+        // Where the installation keeps its own manual, or null for none. The
+        // folder is the installation's and the shell only reads it.
+        $builder->setParameter(
+            'shell.manual',
+            \is_string($config['manual'] ?? null) ? $config['manual'] : null,
         );
     }
 }

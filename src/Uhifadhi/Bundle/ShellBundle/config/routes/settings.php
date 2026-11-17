@@ -42,7 +42,15 @@ use Uhifadhi\Bundle\ShellBundle\Service\SettingsSection;
  * reason; a segment that names no screen is refused by the controller, with a
  * 404 that says which.
  */
+/*
+ * AND THE INSTALLATION'S MANUAL, imported from here so that every
+ * installation that has the settings section has the manual's addresses too,
+ * with no routing line of its own (#24). They serve nothing until
+ * `shell.manual` names a folder. See config/routes/manual.php.
+ */
 return static function (RoutingConfigurator $routes): void {
+    $routes->import('manual.php');
+
     $routes->add(SettingsSection::ROUTE, '/settings/{'.SettingsSection::PARAMETER.'}')
         ->controller('shell.controller.settings')
         ->requirements([SettingsSection::PARAMETER => '[a-z][a-z0-9-]*'])

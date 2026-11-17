@@ -298,6 +298,7 @@ final class CoreProbes
             Probe::post('area_new', [], AreaCreateController::TOKEN_ID, ['name' => 'Ziwa Game Reserve', 'boundary_mode' => 'later']),
             Probe::post('area_edit', $area, AreaEditController::IDENTITY_TOKEN, ['name' => World::KILIMANI]),
             Probe::post('area_boundary_replace', $area, AreaEditController::BOUNDARY_TOKEN, ['confirm' => '1'], ['boundary' => $boundary]),
+            Probe::get(CheckInStatusesController::ROUTE, $area),
             Probe::post(CheckInStatusesController::ROUTE, $area, CheckInStatusesController::TOKEN, ['statuses' => [['key' => 'at_post', 'label' => 'At post', 'kind' => 'at_post', 'active' => '1']]]),
             Probe::post('area_delete', $area, $delete, ['reference' => World::KILIMANI]),
             Probe::post('area_modules_reorder', $area, 'area_modules_'.$world->kilimani, ['order' => []]),

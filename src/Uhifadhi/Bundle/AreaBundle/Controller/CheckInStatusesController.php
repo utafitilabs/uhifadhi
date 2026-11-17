@@ -70,12 +70,18 @@ final readonly class CheckInStatusesController
     ) {
     }
 
-    #[Route('/areas/{uuid}/configure/check-in-statuses', name: self::ROUTE, requirements: ['uuid' => Requirement::UUID], methods: ['POST'], priority: 1)]
+    #[Route('/areas/{uuid}/configure/check-in-statuses', name: self::ROUTE, requirements: ['uuid' => Requirement::UUID], methods: ['GET', 'POST'], priority: 1)]
     #[IsGranted(AreaEditController::CONFIGURE, subject: 'area')]
     public function save(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
+        // A refused save is drawn at this address, so a reload or a pasted link
+        // opens it with a GET: that goes to the card, which is where the list is read.
+        if ($request->isMethod('GET')) {
+            return new RedirectResponse($this->urls->generate(ConfigureController::AREA_ROUTE, ['uuid' => (string) $area->getUuidString(), 'section' => ConfigurationSection::SETTINGS]).'#'.self::ANCHOR);
+        }
+
         if (!$this->csrf->isTokenValid(new CsrfToken(self::TOKEN, $request->request->getString('_token')))) {
             throw new AccessDeniedException('Invalid CSRF token.');
         }

@@ -214,6 +214,7 @@ department confined to Kilimani.
 | area_new | POST /areas/new | `areas.configure` | sign-in | sign-in | refused | refused | refused | refused | → /areas/{new} | → /areas/{new} |
 | area_edit | POST /areas/{kilimani}/edit | `areas.configure` | sign-in | sign-in | refused | → /areas/{kilimani}/configure/settings | refused | refused | → /areas/{kilimani}/configure/settings | → /areas/{kilimani}/configure/settings |
 | area_boundary_replace | POST /areas/{kilimani}/boundary/replace | `areas.configure` | sign-in | sign-in | refused | → /areas/{kilimani} | refused | refused | → /areas/{kilimani} | → /areas/{kilimani} |
+| area_check_in_statuses | GET /areas/{kilimani}/configure/check-in-statuses | `areas.configure` | sign-in | sign-in | refused | → /areas/{kilimani}/configure/settings | refused | refused | → /areas/{kilimani}/configure/settings | → /areas/{kilimani}/configure/settings |
 | area_check_in_statuses | POST /areas/{kilimani}/configure/check-in-statuses | `areas.configure` | sign-in | sign-in | refused | → /areas/{kilimani}/configure/settings | refused | refused | → /areas/{kilimani}/configure/settings | → /areas/{kilimani}/configure/settings |
 | area_delete | POST /areas/{kilimani}/delete | — | sign-in | sign-in | refused | refused | refused | refused | refused | → /areas |
 | area_modules_reorder | POST /areas/{kilimani}/configure/modules/reorder | `modules.configure` | sign-in | sign-in | refused | → /areas/{kilimani}/configure/modules | refused | refused | → /areas/{kilimani}/configure/modules | → /areas/{kilimani}/configure/modules |

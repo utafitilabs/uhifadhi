@@ -106,6 +106,23 @@ final class CheckInStatusesEditorTest extends WebTestCase
         self::assertTrue($this->model($after)['justSaved']);
     }
 
+    /**
+     * A REFUSED SAVE IS DRAWN AT THE SAVE'S ADDRESS, so a reload, a bookmark or a
+     * pasted link opens that address with a GET: it goes to the card, not to a 404.
+     */
+    public function testOpeningTheSaveAddressGoesToTheCard(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea();
+
+        $this->browser()->request('GET', $this->saveUrl($area));
+
+        $response = $this->browser()->getResponse();
+        self::assertSame(302, $response->getStatusCode());
+        self::assertSame($this->settingsUrl($area).'#check-in-statuses', $response->headers->get('Location'));
+    }
+
     public function testARefusedSaveKeepsTheEditsAndSaysWhyWithA422(): void
     {
         $this->boot();

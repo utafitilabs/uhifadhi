@@ -1351,7 +1351,7 @@ final readonly class ChartBuilder
             $days[] = ['x' => (string) $column, 'y' => $weekday, 'v' => $v, 't' => $weekday.' '.$day->format('j M Y')];
         }
 
-        return [$days, array_values($weeks)];
+        return [$days, $weeks];
     }
 
     /**
